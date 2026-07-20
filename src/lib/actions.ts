@@ -1,0 +1,531 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { createAdminClient, createClient } from "@/lib/supabase/server";
+import { requireProfile, requireRole } from "@/lib/auth";
+import type { AppRole, DecisionKind, Recommendation } from "@/lib/types";
+
+export type ActionResult = { ok: boolean; message?: string };
+
+/** Append to the audit trail. Never throws — logging must not break a flow. */
+async function audit(
+  actorId: string,
+  action: string,
+  entity: string,
+  entityId: string | null,
+  detail: Record<string, unknown> = {}
+) {
+  try {
+    const admin = createAdminClient();
+    await admin.from("audit_log").insert({
+      actor_id: actorId,
+      action,
+      entity,
+      entity_id: entityId,
+      detail,
+    });
+  } catch {
+    // Swallow — the audit log is diagnostic, not load-bearing.
+  }
+}
+
+// =====================================================================
+// AUTHOR
+// =====================================================================
+
+export async function createSubmission(formData: FormData): Promise<void> {
+  const profile = await requireProfile();
+  const supabase = await createClient();
+
+  const conferenceId = String(formData.get("conference_id") ?? "");
+  const title = String(formData.get("title") ?? "").trim();
+  const abstract = String(formData.get("abstract") ?? "").trim();
+  const trackId = String(formData.get("track_id") ?? "");
+  const keywords = String(formData.get("keywords") ?? "")
+    .split(",")
+    .map((k) => k.trim())
+    .filter(Boolean);
+
+  const { data, error } = await supabase
+    .from("submissions")
+    .insert({
+      conference_id: conferenceId,
+      track_id: trackId || null,
+      author_id: profile.id,
+      title,
+      abstract,
+      keywords,
+      status: "draft",
+    })
+    .select("id")
+    .single();
+
+  if (error || !data) throw new Error(error?.message ?? "Could not create submission");
+
+  // The submitting author is always the first, corresponding author.
+  await supabase.from("submission_authors").insert({
+    submission_id: data.id,
+    profile_id: profile.id,
+    full_name: profile.full_name || profile.email,
+    email: profile.email,
+    affiliation: profile.affiliation,
+    is_corresponding: true,
+    author_order: 1,
+  });
+
+  await audit(profile.id, "submission.created", "submission", data.id, { title });
+  revalidatePath("/author");
+  redirect(`/author/submissions/${data.id}`);
+}
+
+export async function updateSubmission(formData: FormData): Promise<ActionResult> {
+  const profile = await requireProfile();
+  const supabase = await createClient();
+  const id = String(formData.get("id"));
+
+  const { error } = await supabase
+    .from("submissions")
+    .update({
+      title: String(formData.get("title") ?? "").trim(),
+      abstract: String(formData.get("abstract") ?? "").trim(),
+      track_id: String(formData.get("track_id") ?? "") || null,
+      keywords: String(formData.get("keywords") ?? "")
+        .split(",")
+        .map((k) => k.trim())
+        .filter(Boolean),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+
+  if (error) return { ok: false, message: error.message };
+
+  await audit(profile.id, "submission.updated", "submission", id);
+  revalidatePath(`/author/submissions/${id}`);
+  return { ok: true, message: "Saved." };
+}
+
+/** Move a draft (or a revision) into the editorial pipeline. */
+export async function submitForReview(formData: FormData): Promise<ActionResult> {
+  const profile = await requireProfile();
+  const supabase = await createClient();
+  const id = String(formData.get("id"));
+
+  const { data: sub } = await supabase
+    .from("submissions")
+    .select("status, file_path, track_id, version")
+    .eq("id", id)
+    .single();
+
+  if (!sub) return { ok: false, message: "Submission not found." };
+  if (!sub.file_path)
+    return { ok: false, message: "Upload your paper file before submitting." };
+  if (!sub.track_id)
+    return { ok: false, message: "Choose a track before submitting." };
+
+  // A resubmission after "revisions requested" bumps the version number.
+  const isRevision = sub.status === "revisions_requested";
+
+  const { error } = await supabase
+    .from("submissions")
+    .update({
+      status: "submitted",
+      submitted_at: new Date().toISOString(),
+      version: isRevision ? sub.version + 1 : sub.version,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+
+  if (error) return { ok: false, message: error.message };
+
+  await audit(profile.id, "submission.submitted", "submission", id, {
+    revision: isRevision,
+  });
+  revalidatePath("/author");
+  revalidatePath(`/author/submissions/${id}`);
+  return { ok: true, message: isRevision ? "Revision submitted." : "Submitted." };
+}
+
+export async function withdrawSubmission(formData: FormData): Promise<ActionResult> {
+  const profile = await requireProfile();
+  const supabase = await createClient();
+  const id = String(formData.get("id"));
+
+  const { error } = await supabase
+    .from("submissions")
+    .update({ status: "withdrawn", updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .eq("author_id", profile.id);
+
+  if (error) return { ok: false, message: error.message };
+
+  await audit(profile.id, "submission.withdrawn", "submission", id);
+  revalidatePath("/author");
+  return { ok: true, message: "Withdrawn." };
+}
+
+export async function addCoAuthor(formData: FormData): Promise<ActionResult> {
+  await requireProfile();
+  const supabase = await createClient();
+  const submissionId = String(formData.get("submission_id"));
+
+  const { count } = await supabase
+    .from("submission_authors")
+    .select("*", { count: "exact", head: true })
+    .eq("submission_id", submissionId);
+
+  const { error } = await supabase.from("submission_authors").insert({
+    submission_id: submissionId,
+    full_name: String(formData.get("full_name") ?? "").trim(),
+    email: String(formData.get("email") ?? "").trim(),
+    affiliation: String(formData.get("affiliation") ?? "").trim(),
+    author_order: (count ?? 0) + 1,
+  });
+
+  if (error) return { ok: false, message: error.message };
+  revalidatePath(`/author/submissions/${submissionId}`);
+  return { ok: true, message: "Co-author added." };
+}
+
+export async function removeCoAuthor(formData: FormData): Promise<ActionResult> {
+  await requireProfile();
+  const supabase = await createClient();
+  const id = String(formData.get("id"));
+  const submissionId = String(formData.get("submission_id"));
+
+  const { error } = await supabase
+    .from("submission_authors")
+    .delete()
+    .eq("id", id)
+    .eq("is_corresponding", false);
+
+  if (error) return { ok: false, message: error.message };
+  revalidatePath(`/author/submissions/${submissionId}`);
+  return { ok: true };
+}
+
+// =====================================================================
+// REVIEWER
+// =====================================================================
+
+export async function respondToAssignment(
+  formData: FormData
+): Promise<ActionResult> {
+  const profile = await requireRole("reviewer");
+  const supabase = await createClient();
+  const id = String(formData.get("assignment_id"));
+  const accept = String(formData.get("accept")) === "true";
+
+  const { data: assignment, error } = await supabase
+    .from("assignments")
+    .update({
+      status: accept ? "accepted" : "declined",
+      responded_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .eq("reviewer_id", profile.id)
+    .select("submission_id")
+    .single();
+
+  if (error) return { ok: false, message: error.message };
+
+  // Accepting creates the empty review shell the reviewer then fills in.
+  if (accept && assignment) {
+    await supabase.from("reviews").upsert(
+      {
+        assignment_id: id,
+        submission_id: assignment.submission_id,
+        reviewer_id: profile.id,
+      },
+      { onConflict: "assignment_id" }
+    );
+  }
+
+  await audit(profile.id, accept ? "assignment.accepted" : "assignment.declined", "assignment", id);
+  revalidatePath("/reviewer");
+  return { ok: true, message: accept ? "Invitation accepted." : "Invitation declined." };
+}
+
+export async function saveReview(formData: FormData): Promise<ActionResult> {
+  const profile = await requireRole("reviewer");
+  const supabase = await createClient();
+
+  const assignmentId = String(formData.get("assignment_id"));
+  const submissionId = String(formData.get("submission_id"));
+  const finalise = String(formData.get("finalise")) === "true";
+
+  const num = (k: string) => {
+    const v = formData.get(k);
+    return v ? Number(v) : null;
+  };
+
+  const recommendation = (formData.get("recommendation") ||
+    null) as Recommendation | null;
+
+  if (finalise && !recommendation)
+    return { ok: false, message: "Pick a recommendation before submitting." };
+
+  const { error } = await supabase.from("reviews").upsert(
+    {
+      assignment_id: assignmentId,
+      submission_id: submissionId,
+      reviewer_id: profile.id,
+      score_originality: num("score_originality"),
+      score_technical: num("score_technical"),
+      score_clarity: num("score_clarity"),
+      score_relevance: num("score_relevance"),
+      confidence: num("confidence"),
+      recommendation,
+      comments_to_author: String(formData.get("comments_to_author") ?? ""),
+      comments_to_editor: String(formData.get("comments_to_editor") ?? ""),
+      is_submitted: finalise,
+      submitted_at: finalise ? new Date().toISOString() : null,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "assignment_id" }
+  );
+
+  if (error) return { ok: false, message: error.message };
+
+  await audit(profile.id, finalise ? "review.submitted" : "review.saved", "review", assignmentId);
+  revalidatePath("/reviewer");
+  revalidatePath(`/reviewer/reviews/${assignmentId}`);
+  return { ok: true, message: finalise ? "Review submitted." : "Draft saved." };
+}
+
+// =====================================================================
+// EDITOR
+// =====================================================================
+
+export async function assignReviewer(formData: FormData): Promise<ActionResult> {
+  const profile = await requireRole("editor", "chief");
+  const supabase = await createClient();
+
+  const submissionId = String(formData.get("submission_id"));
+  const reviewerId = String(formData.get("reviewer_id"));
+  const dueDate = String(formData.get("due_date") ?? "");
+
+  const { error } = await supabase.from("assignments").insert({
+    submission_id: submissionId,
+    reviewer_id: reviewerId,
+    assigned_by: profile.id,
+    due_date: dueDate || null,
+  });
+
+  if (error) {
+    return {
+      ok: false,
+      message: error.code === "23505"
+        ? "That reviewer is already assigned to this submission."
+        : error.message,
+    };
+  }
+
+  await audit(profile.id, "assignment.created", "submission", submissionId, {
+    reviewer_id: reviewerId,
+  });
+  revalidatePath(`/editor/submissions/${submissionId}`);
+  return { ok: true, message: "Reviewer invited." };
+}
+
+export async function removeAssignment(formData: FormData): Promise<ActionResult> {
+  const profile = await requireRole("editor", "chief");
+  const supabase = await createClient();
+  const id = String(formData.get("assignment_id"));
+  const submissionId = String(formData.get("submission_id"));
+
+  const { error } = await supabase.from("assignments").delete().eq("id", id);
+  if (error) return { ok: false, message: error.message };
+
+  await audit(profile.id, "assignment.removed", "assignment", id);
+  revalidatePath(`/editor/submissions/${submissionId}`);
+  return { ok: true, message: "Assignment removed." };
+}
+
+/** An editor's recommendation — advisory until the chief ratifies it. */
+export async function recordRecommendation(
+  formData: FormData
+): Promise<ActionResult> {
+  const profile = await requireRole("editor");
+  const supabase = await createClient();
+
+  const submissionId = String(formData.get("submission_id"));
+  const decision = String(formData.get("decision")) as DecisionKind;
+
+  const { error } = await supabase.from("decisions").insert({
+    submission_id: submissionId,
+    decided_by: profile.id,
+    decision,
+    rationale: String(formData.get("rationale") ?? ""),
+    is_final: false,
+  });
+
+  if (error) return { ok: false, message: error.message };
+
+  await audit(profile.id, "decision.recommended", "submission", submissionId, {
+    decision,
+  });
+  revalidatePath(`/editor/submissions/${submissionId}`);
+  revalidatePath("/chief");
+  return { ok: true, message: "Recommendation sent to the Editor-in-Chief." };
+}
+
+// =====================================================================
+// EDITOR-IN-CHIEF
+// =====================================================================
+
+/** The final call. The DB trigger moves the paper and notifies the author. */
+export async function recordFinalDecision(
+  formData: FormData
+): Promise<ActionResult> {
+  const profile = await requireRole("chief");
+  const supabase = await createClient();
+
+  const submissionId = String(formData.get("submission_id"));
+  const decision = String(formData.get("decision")) as DecisionKind;
+
+  const { error } = await supabase.from("decisions").insert({
+    submission_id: submissionId,
+    decided_by: profile.id,
+    decision,
+    rationale: String(formData.get("rationale") ?? ""),
+    is_final: true,
+  });
+
+  if (error) return { ok: false, message: error.message };
+
+  await audit(profile.id, "decision.final", "submission", submissionId, {
+    decision,
+  });
+  revalidatePath("/chief");
+  revalidatePath(`/chief/submissions/${submissionId}`);
+  return { ok: true, message: "Final decision recorded." };
+}
+
+export async function assignTrackEditor(formData: FormData): Promise<ActionResult> {
+  const profile = await requireRole("chief");
+  const supabase = await createClient();
+
+  const trackId = String(formData.get("track_id"));
+  const editorId = String(formData.get("editor_id") ?? "");
+
+  const { error } = await supabase
+    .from("tracks")
+    .update({ editor_id: editorId || null })
+    .eq("id", trackId);
+
+  if (error) return { ok: false, message: error.message };
+
+  await audit(profile.id, "track.editor_assigned", "track", trackId, {
+    editor_id: editorId,
+  });
+  revalidatePath("/chief");
+  revalidatePath("/admin/tracks");
+  return { ok: true, message: "Track editor updated." };
+}
+
+// =====================================================================
+// ADMIN
+// =====================================================================
+
+export async function updateUserRoles(formData: FormData): Promise<ActionResult> {
+  const profile = await requireRole("admin");
+  const admin = createAdminClient();
+
+  const userId = String(formData.get("user_id"));
+  const roles = formData.getAll("roles").map(String) as AppRole[];
+
+  if (roles.length === 0)
+    return { ok: false, message: "A user needs at least one role." };
+
+  // Guard against an admin removing their own admin role and locking
+  // themselves out of user management.
+  if (userId === profile.id && !roles.includes("admin"))
+    return { ok: false, message: "You cannot remove your own admin role." };
+
+  const { error } = await admin
+    .from("profiles")
+    .update({ roles, updated_at: new Date().toISOString() })
+    .eq("id", userId);
+
+  if (error) return { ok: false, message: error.message };
+
+  await audit(profile.id, "user.roles_updated", "profile", userId, { roles });
+  revalidatePath("/admin/users");
+  return { ok: true, message: "Roles updated." };
+}
+
+export async function setUserActive(formData: FormData): Promise<ActionResult> {
+  const profile = await requireRole("admin");
+  const admin = createAdminClient();
+
+  const userId = String(formData.get("user_id"));
+  const active = String(formData.get("active")) === "true";
+
+  if (userId === profile.id && !active)
+    return { ok: false, message: "You cannot deactivate your own account." };
+
+  const { error } = await admin
+    .from("profiles")
+    .update({ is_active: active })
+    .eq("id", userId);
+
+  if (error) return { ok: false, message: error.message };
+
+  await audit(profile.id, active ? "user.activated" : "user.deactivated", "profile", userId);
+  revalidatePath("/admin/users");
+  return { ok: true, message: active ? "User activated." : "User deactivated." };
+}
+
+export async function upsertTrack(formData: FormData): Promise<ActionResult> {
+  const profile = await requireRole("admin", "chief");
+  const supabase = await createClient();
+
+  const id = String(formData.get("id") ?? "");
+  const payload = {
+    conference_id: String(formData.get("conference_id")),
+    name: String(formData.get("name") ?? "").trim(),
+    description: String(formData.get("description") ?? "").trim(),
+  };
+
+  const { error } = id
+    ? await supabase.from("tracks").update(payload).eq("id", id)
+    : await supabase.from("tracks").insert(payload);
+
+  if (error) return { ok: false, message: error.message };
+
+  await audit(profile.id, id ? "track.updated" : "track.created", "track", id || null);
+  revalidatePath("/admin/tracks");
+  return { ok: true, message: "Track saved." };
+}
+
+export async function updateConference(formData: FormData): Promise<ActionResult> {
+  const profile = await requireRole("admin", "chief");
+  const supabase = await createClient();
+  const id = String(formData.get("id"));
+
+  const dateOrNull = (k: string) => {
+    const v = String(formData.get(k) ?? "");
+    return v ? new Date(v).toISOString() : null;
+  };
+
+  const { error } = await supabase
+    .from("conferences")
+    .update({
+      name: String(formData.get("name") ?? "").trim(),
+      acronym: String(formData.get("acronym") ?? "").trim(),
+      year: Number(formData.get("year")),
+      description: String(formData.get("description") ?? ""),
+      submission_deadline: dateOrNull("submission_deadline"),
+      review_deadline: dateOrNull("review_deadline"),
+      notification_date: dateOrNull("notification_date"),
+      is_open: String(formData.get("is_open")) === "true",
+    })
+    .eq("id", id);
+
+  if (error) return { ok: false, message: error.message };
+
+  await audit(profile.id, "conference.updated", "conference", id);
+  revalidatePath("/admin/tracks");
+  return { ok: true, message: "Conference updated." };
+}

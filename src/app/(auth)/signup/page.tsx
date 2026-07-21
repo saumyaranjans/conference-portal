@@ -10,6 +10,7 @@ export default function SignupPage() {
   const [form, setForm] = useState({
     fullName: "",
     affiliation: "",
+    designation: "",
     email: "",
     password: "",
   });
@@ -31,7 +32,11 @@ export default function SignupPage() {
       email: form.email,
       password: form.password,
       options: {
-        data: { full_name: form.fullName, affiliation: form.affiliation },
+        data: {
+          full_name: form.fullName,
+          affiliation: form.affiliation,
+          designation: form.designation,
+        },
       },
     });
 
@@ -81,6 +86,28 @@ export default function SignupPage() {
               value={form.affiliation}
               onChange={(e) => set("affiliation", e.target.value)}
             />
+          </div>
+          <div>
+            <label className="label" htmlFor="designation">
+              Professional designation
+            </label>
+            <select
+              id="designation"
+              required
+              className="input"
+              value={form.designation}
+              onChange={(e) => set("designation", e.target.value)}
+            >
+              <option value="">Select…</option>
+              <option value="Academician">Academician</option>
+              <option value="Research (or PhD) Scholar">
+                Research (or PhD) Scholar
+              </option>
+              <option value="Industry Professional">
+                Industry Professional
+              </option>
+              <option value="UG or PG Student">UG or PG Student</option>
+            </select>
           </div>
           <div>
             <label className="label" htmlFor="email">

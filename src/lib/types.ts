@@ -29,6 +29,7 @@ export interface Profile {
   email: string;
   full_name: string;
   affiliation: string;
+  designation: string;
   country: string;
   bio: string;
   expertise: string[];

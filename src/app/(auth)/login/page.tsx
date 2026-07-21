@@ -10,22 +10,6 @@ import { GlogiftMark } from "@/components/GlogiftLogo";
 const CONFERENCE =
   "International Conference on AI-Driven Solutions in Management: Flexibility, Digitalisation and Decarbonization";
 
-/** IIM logo sits on a permanently-white chip so it reads in either theme. */
-function IimChip({ className = "" }: { className?: string }) {
-  return (
-    <span
-      className={`inline-flex items-center rounded-lg px-4 py-2.5 ${className}`}
-      style={{ backgroundColor: "#ffffff" }}
-    >
-      <img
-        src="/iim-sambalpur.png"
-        alt="Indian Institute of Management Sambalpur"
-        className="h-14 w-auto object-contain"
-      />
-    </span>
-  );
-}
-
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -73,9 +57,8 @@ export default function LoginPage() {
           aria-hidden
         />
 
-        <div className="relative flex items-center gap-3">
-          <GlogiftMark id="glogift-hero" className="h-12 w-12 shrink-0" />
-          <p className="text-sm text-white/70 max-w-[13rem] leading-snug">
+        <div className="relative">
+          <p className="text-sm text-white/80 whitespace-nowrap">
             Global Institute of Flexible Systems Management
           </p>
         </div>
@@ -103,9 +86,14 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <div className="relative flex items-center gap-3 text-sm text-white/70">
+        <div className="relative flex items-center gap-4 text-sm text-white/70">
           <span>Hosted by</span>
-          <IimChip />
+          <img
+            src="/iim-sambalpur.png"
+            alt="Indian Institute of Management Sambalpur"
+            className="h-14 w-auto object-contain"
+            style={{ filter: "brightness(0) invert(1)" }}
+          />
         </div>
       </aside>
 
@@ -127,7 +115,11 @@ export default function LoginPage() {
             </h1>
             <div className="mt-3 flex items-center justify-center gap-2 text-sm text-slate-500">
               <span>Hosted by</span>
-              <IimChip className="border border-slate-200" />
+              <img
+                src="/iim-sambalpur.png"
+                alt="Indian Institute of Management Sambalpur"
+                className="h-10 w-auto object-contain iim-adaptive"
+              />
             </div>
           </div>
 

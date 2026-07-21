@@ -14,13 +14,13 @@ const CONFERENCE =
 function IimChip({ className = "" }: { className?: string }) {
   return (
     <span
-      className={`inline-flex items-center rounded-lg px-3 py-2 ${className}`}
+      className={`inline-flex items-center rounded-lg px-4 py-2.5 ${className}`}
       style={{ backgroundColor: "#ffffff" }}
     >
       <img
         src="/iim-sambalpur.png"
         alt="Indian Institute of Management Sambalpur"
-        className="h-9 w-auto object-contain"
+        className="h-14 w-auto object-contain"
       />
     </span>
   );

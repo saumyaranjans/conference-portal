@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { GlogiftMark, GlogiftLockup } from "@/components/GlogiftLogo";
+import { GlogiftMark } from "@/components/GlogiftLogo";
 
 const CONFERENCE =
   "International Conference on AI-Driven Solutions in Management: Flexibility, Digitalisation and Decarbonization";
@@ -73,9 +73,11 @@ export default function LoginPage() {
           aria-hidden
         />
 
-        <div className="relative flex items-center justify-between gap-4">
-          <GlogiftLockup light />
-          <IimChip />
+        <div className="relative flex items-center gap-3">
+          <GlogiftMark id="glogift-hero" className="h-12 w-12 shrink-0" />
+          <p className="text-sm text-white/70 max-w-[13rem] leading-snug">
+            Global Institute of Flexible Systems Management
+          </p>
         </div>
 
         <div className="relative">
@@ -101,10 +103,10 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <p className="relative text-sm text-white/60">
-          Annual Conference of the Global Institute of Flexible Systems
-          Management · Hosted by IIM Sambalpur
-        </p>
+        <div className="relative flex items-center gap-3 text-sm text-white/70">
+          <span>Hosted by</span>
+          <IimChip />
+        </div>
       </aside>
 
       {/* ============ Form panel ============ */}
@@ -116,16 +118,17 @@ export default function LoginPage() {
         <div className="w-full max-w-sm">
           {/* compact branding for small screens */}
           <div className="lg:hidden mb-8 text-center">
-            <div className="flex items-center justify-center gap-3">
-              <GlogiftMark id="glogift-m" className="h-12 w-12" />
-              <IimChip className="border border-slate-200" />
-            </div>
+            <GlogiftMark id="glogift-m" className="h-12 w-12 mx-auto" />
             <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-slate-500">
               GLOGIFT 2027
             </p>
             <h1 className="mt-1 text-base font-semibold text-slate-900 leading-snug">
               {CONFERENCE}
             </h1>
+            <div className="mt-3 flex items-center justify-center gap-2 text-sm text-slate-500">
+              <span>Hosted by</span>
+              <IimChip className="border border-slate-200" />
+            </div>
           </div>
 
           <div className="mb-6">

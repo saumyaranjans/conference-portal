@@ -64,7 +64,7 @@ export default function LoginPage() {
         </div>
 
         <div className="relative">
-          <p className="text-2xl font-bold uppercase tracking-wider text-white">
+          <p className="text-2xl font-bold uppercase tracking-wider text-gradient-light w-fit">
             GLOGIFT 2027
           </p>
           <h1 className="mt-3 text-3xl xl:text-4xl font-semibold leading-tight max-w-xl">
@@ -110,7 +110,7 @@ export default function LoginPage() {
           </div>
 
           <div className="mb-6">
-            <h2 className="text-2xl font-semibold text-slate-900">Sign in</h2>
+            <h2 className="text-2xl font-semibold text-gradient w-fit">Sign in</h2>
             <p className="text-sm text-slate-500 mt-1">
               Welcome back — access your dashboard.
             </p>

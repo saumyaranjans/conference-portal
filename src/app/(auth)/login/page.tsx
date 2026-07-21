@@ -64,26 +64,12 @@ export default function LoginPage() {
         </div>
 
         <div className="relative">
-          <p className="text-sm font-medium uppercase tracking-wider text-white/70">
+          <p className="text-2xl font-bold uppercase tracking-wider text-white">
             GLOGIFT 2027
           </p>
           <h1 className="mt-3 text-3xl xl:text-4xl font-semibold leading-tight max-w-xl">
             {CONFERENCE}
           </h1>
-          <p className="mt-5 text-white/80 max-w-md">
-            The peer-review portal for authors, reviewers, editors and the
-            editorial board — submissions, reviews and decisions in one place.
-          </p>
-          <div className="mt-8 flex flex-wrap gap-2">
-            {["Flexibility", "Digitalisation", "Decarbonization"].map((t) => (
-              <span
-                key={t}
-                className="rounded-full border border-white/25 bg-white/10 px-3 py-1 text-sm"
-              >
-                {t}
-              </span>
-            ))}
-          </div>
         </div>
 
         <div className="relative flex items-center gap-4 text-sm text-white/70">

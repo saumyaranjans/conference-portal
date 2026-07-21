@@ -18,7 +18,7 @@ export default async function ReviewPage({
   const { data: assignment } = await supabase
     .from("assignments")
     .select(
-      "*, submissions(id, title, abstract, keywords, file_path, file_name, version, tracks(name))"
+      "*, submissions(id, title, abstract, keywords, file_path, file_name, version, paper_id, tracks(name))"
     )
     .eq("id", id)
     .eq("reviewer_id", profile.id)
@@ -45,7 +45,7 @@ export default async function ReviewPage({
 
       <PageHeader
         title={sub?.title ?? "Submission"}
-        subtitle={`${sub?.tracks?.name ?? "No track"} · Version ${sub?.version ?? 1}`}
+        subtitle={`${sub?.paper_id ? `Paper ${sub.paper_id} · ` : ""}${sub?.tracks?.name ?? "No track"} · Version ${sub?.version ?? 1}`}
       />
 
       {/* The reviewer never sees author identities — single-blind by design. */}

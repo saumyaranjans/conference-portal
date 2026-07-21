@@ -485,6 +485,7 @@ export async function upsertTrack(formData: FormData): Promise<ActionResult> {
   const payload = {
     conference_id: String(formData.get("conference_id")),
     name: String(formData.get("name") ?? "").trim(),
+    code: String(formData.get("code") ?? "").trim().toUpperCase(),
     description: String(formData.get("description") ?? "").trim(),
   };
 
@@ -492,11 +493,38 @@ export async function upsertTrack(formData: FormData): Promise<ActionResult> {
     ? await supabase.from("tracks").update(payload).eq("id", id)
     : await supabase.from("tracks").insert(payload);
 
-  if (error) return { ok: false, message: error.message };
+  if (error) {
+    return {
+      ok: false,
+      message:
+        error.code === "23505"
+          ? "That track code is already used in this conference."
+          : error.message,
+    };
+  }
 
   await audit(profile.id, id ? "track.updated" : "track.created", "track", id || null);
   revalidatePath("/admin/tracks");
   return { ok: true, message: "Track saved." };
+}
+
+export async function createConference(formData: FormData): Promise<ActionResult> {
+  const profile = await requireRole("admin", "chief");
+  const supabase = await createClient();
+
+  const { error } = await supabase.from("conferences").insert({
+    name: String(formData.get("name") ?? "").trim(),
+    acronym: String(formData.get("acronym") ?? "").trim().toUpperCase(),
+    year: Number(formData.get("year")) || new Date().getFullYear(),
+    description: String(formData.get("description") ?? "").trim(),
+    is_open: true,
+  });
+
+  if (error) return { ok: false, message: error.message };
+
+  await audit(profile.id, "conference.created", "conference", null);
+  revalidatePath("/admin/tracks");
+  return { ok: true, message: "Conference created." };
 }
 
 export async function updateConference(formData: FormData): Promise<ActionResult> {

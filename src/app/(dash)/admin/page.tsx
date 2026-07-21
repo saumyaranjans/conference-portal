@@ -37,6 +37,11 @@ export default async function AdminDashboard() {
       <PageHeader
         title="Administration"
         subtitle="System-wide health, users, and the audit trail."
+        action={
+          <a href="/api/reports/submissions" className="btn-secondary">
+            Export submissions CSV
+          </a>
+        }
       />
 
       <Section title="Submissions">

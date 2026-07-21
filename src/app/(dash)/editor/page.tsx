@@ -117,6 +117,7 @@ export default async function EditorDashboard() {
       ) : (
         <DataTable
           headers={[
+            "Paper ID",
             "Title",
             "Status",
             "Reviews",
@@ -131,6 +132,9 @@ export default async function EditorDashboard() {
             const assigned = st?.assigned_count ?? 0;
             return (
               <tr key={s.id} className="hover:bg-slate-50">
+                <td className="td font-mono text-xs text-slate-500 whitespace-nowrap">
+                  {s.paper_id ?? "—"}
+                </td>
                 <td className="td font-medium text-slate-900 max-w-sm">
                   {s.title}
                   <span className="block text-xs font-normal text-slate-400">

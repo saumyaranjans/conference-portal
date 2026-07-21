@@ -67,10 +67,13 @@ export default async function AuthorDashboard() {
         />
       ) : (
         <DataTable
-          headers={["Title", "Track", "Status", "Version", "Updated", ""]}
+          headers={["Paper ID", "Title", "Track", "Status", "Version", "Updated", ""]}
         >
           {submissions.map((s) => (
             <tr key={s.id} className="hover:bg-slate-50">
+              <td className="td font-mono text-xs text-slate-500 whitespace-nowrap">
+                {s.paper_id ?? "—"}
+              </td>
               <td className="td font-medium text-slate-900 max-w-sm">
                 {s.title || <span className="text-slate-400">Untitled</span>}
               </td>

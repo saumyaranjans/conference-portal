@@ -1,6 +1,10 @@
 import { requireRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { updateConference, upsertTrack } from "@/lib/actions";
+import {
+  createConference,
+  updateConference,
+  upsertTrack,
+} from "@/lib/actions";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { PageHeader, Section } from "@/components/ui/Primitives";
 import type { Conference, Track } from "@/lib/types";
@@ -17,178 +21,196 @@ export default async function AdminTracksPage() {
 
   const { data: conferences } = await supabase
     .from("conferences")
-    .select("*")
+    .select("*, tracks(*, profiles(full_name))")
     .order("year", { ascending: false });
 
-  const conference = ((conferences ?? []) as Conference[])[0];
-
-  if (!conference) {
-    return (
-      <>
-        <PageHeader title="Conference & Tracks" />
-        <div className="card card-pad">
-          <p className="text-slate-600">
-            No conference configured. Run the seed migration to create one.
-          </p>
-        </div>
-      </>
-    );
-  }
-
-  const { data: tracks } = await supabase
-    .from("tracks")
-    .select("*, profiles(full_name)")
-    .eq("conference_id", conference.id)
-    .order("name");
+  const list = (conferences ?? []) as (Conference & {
+    tracks: (Track & { profiles: any })[];
+  })[];
 
   return (
     <>
       <PageHeader
-        title="Conference & Tracks"
-        subtitle="Deadlines, open/closed state, and the track list."
+        title="Conferences & Tracks"
+        subtitle="Manage every conference edition, its tracks, codes and deadlines."
       />
 
-      <Section title="Conference">
-        <ActionForm action={updateConference} className="card card-pad space-y-4">
-          <input type="hidden" name="id" value={conference.id} />
-
-          <div className="grid sm:grid-cols-[2fr_1fr_1fr] gap-4">
+      {/* -------- New conference -------- */}
+      <Section title="Add a conference">
+        <ActionForm action={createConference} className="card card-pad">
+          <div className="grid sm:grid-cols-[2fr_1fr_1fr_auto] gap-3 items-end">
             <div>
-              <label className="label" htmlFor="name">
+              <label className="label" htmlFor="new-name">
                 Name
               </label>
-              <input
-                id="name"
-                name="name"
-                defaultValue={conference.name}
-                className="input"
-              />
+              <input id="new-name" name="name" required className="input" />
             </div>
             <div>
-              <label className="label" htmlFor="acronym">
+              <label className="label" htmlFor="new-acronym">
                 Acronym
               </label>
-              <input
-                id="acronym"
-                name="acronym"
-                defaultValue={conference.acronym}
-                className="input"
-              />
+              <input id="new-acronym" name="acronym" className="input" />
             </div>
             <div>
-              <label className="label" htmlFor="year">
+              <label className="label" htmlFor="new-year">
                 Year
               </label>
               <input
-                id="year"
+                id="new-year"
                 name="year"
                 type="number"
-                defaultValue={conference.year}
+                defaultValue={new Date().getFullYear()}
                 className="input"
               />
             </div>
+            <SubmitButton>Create</SubmitButton>
           </div>
-
-          <div>
-            <label className="label" htmlFor="description">
-              Description
-            </label>
-            <textarea
-              id="description"
-              name="description"
-              rows={3}
-              defaultValue={conference.description}
-              className="input"
-            />
-          </div>
-
-          <div className="grid sm:grid-cols-3 gap-4">
-            {[
-              ["submission_deadline", "Submission deadline"],
-              ["review_deadline", "Review deadline"],
-              ["notification_date", "Notification date"],
-            ].map(([key, label]) => (
-              <div key={key}>
-                <label className="label" htmlFor={key}>
-                  {label}
-                </label>
-                <input
-                  id={key}
-                  name={key}
-                  type="datetime-local"
-                  defaultValue={toLocalInput(
-                    conference[key as keyof Conference] as string | null
-                  )}
-                  className="input"
-                />
-              </div>
-            ))}
-          </div>
-
-          <div>
-            <label className="label" htmlFor="is_open">
-              Submissions
-            </label>
-            <select
-              id="is_open"
-              name="is_open"
-              defaultValue={String(conference.is_open)}
-              className="input max-w-xs"
-            >
-              <option value="true">Open — authors can submit</option>
-              <option value="false">Closed</option>
-            </select>
-          </div>
-
-          <SubmitButton>Save conference</SubmitButton>
         </ActionForm>
       </Section>
 
-      <Section title="Tracks">
-        <div className="card divide-y divide-slate-100">
-          {((tracks ?? []) as (Track & { profiles: any })[]).map((t) => (
-            <ActionForm key={t.id} action={upsertTrack} className="px-5 py-4">
-              <input type="hidden" name="id" value={t.id} />
-              <input
-                type="hidden"
-                name="conference_id"
-                value={conference.id}
-              />
-              <div className="grid sm:grid-cols-[1fr_2fr_auto] gap-3 items-start">
-                <input name="name" defaultValue={t.name} className="input" />
+      {/* -------- Each conference -------- */}
+      {list.map((conference) => (
+        <Section
+          key={conference.id}
+          title={`${conference.acronym} ${conference.year}${conference.is_open ? "" : " · closed"}`}
+        >
+          <ActionForm
+            action={updateConference}
+            className="card card-pad space-y-4 mb-4"
+          >
+            <input type="hidden" name="id" value={conference.id} />
+            <div className="grid sm:grid-cols-[2fr_1fr_1fr] gap-4">
+              <div>
+                <label className="label">Name</label>
+                <input name="name" defaultValue={conference.name} className="input" />
+              </div>
+              <div>
+                <label className="label">Acronym</label>
                 <input
-                  name="description"
-                  defaultValue={t.description}
+                  name="acronym"
+                  defaultValue={conference.acronym}
                   className="input"
                 />
-                <SubmitButton variant="secondary">Save</SubmitButton>
               </div>
-              <p className="text-xs text-slate-400 mt-2">
-                Editor: {t.profiles?.full_name ?? "unassigned"} — assign from the
-                Editorial Board page.
-              </p>
-            </ActionForm>
-          ))}
+              <div>
+                <label className="label">Year</label>
+                <input
+                  name="year"
+                  type="number"
+                  defaultValue={conference.year}
+                  className="input"
+                />
+              </div>
+            </div>
 
-          <ActionForm action={upsertTrack} className="px-5 py-4 bg-slate-50">
-            <input type="hidden" name="conference_id" value={conference.id} />
-            <div className="grid sm:grid-cols-[1fr_2fr_auto] gap-3">
-              <input
-                name="name"
-                required
-                placeholder="New track name"
-                className="input"
-              />
-              <input
+            <div>
+              <label className="label">Description</label>
+              <textarea
                 name="description"
-                placeholder="Description"
+                rows={2}
+                defaultValue={conference.description}
                 className="input"
               />
-              <SubmitButton>Add track</SubmitButton>
+            </div>
+
+            <div className="grid sm:grid-cols-3 gap-4">
+              {[
+                ["submission_deadline", "Submission deadline"],
+                ["review_deadline", "Review deadline"],
+                ["notification_date", "Notification date"],
+              ].map(([key, label]) => (
+                <div key={key}>
+                  <label className="label">{label}</label>
+                  <input
+                    name={key}
+                    type="datetime-local"
+                    defaultValue={toLocalInput(
+                      conference[key as keyof Conference] as string | null
+                    )}
+                    className="input"
+                  />
+                </div>
+              ))}
+            </div>
+
+            <div className="flex items-end gap-4">
+              <div>
+                <label className="label">Submissions</label>
+                <select
+                  name="is_open"
+                  defaultValue={String(conference.is_open)}
+                  className="input"
+                >
+                  <option value="true">Open</option>
+                  <option value="false">Closed</option>
+                </select>
+              </div>
+              <SubmitButton>Save conference</SubmitButton>
             </div>
           </ActionForm>
-        </div>
-      </Section>
+
+          {/* tracks for this conference */}
+          <div className="card divide-y divide-slate-100">
+            {conference.tracks
+              ?.sort((a, b) => a.code.localeCompare(b.code))
+              .map((t) => (
+                <ActionForm key={t.id} action={upsertTrack} className="px-5 py-4">
+                  <input type="hidden" name="id" value={t.id} />
+                  <input
+                    type="hidden"
+                    name="conference_id"
+                    value={conference.id}
+                  />
+                  <div className="grid sm:grid-cols-[80px_1fr_2fr_auto] gap-3 items-start">
+                    <input
+                      name="code"
+                      defaultValue={t.code}
+                      placeholder="Code"
+                      maxLength={5}
+                      className="input font-mono uppercase"
+                    />
+                    <input name="name" defaultValue={t.name} className="input" />
+                    <input
+                      name="description"
+                      defaultValue={t.description}
+                      className="input"
+                    />
+                    <SubmitButton variant="secondary">Save</SubmitButton>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-2">
+                    Editor: {t.profiles?.full_name ?? "unassigned"} — assign from
+                    the Editorial Board page.
+                  </p>
+                </ActionForm>
+              ))}
+
+            <ActionForm action={upsertTrack} className="px-5 py-4 bg-slate-50">
+              <input type="hidden" name="conference_id" value={conference.id} />
+              <div className="grid sm:grid-cols-[80px_1fr_2fr_auto] gap-3">
+                <input
+                  name="code"
+                  required
+                  placeholder="Code"
+                  maxLength={5}
+                  className="input font-mono uppercase"
+                />
+                <input
+                  name="name"
+                  required
+                  placeholder="New track name"
+                  className="input"
+                />
+                <input
+                  name="description"
+                  placeholder="Description"
+                  className="input"
+                />
+                <SubmitButton>Add track</SubmitButton>
+              </div>
+            </ActionForm>
+          </div>
+        </Section>
+      ))}
     </>
   );
 }

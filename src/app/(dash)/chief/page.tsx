@@ -66,6 +66,11 @@ export default async function ChiefDashboard() {
       <PageHeader
         title="Editorial Board"
         subtitle="Final decisions, track editors, and conference-wide progress."
+        action={
+          <a href="/api/reports/submissions" className="btn-secondary">
+            Export submissions CSV
+          </a>
+        }
       />
 
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
@@ -163,12 +168,15 @@ export default async function ChiefDashboard() {
           <EmptyState title="No submissions yet" />
         ) : (
           <DataTable
-            headers={["Title", "Track", "Status", "Reviews", "Avg", "Updated", ""]}
+            headers={["Paper ID", "Title", "Track", "Status", "Reviews", "Avg", "Updated", ""]}
           >
             {submissions.map((s) => {
               const st = stats.get(s.id);
               return (
                 <tr key={s.id} className="hover:bg-slate-50">
+                  <td className="td font-mono text-xs text-slate-500 whitespace-nowrap">
+                    {s.paper_id ?? "—"}
+                  </td>
                   <td className="td font-medium text-slate-900 max-w-xs">
                     {s.title}
                   </td>

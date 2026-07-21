@@ -76,7 +76,7 @@ export default async function AuthorSubmissionPage({
 
       <PageHeader
         title={sub.title || "Untitled submission"}
-        subtitle={`Version ${sub.version} · Created ${formatDate(sub.created_at)}`}
+        subtitle={`${sub.paper_id ? `Paper ${sub.paper_id} · ` : ""}Version ${sub.version} · Created ${formatDate(sub.created_at)}`}
         action={<StatusBadge status={sub.status} />}
       />
 
@@ -280,6 +280,29 @@ export default async function AuthorSubmissionPage({
                 </p>
               </div>
             ))}
+          </div>
+        </Section>
+      )}
+
+      {/* ---------------- Camera-ready (accepted papers) ---------------- */}
+      {sub.status === "accepted" && (
+        <Section title="Camera-ready submission">
+          <div className="card card-pad">
+            <p className="text-sm text-slate-600 mb-3">
+              Your paper was accepted. Upload the final camera-ready version for
+              the proceedings.
+            </p>
+            <PaperUpload
+              submissionId={sub.id}
+              currentName={sub.camera_ready_file_name}
+              editable={true}
+              kind="camera_ready"
+            />
+            {sub.camera_ready_at && (
+              <p className="text-xs text-emerald-700 mt-2">
+                Camera-ready uploaded on {formatDate(sub.camera_ready_at)}.
+              </p>
+            )}
           </div>
         </Section>
       )}

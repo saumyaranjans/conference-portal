@@ -28,7 +28,14 @@ export interface Profile {
   id: string;
   email: string;
   full_name: string;
+  first_name: string;
+  last_name: string;
+  title: string;
+  gender: string;
+  mobile: string;
   affiliation: string;
+  institution: string;
+  department: string;
   designation: string;
   country: string;
   bio: string;
@@ -54,9 +61,19 @@ export interface Track {
   id: string;
   conference_id: string;
   name: string;
+  code: string;
   description: string;
   editor_id: string | null;
 }
+
+/** The 5 participant categories from the CMPRP registration spec. */
+export const PARTICIPANT_CATEGORIES = [
+  "Faculty / Academician",
+  "Industry Professional",
+  "Research Scholar / PhD",
+  "Student (UG/PG)",
+  "Foreign Delegate",
+] as const;
 
 export interface Submission {
   id: string;
@@ -68,8 +85,13 @@ export interface Submission {
   keywords: string[];
   status: SubmissionStatus;
   version: number;
+  paper_id: string | null;
+  paper_number: number | null;
   file_path: string | null;
   file_name: string | null;
+  camera_ready_file_path: string | null;
+  camera_ready_file_name: string | null;
+  camera_ready_at: string | null;
   submitted_at: string | null;
   created_at: string;
   updated_at: string;

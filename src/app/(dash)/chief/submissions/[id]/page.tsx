@@ -66,7 +66,7 @@ export default async function ChiefSubmissionPage({
 
       <PageHeader
         title={sub.title}
-        subtitle={`${sub.tracks?.name ?? "No track"} · Editor: ${
+        subtitle={`${sub.paper_id ? `Paper ${sub.paper_id} · ` : ""}${sub.tracks?.name ?? "No track"} · Editor: ${
           sub.tracks?.profiles?.full_name ?? "unassigned"
         } · Version ${sub.version}`}
         action={<StatusBadge status={sub.status} />}

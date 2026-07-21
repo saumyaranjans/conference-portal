@@ -18,7 +18,7 @@ export default async function ReviewerDashboard() {
   const { data } = await supabase
     .from("assignments")
     .select(
-      "*, submissions(id, title, abstract, keywords, status, file_name, tracks(name)), reviews(id, is_submitted, recommendation)"
+      "*, submissions(id, title, abstract, keywords, status, file_name, paper_id, tracks(name)), reviews(id, is_submitted, recommendation)"
     )
     .eq("reviewer_id", profile.id)
     .order("created_at", { ascending: false });

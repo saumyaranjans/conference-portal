@@ -12,14 +12,23 @@ export function PaperUpload({
   submissionId,
   currentName,
   editable,
+  kind = "paper",
 }: {
   submissionId: string;
   currentName: string | null;
   editable: boolean;
+  /** Which slot to write to — the main paper or the camera-ready file. */
+  kind?: "paper" | "camera_ready";
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const cols =
+    kind === "camera_ready"
+      ? { path: "camera_ready_file_path", name: "camera_ready_file_name" }
+      : { path: "file_path", name: "file_name" };
+  const folder = kind === "camera_ready" ? "camera-ready/" : "";
 
   async function onChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -33,7 +42,7 @@ export function PaperUpload({
     setBusy(true);
     setError(null);
     const supabase = createClient();
-    const path = `${submissionId}/${Date.now()}-${file.name}`;
+    const path = `${submissionId}/${folder}${Date.now()}-${file.name}`;
 
     const { error: upErr } = await supabase.storage
       .from("papers")
@@ -45,9 +54,15 @@ export function PaperUpload({
       return;
     }
 
+    const patch: Record<string, unknown> = {
+      [cols.path]: path,
+      [cols.name]: file.name,
+    };
+    if (kind === "camera_ready") patch.camera_ready_at = new Date().toISOString();
+
     const { error: dbErr } = await supabase
       .from("submissions")
-      .update({ file_path: path, file_name: file.name })
+      .update(patch)
       .eq("id", submissionId);
 
     if (dbErr) setError(dbErr.message);
@@ -60,15 +75,16 @@ export function PaperUpload({
     const supabase = createClient();
     const { data: sub } = await supabase
       .from("submissions")
-      .select("file_path")
+      .select(cols.path)
       .eq("id", submissionId)
       .single();
 
-    if (!sub?.file_path) return;
+    const filePath = (sub as Record<string, string> | null)?.[cols.path];
+    if (!filePath) return;
 
     const { data } = await supabase.storage
       .from("papers")
-      .createSignedUrl(sub.file_path, 60);
+      .createSignedUrl(filePath, 60);
 
     if (data?.signedUrl) window.open(data.signedUrl, "_blank");
   }

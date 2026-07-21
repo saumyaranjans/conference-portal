@@ -58,7 +58,7 @@ export default function LoginPage() {
         />
 
         <div className="relative">
-          <p className="text-sm text-white/80 whitespace-nowrap">
+          <p className="text-lg font-medium text-white/90 whitespace-nowrap">
             Global Institute of Flexible Systems Management
           </p>
         </div>

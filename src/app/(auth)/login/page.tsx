@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { GlogiftMark } from "@/components/GlogiftLogo";
 
 const CONFERENCE =
   "International Conference on AI-Driven Solutions in Management: Flexibility, Digitalisation and Decarbonization";
@@ -90,16 +89,18 @@ export default function LoginPage() {
         </div>
 
         <div className="w-full max-w-sm">
-          {/* compact branding for small screens */}
+          {/* compact branding for small screens — mirrors the desktop panel */}
           <div className="lg:hidden mb-8 text-center">
-            <GlogiftMark id="glogift-m" className="h-12 w-12 mx-auto" />
-            <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <p className="text-base font-medium text-slate-600">
+              Global Institute of Flexible Systems Management
+            </p>
+            <p className="mt-3 text-2xl font-bold uppercase tracking-wider text-gradient w-fit mx-auto">
               GLOGIFT 2027
             </p>
-            <h1 className="mt-1 text-base font-semibold text-slate-900 leading-snug">
+            <h1 className="mt-2 text-lg font-semibold text-slate-900 leading-snug">
               {CONFERENCE}
             </h1>
-            <div className="mt-3 flex items-center justify-center gap-2 text-sm text-slate-500">
+            <div className="mt-4 flex items-center justify-center gap-2 text-sm text-slate-500">
               <span>Hosted by</span>
               <img
                 src="/iim-sambalpur.png"

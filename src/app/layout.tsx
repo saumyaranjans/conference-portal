@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Conference Submission Portal",
+  title: "GLOGIFT 2027 — Conference Submission Portal",
   description:
-    "Submit, review, and decide on conference papers — authors, reviewers, editors and administrators in one place.",
+    "International Conference on AI-Driven Solutions in Management: Flexibility, Digitalisation and Decarbonization — GLOGIFT 2027, IIM Sambalpur.",
 };
 
 export default function RootLayout({

@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { ROLE_LABELS, type AppRole, type Profile } from "@/lib/types";
 import { SignOutButton } from "@/components/SignOutButton";
 import { NotificationBell } from "@/components/NotificationBell";
+import { RoleSwitcher } from "@/components/RoleSwitcher";
 
 /** Nav entries per role. A user with several roles sees several groups. */
 const NAV: Record<AppRole, { href: string; label: string }[]> = {
@@ -49,6 +50,7 @@ export async function DashboardShell({
             Conference Portal
           </Link>
           <div className="flex items-center gap-4">
+            <RoleSwitcher roles={visibleRoles} />
             <NotificationBell unread={unread ?? 0} />
             <div className="text-right hidden sm:block">
               <p className="text-sm font-medium text-slate-800 leading-tight">

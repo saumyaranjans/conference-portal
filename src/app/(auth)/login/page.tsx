@@ -73,12 +73,22 @@ function LoginForm() {
         {busy ? "Signing in…" : "Sign in"}
       </button>
 
-      <p className="text-sm text-slate-500 text-center">
-        No account?{" "}
-        <Link href="/signup" className="text-blue-700 hover:underline">
-          Create one
-        </Link>
-      </p>
+      <div className="text-sm text-center space-y-1">
+        <p>
+          <Link
+            href="/forgot-password"
+            className="text-blue-700 hover:underline"
+          >
+            Forgot password?
+          </Link>
+        </p>
+        <p className="text-slate-500">
+          No account?{" "}
+          <Link href="/signup" className="text-blue-700 hover:underline">
+            Create one
+          </Link>
+        </p>
+      </div>
     </form>
   );
 }

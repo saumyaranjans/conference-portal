@@ -113,7 +113,7 @@ export default function LoginPage() {
           <div className="mb-6">
             <h2 className="text-2xl font-semibold text-gradient w-fit">Sign in</h2>
             <p className="text-sm text-slate-500 mt-1">
-              Welcome back — access your dashboard.
+              Welcome — access your dashboard.
             </p>
           </div>
 

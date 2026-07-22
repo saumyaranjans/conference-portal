@@ -40,6 +40,7 @@ export interface Profile {
   institution: string;
   department: string;
   designation: string;
+  participant_category: string;
   country: string;
   bio: string;
   expertise: string[];

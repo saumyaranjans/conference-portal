@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { COUNTRY_DIAL_CODES } from "@/lib/types";
+import { COUNTRY_DIAL_CODES, PARTICIPANT_CATEGORIES } from "@/lib/types";
 
 const EMPTY = {
   title: "",
@@ -17,6 +17,7 @@ const EMPTY = {
   institution: "",
   department: "",
   designation: "",
+  participantCategory: "",
   email: "",
   password: "",
   confirm: "",
@@ -60,6 +61,7 @@ export default function SignupPage() {
           affiliation: form.institution,
           department: form.department,
           designation: form.designation,
+          participant_category: form.participantCategory,
         },
       },
     });
@@ -225,7 +227,7 @@ export default function SignupPage() {
                   onChange={(e) => set("department", e.target.value)}
                 />
               </div>
-              <div className="sm:col-span-2">
+              <div>
                 <label className="label" htmlFor="designation">
                   Designation
                 </label>
@@ -236,6 +238,25 @@ export default function SignupPage() {
                   value={form.designation}
                   onChange={(e) => set("designation", e.target.value)}
                 />
+              </div>
+              <div>
+                <label className="label" htmlFor="participantCategory">
+                  Participant category
+                </label>
+                <select
+                  id="participantCategory"
+                  required
+                  className="input"
+                  value={form.participantCategory}
+                  onChange={(e) => set("participantCategory", e.target.value)}
+                >
+                  <option value="">Select…</option>
+                  {PARTICIPANT_CATEGORIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
           </div>

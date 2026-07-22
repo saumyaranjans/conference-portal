@@ -14,7 +14,13 @@ import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { PaperUpload } from "@/components/PaperUpload";
 import { StatusBadge, RecommendationBadge } from "@/components/ui/StatusBadge";
 import { PageHeader, Section, formatDate } from "@/components/ui/Primitives";
-import type { Decision, Review, Submission, Track } from "@/lib/types";
+import {
+  PARTICIPANT_CATEGORIES,
+  type Decision,
+  type Review,
+  type Submission,
+  type Track,
+} from "@/lib/types";
 
 export default async function AuthorSubmissionPage({
   params,
@@ -223,7 +229,13 @@ export default async function AuthorSubmissionPage({
                     )}
                   </p>
                   <p className="text-xs text-slate-500">
-                    {[a.designation, a.affiliation, a.email, a.mobile]
+                    {[
+                      a.designation,
+                      a.participant_category,
+                      a.affiliation,
+                      a.email,
+                      a.mobile,
+                    ]
                       .filter(Boolean)
                       .join(" · ")}
                   </p>
@@ -247,7 +259,7 @@ export default async function AuthorSubmissionPage({
           {editable && (
             <ActionForm action={addCoAuthor} className="px-5 py-4">
               <input type="hidden" name="submission_id" value={sub.id} />
-              <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 <input
                   name="full_name"
                   required
@@ -259,6 +271,14 @@ export default async function AuthorSubmissionPage({
                   placeholder="Designation"
                   className="input"
                 />
+                <select name="participant_category" defaultValue="" className="input">
+                  <option value="">Participant category…</option>
+                  {PARTICIPANT_CATEGORIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
                 <input
                   name="affiliation"
                   placeholder="Affiliation"

@@ -46,8 +46,9 @@ export default async function AdminUsersPage() {
                 <p className="text-xs text-slate-500 mt-0.5">
                   {u.email}
                   {u.affiliation ? ` · ${u.affiliation}` : ""}
-                  {u.designation ? ` · ${u.designation}` : ""} · joined{" "}
-                  {formatDate(u.created_at)}
+                  {u.designation ? ` · ${u.designation}` : ""}
+                  {u.participant_category ? ` · ${u.participant_category}` : ""} ·
+                  joined {formatDate(u.created_at)}
                 </p>
               </div>
 

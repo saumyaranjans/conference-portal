@@ -83,6 +83,7 @@ export async function createSubmission(formData: FormData): Promise<void> {
     email: profile.email,
     affiliation: profile.affiliation || profile.institution,
     designation: profile.designation,
+    participant_category: profile.participant_category,
     mobile: profile.mobile,
     is_corresponding: true,
     author_order: 1,
@@ -204,6 +205,7 @@ export async function addCoAuthor(formData: FormData): Promise<ActionResult> {
     email: String(formData.get("email") ?? "").trim(),
     affiliation: String(formData.get("affiliation") ?? "").trim(),
     designation: String(formData.get("designation") ?? "").trim(),
+    participant_category: String(formData.get("participant_category") ?? "").trim(),
     mobile: String(formData.get("mobile") ?? "").trim(),
     author_order: (count ?? 0) + 1,
   });

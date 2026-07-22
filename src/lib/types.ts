@@ -69,6 +69,36 @@ export interface Track {
   editor_id: string | null;
 }
 
+/** Country dial codes for mobile numbers (India first). */
+export const COUNTRY_DIAL_CODES: { country: string; code: string }[] = [
+  { country: "India", code: "+91" },
+  { country: "United States / Canada", code: "+1" },
+  { country: "United Kingdom", code: "+44" },
+  { country: "Australia", code: "+61" },
+  { country: "Bangladesh", code: "+880" },
+  { country: "Bhutan", code: "+975" },
+  { country: "China", code: "+86" },
+  { country: "France", code: "+33" },
+  { country: "Germany", code: "+49" },
+  { country: "Indonesia", code: "+62" },
+  { country: "Italy", code: "+39" },
+  { country: "Japan", code: "+81" },
+  { country: "Malaysia", code: "+60" },
+  { country: "Nepal", code: "+977" },
+  { country: "Netherlands", code: "+31" },
+  { country: "New Zealand", code: "+64" },
+  { country: "Nigeria", code: "+234" },
+  { country: "Pakistan", code: "+92" },
+  { country: "Saudi Arabia", code: "+966" },
+  { country: "Singapore", code: "+65" },
+  { country: "South Africa", code: "+27" },
+  { country: "South Korea", code: "+82" },
+  { country: "Spain", code: "+34" },
+  { country: "Sri Lanka", code: "+94" },
+  { country: "Switzerland", code: "+41" },
+  { country: "United Arab Emirates", code: "+971" },
+];
+
 /** The 5 participant categories from the CMPRP registration spec. */
 export const PARTICIPANT_CATEGORIES = [
   "Faculty / Academician",

@@ -4,13 +4,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { PARTICIPANT_CATEGORIES } from "@/lib/types";
+import { COUNTRY_DIAL_CODES, PARTICIPANT_CATEGORIES } from "@/lib/types";
 
 const EMPTY = {
   title: "",
   firstName: "",
   lastName: "",
   gender: "",
+  dialCode: "+91",
   mobile: "",
   country: "",
   institution: "",
@@ -53,7 +54,7 @@ export default function SignupPage() {
           last_name: form.lastName,
           title: form.title,
           gender: form.gender,
-          mobile: form.mobile,
+          mobile: form.mobile ? `${form.dialCode} ${form.mobile}`.trim() : "",
           country: form.country,
           institution: form.institution,
           affiliation: form.institution,
@@ -157,12 +158,28 @@ export default function SignupPage() {
                 <label className="label" htmlFor="mobile">
                   Mobile
                 </label>
-                <input
-                  id="mobile"
-                  className="input"
-                  value={form.mobile}
-                  onChange={(e) => set("mobile", e.target.value)}
-                />
+                <div className="flex gap-2">
+                  <select
+                    aria-label="Country code"
+                    className="input w-28 shrink-0"
+                    value={form.dialCode}
+                    onChange={(e) => set("dialCode", e.target.value)}
+                  >
+                    {COUNTRY_DIAL_CODES.map((c) => (
+                      <option key={c.country} value={c.code}>
+                        {c.code} {c.country}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    id="mobile"
+                    type="tel"
+                    className="input"
+                    placeholder="Mobile number"
+                    value={form.mobile}
+                    onChange={(e) => set("mobile", e.target.value)}
+                  />
+                </div>
               </div>
               <div className="sm:col-span-2">
                 <label className="label" htmlFor="country">

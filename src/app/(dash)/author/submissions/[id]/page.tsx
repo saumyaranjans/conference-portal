@@ -12,6 +12,7 @@ import {
 } from "@/lib/actions";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { PaperUpload } from "@/components/PaperUpload";
+import { InstitutionInput } from "@/components/InstitutionInput";
 import { StatusBadge, RecommendationBadge } from "@/components/ui/StatusBadge";
 import { PageHeader, Section, formatDate } from "@/components/ui/Primitives";
 import {
@@ -279,11 +280,7 @@ export default async function AuthorSubmissionPage({
                     </option>
                   ))}
                 </select>
-                <input
-                  name="affiliation"
-                  placeholder="Affiliation"
-                  className="input"
-                />
+                <InstitutionInput name="affiliation" placeholder="Affiliation" />
                 <input
                   name="email"
                   type="email"

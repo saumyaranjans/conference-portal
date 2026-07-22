@@ -3,22 +3,34 @@
 import { useEffect, useRef, useState } from "react";
 
 /**
- * Institution field with a world-universities typeahead. Suggestions come
- * from /api/universities as the user types; free text is still allowed.
+ * Institution / affiliation field with a world-universities typeahead.
+ * Works either controlled (pass `value` + `onChange`) or uncontrolled inside
+ * a plain form (pass `name` so the value submits with the form). Suggestions
+ * come from /api/universities as the user types; free text is still allowed.
  */
 export function InstitutionInput({
   id,
+  name,
   value,
   onChange,
+  defaultValue = "",
   placeholder,
   required,
 }: {
-  id: string;
-  value: string;
-  onChange: (v: string) => void;
+  id?: string;
+  name?: string;
+  value?: string;
+  onChange?: (v: string) => void;
+  defaultValue?: string;
   placeholder?: string;
   required?: boolean;
 }) {
+  const controlled = value !== undefined && onChange !== undefined;
+  const [internal, setInternal] = useState(defaultValue);
+  const current = controlled ? (value as string) : internal;
+  const setCurrent = (v: string) =>
+    controlled ? onChange!(v) : setInternal(v);
+
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
@@ -36,7 +48,7 @@ export function InstitutionInput({
   }, []);
 
   function handleChange(v: string) {
-    onChange(v);
+    setCurrent(v);
     if (timer.current) clearTimeout(timer.current);
     if (v.trim().length < 2) {
       setSuggestions([]);
@@ -57,7 +69,7 @@ export function InstitutionInput({
   }
 
   function pick(s: string) {
-    onChange(s);
+    setCurrent(s);
     setOpen(false);
     setSuggestions([]);
   }
@@ -66,11 +78,12 @@ export function InstitutionInput({
     <div className="relative" ref={boxRef}>
       <input
         id={id}
+        name={name}
         required={required}
         autoComplete="off"
         placeholder={placeholder}
         className="input"
-        value={value}
+        value={current}
         onChange={(e) => handleChange(e.target.value)}
         onFocus={() => suggestions.length > 0 && setOpen(true)}
         onKeyDown={(e) => {

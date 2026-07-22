@@ -164,6 +164,16 @@ export async function withdrawSubmission(formData: FormData): Promise<ActionResu
   const supabase = await createClient();
   const id = String(formData.get("id"));
 
+  // An accepted paper is final and cannot be withdrawn.
+  const { data: current } = await supabase
+    .from("submissions")
+    .select("status")
+    .eq("id", id)
+    .single();
+  if (current?.status === "accepted") {
+    return { ok: false, message: "An accepted paper cannot be withdrawn." };
+  }
+
   const { error } = await supabase
     .from("submissions")
     .update({ status: "withdrawn", updated_at: new Date().toISOString() })

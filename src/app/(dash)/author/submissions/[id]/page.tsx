@@ -405,7 +405,9 @@ export default async function AuthorSubmissionPage({
 
           {!canSubmit && !canWithdraw && (
             <p className="text-sm text-slate-500">
-              This submission is closed. No further action is available.
+              {sub.status === "accepted"
+                ? "This paper has been accepted and can no longer be withdrawn."
+                : "This submission is closed. No further action is available."}
             </p>
           )}
         </div>

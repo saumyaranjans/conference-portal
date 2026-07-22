@@ -367,7 +367,7 @@ export async function recordRecommendation(
   });
   revalidatePath(`/editor/submissions/${submissionId}`);
   revalidatePath("/chief");
-  return { ok: true, message: "Recommendation sent to the Conveners." };
+  return { ok: true, message: "Recommendation sent to the Convener." };
 }
 
 // =====================================================================

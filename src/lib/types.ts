@@ -180,7 +180,7 @@ export const ROLE_LABELS: Record<AppRole, string> = {
   author: "Author",
   reviewer: "Reviewer",
   editor: "Track Editor",
-  chief: "Conveners",
+  chief: "Convener",
   admin: "Editorial Office",
 };
 

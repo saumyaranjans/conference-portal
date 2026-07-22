@@ -14,7 +14,7 @@ const NAV: Record<AppRole, { href: string; label: string }[]> = {
   ],
   reviewer: [{ href: "/reviewer", label: "My Reviews" }],
   editor: [{ href: "/editor", label: "Track Queue" }],
-  chief: [{ href: "/chief", label: "Conveners" }],
+  chief: [{ href: "/chief", label: "Convener" }],
   admin: [
     { href: "/admin", label: "Overview" },
     { href: "/admin/users", label: "Users & Roles" },

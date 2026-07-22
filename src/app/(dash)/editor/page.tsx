@@ -72,7 +72,7 @@ export default async function EditorDashboard() {
         <PageHeader title="Track Queue" />
         <EmptyState
           title="You are not assigned to a track yet"
-          description="The Conveners assign track editors to tracks. Once assigned, submissions will appear here."
+          description="The Convener assigns track editors to tracks. Once assigned, submissions will appear here."
         />
       </>
     );

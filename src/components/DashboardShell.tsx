@@ -5,22 +5,7 @@ import { SignOutButton } from "@/components/SignOutButton";
 import { NotificationBell } from "@/components/NotificationBell";
 import { RoleSwitcher } from "@/components/RoleSwitcher";
 import { ThemeToggle } from "@/components/ThemeToggle";
-
-/** Nav entries per role. A user with several roles sees several groups. */
-const NAV: Record<AppRole, { href: string; label: string }[]> = {
-  author: [
-    { href: "/author", label: "My Submissions" },
-    { href: "/author/submissions/new", label: "New Submission" },
-  ],
-  reviewer: [{ href: "/reviewer", label: "My Reviews" }],
-  editor: [{ href: "/editor", label: "Track Queue" }],
-  chief: [{ href: "/chief", label: "Convener" }],
-  admin: [
-    { href: "/admin", label: "Overview" },
-    { href: "/admin/users", label: "Users & Roles" },
-    { href: "/admin/tracks", label: "Conference & Tracks" },
-  ],
-};
+import { SidebarNav } from "@/components/SidebarNav";
 
 const ROLE_ORDER: AppRole[] = ["author", "reviewer", "editor", "chief", "admin"];
 
@@ -69,27 +54,7 @@ export async function DashboardShell({
 
       <div className="flex-1 max-w-7xl w-full mx-auto px-4 py-6 flex gap-6">
         <aside className="w-56 shrink-0 hidden md:block">
-          <nav className="space-y-6 sticky top-20">
-            {visibleRoles.map((role) => (
-              <div key={role}>
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2 px-3">
-                  {ROLE_LABELS[role]}
-                </p>
-                <ul className="space-y-0.5">
-                  {NAV[role].map((item) => (
-                    <li key={item.href}>
-                      <Link
-                        href={item.href}
-                        className="block px-3 py-2 rounded-lg text-sm text-slate-700 hover:bg-white hover:text-blue-700 transition-colors"
-                      >
-                        {item.label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </nav>
+          <SidebarNav roles={visibleRoles} />
         </aside>
 
         <main className="flex-1 min-w-0">{children}</main>

@@ -274,7 +274,7 @@ export default async function AuthorSubmissionPage({
                 />
                 <select name="designation" required defaultValue="" className="input">
                   <option value="" disabled>
-                    Designation…
+                    Participant category…
                   </option>
                   {PARTICIPANT_CATEGORIES.map((c) => (
                     <option key={c} value={c}>

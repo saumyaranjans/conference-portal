@@ -94,6 +94,98 @@ export async function createSubmission(formData: FormData): Promise<void> {
   redirect(`/author/submissions/${data.id}`);
 }
 
+export type CoAuthorInput = {
+  full_name: string;
+  designation: string;
+  participant_category: string;
+  affiliation: string;
+  email: string;
+  mobile: string;
+};
+
+/**
+ * Single-page submission: create the draft plus the corresponding author and
+ * any co-authors in one call, returning the new id so the client can upload
+ * the paper file and finalise. Does not redirect.
+ */
+export async function createSubmissionOnePage(payload: {
+  conference_id: string;
+  title: string;
+  track_id: string;
+  abstract: string;
+  keywords: string[];
+  coAuthors: CoAuthorInput[];
+}): Promise<{ ok: boolean; id?: string; message?: string }> {
+  const profile = await requireProfile();
+  const supabase = await createClient();
+
+  const { count: activeCount } = await supabase
+    .from("submissions")
+    .select("*", { count: "exact", head: true })
+    .eq("author_id", profile.id)
+    .neq("status", "withdrawn");
+  if ((activeCount ?? 0) >= MAX_SUBMISSIONS_PER_AUTHOR) {
+    return {
+      ok: false,
+      message: `You may hold at most ${MAX_SUBMISSIONS_PER_AUTHOR} submissions.`,
+    };
+  }
+
+  if (!payload.title.trim()) return { ok: false, message: "Title is required." };
+  if (!payload.track_id) return { ok: false, message: "Choose a track." };
+
+  const { data, error } = await supabase
+    .from("submissions")
+    .insert({
+      conference_id: payload.conference_id,
+      track_id: payload.track_id || null,
+      author_id: profile.id,
+      title: payload.title.trim(),
+      abstract: payload.abstract.trim(),
+      keywords: payload.keywords,
+      status: "draft",
+    })
+    .select("id")
+    .single();
+
+  if (error || !data)
+    return { ok: false, message: error?.message ?? "Could not create submission" };
+
+  // Corresponding author (the submitter) first, then co-authors.
+  await supabase.from("submission_authors").insert({
+    submission_id: data.id,
+    profile_id: profile.id,
+    full_name: profile.full_name || profile.email,
+    email: profile.email,
+    affiliation: profile.affiliation || profile.institution,
+    designation: profile.designation,
+    participant_category: profile.participant_category,
+    mobile: profile.mobile,
+    is_corresponding: true,
+    author_order: 1,
+  });
+
+  const extras = payload.coAuthors
+    .filter((c) => c.full_name.trim() && c.email.trim())
+    .map((c, i) => ({
+      submission_id: data.id,
+      full_name: c.full_name.trim(),
+      email: c.email.trim(),
+      affiliation: c.affiliation.trim(),
+      designation: c.designation.trim(),
+      participant_category: c.participant_category.trim(),
+      mobile: c.mobile.trim(),
+      author_order: i + 2,
+    }));
+  if (extras.length) await supabase.from("submission_authors").insert(extras);
+
+  await audit(profile.id, "submission.created", "submission", data.id, {
+    title: payload.title,
+  });
+  revalidatePath("/author");
+  return { ok: true, id: data.id };
+}
+
 export async function updateSubmission(formData: FormData): Promise<ActionResult> {
   const profile = await requireProfile();
   const supabase = await createClient();

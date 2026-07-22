@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { COUNTRY_DIAL_CODES, PARTICIPANT_CATEGORIES } from "@/lib/types";
+import { InstitutionInput } from "@/components/InstitutionInput";
 
 const EMPTY = {
   title: "",
@@ -207,13 +208,12 @@ export default function SignupPage() {
                 <label className="label" htmlFor="institution">
                   Institution
                 </label>
-                <input
+                <InstitutionInput
                   id="institution"
                   required
-                  className="input"
-                  placeholder="University or organisation"
+                  placeholder="Start typing your university…"
                   value={form.institution}
-                  onChange={(e) => set("institution", e.target.value)}
+                  onChange={(v) => set("institution", v)}
                 />
               </div>
               <div>

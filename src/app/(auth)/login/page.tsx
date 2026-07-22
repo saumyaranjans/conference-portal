@@ -3,8 +3,12 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Playfair_Display } from "next/font/google";
 import { createClient } from "@/lib/supabase/client";
 import { ThemeToggle } from "@/components/ThemeToggle";
+
+// Elegant display serif for the conference title.
+const display = Playfair_Display({ subsets: ["latin"], weight: ["600", "700"] });
 
 const CONFERENCE =
   "International Conference on AI-Driven Solutions in Management: Flexibility, Digitalisation and Decarbonization";
@@ -63,10 +67,12 @@ export default function LoginPage() {
         </div>
 
         <div className="relative">
-          <p className="text-2xl font-bold uppercase tracking-wider text-gradient-light w-fit">
+          <p className="text-4xl xl:text-5xl font-bold uppercase tracking-wider text-gradient-light w-fit">
             GLOGIFT 2027
           </p>
-          <h1 className="mt-3 text-3xl xl:text-4xl font-semibold leading-tight max-w-xl">
+          <h1
+            className={`${display.className} mt-4 text-2xl xl:text-3xl font-semibold leading-snug max-w-xl`}
+          >
             {CONFERENCE}
           </h1>
         </div>
@@ -94,10 +100,12 @@ export default function LoginPage() {
             <p className="text-base font-medium text-slate-600">
               Global Institute of Flexible Systems Management
             </p>
-            <p className="mt-3 text-2xl font-bold uppercase tracking-wider text-gradient w-fit mx-auto">
+            <p className="mt-3 text-3xl font-bold uppercase tracking-wider text-gradient w-fit mx-auto">
               GLOGIFT 2027
             </p>
-            <h1 className="mt-2 text-lg font-semibold text-slate-900 leading-snug">
+            <h1
+              className={`${display.className} mt-2 text-base font-semibold text-slate-900 leading-snug`}
+            >
               {CONFERENCE}
             </h1>
             <div className="mt-4 flex items-center justify-center gap-2 text-sm text-slate-500">

@@ -9,7 +9,7 @@ import { DeleteSubmissionButton } from "@/components/DeleteSubmissionButton";
 import { ReviewPanel } from "@/components/ReviewPanel";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { PageHeader, Section, formatDate } from "@/components/ui/Primitives";
-import type { Submission } from "@/lib/types";
+import { DELETABLE_SUBMISSION_STATUSES, type Submission } from "@/lib/types";
 
 export default async function ChiefSubmissionPage({
   params,
@@ -230,8 +230,8 @@ export default async function ChiefSubmissionPage({
         )}
       </Section>
 
-      {/* ---- Delete (submitted / withdrawn only) ---- */}
-      {["submitted", "withdrawn"].includes(sub.status) && (
+      {/* ---- Delete (submitted / withdrawn / rejected only) ---- */}
+      {DELETABLE_SUBMISSION_STATUSES.includes(sub.status) && (
         <Section title="Danger zone">
           <div className="card card-pad border-red-200">
             <p className="text-sm text-slate-700">

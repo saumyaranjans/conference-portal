@@ -192,6 +192,13 @@ export interface ReviewStats {
   rec_reject: number;
 }
 
+/** Statuses a Convener/admin may delete (not draft, under-review, revisions, or accepted). */
+export const DELETABLE_SUBMISSION_STATUSES: SubmissionStatus[] = [
+  "submitted",
+  "withdrawn",
+  "rejected",
+];
+
 /** Human-readable labels, kept in one place so every dashboard agrees. */
 export const STATUS_LABELS: Record<SubmissionStatus, string> = {
   draft: "Draft",

@@ -13,7 +13,13 @@ import {
   StatCard,
   formatDate,
 } from "@/components/ui/Primitives";
-import type { Profile, ReviewStats, Submission, Track } from "@/lib/types";
+import {
+  DELETABLE_SUBMISSION_STATUSES,
+  type Profile,
+  type ReviewStats,
+  type Submission,
+  type Track,
+} from "@/lib/types";
 
 export default async function ChiefDashboard() {
   await requireRole("chief");
@@ -198,7 +204,7 @@ export default async function ChiefDashboard() {
                       >
                         Open
                       </Link>
-                      {["submitted", "withdrawn"].includes(s.status) && (
+                      {DELETABLE_SUBMISSION_STATUSES.includes(s.status) && (
                         <DeleteSubmissionButton id={s.id} compact />
                       )}
                     </div>

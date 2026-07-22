@@ -4,7 +4,10 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { requireProfile, requireRole } from "@/lib/auth";
-import { MAX_SUBMISSIONS_PER_AUTHOR } from "@/lib/types";
+import {
+  DELETABLE_SUBMISSION_STATUSES,
+  MAX_SUBMISSIONS_PER_AUTHOR,
+} from "@/lib/types";
 import type { AppRole, DecisionKind, Recommendation } from "@/lib/types";
 
 export type ActionResult = { ok: boolean; message?: string };
@@ -572,10 +575,10 @@ export async function deleteSubmission(formData: FormData): Promise<ActionResult
     .single();
 
   if (!sub) return { ok: false, message: "Submission not found." };
-  if (!["submitted", "withdrawn"].includes(sub.status)) {
+  if (!DELETABLE_SUBMISSION_STATUSES.includes(sub.status)) {
     return {
       ok: false,
-      message: "Only submitted or withdrawn papers can be deleted.",
+      message: "Only submitted, withdrawn or rejected papers can be deleted.",
     };
   }
 

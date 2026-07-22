@@ -81,7 +81,8 @@ export async function createSubmission(formData: FormData): Promise<void> {
     profile_id: profile.id,
     full_name: profile.full_name || profile.email,
     email: profile.email,
-    affiliation: profile.affiliation,
+    affiliation: profile.affiliation || profile.institution,
+    designation: profile.designation,
     is_corresponding: true,
     author_order: 1,
   });
@@ -198,6 +199,43 @@ export async function addCoAuthor(formData: FormData): Promise<ActionResult> {
   if (error) return { ok: false, message: error.message };
   revalidatePath(`/author/submissions/${submissionId}`);
   return { ok: true, message: "Co-author added." };
+}
+
+/** Corresponding author reorders the author list by swapping neighbours. */
+export async function moveAuthor(formData: FormData): Promise<ActionResult> {
+  await requireProfile();
+  const supabase = await createClient();
+  const id = String(formData.get("id"));
+  const submissionId = String(formData.get("submission_id"));
+  const direction = String(formData.get("direction"));
+
+  const { data: authors } = await supabase
+    .from("submission_authors")
+    .select("id, author_order")
+    .eq("submission_id", submissionId)
+    .order("author_order");
+
+  if (!authors) return { ok: false, message: "Could not load authors." };
+
+  const idx = authors.findIndex((a) => a.id === id);
+  const swapIdx = direction === "up" ? idx - 1 : idx + 1;
+  if (idx < 0 || swapIdx < 0 || swapIdx >= authors.length) return { ok: true };
+
+  const a = authors[idx];
+  const b = authors[swapIdx];
+
+  // Swap their order values (no unique constraint, so two updates are safe).
+  await supabase
+    .from("submission_authors")
+    .update({ author_order: b.author_order })
+    .eq("id", a.id);
+  await supabase
+    .from("submission_authors")
+    .update({ author_order: a.author_order })
+    .eq("id", b.id);
+
+  revalidatePath(`/author/submissions/${submissionId}`);
+  return { ok: true };
 }
 
 export async function removeCoAuthor(formData: FormData): Promise<ActionResult> {

@@ -4,6 +4,7 @@ import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import {
   addCoAuthor,
+  moveAuthor,
   removeCoAuthor,
   submitForReview,
   updateSubmission,
@@ -181,25 +182,58 @@ export default async function AuthorSubmissionPage({
       {/* ---------------- Co-authors ---------------- */}
       <Section title="Authors">
         <div className="card divide-y divide-slate-100">
-          {(coAuthors ?? []).map((a: any) => (
+          {(coAuthors ?? []).map((a: any, idx: number, arr: any[]) => (
             <div
               key={a.id}
               className="px-5 py-3 flex items-center justify-between gap-4"
             >
-              <div>
-                <p className="text-sm font-medium text-slate-800">
-                  {a.full_name}
-                  {a.is_corresponding && (
-                    <span className="badge bg-blue-100 text-blue-800 ml-2">
-                      Corresponding
-                    </span>
-                  )}
-                </p>
-                <p className="text-xs text-slate-500">
-                  {a.email}
-                  {a.affiliation ? ` · ${a.affiliation}` : ""}
-                  {a.designation ? ` · ${a.designation}` : ""}
-                </p>
+              <div className="flex items-center gap-3 min-w-0">
+                {editable && (
+                  <div className="flex flex-col text-slate-400">
+                    <ActionForm action={moveAuthor}>
+                      <input type="hidden" name="id" value={a.id} />
+                      <input type="hidden" name="submission_id" value={sub.id} />
+                      <input type="hidden" name="direction" value="up" />
+                      <button
+                        type="submit"
+                        disabled={idx === 0}
+                        aria-label="Move author up"
+                        className="leading-none hover:text-slate-700 disabled:opacity-30 disabled:hover:text-slate-400"
+                      >
+                        ▲
+                      </button>
+                    </ActionForm>
+                    <ActionForm action={moveAuthor}>
+                      <input type="hidden" name="id" value={a.id} />
+                      <input type="hidden" name="submission_id" value={sub.id} />
+                      <input type="hidden" name="direction" value="down" />
+                      <button
+                        type="submit"
+                        disabled={idx === arr.length - 1}
+                        aria-label="Move author down"
+                        className="leading-none hover:text-slate-700 disabled:opacity-30 disabled:hover:text-slate-400"
+                      >
+                        ▼
+                      </button>
+                    </ActionForm>
+                  </div>
+                )}
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-slate-800">
+                    <span className="text-slate-400 mr-1.5">{idx + 1}.</span>
+                    {a.full_name}
+                    {a.is_corresponding && (
+                      <span className="badge bg-blue-100 text-blue-800 ml-2">
+                        Corresponding
+                      </span>
+                    )}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {a.email}
+                    {a.affiliation ? ` · ${a.affiliation}` : ""}
+                    {a.designation ? ` · ${a.designation}` : ""}
+                  </p>
+                </div>
               </div>
               {editable && !a.is_corresponding && (
                 <ActionForm action={removeCoAuthor}>

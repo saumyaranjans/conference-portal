@@ -8,7 +8,7 @@ import {
   PageHeader,
   formatDate,
 } from "@/components/ui/Primitives";
-import type { Submission } from "@/lib/types";
+import { MAX_SUBMISSIONS_PER_AUTHOR, type Submission } from "@/lib/types";
 
 type Row = Submission & { tracks: { name: string } | null };
 
@@ -93,6 +93,9 @@ export default async function AuthorDashboard({
 
   const submissions = (data ?? []) as Row[];
 
+  const activeCount = submissions.filter((s) => s.status !== "withdrawn").length;
+  const atLimit = activeCount >= MAX_SUBMISSIONS_PER_AUTHOR;
+
   const countFor = (key: keyof typeof FOLDERS) =>
     submissions.filter(FOLDERS[key].match).length;
 
@@ -106,13 +109,38 @@ export default async function AuthorDashboard({
     <>
       <PageHeader
         title="My Submissions"
-        subtitle="Your author center — track manuscripts through each stage."
+        subtitle={`Your author center — ${activeCount} of ${MAX_SUBMISSIONS_PER_AUTHOR} submissions used.`}
         action={
-          <Link href="/author/submissions/new" className="btn-primary">
-            Submit New Manuscript
-          </Link>
+          atLimit ? (
+            <span
+              className="btn-secondary opacity-60 cursor-not-allowed"
+              title={`Limit of ${MAX_SUBMISSIONS_PER_AUTHOR} submissions reached`}
+            >
+              Submit New Manuscript
+            </span>
+          ) : (
+            <Link href="/author/submissions/new" className="btn-primary">
+              Submit New Manuscript
+            </Link>
+          )
         }
       />
+
+      <div
+        className={`card card-pad mb-8 ${
+          atLimit ? "bg-amber-50 border-amber-200" : "bg-blue-50 border-blue-200"
+        }`}
+      >
+        <p
+          className={`text-sm ${atLimit ? "text-amber-900" : "text-blue-900"}`}
+        >
+          <strong>Submission rule:</strong> each author may hold a maximum of{" "}
+          {MAX_SUBMISSIONS_PER_AUTHOR} submissions.{" "}
+          {atLimit
+            ? "You have reached the limit — withdraw a submission to free a slot."
+            : `You have ${MAX_SUBMISSIONS_PER_AUTHOR - activeCount} remaining.`}
+        </p>
+      </div>
 
       {/* -------- Folder groups -------- */}
       <div className="grid md:grid-cols-3 gap-6 mb-10">
@@ -124,12 +152,18 @@ export default async function AuthorDashboard({
             <div className="py-2">
               {group.title === "New Submissions" && (
                 <div className="px-4 py-2.5">
-                  <Link
-                    href="/author/submissions/new"
-                    className="text-blue-700 hover:underline font-medium"
-                  >
-                    Submit New Manuscript
-                  </Link>
+                  {atLimit ? (
+                    <span className="text-slate-400 font-medium cursor-not-allowed">
+                      Submit New Manuscript
+                    </span>
+                  ) : (
+                    <Link
+                      href="/author/submissions/new"
+                      className="text-blue-700 hover:underline font-medium"
+                    >
+                      Submit New Manuscript
+                    </Link>
+                  )}
                 </div>
               )}
               {group.keys.map((key) => (
@@ -163,9 +197,11 @@ export default async function AuthorDashboard({
           title="Nothing in this folder"
           description="Submissions matching this stage will appear here."
           action={
-            <Link href="/author/submissions/new" className="btn-primary">
-              Submit New Manuscript
-            </Link>
+            atLimit ? undefined : (
+              <Link href="/author/submissions/new" className="btn-primary">
+                Submit New Manuscript
+              </Link>
+            )
           }
         />
       ) : (

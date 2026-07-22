@@ -1,3 +1,6 @@
+/** Each author may hold at most this many submissions (withdrawn excluded). */
+export const MAX_SUBMISSIONS_PER_AUTHOR = 2;
+
 export type AppRole = "author" | "reviewer" | "editor" | "chief" | "admin";
 
 export type SubmissionStatus =

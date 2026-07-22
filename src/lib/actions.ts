@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { requireProfile, requireRole } from "@/lib/auth";
+import { MAX_SUBMISSIONS_PER_AUTHOR } from "@/lib/types";
 import type { AppRole, DecisionKind, Recommendation } from "@/lib/types";
 
 export type ActionResult = { ok: boolean; message?: string };
@@ -37,6 +38,17 @@ async function audit(
 export async function createSubmission(formData: FormData): Promise<void> {
   const profile = await requireProfile();
   const supabase = await createClient();
+
+  // Enforce the per-author submission cap (withdrawn ones don't count).
+  const { count: activeCount } = await supabase
+    .from("submissions")
+    .select("*", { count: "exact", head: true })
+    .eq("author_id", profile.id)
+    .neq("status", "withdrawn");
+
+  if ((activeCount ?? 0) >= MAX_SUBMISSIONS_PER_AUTHOR) {
+    redirect("/author/submissions/new?error=limit");
+  }
 
   const conferenceId = String(formData.get("conference_id") ?? "");
   const title = String(formData.get("title") ?? "").trim();

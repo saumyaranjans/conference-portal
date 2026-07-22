@@ -1,12 +1,31 @@
+import Link from "next/link";
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/ui/Primitives";
 import { NewSubmissionForm } from "@/components/NewSubmissionForm";
-import type { Conference, Track } from "@/lib/types";
+import {
+  MAX_SUBMISSIONS_PER_AUTHOR,
+  type Conference,
+  type Track,
+} from "@/lib/types";
 
-export default async function NewSubmissionPage() {
-  await requireProfile();
+export default async function NewSubmissionPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const { error } = await searchParams;
+  const profile = await requireProfile();
   const supabase = await createClient();
+
+  // How many submissions the author already holds (withdrawn excluded).
+  const { count: activeCount } = await supabase
+    .from("submissions")
+    .select("*", { count: "exact", head: true })
+    .eq("author_id", profile.id)
+    .neq("status", "withdrawn");
+
+  const atLimit = (activeCount ?? 0) >= MAX_SUBMISSIONS_PER_AUTHOR;
 
   const { data: conferences } = await supabase
     .from("conferences")
@@ -34,6 +53,27 @@ export default async function NewSubmissionPage() {
     );
   }
 
+  if (atLimit) {
+    return (
+      <>
+        <PageHeader title="New Submission" />
+        <div className="card card-pad max-w-2xl">
+          <p className="font-medium text-slate-900">
+            You have reached the submission limit
+          </p>
+          <p className="text-sm text-slate-600 mt-1.5">
+            Each author may hold at most {MAX_SUBMISSIONS_PER_AUTHOR}{" "}
+            submissions. To submit a new manuscript, withdraw one of your
+            existing submissions first.
+          </p>
+          <Link href="/author" className="btn-primary mt-4">
+            Back to my submissions
+          </Link>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <PageHeader
@@ -44,6 +84,23 @@ export default async function NewSubmissionPage() {
             : "Choose a conference and track to begin."
         }
       />
+
+      <div className="card card-pad bg-blue-50 border-blue-200 mb-6 max-w-3xl">
+        <p className="text-sm text-blue-900">
+          Each author may submit a maximum of {MAX_SUBMISSIONS_PER_AUTHOR}{" "}
+          manuscripts. This will be submission {(activeCount ?? 0) + 1} of{" "}
+          {MAX_SUBMISSIONS_PER_AUTHOR}.
+        </p>
+      </div>
+
+      {error === "limit" && (
+        <div className="card card-pad bg-red-50 border-red-200 mb-6 max-w-3xl">
+          <p className="text-sm text-red-700">
+            Submission limit reached — this manuscript was not created.
+          </p>
+        </div>
+      )}
+
       <NewSubmissionForm conferences={list} />
     </>
   );

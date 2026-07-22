@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { COUNTRY_DIAL_CODES, PARTICIPANT_CATEGORIES } from "@/lib/types";
+import { COUNTRY_DIAL_CODES } from "@/lib/types";
 
 const EMPTY = {
   title: "",
@@ -227,22 +227,15 @@ export default function SignupPage() {
               </div>
               <div className="sm:col-span-2">
                 <label className="label" htmlFor="designation">
-                  Participant category
+                  Designation
                 </label>
-                <select
+                <input
                   id="designation"
-                  required
                   className="input"
+                  placeholder="e.g. Professor, Research Scholar, Manager"
                   value={form.designation}
                   onChange={(e) => set("designation", e.target.value)}
-                >
-                  <option value="">Select…</option>
-                  {PARTICIPANT_CATEGORIES.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
             </div>
           </div>

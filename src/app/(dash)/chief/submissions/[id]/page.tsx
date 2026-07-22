@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { recordFinalDecision } from "@/lib/actions";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { PaperDownload } from "@/components/PaperUpload";
+import { DeleteSubmissionButton } from "@/components/DeleteSubmissionButton";
 import { ReviewPanel } from "@/components/ReviewPanel";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { PageHeader, Section, formatDate } from "@/components/ui/Primitives";
@@ -228,6 +229,21 @@ export default async function ChiefSubmissionPage({
           </ActionForm>
         )}
       </Section>
+
+      {/* ---- Delete (submitted / withdrawn only) ---- */}
+      {["submitted", "withdrawn"].includes(sub.status) && (
+        <Section title="Danger zone">
+          <div className="card card-pad border-red-200">
+            <p className="text-sm text-slate-700">
+              Delete this {sub.status} paper. This permanently removes the paper,
+              its authors, reviews, decisions and files. This cannot be undone.
+            </p>
+            <div className="mt-3">
+              <DeleteSubmissionButton id={sub.id} />
+            </div>
+          </div>
+        </Section>
+      )}
     </>
   );
 }

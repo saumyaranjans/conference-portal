@@ -559,6 +559,52 @@ export async function recordFinalDecision(
   return { ok: true, message: "Final decision recorded." };
 }
 
+/** Convener/admin deletes a submitted or withdrawn paper (and its files). */
+export async function deleteSubmission(formData: FormData): Promise<ActionResult> {
+  const profile = await requireRole("chief");
+  const supabase = await createClient();
+  const id = String(formData.get("id"));
+
+  const { data: sub } = await supabase
+    .from("submissions")
+    .select("status")
+    .eq("id", id)
+    .single();
+
+  if (!sub) return { ok: false, message: "Submission not found." };
+  if (!["submitted", "withdrawn"].includes(sub.status)) {
+    return {
+      ok: false,
+      message: "Only submitted or withdrawn papers can be deleted.",
+    };
+  }
+
+  // Remove paper + camera-ready files (best effort) with the admin client.
+  try {
+    const admin = createAdminClient();
+    for (const prefix of [id, `${id}/camera-ready`]) {
+      const { data: files } = await admin.storage.from("papers").list(prefix);
+      if (files?.length) {
+        await admin.storage
+          .from("papers")
+          .remove(files.map((f: { name: string }) => `${prefix}/${f.name}`));
+      }
+    }
+  } catch {
+    // storage cleanup is non-critical
+  }
+
+  await audit(profile.id, "submission.deleted", "submission", id, {
+    status: sub.status,
+  });
+
+  const { error } = await supabase.from("submissions").delete().eq("id", id);
+  if (error) return { ok: false, message: error.message };
+
+  revalidatePath("/chief");
+  return { ok: true, message: "Paper deleted." };
+}
+
 export async function assignTrackEditor(formData: FormData): Promise<ActionResult> {
   const profile = await requireRole("chief");
   const supabase = await createClient();

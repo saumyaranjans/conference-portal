@@ -215,6 +215,10 @@ export default function SignupPage() {
                   value={form.institution}
                   onChange={(v) => set("institution", v)}
                 />
+                <p className="text-xs text-slate-400 mt-1">
+                  Not listed? Just type your institution name — it will be saved
+                  as entered.
+                </p>
               </div>
               <div>
                 <label className="label" htmlFor="department">

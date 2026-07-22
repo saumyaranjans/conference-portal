@@ -35,7 +35,7 @@ export default async function AdminDashboard() {
   return (
     <>
       <PageHeader
-        title="Administration"
+        title="Editorial Office"
         subtitle="System-wide health, users, and the audit trail."
         action={
           <a href="/api/reports/submissions" className="btn-secondary">
@@ -58,8 +58,8 @@ export default async function AdminDashboard() {
           <StatCard label="Total users" value={users.length} href="/admin/users" />
           <StatCard label="Authors" value={roleCount("author")} />
           <StatCard label="Reviewers" value={roleCount("reviewer")} />
-          <StatCard label="Editors" value={roleCount("editor")} />
-          <StatCard label="Chiefs" value={roleCount("chief")} />
+          <StatCard label="Track Editors" value={roleCount("editor")} />
+          <StatCard label="Conveners" value={roleCount("chief")} />
         </div>
         {users.filter((u) => !u.is_active).length > 0 && (
           <p className="text-sm text-amber-800 bg-amber-50 rounded-lg px-3 py-2 mt-4">

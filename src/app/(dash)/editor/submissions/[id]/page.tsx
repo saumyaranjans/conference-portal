@@ -217,7 +217,7 @@ export default async function EditorSubmissionPage({
                         : "bg-amber-100 text-amber-800"
                     }`}
                   >
-                    {d.is_final ? "Final (Editor-in-Chief)" : "Recommendation"}
+                    {d.is_final ? "Final (Conveners)" : "Recommendation"}
                   </span>
                 </div>
                 <p className="text-xs text-slate-400 mt-1">
@@ -258,7 +258,7 @@ export default async function EditorSubmissionPage({
             )}
 
             <div>
-              <label className="label">Recommend to the Editor-in-Chief</label>
+              <label className="label">Recommend to the Conveners</label>
               <div className="grid sm:grid-cols-3 gap-2">
                 {[
                   ["accept", "Accept"],

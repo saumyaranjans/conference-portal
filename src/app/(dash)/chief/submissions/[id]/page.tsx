@@ -60,7 +60,7 @@ export default async function ChiefSubmissionPage({
     <>
       <div className="mb-2">
         <Link href="/chief" className="text-sm text-blue-700 hover:underline">
-          ← Editorial board
+          ← Conveners
         </Link>
       </div>
 

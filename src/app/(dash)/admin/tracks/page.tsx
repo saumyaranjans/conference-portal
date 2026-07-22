@@ -179,7 +179,7 @@ export default async function AdminTracksPage() {
                   </div>
                   <p className="text-xs text-slate-400 mt-2">
                     Editor: {t.profiles?.full_name ?? "unassigned"} — assign from
-                    the Editorial Board page.
+                    the Conveners page.
                   </p>
                 </ActionForm>
               ))}

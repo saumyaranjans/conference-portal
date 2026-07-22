@@ -179,9 +179,9 @@ export const RECOMMENDATION_LABELS: Record<Recommendation, string> = {
 export const ROLE_LABELS: Record<AppRole, string> = {
   author: "Author",
   reviewer: "Reviewer",
-  editor: "Editor",
-  chief: "Editor-in-Chief",
-  admin: "Administrator",
+  editor: "Track Editor",
+  chief: "Conveners",
+  admin: "Editorial Office",
 };
 
 /** Where each role lands after signing in. */

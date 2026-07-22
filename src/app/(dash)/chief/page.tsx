@@ -64,7 +64,7 @@ export default async function ChiefDashboard() {
   return (
     <>
       <PageHeader
-        title="Editorial Board"
+        title="Conveners"
         subtitle="Final decisions, track editors, and conference-wide progress."
         action={
           <a href="/api/reports/submissions" className="btn-secondary">

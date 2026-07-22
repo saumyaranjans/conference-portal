@@ -191,6 +191,7 @@ export async function addCoAuthor(formData: FormData): Promise<ActionResult> {
     full_name: String(formData.get("full_name") ?? "").trim(),
     email: String(formData.get("email") ?? "").trim(),
     affiliation: String(formData.get("affiliation") ?? "").trim(),
+    designation: String(formData.get("designation") ?? "").trim(),
     author_order: (count ?? 0) + 1,
   });
 

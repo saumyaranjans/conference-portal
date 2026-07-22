@@ -13,7 +13,13 @@ import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { PaperUpload } from "@/components/PaperUpload";
 import { StatusBadge, RecommendationBadge } from "@/components/ui/StatusBadge";
 import { PageHeader, Section, formatDate } from "@/components/ui/Primitives";
-import type { Decision, Review, Submission, Track } from "@/lib/types";
+import {
+  PARTICIPANT_CATEGORIES,
+  type Decision,
+  type Review,
+  type Submission,
+  type Track,
+} from "@/lib/types";
 
 export default async function AuthorSubmissionPage({
   params,
@@ -192,6 +198,7 @@ export default async function AuthorSubmissionPage({
                 <p className="text-xs text-slate-500">
                   {a.email}
                   {a.affiliation ? ` · ${a.affiliation}` : ""}
+                  {a.designation ? ` · ${a.designation}` : ""}
                 </p>
               </div>
               {editable && !a.is_corresponding && (
@@ -212,7 +219,7 @@ export default async function AuthorSubmissionPage({
           {editable && (
             <ActionForm action={addCoAuthor} className="px-5 py-4">
               <input type="hidden" name="submission_id" value={sub.id} />
-              <div className="grid sm:grid-cols-3 gap-3">
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 <input
                   name="full_name"
                   required
@@ -231,6 +238,16 @@ export default async function AuthorSubmissionPage({
                   placeholder="Affiliation"
                   className="input"
                 />
+                <select name="designation" required defaultValue="" className="input">
+                  <option value="" disabled>
+                    Designation…
+                  </option>
+                  {PARTICIPANT_CATEGORIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
               </div>
               <SubmitButton variant="secondary" className="mt-3">
                 Add co-author

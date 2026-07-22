@@ -3,6 +3,7 @@ import { requireRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { assignTrackEditor } from "@/lib/actions";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
+import { DeleteSubmissionButton } from "@/components/DeleteSubmissionButton";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import {
   DataTable,
@@ -189,13 +190,18 @@ export default async function ChiefDashboard() {
                   </td>
                   <td className="td">{st?.avg_score ?? "—"}</td>
                   <td className="td text-slate-500">{formatDate(s.updated_at)}</td>
-                  <td className="td text-right">
-                    <Link
-                      href={`/chief/submissions/${s.id}`}
-                      className="text-blue-700 hover:underline text-sm font-medium"
-                    >
-                      Open
-                    </Link>
+                  <td className="td text-right whitespace-nowrap">
+                    <div className="flex items-center justify-end gap-3">
+                      <Link
+                        href={`/chief/submissions/${s.id}`}
+                        className="text-blue-700 hover:underline text-sm font-medium"
+                      >
+                        Open
+                      </Link>
+                      {["submitted", "withdrawn"].includes(s.status) && (
+                        <DeleteSubmissionButton id={s.id} compact />
+                      )}
+                    </div>
                   </td>
                 </tr>
               );

@@ -432,8 +432,7 @@ export function NewSubmissionForm({
         <div>
           <h2 className="font-semibold text-slate-900">Participation</h2>
           <p className="text-sm text-slate-600 mt-1">
-            Please select your intended level of participation below. Additional
-            tabs are available for further details on each option.
+            Please select your intended level of participation below.
           </p>
         </div>
 

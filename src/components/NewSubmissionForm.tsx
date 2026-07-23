@@ -326,7 +326,7 @@ export function NewSubmissionForm({
         </div>
 
         <div className="space-y-2">
-          {SUBMISSION_TYPES.map((t, i) => (
+          {SUBMISSION_TYPES.map((t) => (
             <label
               key={t.value}
               className="flex items-start gap-3 border border-slate-300 rounded-lg
@@ -343,7 +343,7 @@ export function NewSubmissionForm({
               />
               <span>
                 <span className="block text-sm font-medium text-slate-900">
-                  {i + 1}. {t.label}
+                  {t.label}
                 </span>
                 <span className="block text-xs text-slate-500 mt-0.5">
                   {t.description}
@@ -355,13 +355,13 @@ export function NewSubmissionForm({
 
         <div>
           <p className="text-sm font-medium text-slate-900">
-            3. Participation Intention
+            Participation Intention
           </p>
           <p className="text-xs text-slate-500 mt-0.5 mb-2">
             Please specify your attendance format:
           </p>
           <div className="grid sm:grid-cols-2 gap-2">
-            {PARTICIPATION_MODES.map((m, i) => (
+            {PARTICIPATION_MODES.map((m) => (
               <label
                 key={m.value}
                 className="flex items-center gap-3 border border-slate-300 rounded-lg
@@ -375,9 +375,7 @@ export function NewSubmissionForm({
                   checked={participationMode === m.value}
                   onChange={(e) => setParticipationMode(e.target.value)}
                 />
-                <span className="text-sm text-slate-800">
-                  ({String.fromCharCode(97 + i)}) {m.label}
-                </span>
+                <span className="text-sm text-slate-800">{m.label}</span>
               </label>
             ))}
           </div>

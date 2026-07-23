@@ -4,6 +4,9 @@ export const MAX_SUBMISSIONS_PER_AUTHOR = 2;
 /** Abstracts are capped at this many words. */
 export const ABSTRACT_WORD_LIMIT = 500;
 
+/** Completed reviews required before a track editor may recommend. */
+export const MIN_REVIEWS_PER_SUBMISSION = 2;
+
 /** Word count used for the abstract limit (whitespace separated). */
 export function countWords(text: string): number {
   const t = text.trim();

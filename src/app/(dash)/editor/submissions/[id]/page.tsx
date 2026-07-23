@@ -2,13 +2,19 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { assignReviewer, recordRecommendation, removeAssignment } from "@/lib/actions";
+import {
+  addReviewerByEmail,
+  assignReviewer,
+  recordRecommendation,
+  removeAssignment,
+} from "@/lib/actions";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { PaperDownload } from "@/components/PaperUpload";
 import { StatusBadge, RecommendationBadge } from "@/components/ui/StatusBadge";
 import { PageHeader, Section, formatDate } from "@/components/ui/Primitives";
 import { ReviewPanel } from "@/components/ReviewPanel";
 import {
+  MIN_REVIEWS_PER_SUBMISSION,
   participationModeLabel,
   submissionTypeLabel,
   type Submission,
@@ -209,10 +215,32 @@ export default async function EditorSubmissionPage({
               </div>
               {available.length === 0 && (
                 <p className="text-xs text-slate-400 mt-2">
-                  No further reviewers available. An administrator can grant the
-                  reviewer role to more users.
+                  No further reviewers available — add one below.
                 </p>
               )}
+            </ActionForm>
+          )}
+
+          {/* Make another registered user available as a reviewer */}
+          {!isFinal && (
+            <ActionForm action={addReviewerByEmail} className="px-5 py-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
+                Add a reviewer
+              </p>
+              <div className="grid sm:grid-cols-[1fr_auto] gap-3">
+                <input
+                  name="email"
+                  type="email"
+                  required
+                  placeholder="Reviewer's registered email"
+                  className="input"
+                />
+                <SubmitButton variant="secondary">Add as reviewer</SubmitButton>
+              </div>
+              <p className="text-xs text-slate-400 mt-2">
+                They must already have a portal account. Once added they appear
+                in the list above and can be invited to review.
+              </p>
             </ActionForm>
           )}
         </div>
@@ -266,11 +294,13 @@ export default async function EditorSubmissionPage({
           <ActionForm action={recordRecommendation} className="card card-pad space-y-4">
             <input type="hidden" name="submission_id" value={id} />
 
-            {completed.length < 2 && (
-              <p className="text-sm text-amber-800 bg-amber-50 rounded-lg px-3 py-2">
-                Only {completed.length} review{completed.length === 1 ? "" : "s"}{" "}
-                received. Most conferences expect at least two before
-                recommending.
+            {completed.length < MIN_REVIEWS_PER_SUBMISSION && (
+              <p className="text-sm text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                <strong>
+                  {MIN_REVIEWS_PER_SUBMISSION} completed reviews are required
+                </strong>{" "}
+                before you can recommend a decision — {completed.length} received
+                so far. Invite more reviewers above.
               </p>
             )}
             {alreadyRecommended && (
@@ -314,7 +344,12 @@ export default async function EditorSubmissionPage({
               />
             </div>
 
-            <SubmitButton>Send recommendation</SubmitButton>
+            <SubmitButton
+              disabled={completed.length < MIN_REVIEWS_PER_SUBMISSION}
+              className="disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Send recommendation
+            </SubmitButton>
           </ActionForm>
         )}
       </Section>

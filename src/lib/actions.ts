@@ -9,6 +9,7 @@ import {
   countWords,
   DELETABLE_SUBMISSION_STATUSES,
   MAX_SUBMISSIONS_PER_AUTHOR,
+  MIN_REVIEWS_PER_SUBMISSION,
 } from "@/lib/types";
 import type { AppRole, DecisionKind, Recommendation } from "@/lib/types";
 
@@ -589,6 +590,59 @@ export async function saveReview(formData: FormData): Promise<ActionResult> {
 // EDITOR
 // =====================================================================
 
+/**
+ * Track editor makes an existing portal user available as a reviewer.
+ * Only ever *adds* the reviewer role — it never creates accounts, removes
+ * roles, or grants anything else.
+ */
+export async function addReviewerByEmail(
+  formData: FormData
+): Promise<ActionResult> {
+  const profile = await requireRole("editor", "chief");
+  const admin = createAdminClient();
+
+  const email = String(formData.get("email") ?? "")
+    .trim()
+    .toLowerCase();
+  if (!email) return { ok: false, message: "Enter an email address." };
+
+  const { data: target } = await admin
+    .from("profiles")
+    .select("id, full_name, email, roles")
+    .ilike("email", email)
+    .maybeSingle();
+
+  if (!target) {
+    return {
+      ok: false,
+      message:
+        "No registered user with that email. Ask them to create an account first, then add them here.",
+    };
+  }
+
+  const roles: string[] = target.roles ?? [];
+  if (roles.includes("reviewer")) {
+    return {
+      ok: true,
+      message: `${target.full_name || target.email} is already a reviewer.`,
+    };
+  }
+
+  const { error } = await admin
+    .from("profiles")
+    .update({ roles: [...roles, "reviewer"], updated_at: new Date().toISOString() })
+    .eq("id", target.id);
+
+  if (error) return { ok: false, message: error.message };
+
+  await audit(profile.id, "reviewer.added", "profile", target.id, { email });
+  revalidatePath("/editor");
+  return {
+    ok: true,
+    message: `${target.full_name || target.email} can now be assigned as a reviewer.`,
+  };
+}
+
 export async function assignReviewer(formData: FormData): Promise<ActionResult> {
   const profile = await requireRole("editor", "chief");
   const supabase = await createClient();
@@ -643,6 +697,20 @@ export async function recordRecommendation(
 
   const submissionId = String(formData.get("submission_id"));
   const decision = String(formData.get("decision")) as DecisionKind;
+
+  // A recommendation needs at least two completed reviews.
+  const { count: completed } = await supabase
+    .from("reviews")
+    .select("*", { count: "exact", head: true })
+    .eq("submission_id", submissionId)
+    .eq("is_submitted", true);
+
+  if ((completed ?? 0) < MIN_REVIEWS_PER_SUBMISSION) {
+    return {
+      ok: false,
+      message: `At least ${MIN_REVIEWS_PER_SUBMISSION} completed reviews are required before recommending — currently ${completed ?? 0}.`,
+    };
+  }
 
   const { error } = await supabase.from("decisions").insert({
     submission_id: submissionId,

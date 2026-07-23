@@ -11,6 +11,7 @@ import { InstitutionInput } from "@/components/InstitutionInput";
 import { CameraReadyPreview } from "@/components/CameraReadyPreview";
 import {
   ABSTRACT_WORD_LIMIT,
+  AUTHOR_ATTENDANCE,
   countWords,
   PARTICIPANT_CATEGORIES,
   PARTICIPATION_MODES,
@@ -40,7 +41,33 @@ const emptyCoAuthor = (): AuthorRow => ({
   affiliation: "",
   email: "",
   mobile: "",
+  attendance: "",
 });
+
+/** Attendance picker shown for every listed author. */
+function AttendanceSelect({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <select
+      className="input"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      aria-label="Conference attendance"
+    >
+      <option value="">Attendance…</option>
+      {AUTHOR_ATTENDANCE.map((a) => (
+        <option key={a.value} value={a.value}>
+          {a.label}
+        </option>
+      ))}
+    </select>
+  );
+}
 
 export function NewSubmissionForm({
   conferences,
@@ -57,7 +84,7 @@ export function NewSubmissionForm({
   const [abstract, setAbstract] = useState("");
   const [keywords, setKeywords] = useState("");
   const [authors, setAuthors] = useState<AuthorRow[]>([
-    { ...me, is_corresponding: true },
+    { ...me, attendance: "", is_corresponding: true },
   ]);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [submissionType, setSubmissionType] = useState("");
@@ -111,6 +138,11 @@ export function NewSubmissionForm({
       return `The abstract is ${abstractWords} words — please reduce it to ${ABSTRACT_WORD_LIMIT} words or fewer.`;
     if (!submissionType) return "Select your level of participation.";
     if (!participationMode) return "Select your attendance format.";
+    const listed = authors.filter(
+      (a) => a.is_corresponding || (a.full_name.trim() && a.email.trim())
+    );
+    if (listed.some((a) => !a.attendance))
+      return "Select the conference attendance for every author.";
     if (!declOriginal || !declAi || !declConsent)
       return "Please accept all declarations before continuing.";
     return null;
@@ -369,6 +401,28 @@ export function NewSubmissionForm({
           details come from your profile.
         </p>
 
+        <div className="flex items-start gap-2 rounded-lg bg-blue-50 border border-blue-200 px-3 py-2">
+          <svg
+            className="w-4 h-4 text-blue-700 mt-0.5 shrink-0"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            viewBox="0 0 24 24"
+            aria-hidden
+          >
+            <circle cx="12" cy="12" r="9" />
+            <path strokeLinecap="round" d="M12 11v5m0-8.5v.5" />
+          </svg>
+          <p className="text-xs text-blue-900">
+            Indicate for each author whether they will attend. Choosing{" "}
+            <strong>
+              Attending Conference &amp; Require Attendance/Presentation
+              Certificate
+            </strong>{" "}
+            requires payment of the registration fee.
+          </p>
+        </div>
+
         {authors.map((a, i) => (
           <div
             key={i}
@@ -442,6 +496,12 @@ export function NewSubmissionForm({
                     <p className="text-[11px] text-slate-400 mt-1">
                       Edit these in My Profile.
                     </p>
+                    <div className="mt-2 max-w-md">
+                      <AttendanceSelect
+                        value={a.attendance ?? ""}
+                        onChange={(v) => setAuthor(i, { attendance: v })}
+                      />
+                    </div>
                   </>
                 ) : (
                   <>
@@ -496,6 +556,12 @@ export function NewSubmissionForm({
                           setAuthor(i, { mobile: e.target.value })
                         }
                       />
+                      <div className="sm:col-span-2 lg:col-span-3">
+                        <AttendanceSelect
+                          value={a.attendance ?? ""}
+                          onChange={(v) => setAuthor(i, { attendance: v })}
+                        />
+                      </div>
                     </div>
                     <div className="flex items-center gap-4 mt-2">
                       <button

@@ -151,6 +151,8 @@ export type CoAuthorInput = {
   affiliation: string;
   email: string;
   mobile: string;
+  /** attending | not_attending */
+  attendance?: string;
 };
 
 /**
@@ -233,6 +235,7 @@ export async function createSubmissionOnePage(payload: {
         affiliation: "",
         email: "",
         mobile: "",
+        attendance: "",
         is_corresponding: true,
       },
       ...ordered,
@@ -252,6 +255,7 @@ export async function createSubmissionOnePage(payload: {
           designation: profile.designation,
           participant_category: profile.participant_category,
           mobile: profile.mobile,
+          attendance: a.attendance ?? "",
           is_corresponding: true,
           author_order: i + 1,
         }
@@ -263,6 +267,7 @@ export async function createSubmissionOnePage(payload: {
           designation: a.designation.trim(),
           participant_category: a.participant_category.trim(),
           mobile: a.mobile.trim(),
+          attendance: a.attendance ?? "",
           is_corresponding: false,
           author_order: i + 1,
         }

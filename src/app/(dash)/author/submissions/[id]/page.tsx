@@ -16,6 +16,7 @@ import { InstitutionInput } from "@/components/InstitutionInput";
 import { StatusBadge, RecommendationBadge } from "@/components/ui/StatusBadge";
 import { PageHeader, Section, formatDate } from "@/components/ui/Primitives";
 import {
+  attendanceLabel,
   PARTICIPANT_CATEGORIES,
   participationModeLabel,
   submissionTypeLabel,
@@ -318,6 +319,11 @@ export default async function AuthorSubmissionPage({
                       .filter(Boolean)
                       .join(" · ")}
                   </p>
+                  {a.attendance && (
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      {attendanceLabel(a.attendance)}
+                    </p>
+                  )}
                 </div>
               </div>
               {editable && !a.is_corresponding && (

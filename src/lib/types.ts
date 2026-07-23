@@ -80,6 +80,19 @@ export interface Track {
   editor_id: string | null;
 }
 
+/** Whether a listed author will attend the conference. */
+export const AUTHOR_ATTENDANCE = [
+  {
+    value: "attending",
+    label: "Attending Conference & Require Attendance/Presentation Certificate",
+  },
+  { value: "not_attending", label: "Not Attending" },
+] as const;
+
+export function attendanceLabel(value: string): string {
+  return AUTHOR_ATTENDANCE.find((a) => a.value === value)?.label ?? "—";
+}
+
 /** Intended level of participation, captured on each submission. */
 export const SUBMISSION_TYPES = [
   {

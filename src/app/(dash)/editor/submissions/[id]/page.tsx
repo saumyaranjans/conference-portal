@@ -8,7 +8,11 @@ import { PaperDownload } from "@/components/PaperUpload";
 import { StatusBadge, RecommendationBadge } from "@/components/ui/StatusBadge";
 import { PageHeader, Section, formatDate } from "@/components/ui/Primitives";
 import { ReviewPanel } from "@/components/ReviewPanel";
-import type { Submission } from "@/lib/types";
+import {
+  participationModeLabel,
+  submissionTypeLabel,
+  type Submission,
+} from "@/lib/types";
 
 export default async function EditorSubmissionPage({
   params,
@@ -107,6 +111,25 @@ export default async function EditorSubmissionPage({
               ))}
             </div>
           )}
+
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1">
+                Level of participation
+              </p>
+              <p className="text-sm text-slate-700">
+                {submissionTypeLabel(sub.submission_type)}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1">
+                Attendance format
+              </p>
+              <p className="text-sm text-slate-700">
+                {participationModeLabel(sub.participation_mode)}
+              </p>
+            </div>
+          </div>
 
           <PaperDownload filePath={sub.file_path} fileName={sub.file_name} />
         </div>

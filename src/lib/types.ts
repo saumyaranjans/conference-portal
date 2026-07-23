@@ -70,6 +70,34 @@ export interface Track {
   editor_id: string | null;
 }
 
+/** Intended level of participation, captured on each submission. */
+export const SUBMISSION_TYPES = [
+  {
+    value: "abstract_presentation",
+    label: "Abstract & Presentation Only",
+    description: "Submission of abstract and delivery of presentation.",
+  },
+  {
+    value: "full_paper_presentation",
+    label: "Full Paper & Presentation",
+    description:
+      "Submission of abstract, full paper, and delivery of presentation.",
+  },
+] as const;
+
+export const PARTICIPATION_MODES = [
+  { value: "virtual", label: "Virtual Conference (Online)" },
+  { value: "onsite", label: "On-Site Institution Visit (Offline)" },
+] as const;
+
+export function submissionTypeLabel(value: string): string {
+  return SUBMISSION_TYPES.find((t) => t.value === value)?.label ?? "—";
+}
+
+export function participationModeLabel(value: string): string {
+  return PARTICIPATION_MODES.find((m) => m.value === value)?.label ?? "—";
+}
+
 export interface PublicationOpportunity {
   id: string;
   title: string;
@@ -131,6 +159,8 @@ export interface Submission {
   keywords: string[];
   status: SubmissionStatus;
   version: number;
+  submission_type: string;
+  participation_mode: string;
   paper_id: string | null;
   paper_number: number | null;
   file_path: string | null;

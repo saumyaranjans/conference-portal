@@ -11,6 +11,8 @@ import {
 import { InstitutionInput } from "@/components/InstitutionInput";
 import {
   PARTICIPANT_CATEGORIES,
+  PARTICIPATION_MODES,
+  SUBMISSION_TYPES,
   type Conference,
   type Track,
 } from "@/lib/types";
@@ -40,6 +42,8 @@ export function NewSubmissionForm({
   const [keywords, setKeywords] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [coAuthors, setCoAuthors] = useState<CoAuthorInput[]>([]);
+  const [submissionType, setSubmissionType] = useState("");
+  const [participationMode, setParticipationMode] = useState("");
 
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("");
@@ -63,6 +67,8 @@ export function NewSubmissionForm({
     if (!file) return setError("Upload your paper file.");
     if (file.size > 25 * 1024 * 1024)
       return setError("The paper file must be under 25 MB.");
+    if (!submissionType) return setError("Select your level of participation.");
+    if (!participationMode) return setError("Select your attendance format.");
 
     setBusy(true);
     try {
@@ -78,6 +84,8 @@ export function NewSubmissionForm({
           .map((k) => k.trim())
           .filter(Boolean),
         coAuthors,
+        submission_type: submissionType,
+        participation_mode: participationMode,
       });
       if (!created.ok || !created.id) {
         setError(created.message ?? "Could not create the submission.");
@@ -305,6 +313,75 @@ export function NewSubmissionForm({
             </button>
           </div>
         ))}
+      </div>
+
+      {/* ---------------- Participation ---------------- */}
+      <div className="card card-pad space-y-5">
+        <div>
+          <h2 className="font-semibold text-slate-900">Participation</h2>
+          <p className="text-sm text-slate-600 mt-1">
+            Please select your intended level of participation below. Additional
+            tabs are available for further details on each option.
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          {SUBMISSION_TYPES.map((t, i) => (
+            <label
+              key={t.value}
+              className="flex items-start gap-3 border border-slate-300 rounded-lg
+                         px-3 py-3 cursor-pointer hover:bg-slate-50
+                         has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50"
+            >
+              <input
+                type="radio"
+                name="submission_type"
+                value={t.value}
+                checked={submissionType === t.value}
+                onChange={(e) => setSubmissionType(e.target.value)}
+                className="mt-1"
+              />
+              <span>
+                <span className="block text-sm font-medium text-slate-900">
+                  {i + 1}. {t.label}
+                </span>
+                <span className="block text-xs text-slate-500 mt-0.5">
+                  {t.description}
+                </span>
+              </span>
+            </label>
+          ))}
+        </div>
+
+        <div>
+          <p className="text-sm font-medium text-slate-900">
+            3. Participation Intention
+          </p>
+          <p className="text-xs text-slate-500 mt-0.5 mb-2">
+            Please specify your attendance format:
+          </p>
+          <div className="grid sm:grid-cols-2 gap-2">
+            {PARTICIPATION_MODES.map((m, i) => (
+              <label
+                key={m.value}
+                className="flex items-center gap-3 border border-slate-300 rounded-lg
+                           px-3 py-2.5 cursor-pointer hover:bg-slate-50
+                           has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50"
+              >
+                <input
+                  type="radio"
+                  name="participation_mode"
+                  value={m.value}
+                  checked={participationMode === m.value}
+                  onChange={(e) => setParticipationMode(e.target.value)}
+                />
+                <span className="text-sm text-slate-800">
+                  ({String.fromCharCode(97 + i)}) {m.label}
+                </span>
+              </label>
+            ))}
+          </div>
+        </div>
       </div>
 
       {error && (

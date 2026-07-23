@@ -162,6 +162,8 @@ export async function createSubmissionOnePage(payload: {
   abstract: string;
   keywords: string[];
   coAuthors: CoAuthorInput[];
+  submission_type?: string;
+  participation_mode?: string;
 }): Promise<{ ok: boolean; id?: string; message?: string }> {
   const profile = await requireProfile();
   const supabase = await createClient();
@@ -190,6 +192,8 @@ export async function createSubmissionOnePage(payload: {
       title: payload.title.trim(),
       abstract: payload.abstract.trim(),
       keywords: payload.keywords,
+      submission_type: payload.submission_type ?? "",
+      participation_mode: payload.participation_mode ?? "",
       status: "draft",
     })
     .select("id")

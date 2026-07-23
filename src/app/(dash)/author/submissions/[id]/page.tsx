@@ -17,6 +17,8 @@ import { StatusBadge, RecommendationBadge } from "@/components/ui/StatusBadge";
 import { PageHeader, Section, formatDate } from "@/components/ui/Primitives";
 import {
   PARTICIPANT_CATEGORIES,
+  participationModeLabel,
+  submissionTypeLabel,
   type Decision,
   type Review,
   type Submission,
@@ -179,6 +181,30 @@ export default async function AuthorSubmissionPage({
           {editable && <SubmitButton>Save changes</SubmitButton>}
         </ActionForm>
       </Section>
+
+      {/* ---------------- Participation ---------------- */}
+      {(sub.submission_type || sub.participation_mode) && (
+        <Section title="Participation">
+          <div className="card card-pad grid sm:grid-cols-2 gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Level of participation
+              </p>
+              <p className="text-sm text-slate-800 mt-1">
+                {submissionTypeLabel(sub.submission_type)}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Attendance format
+              </p>
+              <p className="text-sm text-slate-800 mt-1">
+                {participationModeLabel(sub.participation_mode)}
+              </p>
+            </div>
+          </div>
+        </Section>
+      )}
 
       {/* ---------------- Co-authors ---------------- */}
       <Section title="Authors">

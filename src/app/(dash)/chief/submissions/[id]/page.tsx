@@ -9,7 +9,12 @@ import { DeleteSubmissionButton } from "@/components/DeleteSubmissionButton";
 import { ReviewPanel } from "@/components/ReviewPanel";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { PageHeader, Section, formatDate } from "@/components/ui/Primitives";
-import { DELETABLE_SUBMISSION_STATUSES, type Submission } from "@/lib/types";
+import {
+  DELETABLE_SUBMISSION_STATUSES,
+  participationModeLabel,
+  submissionTypeLabel,
+  type Submission,
+} from "@/lib/types";
 
 export default async function ChiefSubmissionPage({
   params,
@@ -115,6 +120,25 @@ export default async function ChiefSubmissionPage({
               {sub.abstract}
             </p>
           </div>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1">
+                Level of participation
+              </p>
+              <p className="text-sm text-slate-700">
+                {submissionTypeLabel(sub.submission_type)}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1">
+                Attendance format
+              </p>
+              <p className="text-sm text-slate-700">
+                {participationModeLabel(sub.participation_mode)}
+              </p>
+            </div>
+          </div>
+
           <PaperDownload filePath={sub.file_path} fileName={sub.file_name} />
         </div>
       </Section>

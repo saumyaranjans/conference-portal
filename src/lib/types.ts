@@ -1,6 +1,15 @@
 /** Each author may hold at most this many submissions (withdrawn excluded). */
 export const MAX_SUBMISSIONS_PER_AUTHOR = 2;
 
+/** Abstracts are capped at this many words. */
+export const ABSTRACT_WORD_LIMIT = 500;
+
+/** Word count used for the abstract limit (whitespace separated). */
+export function countWords(text: string): number {
+  const t = text.trim();
+  return t ? t.split(/\s+/).length : 0;
+}
+
 export type AppRole = "author" | "reviewer" | "editor" | "chief" | "admin";
 
 export type SubmissionStatus =

@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { requireProfile, requireRole } from "@/lib/auth";
 import {
+  ABSTRACT_WORD_LIMIT,
+  countWords,
   DELETABLE_SUBMISSION_STATUSES,
   MAX_SUBMISSIONS_PER_AUTHOR,
 } from "@/lib/types";
@@ -184,6 +186,14 @@ export async function createSubmissionOnePage(payload: {
   if (!payload.title.trim()) return { ok: false, message: "Title is required." };
   if (!payload.track_id) return { ok: false, message: "Choose a track." };
 
+  const words = countWords(payload.abstract);
+  if (words > ABSTRACT_WORD_LIMIT) {
+    return {
+      ok: false,
+      message: `The abstract is ${words} words; the limit is ${ABSTRACT_WORD_LIMIT}.`,
+    };
+  }
+
   const { data, error } = await supabase
     .from("submissions")
     .insert({
@@ -265,11 +275,20 @@ export async function updateSubmission(formData: FormData): Promise<ActionResult
   const supabase = await createClient();
   const id = String(formData.get("id"));
 
+  const abstract = String(formData.get("abstract") ?? "").trim();
+  const words = countWords(abstract);
+  if (words > ABSTRACT_WORD_LIMIT) {
+    return {
+      ok: false,
+      message: `The abstract is ${words} words; the limit is ${ABSTRACT_WORD_LIMIT}.`,
+    };
+  }
+
   const { error } = await supabase
     .from("submissions")
     .update({
       title: String(formData.get("title") ?? "").trim(),
-      abstract: String(formData.get("abstract") ?? "").trim(),
+      abstract,
       track_id: String(formData.get("track_id") ?? "") || null,
       keywords: String(formData.get("keywords") ?? "")
         .split(",")

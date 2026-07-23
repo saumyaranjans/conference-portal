@@ -10,6 +10,8 @@ import {
 } from "@/lib/actions";
 import { InstitutionInput } from "@/components/InstitutionInput";
 import {
+  ABSTRACT_WORD_LIMIT,
+  countWords,
   PARTICIPANT_CATEGORIES,
   PARTICIPATION_MODES,
   SUBMISSION_TYPES,
@@ -67,6 +69,7 @@ export function NewSubmissionForm({
   const [error, setError] = useState<string | null>(null);
 
   const tracks = conferences.find((c) => c.id === confId)?.tracks ?? [];
+  const abstractWords = countWords(abstract);
 
   function setAuthor(i: number, patch: Partial<CoAuthorInput>) {
     setAuthors((rows) =>
@@ -92,6 +95,10 @@ export function NewSubmissionForm({
     if (!title.trim()) return setError("Enter a title.");
     if (!trackId) return setError("Choose a track.");
     if (!abstract.trim()) return setError("Enter an abstract.");
+    if (abstractWords > ABSTRACT_WORD_LIMIT)
+      return setError(
+        `The abstract is ${abstractWords} words — please reduce it to ${ABSTRACT_WORD_LIMIT} words or fewer.`
+      );
     if (!file) return setError("Upload your paper file.");
     if (file.size > 25 * 1024 * 1024)
       return setError("The paper file must be under 25 MB.");
@@ -232,6 +239,17 @@ export function NewSubmissionForm({
             value={abstract}
             onChange={(e) => setAbstract(e.target.value)}
           />
+          <p
+            className={`text-xs mt-1 ${
+              abstractWords > ABSTRACT_WORD_LIMIT
+                ? "text-red-600 font-medium"
+                : "text-slate-400"
+            }`}
+          >
+            {abstractWords} / {ABSTRACT_WORD_LIMIT} words
+            {abstractWords > ABSTRACT_WORD_LIMIT &&
+              ` — ${abstractWords - ABSTRACT_WORD_LIMIT} over the limit`}
+          </p>
         </div>
 
         <div>

@@ -35,6 +35,50 @@ async function audit(
 }
 
 // =====================================================================
+// PROFILE (any signed-in user edits their own)
+// =====================================================================
+
+export async function updateProfile(formData: FormData): Promise<ActionResult> {
+  const profile = await requireProfile();
+  const supabase = await createClient();
+
+  const first = String(formData.get("first_name") ?? "").trim();
+  const last = String(formData.get("last_name") ?? "").trim();
+  const fullName = `${first} ${last}`.trim();
+
+  const dial = String(formData.get("dial_code") ?? "").trim();
+  const number = String(formData.get("mobile") ?? "").trim();
+  const institution = String(formData.get("institution") ?? "").trim();
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      title: String(formData.get("title") ?? "").trim(),
+      first_name: first,
+      last_name: last,
+      full_name: fullName || profile.full_name,
+      gender: String(formData.get("gender") ?? "").trim(),
+      mobile: number ? `${dial} ${number}`.trim() : "",
+      country: String(formData.get("country") ?? "").trim(),
+      institution,
+      affiliation: institution,
+      department: String(formData.get("department") ?? "").trim(),
+      designation: String(formData.get("designation") ?? "").trim(),
+      participant_category: String(
+        formData.get("participant_category") ?? ""
+      ).trim(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", profile.id);
+
+  if (error) return { ok: false, message: error.message };
+
+  await audit(profile.id, "profile.updated", "profile", profile.id);
+  revalidatePath("/profile");
+  return { ok: true, message: "Profile updated." };
+}
+
+// =====================================================================
 // AUTHOR
 // =====================================================================
 

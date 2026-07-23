@@ -39,14 +39,18 @@ export async function DashboardShell({
             <RoleSwitcher roles={visibleRoles} />
             <ThemeToggle />
             <NotificationBell unread={unread ?? 0} />
-            <div className="text-right hidden sm:block">
+            <Link
+              href="/profile"
+              className="text-right hidden sm:block hover:opacity-80 transition-opacity"
+              title="Edit my profile"
+            >
               <p className="text-sm font-medium text-slate-800 leading-tight">
                 {profile.full_name || profile.email}
               </p>
               <p className="text-xs text-slate-500 leading-tight">
                 {profile.roles.map((r) => ROLE_LABELS[r]).join(" · ")}
               </p>
-            </div>
+            </Link>
             <SignOutButton />
           </div>
         </div>

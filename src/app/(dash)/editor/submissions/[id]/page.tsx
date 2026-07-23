@@ -154,6 +154,9 @@ export default async function EditorSubmissionPage({
             <div key={a.id} className="px-5 py-3 flex items-center justify-between gap-4">
               <div className="min-w-0">
                 <p className="text-sm font-medium text-slate-800">
+                  <span className="badge bg-slate-100 text-slate-700 mr-2">
+                    Reviewer {a.reviewer_number ?? "—"}
+                  </span>
                   {a.profiles?.full_name || a.profiles?.email}
                 </p>
                 <p className="text-xs text-slate-500">

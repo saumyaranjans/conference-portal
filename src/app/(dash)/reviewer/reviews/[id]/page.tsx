@@ -46,6 +46,13 @@ export default async function ReviewPage({
       <PageHeader
         title={sub?.title ?? "Submission"}
         subtitle={`${sub?.paper_id ? `Paper ${sub.paper_id} · ` : ""}${sub?.tracks?.name ?? "No track"} · Version ${sub?.version ?? 1}`}
+        action={
+          assignment.reviewer_number ? (
+            <span className="badge bg-blue-100 text-blue-800">
+              You are Reviewer {assignment.reviewer_number}
+            </span>
+          ) : undefined
+        }
       />
 
       {/* The reviewer never sees author identities — single-blind by design. */}

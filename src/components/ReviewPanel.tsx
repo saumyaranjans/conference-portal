@@ -57,7 +57,7 @@ export function ReviewPanel({
             <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
               <div>
                 <p className="font-medium text-slate-900">
-                  Reviewer {i + 1}
+                  Reviewer {a.reviewer_number ?? i + 1}
                   {showConfidential && (
                     <span className="text-slate-400 font-normal text-sm">
                       {" "}

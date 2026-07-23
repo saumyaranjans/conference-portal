@@ -240,6 +240,8 @@ export interface Assignment {
   id: string;
   submission_id: string;
   reviewer_id: string;
+  /** Reviewer 1, Reviewer 2, … within this submission. */
+  reviewer_number: number | null;
   assigned_by: string | null;
   status: AssignmentStatus;
   due_date: string | null;

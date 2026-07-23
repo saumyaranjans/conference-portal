@@ -109,6 +109,9 @@ export default async function ReviewerDashboard() {
                         {a.submissions?.title}
                       </p>
                       <p className="text-xs text-slate-500 mt-0.5">
+                        {a.reviewer_number
+                          ? `You are Reviewer ${a.reviewer_number} · `
+                          : ""}
                         {a.submissions?.tracks?.name ?? "No track"}
                         {a.due_date && (
                           <span className={late ? "text-red-600 font-medium" : ""}>

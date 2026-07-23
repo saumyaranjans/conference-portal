@@ -86,7 +86,9 @@ export function SidebarNav({
             Publication opportunities
           </p>
           <p className="text-xs text-slate-600 mb-3 px-3 leading-snug">
-            Selected papers will be considered for publication in:
+            Selected full papers, subject to an additional review round by the
+            respective journal editorial boards, will be considered for
+            publication in:
           </p>
 
           <ul className="space-y-4">

@@ -394,6 +394,8 @@ export async function addCoAuthor(formData: FormData): Promise<ActionResult> {
     .select("*", { count: "exact", head: true })
     .eq("submission_id", submissionId);
 
+  const mobileNumber = String(formData.get("mobile") ?? "").trim();
+
   const { error } = await supabase.from("submission_authors").insert({
     submission_id: submissionId,
     full_name: String(formData.get("full_name") ?? "").trim(),
@@ -401,7 +403,10 @@ export async function addCoAuthor(formData: FormData): Promise<ActionResult> {
     affiliation: String(formData.get("affiliation") ?? "").trim(),
     designation: String(formData.get("designation") ?? "").trim(),
     participant_category: String(formData.get("participant_category") ?? "").trim(),
-    mobile: String(formData.get("mobile") ?? "").trim(),
+    mobile: mobileNumber
+      ? `${String(formData.get("dial_code") ?? "+91").trim()} ${mobileNumber}`.trim()
+      : "",
+    attendance: String(formData.get("attendance") ?? "").trim(),
     author_order: (count ?? 0) + 1,
   });
 

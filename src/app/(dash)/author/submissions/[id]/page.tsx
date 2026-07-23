@@ -17,6 +17,8 @@ import { StatusBadge, RecommendationBadge } from "@/components/ui/StatusBadge";
 import { PageHeader, Section, formatDate } from "@/components/ui/Primitives";
 import {
   attendanceLabel,
+  AUTHOR_ATTENDANCE,
+  COUNTRY_DIAL_CODES,
   PARTICIPANT_CATEGORIES,
   participationModeLabel,
   submissionTypeLabel,
@@ -372,11 +374,40 @@ export default async function AuthorSubmissionPage({
                   placeholder="Email"
                   className="input"
                 />
-                <input
-                  name="mobile"
-                  placeholder="Mobile number"
-                  className="input"
-                />
+                <div className="flex gap-2">
+                  <select
+                    name="dial_code"
+                    aria-label="Country code"
+                    defaultValue="+91"
+                    className="input w-24 shrink-0"
+                  >
+                    {COUNTRY_DIAL_CODES.map((c) => (
+                      <option key={c.country} value={c.code}>
+                        {c.code} {c.country}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    name="mobile"
+                    type="tel"
+                    placeholder="Mobile number"
+                    className="input"
+                  />
+                </div>
+                <select
+                  name="attendance"
+                  defaultValue=""
+                  className="input sm:col-span-2 lg:col-span-3"
+                >
+                  <option value="" disabled hidden>
+                    Attendance Intention
+                  </option>
+                  {AUTHOR_ATTENDANCE.map((a) => (
+                    <option key={a.value} value={a.value}>
+                      {a.label}
+                    </option>
+                  ))}
+                </select>
               </div>
               <SubmitButton variant="secondary" className="mt-3">
                 Add co-author

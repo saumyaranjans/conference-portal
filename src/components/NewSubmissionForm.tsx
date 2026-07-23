@@ -54,14 +54,17 @@ function AttendanceSelect({
 }) {
   return (
     <select
-      className="input"
+      className={`input ${value ? "" : "text-slate-400"}`}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      aria-label="Conference attendance"
+      aria-label="Attendance Intention"
     >
-      <option value="">Attendance…</option>
+      {/* placeholder styled like the other fields; not offered as a choice */}
+      <option value="" disabled hidden>
+        Attendance Intention
+      </option>
       {AUTHOR_ATTENDANCE.map((a) => (
-        <option key={a.value} value={a.value}>
+        <option key={a.value} value={a.value} className="text-slate-900">
           {a.label}
         </option>
       ))}

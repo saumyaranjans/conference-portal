@@ -13,6 +13,7 @@ import {
   ABSTRACT_WORD_LIMIT,
   AUTHOR_ATTENDANCE,
   countWords,
+  COUNTRY_DIAL_CODES,
   PARTICIPANT_CATEGORIES,
   PARTICIPATION_MODES,
   SUBMISSION_TYPES,
@@ -32,7 +33,11 @@ export type Me = {
   mobile: string;
 };
 
-type AuthorRow = CoAuthorInput & { is_corresponding?: boolean };
+/** `dialCode` is form-only — it is merged into `mobile` on submit. */
+type AuthorRow = CoAuthorInput & {
+  is_corresponding?: boolean;
+  dialCode?: string;
+};
 
 const emptyCoAuthor = (): AuthorRow => ({
   full_name: "",
@@ -41,6 +46,7 @@ const emptyCoAuthor = (): AuthorRow => ({
   affiliation: "",
   email: "",
   mobile: "",
+  dialCode: "+91",
   attendance: "",
 });
 
@@ -183,7 +189,13 @@ export function NewSubmissionForm({
           .split(",")
           .map((k) => k.trim())
           .filter(Boolean),
-        authors,
+        // merge the dial code into each co-author's mobile number
+        authors: authors.map((a) => ({
+          ...a,
+          mobile: a.mobile.trim()
+            ? `${a.dialCode ?? "+91"} ${a.mobile.trim()}`.trim()
+            : "",
+        })),
         submission_type: submissionType,
         participation_mode: participationMode,
         declared_original: declOriginal,
@@ -529,14 +541,31 @@ export function NewSubmissionForm({
                         value={a.email}
                         onChange={(e) => setAuthor(i, { email: e.target.value })}
                       />
-                      <input
-                        className="input"
-                        placeholder="Mobile number"
-                        value={a.mobile}
-                        onChange={(e) =>
-                          setAuthor(i, { mobile: e.target.value })
-                        }
-                      />
+                      <div className="flex gap-2">
+                        <select
+                          aria-label="Country code"
+                          className="input w-24 shrink-0"
+                          value={a.dialCode ?? "+91"}
+                          onChange={(e) =>
+                            setAuthor(i, { dialCode: e.target.value })
+                          }
+                        >
+                          {COUNTRY_DIAL_CODES.map((c) => (
+                            <option key={c.country} value={c.code}>
+                              {c.code} {c.country}
+                            </option>
+                          ))}
+                        </select>
+                        <input
+                          className="input"
+                          type="tel"
+                          placeholder="Mobile number"
+                          value={a.mobile}
+                          onChange={(e) =>
+                            setAuthor(i, { mobile: e.target.value })
+                          }
+                        />
+                      </div>
                       <div className="sm:col-span-2 lg:col-span-3">
                         <AttendanceSelect
                           value={a.attendance ?? ""}

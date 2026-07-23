@@ -8,6 +8,7 @@ import {
   type CoAuthorInput,
 } from "@/lib/actions";
 import { InstitutionInput } from "@/components/InstitutionInput";
+import { CameraReadyPreview } from "@/components/CameraReadyPreview";
 import {
   ABSTRACT_WORD_LIMIT,
   countWords,
@@ -61,6 +62,7 @@ export function NewSubmissionForm({
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [submissionType, setSubmissionType] = useState("");
   const [participationMode, setParticipationMode] = useState("");
+  const [showPreview, setShowPreview] = useState(false);
 
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("");
@@ -86,19 +88,36 @@ export function NewSubmissionForm({
     });
   }
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-
-    if (!title.trim()) return setError("Enter a title.");
-    if (!trackId) return setError("Choose a track.");
-    if (!abstract.trim()) return setError("Enter an abstract.");
+  /** Validate the form; returns an error message or null. */
+  function validate(): string | null {
+    if (!title.trim()) return "Enter a title.";
+    if (!trackId) return "Choose a track.";
+    if (!abstract.trim()) return "Enter an abstract.";
     if (abstractWords > ABSTRACT_WORD_LIMIT)
-      return setError(
-        `The abstract is ${abstractWords} words — please reduce it to ${ABSTRACT_WORD_LIMIT} words or fewer.`
-      );
-    if (!submissionType) return setError("Select your level of participation.");
-    if (!participationMode) return setError("Select your attendance format.");
+      return `The abstract is ${abstractWords} words — please reduce it to ${ABSTRACT_WORD_LIMIT} words or fewer.`;
+    if (!submissionType) return "Select your level of participation.";
+    if (!participationMode) return "Select your attendance format.";
+    return null;
+  }
+
+  function onReview(e: React.FormEvent) {
+    e.preventDefault();
+    const problem = validate();
+    setError(problem);
+    if (!problem) {
+      setShowPreview(true);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }
+
+  async function onSubmit() {
+    setError(null);
+    const problem = validate();
+    if (problem) {
+      setError(problem);
+      setShowPreview(false);
+      return;
+    }
 
     setBusy(true);
     try {
@@ -143,8 +162,76 @@ export function NewSubmissionForm({
     }
   }
 
+  // -------- Camera-ready proof: review and approve before submitting --------
+  if (showPreview) {
+    const conf = conferences.find((c) => c.id === confId);
+    const track = tracks.find((t) => t.id === trackId);
+
+    return (
+      <div className="space-y-6 max-w-4xl">
+        <div className="card card-pad bg-blue-50 border-blue-200">
+          <p className="text-sm text-blue-900">
+            <strong>Review your camera-ready abstract.</strong> Check the details
+            below carefully — approve to submit, or go back to make changes.
+          </p>
+        </div>
+
+        <CameraReadyPreview
+          conferenceName={
+            conf ? `${conf.name} (${conf.acronym} ${conf.year})` : ""
+          }
+          trackName={track ? `${track.code} — ${track.name}` : ""}
+          title={title}
+          authors={authors.map((a) =>
+            a.is_corresponding
+              ? {
+                  full_name: me.full_name || me.email,
+                  designation: me.designation,
+                  affiliation: me.affiliation,
+                }
+              : {
+                  full_name: a.full_name,
+                  designation: a.designation,
+                  affiliation: a.affiliation,
+                }
+          )}
+          abstract={abstract}
+          keywords={keywords}
+        />
+
+        {error && (
+          <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">
+            {error}
+          </p>
+        )}
+
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            disabled={busy}
+            className="btn-secondary"
+            onClick={() => setShowPreview(false)}
+          >
+            Back to edit
+          </button>
+          <button
+            type="button"
+            disabled={busy}
+            className="btn-primary"
+            onClick={onSubmit}
+          >
+            {busy ? status || "Submitting…" : "Approve & Submit Abstract"}
+          </button>
+          <p className="text-xs text-slate-500">
+            By approving you confirm the details above are correct.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <form onSubmit={onSubmit} className="space-y-6 max-w-4xl">
+    <form onSubmit={onReview} className="space-y-6 max-w-4xl">
       {/* ---------------- Manuscript ---------------- */}
       <div className="card card-pad space-y-5">
         <h2 className="font-semibold text-slate-900">Manuscript</h2>
@@ -482,11 +569,11 @@ export function NewSubmissionForm({
 
       <div className="flex items-center gap-3">
         <button type="submit" disabled={busy} className="btn-primary">
-          {busy ? status || "Submitting…" : "Submit abstract"}
+          Review camera-ready copy
         </button>
         <p className="text-xs text-slate-500">
-          If you selected Full Paper &amp; Presentation, you will be able to
-          upload the full paper once your abstract is accepted.
+          You will see a camera-ready proof to approve before the abstract is
+          submitted.
         </p>
       </div>
     </form>

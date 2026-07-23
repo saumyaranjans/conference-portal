@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { recordFinalDecision } from "@/lib/actions";
+import { recordFinalDecision, withdrawSubmission } from "@/lib/actions";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { PaperDownload } from "@/components/PaperUpload";
 import { DeleteSubmissionButton } from "@/components/DeleteSubmissionButton";
@@ -253,6 +253,28 @@ export default async function ChiefSubmissionPage({
           </ActionForm>
         )}
       </Section>
+
+      {/* ---- Withdraw on the author's behalf ---- */}
+      {["submitted", "under_review", "revisions_requested"].includes(
+        sub.status
+      ) && (
+        <Section title="Withdraw">
+          <div className="card card-pad">
+            <p className="text-sm text-slate-700">
+              Authors cannot withdraw an abstract once submitted. Withdraw it
+              here on their behalf if they have requested it.
+            </p>
+            <ActionForm
+              action={withdrawSubmission}
+              className="mt-3"
+              confirm="Withdraw this abstract on the author's behalf?"
+            >
+              <input type="hidden" name="id" value={sub.id} />
+              <SubmitButton variant="danger">Withdraw abstract</SubmitButton>
+            </ActionForm>
+          </div>
+        </Section>
+      )}
 
       {/* ---- Delete (submitted / withdrawn / rejected only) ---- */}
       {DELETABLE_SUBMISSION_STATUSES.includes(sub.status) && (

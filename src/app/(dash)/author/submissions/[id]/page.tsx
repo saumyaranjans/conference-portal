@@ -77,7 +77,9 @@ export default async function AuthorSubmissionPage({
   // Authors may edit while the paper is a draft or awaiting revisions.
   const editable = ["draft", "revisions_requested"].includes(sub.status);
   const canSubmit = editable;
-  const canWithdraw = !["withdrawn", "accepted", "rejected"].includes(sub.status);
+  // Authors may withdraw only an abstract they have not submitted yet;
+  // once submitted, withdrawal is the Convener's call.
+  const canWithdraw = sub.status === "draft";
 
   return (
     <>
@@ -529,11 +531,11 @@ export default async function AuthorSubmissionPage({
             </ActionForm>
           )}
 
-          {!canSubmit && !canWithdraw && (
+          {!canWithdraw && !["withdrawn", "draft"].includes(sub.status) && (
             <p className="text-sm text-slate-500">
               {sub.status === "accepted"
                 ? "This paper has been accepted and can no longer be withdrawn."
-                : "This submission is closed. No further action is available."}
+                : "Your abstract has been submitted. Only the Convener can withdraw it — please contact the Convener if you need it withdrawn."}
             </p>
           )}
         </div>

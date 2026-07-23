@@ -361,26 +361,53 @@ export async function withdrawSubmission(formData: FormData): Promise<ActionResu
   const supabase = await createClient();
   const id = String(formData.get("id"));
 
-  // An accepted paper is final and cannot be withdrawn.
   const { data: current } = await supabase
     .from("submissions")
-    .select("status")
+    .select("status, author_id")
     .eq("id", id)
     .single();
-  if (current?.status === "accepted") {
+
+  if (!current) return { ok: false, message: "Submission not found." };
+
+  // An accepted paper is final and cannot be withdrawn by anyone.
+  if (current.status === "accepted") {
     return { ok: false, message: "An accepted paper cannot be withdrawn." };
   }
 
-  const { error } = await supabase
+  const isOrganiser =
+    profile.roles.includes("chief") || profile.roles.includes("admin");
+
+  // Authors may only withdraw an abstract they have not submitted yet.
+  if (!isOrganiser) {
+    if (current.author_id !== profile.id) {
+      return { ok: false, message: "You cannot withdraw this submission." };
+    }
+    if (current.status !== "draft") {
+      return {
+        ok: false,
+        message:
+          "A submitted abstract can only be withdrawn by the Convener. Please contact the Convener.",
+      };
+    }
+  }
+
+  const query = supabase
     .from("submissions")
     .update({ status: "withdrawn", updated_at: new Date().toISOString() })
-    .eq("id", id)
-    .eq("author_id", profile.id);
+    .eq("id", id);
+
+  const { error } = isOrganiser
+    ? await query
+    : await query.eq("author_id", profile.id);
 
   if (error) return { ok: false, message: error.message };
 
-  await audit(profile.id, "submission.withdrawn", "submission", id);
+  await audit(profile.id, "submission.withdrawn", "submission", id, {
+    by: isOrganiser ? "organiser" : "author",
+  });
   revalidatePath("/author");
+  revalidatePath("/chief");
+  revalidatePath(`/chief/submissions/${id}`);
   return { ok: true, message: "Withdrawn." };
 }
 

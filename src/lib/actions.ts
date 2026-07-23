@@ -777,6 +777,61 @@ export async function createConference(formData: FormData): Promise<ActionResult
   return { ok: true, message: "Conference created." };
 }
 
+// ---- Publication opportunities (Editorial Office / Convener) ----------
+
+export async function upsertPublicationOpportunity(
+  formData: FormData
+): Promise<ActionResult> {
+  const profile = await requireRole("admin", "chief");
+  const supabase = await createClient();
+
+  const id = String(formData.get("id") ?? "");
+  const payload = {
+    title: String(formData.get("title") ?? "").trim(),
+    category: String(formData.get("category") ?? "").trim(),
+    image_url: String(formData.get("image_url") ?? "").trim(),
+    description: String(formData.get("description") ?? "").trim(),
+    url: String(formData.get("url") ?? "").trim(),
+    sort_order: Number(formData.get("sort_order")) || 0,
+    is_active: String(formData.get("is_active") ?? "true") === "true",
+  };
+
+  if (!payload.title) return { ok: false, message: "Title is required." };
+
+  const { error } = id
+    ? await supabase.from("publication_opportunities").update(payload).eq("id", id)
+    : await supabase.from("publication_opportunities").insert(payload);
+
+  if (error) return { ok: false, message: error.message };
+
+  await audit(
+    profile.id,
+    id ? "opportunity.updated" : "opportunity.created",
+    "publication_opportunity",
+    id || null
+  );
+  revalidatePath("/admin/publications");
+  return { ok: true, message: "Saved." };
+}
+
+export async function deletePublicationOpportunity(
+  formData: FormData
+): Promise<ActionResult> {
+  const profile = await requireRole("admin", "chief");
+  const supabase = await createClient();
+  const id = String(formData.get("id"));
+
+  const { error } = await supabase
+    .from("publication_opportunities")
+    .delete()
+    .eq("id", id);
+  if (error) return { ok: false, message: error.message };
+
+  await audit(profile.id, "opportunity.deleted", "publication_opportunity", id);
+  revalidatePath("/admin/publications");
+  return { ok: true, message: "Removed." };
+}
+
 export async function updateConference(formData: FormData): Promise<ActionResult> {
   const profile = await requireRole("admin", "chief");
   const supabase = await createClient();

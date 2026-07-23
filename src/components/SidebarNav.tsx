@@ -2,7 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ROLE_HOME, ROLE_LABELS, type AppRole } from "@/lib/types";
+import {
+  ROLE_HOME,
+  ROLE_LABELS,
+  type AppRole,
+  type PublicationOpportunity,
+} from "@/lib/types";
 
 /** Nav entries per role. */
 const NAV: Record<AppRole, { href: string; label: string }[]> = {
@@ -17,6 +22,7 @@ const NAV: Record<AppRole, { href: string; label: string }[]> = {
     { href: "/admin", label: "Overview" },
     { href: "/admin/users", label: "Users & Roles" },
     { href: "/admin/tracks", label: "Conference & Tracks" },
+    { href: "/admin/publications", label: "Publication Opportunities" },
   ],
 };
 
@@ -27,7 +33,16 @@ const ROLE_ORDER: AppRole[] = ["author", "reviewer", "editor", "chief", "admin"]
  * from the URL, set by the "View as" switcher). Falls back to the first role
  * they hold.
  */
-export function SidebarNav({ roles }: { roles: AppRole[] }) {
+/** Roles that see the publication-opportunities panel. */
+const SHOW_OPPORTUNITIES: AppRole[] = ["author", "reviewer", "editor"];
+
+export function SidebarNav({
+  roles,
+  opportunities = [],
+}: {
+  roles: AppRole[];
+  opportunities?: PublicationOpportunity[];
+}) {
   const pathname = usePathname();
 
   const current: AppRole =
@@ -64,6 +79,68 @@ export function SidebarNav({ roles }: { roles: AppRole[] }) {
           );
         })}
       </ul>
+
+      {SHOW_OPPORTUNITIES.includes(current) && opportunities.length > 0 && (
+        <section className="mt-8">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1 px-3">
+            Publication opportunities
+          </p>
+          <p className="text-xs text-slate-600 mb-3 px-3 leading-snug">
+            Selected papers will be considered for publication in:
+          </p>
+
+          <ul className="space-y-4">
+            {opportunities.map((o) => {
+              const cover = o.image_url ? (
+                <img
+                  src={o.image_url}
+                  alt={o.title}
+                  className="w-full rounded-md border border-slate-200 bg-white"
+                />
+              ) : null;
+
+              return (
+                <li key={o.id} className="px-3">
+                  {cover &&
+                    (o.url ? (
+                      <a
+                        href={o.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block hover:opacity-90 transition-opacity"
+                      >
+                        {cover}
+                      </a>
+                    ) : (
+                      cover
+                    ))}
+
+                  {o.url ? (
+                    <a
+                      href={o.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2 block text-xs font-medium text-blue-700 hover:underline leading-snug"
+                    >
+                      {o.title}
+                    </a>
+                  ) : (
+                    <p className="mt-2 text-xs font-medium text-slate-800 leading-snug">
+                      {o.title}
+                    </p>
+                  )}
+
+                  {(o.category || o.publisher) && (
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      {o.category || o.publisher}
+                    </p>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
     </nav>
   );
 }

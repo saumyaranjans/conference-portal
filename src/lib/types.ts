@@ -70,6 +70,18 @@ export interface Track {
   editor_id: string | null;
 }
 
+export interface PublicationOpportunity {
+  id: string;
+  title: string;
+  publisher: string;
+  category: string;
+  description: string;
+  image_url: string;
+  url: string;
+  is_active: boolean;
+  sort_order: number;
+}
+
 /** Country dial codes for mobile numbers (India first). */
 export const COUNTRY_DIAL_CODES: { country: string; code: string }[] = [
   { country: "India", code: "+91" },

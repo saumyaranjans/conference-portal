@@ -1,6 +1,11 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { ROLE_LABELS, type AppRole, type Profile } from "@/lib/types";
+import {
+  ROLE_LABELS,
+  type AppRole,
+  type Profile,
+  type PublicationOpportunity,
+} from "@/lib/types";
 import { SignOutButton } from "@/components/SignOutButton";
 import { NotificationBell } from "@/components/NotificationBell";
 import { RoleSwitcher } from "@/components/RoleSwitcher";
@@ -22,6 +27,13 @@ export async function DashboardShell({
     .select("*", { count: "exact", head: true })
     .eq("profile_id", profile.id)
     .eq("is_read", false);
+
+  const { data: opportunities } = await supabase
+    .from("publication_opportunities")
+    .select("*")
+    .eq("is_active", true)
+    .order("sort_order")
+    .limit(6);
 
   // Admins get every nav group so they can inspect any part of the portal.
   const visibleRoles = profile.roles.includes("admin")
@@ -58,7 +70,10 @@ export async function DashboardShell({
 
       <div className="flex-1 max-w-7xl w-full mx-auto px-4 py-6 flex gap-6">
         <aside className="w-56 shrink-0 hidden md:block">
-          <SidebarNav roles={visibleRoles} />
+          <SidebarNav
+            roles={visibleRoles}
+            opportunities={(opportunities ?? []) as PublicationOpportunity[]}
+          />
         </aside>
 
         <main className="flex-1 min-w-0">{children}</main>

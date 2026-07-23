@@ -69,6 +69,7 @@ export async function updateProfile(formData: FormData): Promise<ActionResult> {
       participant_category: String(
         formData.get("participant_category") ?? ""
       ).trim(),
+      orcid: String(formData.get("orcid") ?? "").trim(),
       updated_at: new Date().toISOString(),
     })
     .eq("id", profile.id);

@@ -4,10 +4,12 @@ import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { InstitutionInput } from "@/components/InstitutionInput";
 import { PageHeader, Section } from "@/components/ui/Primitives";
 import {
+  COUNTRIES,
   COUNTRY_DIAL_CODES,
   PARTICIPANT_CATEGORIES,
   ROLE_LABELS,
 } from "@/lib/types";
+import { ListAutocomplete } from "@/components/ListAutocomplete";
 
 /** Split a stored "+91 98765..." into its dial code and the number. */
 function splitMobile(stored: string): { dial: string; number: string } {
@@ -131,11 +133,12 @@ export default async function ProfilePage() {
               <label className="label" htmlFor="country">
                 Country
               </label>
-              <input
+              <ListAutocomplete
                 id="country"
                 name="country"
+                options={COUNTRIES}
                 defaultValue={profile.country}
-                className="input"
+                placeholder="Start typing…"
               />
             </div>
           </div>
@@ -180,6 +183,18 @@ export default async function ProfilePage() {
                 name="designation"
                 defaultValue={profile.designation}
                 placeholder="e.g. Professor, Research Scholar, Manager"
+                className="input"
+              />
+            </div>
+            <div>
+              <label className="label" htmlFor="orcid">
+                ORCID iD
+              </label>
+              <input
+                id="orcid"
+                name="orcid"
+                defaultValue={profile.orcid}
+                placeholder="0000-0002-1825-0097"
                 className="input"
               />
             </div>

@@ -4,8 +4,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { COUNTRY_DIAL_CODES, PARTICIPANT_CATEGORIES } from "@/lib/types";
+import {
+  COUNTRIES,
+  COUNTRY_DIAL_CODES,
+  PARTICIPANT_CATEGORIES,
+} from "@/lib/types";
 import { InstitutionInput } from "@/components/InstitutionInput";
+import { ListAutocomplete } from "@/components/ListAutocomplete";
 
 const EMPTY = {
   title: "",
@@ -19,6 +24,7 @@ const EMPTY = {
   department: "",
   designation: "",
   participantCategory: "",
+  orcid: "",
   email: "",
   password: "",
   confirm: "",
@@ -63,6 +69,7 @@ export default function SignupPage() {
           department: form.department,
           designation: form.designation,
           participant_category: form.participantCategory,
+          orcid: form.orcid.trim(),
         },
       },
     });
@@ -188,11 +195,12 @@ export default function SignupPage() {
                 <label className="label" htmlFor="country">
                   Country
                 </label>
-                <input
+                <ListAutocomplete
                   id="country"
-                  className="input"
+                  options={COUNTRIES}
+                  placeholder="Start typing…"
                   value={form.country}
-                  onChange={(e) => set("country", e.target.value)}
+                  onChange={(v) => set("country", v)}
                 />
               </div>
             </div>
@@ -242,6 +250,21 @@ export default function SignupPage() {
                   value={form.designation}
                   onChange={(e) => set("designation", e.target.value)}
                 />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="label" htmlFor="orcid">
+                  ORCID iD <span className="text-slate-400">(optional)</span>
+                </label>
+                <input
+                  id="orcid"
+                  className="input"
+                  placeholder="0000-0002-1825-0097"
+                  value={form.orcid}
+                  onChange={(e) => set("orcid", e.target.value)}
+                />
+                <p className="text-xs text-slate-400 mt-1">
+                  16 digits in the form 0000-0000-0000-0000.
+                </p>
               </div>
               <div>
                 <label className="label" htmlFor="participantCategory">

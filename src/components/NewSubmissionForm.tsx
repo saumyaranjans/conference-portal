@@ -77,6 +77,15 @@ export function NewSubmissionForm({
     );
   }
 
+  /** Insert a fresh co-author row directly after the given position. */
+  function addAfter(i: number) {
+    setAuthors((rows) => {
+      const copy = [...rows];
+      copy.splice(i + 1, 0, emptyCoAuthor());
+      return copy;
+    });
+  }
+
   /** Move an author from one position to another (drag-drop or arrows). */
   function moveRow(from: number, to: number) {
     if (from === to || to < 0 || to >= authors.length) return;
@@ -478,15 +487,24 @@ export function NewSubmissionForm({
                         }
                       />
                     </div>
-                    <button
-                      type="button"
-                      className="text-xs text-red-600 hover:underline mt-2"
-                      onClick={() =>
-                        setAuthors((r) => r.filter((_, idx) => idx !== i))
-                      }
-                    >
-                      Remove
-                    </button>
+                    <div className="flex items-center gap-4 mt-2">
+                      <button
+                        type="button"
+                        className="text-xs text-blue-700 hover:underline"
+                        onClick={() => addAfter(i)}
+                      >
+                        Add co-author
+                      </button>
+                      <button
+                        type="button"
+                        className="text-xs text-red-600 hover:underline"
+                        onClick={() =>
+                          setAuthors((r) => r.filter((_, idx) => idx !== i))
+                        }
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </>
                 )}
               </div>

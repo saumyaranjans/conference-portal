@@ -404,28 +404,6 @@ export function NewSubmissionForm({
           details come from your profile.
         </p>
 
-        <div className="flex items-start gap-2 rounded-lg bg-blue-50 border border-blue-200 px-3 py-2">
-          <svg
-            className="w-4 h-4 text-blue-700 mt-0.5 shrink-0"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2}
-            viewBox="0 0 24 24"
-            aria-hidden
-          >
-            <circle cx="12" cy="12" r="9" />
-            <path strokeLinecap="round" d="M12 11v5m0-8.5v.5" />
-          </svg>
-          <p className="text-xs text-blue-900">
-            Indicate for each author whether they will attend. Choosing{" "}
-            <strong>
-              Attending Conference &amp; Require Attendance/Presentation
-              Certificate
-            </strong>{" "}
-            requires payment of the registration fee.
-          </p>
-        </div>
-
         {authors.map((a, i) => (
           <div
             key={i}
@@ -590,6 +568,28 @@ export function NewSubmissionForm({
             </div>
           </div>
         ))}
+
+        <div className="flex items-start gap-2 rounded-lg bg-blue-50 border border-blue-200 px-3 py-2">
+          <svg
+            className="w-4 h-4 text-blue-700 mt-0.5 shrink-0"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            viewBox="0 0 24 24"
+            aria-hidden
+          >
+            <circle cx="12" cy="12" r="9" />
+            <path strokeLinecap="round" d="M12 11v5m0-8.5v.5" />
+          </svg>
+          <p className="text-xs text-blue-900">
+            Indicate for each author whether they will attend. Choosing{" "}
+            <strong>
+              Attending Conference &amp; Require Attendance/Presentation
+              Certificate
+            </strong>{" "}
+            requires payment of the registration fee.
+          </p>
+        </div>
       </div>
 
       {/* ---------------- Participation ---------------- */}

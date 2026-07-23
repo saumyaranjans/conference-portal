@@ -611,7 +611,7 @@ export function NewSubmissionForm({
             [
               declConsent,
               setDeclConsent,
-              "I consent to publication of this abstract in the book of abstracts if accepted.",
+              "I consent to publication of this abstract in the book of abstracts of GLOGIFT 2027 if accepted.",
             ],
           ] as [boolean, (v: boolean) => void, string][]
         ).map(([checked, setter, label]) => (

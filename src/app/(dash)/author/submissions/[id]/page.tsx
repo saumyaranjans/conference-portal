@@ -244,7 +244,7 @@ export default async function AuthorSubmissionPage({
               ],
               [
                 sub.declared_consent_publication,
-                "Consented to publication in the book of abstracts if accepted.",
+                "Consented to publication in the book of abstracts of GLOGIFT 2027 if accepted.",
               ],
             ].map(([ok, label]) => (
               <p key={label as string} className="text-sm text-slate-700">

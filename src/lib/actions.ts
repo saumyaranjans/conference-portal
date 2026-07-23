@@ -833,6 +833,41 @@ export async function createConference(formData: FormData): Promise<ActionResult
   return { ok: true, message: "Conference created." };
 }
 
+/** Editorial Office / Convener records whether an author actually attended. */
+export async function confirmAuthorAttendance(
+  formData: FormData
+): Promise<ActionResult> {
+  const profile = await requireRole("chief");
+  const supabase = await createClient();
+
+  const id = String(formData.get("author_id"));
+  const confirmed = String(formData.get("confirmed")) === "true";
+
+  const { error } = await supabase
+    .from("submission_authors")
+    .update({
+      attended_confirmed: confirmed,
+      attendance_confirmed_at: confirmed ? new Date().toISOString() : null,
+      attendance_confirmed_by: confirmed ? profile.id : null,
+    })
+    .eq("id", id);
+
+  if (error) return { ok: false, message: error.message };
+
+  await audit(
+    profile.id,
+    confirmed ? "attendance.confirmed" : "attendance.cleared",
+    "submission_author",
+    id
+  );
+  revalidatePath("/admin/attendance");
+  revalidatePath("/chief/attendance");
+  return {
+    ok: true,
+    message: confirmed ? "Marked as attended." : "Attendance cleared.",
+  };
+}
+
 // ---- Publication opportunities (Editorial Office / Convener) ----------
 
 export async function upsertPublicationOpportunity(

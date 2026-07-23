@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import {
   createSubmissionOnePage,
   submitForReview,
@@ -56,7 +55,6 @@ export function NewSubmissionForm({
   const [trackId, setTrackId] = useState("");
   const [abstract, setAbstract] = useState("");
   const [keywords, setKeywords] = useState("");
-  const [file, setFile] = useState<File | null>(null);
   const [authors, setAuthors] = useState<AuthorRow[]>([
     { ...me, is_corresponding: true },
   ]);
@@ -99,9 +97,6 @@ export function NewSubmissionForm({
       return setError(
         `The abstract is ${abstractWords} words — please reduce it to ${ABSTRACT_WORD_LIMIT} words or fewer.`
       );
-    if (!file) return setError("Upload your paper file.");
-    if (file.size > 25 * 1024 * 1024)
-      return setError("The paper file must be under 25 MB.");
     if (!submissionType) return setError("Select your level of participation.");
     if (!participationMode) return setError("Select your attendance format.");
 
@@ -128,25 +123,8 @@ export function NewSubmissionForm({
         return;
       }
       const id = created.id;
-      const supabase = createClient();
 
-      // 2. Upload the paper file to storage.
-      setStatus("Uploading paper…");
-      const path = `${id}/${Date.now()}-${file.name}`;
-      const { error: upErr } = await supabase.storage
-        .from("papers")
-        .upload(path, file, { upsert: false });
-      if (upErr) {
-        setError(`Paper uploaded failed: ${upErr.message}`);
-        setBusy(false);
-        return;
-      }
-      await supabase
-        .from("submissions")
-        .update({ file_path: path, file_name: file.name })
-        .eq("id", id);
-
-      // 3. Submit for review.
+      // 2. Submit the abstract for review.
       setStatus("Submitting for review…");
       const fd = new FormData();
       fd.set("id", id);
@@ -266,21 +244,6 @@ export function NewSubmissionForm({
           <p className="text-xs text-slate-400 mt-1">Comma separated.</p>
         </div>
 
-        <div>
-          <label className="label" htmlFor="file">
-            Paper file
-          </label>
-          <input
-            id="file"
-            type="file"
-            accept=".pdf,.doc,.docx"
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            className="block w-full text-sm text-slate-600 file:mr-3 file:py-2 file:px-4
-                       file:rounded-lg file:border-0 file:text-sm file:font-medium
-                       file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-          />
-          <p className="text-xs text-slate-400 mt-1">PDF or Word, up to 25 MB.</p>
-        </div>
       </div>
 
       {/* ---------------- Authors ---------------- */}
@@ -519,10 +482,11 @@ export function NewSubmissionForm({
 
       <div className="flex items-center gap-3">
         <button type="submit" disabled={busy} className="btn-primary">
-          {busy ? status || "Submitting…" : "Submit manuscript"}
+          {busy ? status || "Submitting…" : "Submit abstract"}
         </button>
         <p className="text-xs text-slate-500">
-          This submits your paper for review in one step.
+          If you selected Full Paper &amp; Presentation, you will be able to
+          upload the full paper once your abstract is accepted.
         </p>
       </div>
     </form>

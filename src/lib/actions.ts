@@ -318,8 +318,6 @@ export async function submitForReview(formData: FormData): Promise<ActionResult>
     .single();
 
   if (!sub) return { ok: false, message: "Submission not found." };
-  if (!sub.file_path)
-    return { ok: false, message: "Upload your paper file before submitting." };
   if (!sub.track_id)
     return { ok: false, message: "Choose a track before submitting." };
 

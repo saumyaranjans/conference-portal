@@ -102,16 +102,37 @@ export default async function AuthorSubmissionPage({
         </div>
       )}
 
-      {/* ---------------- Paper file ---------------- */}
-      <Section title="Paper file">
-        <div className="card card-pad">
-          <PaperUpload
-            submissionId={sub.id}
-            currentName={sub.file_name}
-            editable={editable}
-          />
-        </div>
-      </Section>
+      {/* ---------------- Full paper (after acceptance) ---------------- */}
+      {sub.submission_type === "full_paper_presentation" && (
+        <Section title="Full paper">
+          <div className="card card-pad">
+            {sub.status === "accepted" ? (
+              <>
+                <p className="text-sm text-slate-600 mb-3">
+                  Your abstract has been accepted. Upload the full paper (PDF).
+                </p>
+                <PaperUpload
+                  submissionId={sub.id}
+                  currentName={sub.file_name}
+                  editable={true}
+                />
+              </>
+            ) : sub.file_name ? (
+              <PaperUpload
+                submissionId={sub.id}
+                currentName={sub.file_name}
+                editable={false}
+              />
+            ) : (
+              <p className="text-sm text-slate-500">
+                The full paper upload becomes available once your abstract has
+                been reviewed and accepted by the reviewer, track editor and
+                convener.
+              </p>
+            )}
+          </div>
+        </Section>
+      )}
 
       {/* ---------------- Metadata ---------------- */}
       <Section title="Details">

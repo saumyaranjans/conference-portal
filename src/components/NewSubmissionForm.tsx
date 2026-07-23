@@ -111,6 +111,7 @@ export function NewSubmissionForm({
 
   const tracks = conferences.find((c) => c.id === confId)?.tracks ?? [];
   const abstractWords = countWords(abstract);
+  const declarationsAccepted = declOriginal && declAi && declConsent;
 
   function setAuthor(i: number, patch: Partial<AuthorRow>) {
     setAuthors((rows) =>
@@ -737,12 +738,22 @@ export function NewSubmissionForm({
       )}
 
       <div className="flex items-center gap-3">
-        <button type="submit" disabled={busy} className="btn-primary">
+        <button
+          type="submit"
+          disabled={busy || !declarationsAccepted}
+          title={
+            declarationsAccepted
+              ? undefined
+              : "Accept all declarations above to continue"
+          }
+          className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           Review camera-ready copy
         </button>
         <p className="text-xs text-slate-500">
-          You will see a camera-ready proof to approve before the abstract is
-          submitted.
+          {declarationsAccepted
+            ? "You will see a camera-ready proof to approve before the abstract is submitted."
+            : "Accept all three declarations above to continue."}
         </p>
       </div>
     </form>

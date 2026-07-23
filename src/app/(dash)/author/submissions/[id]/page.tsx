@@ -227,6 +227,37 @@ export default async function AuthorSubmissionPage({
         </Section>
       )}
 
+      {/* ---------------- Declaration ---------------- */}
+      {(sub.declared_original ||
+        sub.declared_ai_assistance ||
+        sub.declared_consent_publication) && (
+        <Section title="Declaration">
+          <div className="card card-pad space-y-1.5">
+            {[
+              [
+                sub.declared_original,
+                "Work is original, not plagiarized, and not submitted/published elsewhere.",
+              ],
+              [
+                sub.declared_ai_assistance,
+                "AI tools were used only for assistance, not as co-authors.",
+              ],
+              [
+                sub.declared_consent_publication,
+                "Consented to publication in the book of abstracts if accepted.",
+              ],
+            ].map(([ok, label]) => (
+              <p key={label as string} className="text-sm text-slate-700">
+                <span className={ok ? "text-emerald-600" : "text-slate-300"}>
+                  {ok ? "✓" : "✗"}
+                </span>{" "}
+                {label as string}
+              </p>
+            ))}
+          </div>
+        </Section>
+      )}
+
       {/* ---------------- Co-authors ---------------- */}
       <Section title="Authors">
         <div className="card divide-y divide-slate-100">

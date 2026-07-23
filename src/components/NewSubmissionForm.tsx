@@ -64,6 +64,11 @@ export function NewSubmissionForm({
   const [participationMode, setParticipationMode] = useState("");
   const [showPreview, setShowPreview] = useState(false);
 
+  // Author declarations — all three must be accepted before submitting.
+  const [declOriginal, setDeclOriginal] = useState(false);
+  const [declAi, setDeclAi] = useState(false);
+  const [declConsent, setDeclConsent] = useState(false);
+
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -106,6 +111,8 @@ export function NewSubmissionForm({
       return `The abstract is ${abstractWords} words — please reduce it to ${ABSTRACT_WORD_LIMIT} words or fewer.`;
     if (!submissionType) return "Select your level of participation.";
     if (!participationMode) return "Select your attendance format.";
+    if (!declOriginal || !declAi || !declConsent)
+      return "Please accept all declarations before continuing.";
     return null;
   }
 
@@ -144,6 +151,9 @@ export function NewSubmissionForm({
         authors,
         submission_type: submissionType,
         participation_mode: participationMode,
+        declared_original: declOriginal,
+        declared_ai_assistance: declAi,
+        declared_consent_publication: declConsent,
       });
       if (!created.ok || !created.id) {
         setError(created.message ?? "Could not create the submission.");
@@ -577,6 +587,49 @@ export function NewSubmissionForm({
             ))}
           </div>
         </div>
+      </div>
+
+      {/* ---------------- Declaration ---------------- */}
+      <div className="card card-pad space-y-3">
+        <h2 className="font-semibold text-slate-900">Declaration</h2>
+        <p className="text-sm text-slate-600">
+          Please confirm the following before continuing.
+        </p>
+
+        {(
+          [
+            [
+              declOriginal,
+              setDeclOriginal,
+              "This work is original, not plagiarized, and has not been submitted/published elsewhere.",
+            ],
+            [
+              declAi,
+              setDeclAi,
+              "AI tools were used only for assistance, not as co-authors.",
+            ],
+            [
+              declConsent,
+              setDeclConsent,
+              "I consent to publication of this abstract in the book of abstracts if accepted.",
+            ],
+          ] as [boolean, (v: boolean) => void, string][]
+        ).map(([checked, setter, label]) => (
+          <label
+            key={label}
+            className="flex items-start gap-3 border border-slate-300 rounded-lg
+                       px-3 py-2.5 cursor-pointer hover:bg-slate-50
+                       has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50"
+          >
+            <input
+              type="checkbox"
+              checked={checked}
+              onChange={(e) => setter(e.target.checked)}
+              className="mt-1"
+            />
+            <span className="text-sm text-slate-800">{label}</span>
+          </label>
+        ))}
       </div>
 
       {error && (

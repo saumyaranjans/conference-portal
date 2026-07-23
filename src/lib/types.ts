@@ -170,6 +170,9 @@ export interface Submission {
   version: number;
   submission_type: string;
   participation_mode: string;
+  declared_original: boolean;
+  declared_ai_assistance: boolean;
+  declared_consent_publication: boolean;
   paper_id: string | null;
   paper_number: number | null;
   file_path: string | null;

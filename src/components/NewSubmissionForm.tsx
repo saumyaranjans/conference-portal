@@ -112,7 +112,7 @@ export function NewSubmissionForm({
   const tracks = conferences.find((c) => c.id === confId)?.tracks ?? [];
   const abstractWords = countWords(abstract);
 
-  function setAuthor(i: number, patch: Partial<CoAuthorInput>) {
+  function setAuthor(i: number, patch: Partial<AuthorRow>) {
     setAuthors((rows) =>
       rows.map((r, idx) => (idx === i ? { ...r, ...patch } : r))
     );

@@ -161,7 +161,8 @@ export async function createSubmissionOnePage(payload: {
   track_id: string;
   abstract: string;
   keywords: string[];
-  coAuthors: CoAuthorInput[];
+  /** Ordered author list; the corresponding entry is filled from the profile. */
+  authors: (CoAuthorInput & { is_corresponding?: boolean })[];
   submission_type?: string;
   participation_mode?: string;
 }): Promise<{ ok: boolean; id?: string; message?: string }> {
@@ -202,33 +203,55 @@ export async function createSubmissionOnePage(payload: {
   if (error || !data)
     return { ok: false, message: error?.message ?? "Could not create submission" };
 
-  // Corresponding author (the submitter) first, then co-authors.
-  await supabase.from("submission_authors").insert({
-    submission_id: data.id,
-    profile_id: profile.id,
-    full_name: profile.full_name || profile.email,
-    email: profile.email,
-    affiliation: profile.affiliation || profile.institution,
-    designation: profile.designation,
-    participant_category: profile.participant_category,
-    mobile: profile.mobile,
-    is_corresponding: true,
-    author_order: 1,
-  });
+  // Keep only usable rows, and make sure the submitter is in the list.
+  let ordered = payload.authors.filter(
+    (a) => a.is_corresponding || (a.full_name.trim() && a.email.trim())
+  );
+  if (!ordered.some((a) => a.is_corresponding)) {
+    ordered = [
+      {
+        full_name: "",
+        designation: "",
+        participant_category: "",
+        affiliation: "",
+        email: "",
+        mobile: "",
+        is_corresponding: true,
+      },
+      ...ordered,
+    ];
+  }
 
-  const extras = payload.coAuthors
-    .filter((c) => c.full_name.trim() && c.email.trim())
-    .map((c, i) => ({
-      submission_id: data.id,
-      full_name: c.full_name.trim(),
-      email: c.email.trim(),
-      affiliation: c.affiliation.trim(),
-      designation: c.designation.trim(),
-      participant_category: c.participant_category.trim(),
-      mobile: c.mobile.trim(),
-      author_order: i + 2,
-    }));
-  if (extras.length) await supabase.from("submission_authors").insert(extras);
+  // The corresponding author's details always come from their profile, so a
+  // client can't spoof them; only the ordering comes from the form.
+  const rows = ordered.map((a, i) =>
+    a.is_corresponding
+      ? {
+          submission_id: data.id,
+          profile_id: profile.id,
+          full_name: profile.full_name || profile.email,
+          email: profile.email,
+          affiliation: profile.affiliation || profile.institution,
+          designation: profile.designation,
+          participant_category: profile.participant_category,
+          mobile: profile.mobile,
+          is_corresponding: true,
+          author_order: i + 1,
+        }
+      : {
+          submission_id: data.id,
+          full_name: a.full_name.trim(),
+          email: a.email.trim(),
+          affiliation: a.affiliation.trim(),
+          designation: a.designation.trim(),
+          participant_category: a.participant_category.trim(),
+          mobile: a.mobile.trim(),
+          is_corresponding: false,
+          author_order: i + 1,
+        }
+  );
+
+  await supabase.from("submission_authors").insert(rows);
 
   await audit(profile.id, "submission.created", "submission", data.id, {
     title: payload.title,

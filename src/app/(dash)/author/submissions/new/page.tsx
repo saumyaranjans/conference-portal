@@ -101,7 +101,17 @@ export default async function NewSubmissionPage({
         </div>
       )}
 
-      <NewSubmissionForm conferences={list} />
+      <NewSubmissionForm
+        conferences={list}
+        me={{
+          full_name: profile.full_name || profile.email,
+          email: profile.email,
+          affiliation: profile.affiliation || profile.institution,
+          designation: profile.designation,
+          participant_category: profile.participant_category,
+          mobile: profile.mobile,
+        }}
+      />
     </>
   );
 }

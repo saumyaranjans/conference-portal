@@ -19,7 +19,19 @@ import {
 
 type ConfWithTracks = Conference & { tracks: Track[] };
 
-const emptyCoAuthor = (): CoAuthorInput => ({
+/** The signed-in author, shown as the corresponding author. */
+export type Me = {
+  full_name: string;
+  email: string;
+  affiliation: string;
+  designation: string;
+  participant_category: string;
+  mobile: string;
+};
+
+type AuthorRow = CoAuthorInput & { is_corresponding?: boolean };
+
+const emptyCoAuthor = (): AuthorRow => ({
   full_name: "",
   designation: "",
   participant_category: "",
@@ -30,8 +42,10 @@ const emptyCoAuthor = (): CoAuthorInput => ({
 
 export function NewSubmissionForm({
   conferences,
+  me,
 }: {
   conferences: ConfWithTracks[];
+  me: Me;
 }) {
   const router = useRouter();
 
@@ -41,7 +55,10 @@ export function NewSubmissionForm({
   const [abstract, setAbstract] = useState("");
   const [keywords, setKeywords] = useState("");
   const [file, setFile] = useState<File | null>(null);
-  const [coAuthors, setCoAuthors] = useState<CoAuthorInput[]>([]);
+  const [authors, setAuthors] = useState<AuthorRow[]>([
+    { ...me, is_corresponding: true },
+  ]);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [submissionType, setSubmissionType] = useState("");
   const [participationMode, setParticipationMode] = useState("");
 
@@ -51,10 +68,21 @@ export function NewSubmissionForm({
 
   const tracks = conferences.find((c) => c.id === confId)?.tracks ?? [];
 
-  function setCoAuthor(i: number, patch: Partial<CoAuthorInput>) {
-    setCoAuthors((rows) =>
+  function setAuthor(i: number, patch: Partial<CoAuthorInput>) {
+    setAuthors((rows) =>
       rows.map((r, idx) => (idx === i ? { ...r, ...patch } : r))
     );
+  }
+
+  /** Move an author from one position to another (drag-drop or arrows). */
+  function moveRow(from: number, to: number) {
+    if (from === to || to < 0 || to >= authors.length) return;
+    setAuthors((rows) => {
+      const copy = [...rows];
+      const [moved] = copy.splice(from, 1);
+      copy.splice(to, 0, moved);
+      return copy;
+    });
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -83,7 +111,7 @@ export function NewSubmissionForm({
           .split(",")
           .map((k) => k.trim())
           .filter(Boolean),
-        coAuthors,
+        authors,
         submission_type: submissionType,
         participation_mode: participationMode,
       });
@@ -237,80 +265,164 @@ export function NewSubmissionForm({
         </div>
       </div>
 
-      {/* ---------------- Co-authors ---------------- */}
+      {/* ---------------- Authors ---------------- */}
       <div className="card card-pad space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="font-semibold text-slate-900">Co-authors</h2>
+          <h2 className="font-semibold text-slate-900">Authors</h2>
           <button
             type="button"
             className="btn-secondary text-sm py-1.5"
-            onClick={() => setCoAuthors((r) => [...r, emptyCoAuthor()])}
+            onClick={() => setAuthors((r) => [...r, emptyCoAuthor()])}
           >
             Add co-author
           </button>
         </div>
         <p className="text-xs text-slate-500">
-          You are added automatically as the corresponding author. Add any
-          co-authors below.
+          Drag a row (or use the arrows) to change the author order. Your own
+          details come from your profile.
         </p>
 
-        {coAuthors.map((c, i) => (
-          <div key={i} className="border border-slate-200 rounded-lg p-3">
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              <input
-                className="input"
-                placeholder="Name"
-                value={c.full_name}
-                onChange={(e) => setCoAuthor(i, { full_name: e.target.value })}
-              />
-              <input
-                className="input"
-                placeholder="Designation"
-                value={c.designation}
-                onChange={(e) => setCoAuthor(i, { designation: e.target.value })}
-              />
-              <select
-                className="input"
-                value={c.participant_category}
-                onChange={(e) =>
-                  setCoAuthor(i, { participant_category: e.target.value })
-                }
-              >
-                <option value="">Participant category…</option>
-                {PARTICIPANT_CATEGORIES.map((p) => (
-                  <option key={p} value={p}>
-                    {p}
-                  </option>
-                ))}
-              </select>
-              <InstitutionInput
-                placeholder="Affiliation"
-                value={c.affiliation}
-                onChange={(v) => setCoAuthor(i, { affiliation: v })}
-              />
-              <input
-                className="input"
-                type="email"
-                placeholder="Email"
-                value={c.email}
-                onChange={(e) => setCoAuthor(i, { email: e.target.value })}
-              />
-              <input
-                className="input"
-                placeholder="Mobile number"
-                value={c.mobile}
-                onChange={(e) => setCoAuthor(i, { mobile: e.target.value })}
-              />
+        {authors.map((a, i) => (
+          <div
+            key={i}
+            draggable
+            onDragStart={() => setDragIndex(i)}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={() => {
+              if (dragIndex !== null) moveRow(dragIndex, i);
+              setDragIndex(null);
+            }}
+            onDragEnd={() => setDragIndex(null)}
+            className={`border rounded-lg p-3 bg-white ${
+              dragIndex === i
+                ? "border-blue-400 opacity-70"
+                : "border-slate-200"
+            }`}
+          >
+            <div className="flex items-start gap-3">
+              {/* order + drag handle */}
+              <div className="flex flex-col items-center pt-1 shrink-0">
+                <span
+                  className="cursor-grab active:cursor-grabbing text-slate-400 leading-none"
+                  title="Drag to reorder"
+                  aria-hidden
+                >
+                  ⠿
+                </span>
+                <span className="text-sm font-semibold text-slate-700 mt-1">
+                  {i + 1}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => moveRow(i, i - 1)}
+                  disabled={i === 0}
+                  aria-label="Move author up"
+                  className="text-slate-400 hover:text-slate-700 disabled:opacity-30 leading-none mt-1"
+                >
+                  ▲
+                </button>
+                <button
+                  type="button"
+                  onClick={() => moveRow(i, i + 1)}
+                  disabled={i === authors.length - 1}
+                  aria-label="Move author down"
+                  className="text-slate-400 hover:text-slate-700 disabled:opacity-30 leading-none"
+                >
+                  ▼
+                </button>
+              </div>
+
+              <div className="flex-1 min-w-0">
+                {a.is_corresponding ? (
+                  <>
+                    <p className="text-sm font-medium text-slate-900">
+                      {me.full_name || me.email}
+                      <span className="badge bg-blue-100 text-blue-800 ml-2">
+                        Corresponding
+                      </span>
+                    </p>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      {[
+                        me.designation,
+                        me.participant_category,
+                        me.affiliation,
+                        me.email,
+                        me.mobile,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </p>
+                    <p className="text-[11px] text-slate-400 mt-1">
+                      Edit these in My Profile.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      <input
+                        className="input"
+                        placeholder="Name"
+                        value={a.full_name}
+                        onChange={(e) =>
+                          setAuthor(i, { full_name: e.target.value })
+                        }
+                      />
+                      <input
+                        className="input"
+                        placeholder="Designation"
+                        value={a.designation}
+                        onChange={(e) =>
+                          setAuthor(i, { designation: e.target.value })
+                        }
+                      />
+                      <select
+                        className="input"
+                        value={a.participant_category}
+                        onChange={(e) =>
+                          setAuthor(i, { participant_category: e.target.value })
+                        }
+                      >
+                        <option value="">Participant category…</option>
+                        {PARTICIPANT_CATEGORIES.map((p) => (
+                          <option key={p} value={p}>
+                            {p}
+                          </option>
+                        ))}
+                      </select>
+                      <InstitutionInput
+                        placeholder="Affiliation"
+                        value={a.affiliation}
+                        onChange={(v) => setAuthor(i, { affiliation: v })}
+                      />
+                      <input
+                        className="input"
+                        type="email"
+                        placeholder="Email"
+                        value={a.email}
+                        onChange={(e) => setAuthor(i, { email: e.target.value })}
+                      />
+                      <input
+                        className="input"
+                        placeholder="Mobile number"
+                        value={a.mobile}
+                        onChange={(e) =>
+                          setAuthor(i, { mobile: e.target.value })
+                        }
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      className="text-xs text-red-600 hover:underline mt-2"
+                      onClick={() =>
+                        setAuthors((r) => r.filter((_, idx) => idx !== i))
+                      }
+                    >
+                      Remove
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
-            <button
-              type="button"
-              className="text-xs text-red-600 hover:underline mt-2"
-              onClick={() =>
-                setCoAuthors((r) => r.filter((_, idx) => idx !== i))
-              }
-            >
-              Remove
-            </button>
           </div>
         ))}
       </div>

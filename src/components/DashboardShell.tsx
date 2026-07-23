@@ -46,7 +46,7 @@ export async function DashboardShell({
         <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
           <Link href="/" className="flex items-center gap-2.5 shrink-0">
             <img
-              src="/glogift-logo.jpg"
+              src="/glogift-logo.png"
               alt="GLOGIFT"
               className="h-9 w-auto object-contain"
             />

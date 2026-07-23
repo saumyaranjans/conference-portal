@@ -33,7 +33,7 @@ export function CameraReadyPreview({
       {/* -------- Header -------- */}
       <header className="flex items-center gap-4 border-b-2 border-slate-800 pb-4">
         <img
-          src="/glogift-logo.jpg"
+          src="/glogift-logo.png"
           alt="GLOGIFT"
           className="h-16 w-auto object-contain shrink-0"
         />

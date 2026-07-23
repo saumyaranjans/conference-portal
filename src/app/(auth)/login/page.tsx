@@ -60,7 +60,12 @@ export default function LoginPage() {
           aria-hidden
         />
 
-        <div className="relative">
+        <div className="relative flex items-center gap-4">
+          <img
+            src="/glogift-logo.png"
+            alt="GLOGIFT"
+            className="h-14 w-auto object-contain shrink-0"
+          />
           <p className="text-lg font-medium text-white/90 whitespace-nowrap">
             Global Institute of Flexible Systems Management
           </p>
@@ -97,6 +102,11 @@ export default function LoginPage() {
         <div className="w-full max-w-sm">
           {/* compact branding for small screens — mirrors the desktop panel */}
           <div className="lg:hidden mb-8 text-center">
+            <img
+              src="/glogift-logo.png"
+              alt="GLOGIFT"
+              className="h-14 w-auto object-contain mx-auto mb-2"
+            />
             <p className="text-base font-medium text-slate-600">
               Global Institute of Flexible Systems Management
             </p>

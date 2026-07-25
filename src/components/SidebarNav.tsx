@@ -80,6 +80,31 @@ export function SidebarNav({
         Home
       </Link>
 
+      <Link
+        href="/profile"
+        className={`flex items-center gap-2 px-3 py-2 mb-4 rounded-lg text-sm transition-colors ${
+          pathname.startsWith("/profile")
+            ? "bg-white text-blue-700 font-medium"
+            : "text-slate-700 hover:bg-white hover:text-blue-700"
+        }`}
+      >
+        <svg
+          className="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={1.8}
+          viewBox="0 0 24 24"
+          aria-hidden
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.5 19.5a7.5 7.5 0 0 1 15 0v.75H4.5v-.75Z"
+          />
+        </svg>
+        My Profile
+      </Link>
+
       <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2 px-3">
         {ROLE_LABELS[current]}
       </p>

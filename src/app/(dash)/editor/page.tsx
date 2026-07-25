@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { SubmissionAnalytics } from "@/components/SubmissionAnalytics";
 import {
   DataTable,
   EmptyState,
@@ -29,7 +30,7 @@ export default async function EditorDashboard() {
   const { data: subs } = trackIds.length
     ? await supabase
         .from("submissions")
-        .select("*, tracks(name)")
+        .select("*, tracks(name, code)")
         .in("track_id", trackIds)
         .neq("status", "draft")
         .order("submitted_at", { ascending: true })
@@ -112,6 +113,12 @@ export default async function EditorDashboard() {
           }
         />
       </div>
+
+      {submissions.length > 0 && (
+        <div className="mb-8">
+          <SubmissionAnalytics rows={submissions as any} />
+        </div>
+      )}
 
       {submissions.length === 0 ? (
         <EmptyState

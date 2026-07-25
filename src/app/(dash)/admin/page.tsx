@@ -8,6 +8,7 @@ import {
   StatCard,
   formatDate,
 } from "@/components/ui/Primitives";
+import { SubmissionAnalytics } from "@/components/SubmissionAnalytics";
 import type { Profile } from "@/lib/types";
 
 export default async function AdminDashboard() {
@@ -15,10 +16,14 @@ export default async function AdminDashboard() {
   const supabase = await createClient();
   const admin = createAdminClient();
 
-  const [{ data: confStats }, { data: profiles }, { data: audit }] =
+  const [{ data: confStats }, { data: profiles }, { data: subs }, { data: audit }] =
     await Promise.all([
       supabase.from("conference_stats").select("*"),
       supabase.from("profiles").select("*"),
+      supabase
+        .from("submissions")
+        .select("stage, status, submission_type, tracks(name, code)")
+        .neq("status", "draft"),
       admin
         .from("audit_log")
         .select("*, profiles(full_name, email)")
@@ -44,13 +49,8 @@ export default async function AdminDashboard() {
         }
       />
 
-      <Section title="Submissions">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard label="Total" value={totals.total_submissions ?? 0} />
-          <StatCard label="Under review" value={totals.under_review ?? 0} />
-          <StatCard label="Accepted" value={totals.accepted ?? 0} />
-          <StatCard label="Rejected" value={totals.rejected ?? 0} />
-        </div>
+      <Section title="Submission analytics">
+        <SubmissionAnalytics rows={(subs ?? []) as any} />
       </Section>
 
       <Section title="Users">

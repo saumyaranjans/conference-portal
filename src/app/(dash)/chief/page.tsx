@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { addTrackChair, removeTrackChair } from "@/lib/actions";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { DeleteSubmissionButton } from "@/components/DeleteSubmissionButton";
+import { SubmissionAnalytics } from "@/components/SubmissionAnalytics";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import {
   DataTable,
@@ -29,7 +30,7 @@ export default async function ChiefDashboard() {
     await Promise.all([
       supabase
         .from("submissions")
-        .select("*, tracks(name)")
+        .select("*, tracks(name, code)")
         .neq("status", "draft")
         .order("updated_at", { ascending: false }),
       supabase
@@ -92,6 +93,11 @@ export default async function ChiefDashboard() {
         <StatCard label="Accepted" value={totals.accepted ?? 0} />
         <StatCard label="Rejected" value={totals.rejected ?? 0} />
       </div>
+
+      {/* ---- Stage-wise analytics, overall and per track ---- */}
+      <Section title="Submission analytics">
+        <SubmissionAnalytics rows={submissions as any} />
+      </Section>
 
       {/* ---- Recommendations awaiting ratification ---- */}
       <Section title="Awaiting your decision">

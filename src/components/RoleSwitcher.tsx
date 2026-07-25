@@ -39,7 +39,7 @@ export function RoleSwitcher({ roles }: { roles: AppRole[] }) {
         aria-label="Switch role"
       >
         {!matched && (
-          <option value="" disabled>
+          <option value="" disabled hidden>
             Select…
           </option>
         )}

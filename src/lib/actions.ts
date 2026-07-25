@@ -689,45 +689,73 @@ export async function removeAssignment(formData: FormData): Promise<ActionResult
 }
 
 /** An editor's recommendation — advisory until the chief ratifies it. */
+/**
+ * Track chair (or Convener) records a final decision. Stage-aware status
+ * change is handled by the on_decision_created trigger. There is no hard
+ * review-count gate — the abstract stage is at the chair's discretion, and
+ * at the full-paper stage the UI advises two accepts but the chair may
+ * still finalize with one.
+ */
 export async function recordRecommendation(
   formData: FormData
 ): Promise<ActionResult> {
-  const profile = await requireRole("editor");
+  const profile = await requireRole("editor", "chief");
   const supabase = await createClient();
 
   const submissionId = String(formData.get("submission_id"));
   const decision = String(formData.get("decision")) as DecisionKind;
-
-  // A recommendation needs at least two completed reviews.
-  const { count: completed } = await supabase
-    .from("reviews")
-    .select("*", { count: "exact", head: true })
-    .eq("submission_id", submissionId)
-    .eq("is_submitted", true);
-
-  if ((completed ?? 0) < MIN_REVIEWS_PER_SUBMISSION) {
-    return {
-      ok: false,
-      message: `At least ${MIN_REVIEWS_PER_SUBMISSION} completed reviews are required before recommending — currently ${completed ?? 0}.`,
-    };
-  }
 
   const { error } = await supabase.from("decisions").insert({
     submission_id: submissionId,
     decided_by: profile.id,
     decision,
     rationale: String(formData.get("rationale") ?? ""),
-    is_final: false,
+    is_final: true,
   });
 
   if (error) return { ok: false, message: error.message };
 
-  await audit(profile.id, "decision.recommended", "submission", submissionId, {
+  await audit(profile.id, "decision.recorded", "submission", submissionId, {
     decision,
   });
   revalidatePath(`/editor/submissions/${submissionId}`);
   revalidatePath("/chief");
-  return { ok: true, message: "Recommendation sent to the Convener." };
+  return { ok: true, message: "Decision recorded." };
+}
+
+/** Track chair / Convener highlights a publication outlet for an accepted paper. */
+export async function setSuggestedOutlet(
+  formData: FormData
+): Promise<ActionResult> {
+  const profile = await requireRole("editor", "chief");
+  const supabase = await createClient();
+  const submissionId = String(formData.get("submission_id"));
+  const outletId = String(formData.get("outlet_id") ?? "");
+
+  const { data: sub } = await supabase
+    .from("submissions")
+    .select("status")
+    .eq("id", submissionId)
+    .single();
+  if (sub?.status !== "accepted") {
+    return {
+      ok: false,
+      message: "An outlet can only be highlighted once the paper is accepted.",
+    };
+  }
+
+  const { error } = await supabase
+    .from("submissions")
+    .update({ suggested_outlet_id: outletId || null })
+    .eq("id", submissionId);
+  if (error) return { ok: false, message: error.message };
+
+  await audit(profile.id, "outlet.suggested", "submission", submissionId, {
+    outlet_id: outletId,
+  });
+  revalidatePath(`/editor/submissions/${submissionId}`);
+  revalidatePath(`/author/submissions/${submissionId}`);
+  return { ok: true, message: "Publication outlet highlighted." };
 }
 
 // =====================================================================

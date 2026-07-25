@@ -7,6 +7,7 @@ import {
   assignReviewer,
   recordRecommendation,
   removeAssignment,
+  setSuggestedOutlet,
 } from "@/lib/actions";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { PaperDownload } from "@/components/PaperUpload";
@@ -61,6 +62,15 @@ export default async function EditorSubmissionPage({
         .order("author_order"),
     ]);
 
+  const { data: outlets } =
+    sub.status === "accepted"
+      ? await supabase
+          .from("publication_opportunities")
+          .select("id, title, category")
+          .eq("is_active", true)
+          .order("sort_order")
+      : { data: [] };
+
   const rows = (assignments ?? []) as any[];
   const assignedIds = new Set(rows.map((a) => a.reviewer_id));
   const available = ((candidates ?? []) as any[]).filter(
@@ -68,7 +78,9 @@ export default async function EditorSubmissionPage({
   );
 
   const completed = rows.filter((a) => a.reviews?.[0]?.is_submitted);
-  const alreadyRecommended = ((decisions ?? []) as any[]).some((d) => !d.is_final);
+  const acceptCount = completed.filter(
+    (a) => a.reviews?.[0]?.recommendation === "accept"
+  ).length;
   const isFinal = ["accepted", "rejected"].includes(sub.status);
 
   return (
@@ -254,8 +266,14 @@ export default async function EditorSubmissionPage({
         <ReviewPanel assignments={rows} showConfidential />
       </Section>
 
-      {/* ---- Recommendation ---- */}
-      <Section title="Editorial recommendation">
+      {/* ---- Decision (track chair finalises) ---- */}
+      <Section
+        title={
+          sub.stage === "full_paper"
+            ? "Full paper decision"
+            : "Abstract decision"
+        }
+      >
         {((decisions ?? []) as any[]).length > 0 && (
           <div className="space-y-3 mb-4">
             {((decisions ?? []) as any[]).map((d) => (
@@ -264,14 +282,8 @@ export default async function EditorSubmissionPage({
                   <span className="font-medium capitalize text-slate-900">
                     {d.decision.replace("_", " ")}
                   </span>
-                  <span
-                    className={`badge ${
-                      d.is_final
-                        ? "bg-emerald-100 text-emerald-800"
-                        : "bg-amber-100 text-amber-800"
-                    }`}
-                  >
-                    {d.is_final ? "Final (Convener)" : "Recommendation"}
+                  <span className="badge bg-emerald-100 text-emerald-800">
+                    Recorded
                   </span>
                 </div>
                 <p className="text-xs text-slate-400 mt-1">
@@ -290,35 +302,40 @@ export default async function EditorSubmissionPage({
         {isFinal ? (
           <div className="card card-pad">
             <p className="text-sm text-slate-500">
-              A final decision has been recorded. No further action needed.
+              This paper is {sub.status.replace("_", " ")}. Record another
+              decision below only to change it.
             </p>
           </div>
         ) : (
           <ActionForm action={recordRecommendation} className="card card-pad space-y-4">
             <input type="hidden" name="submission_id" value={id} />
 
-            {completed.length < MIN_REVIEWS_PER_SUBMISSION && (
-              <p className="text-sm text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-                <strong>
-                  {MIN_REVIEWS_PER_SUBMISSION} completed reviews are required
-                </strong>{" "}
-                before you can recommend a decision — {completed.length} received
-                so far. Invite more reviewers above.
-              </p>
-            )}
-            {alreadyRecommended && (
+            {sub.stage === "full_paper" ? (
+              acceptCount < 2 ? (
+                <p className="text-sm text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                  Full papers normally require <strong>two Accept reviews</strong>{" "}
+                  — {acceptCount} so far. You may still accept at your discretion.
+                </p>
+              ) : (
+                <p className="text-sm text-emerald-800 bg-emerald-50 rounded-lg px-3 py-2">
+                  {acceptCount} reviewers recommend Accept.
+                </p>
+              )
+            ) : (
               <p className="text-sm text-slate-600 bg-slate-50 rounded-lg px-3 py-2">
-                You have already sent a recommendation. Submitting again will
-                supersede it.
+                Abstract stage — decide at your discretion. {completed.length}{" "}
+                review{completed.length === 1 ? "" : "s"} received. As track
+                chair your decision is final; the Convener can override it.
               </p>
             )}
 
             <div>
-              <label className="label">Recommend to the Convener</label>
-              <div className="grid sm:grid-cols-3 gap-2">
+              <label className="label">Your decision</label>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2">
                 {[
                   ["accept", "Accept"],
-                  ["revisions_requested", "Request revisions"],
+                  ["minor_revision", "Minor Revision"],
+                  ["major_revision", "Major Revision"],
                   ["reject", "Reject"],
                 ].map(([value, label]) => (
                   <label
@@ -336,26 +353,49 @@ export default async function EditorSubmissionPage({
 
             <div>
               <label className="label" htmlFor="rationale">
-                Rationale
+                Message to the author
               </label>
               <textarea
                 id="rationale"
                 name="rationale"
                 rows={5}
                 className="input"
-                placeholder="Summarise the reviews and explain your recommendation."
+                placeholder="Shown to the author alongside your decision."
               />
             </div>
 
-            <SubmitButton
-              disabled={completed.length < MIN_REVIEWS_PER_SUBMISSION}
-              className="disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Send recommendation
-            </SubmitButton>
+            <SubmitButton>Record decision</SubmitButton>
           </ActionForm>
         )}
       </Section>
+
+      {/* ---- Highlight a publication outlet (accepted papers) ---- */}
+      {sub.status === "accepted" && (
+        <Section title="Publication outlet">
+          <ActionForm action={setSuggestedOutlet} className="card card-pad space-y-3">
+            <input type="hidden" name="submission_id" value={id} />
+            <p className="text-sm text-slate-600">
+              Highlight one outlet this accepted paper may be considered for.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <select
+                name="outlet_id"
+                defaultValue={sub.suggested_outlet_id ?? ""}
+                className="input max-w-md"
+              >
+                <option value="">— None —</option>
+                {((outlets ?? []) as any[]).map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.title}
+                    {o.category ? ` (${o.category})` : ""}
+                  </option>
+                ))}
+              </select>
+              <SubmitButton variant="secondary">Save</SubmitButton>
+            </div>
+          </ActionForm>
+        </Section>
+      )}
     </>
   );
 }

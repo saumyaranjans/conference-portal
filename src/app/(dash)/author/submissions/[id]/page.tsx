@@ -46,6 +46,14 @@ export default async function AuthorSubmissionPage({
   if (!submission) notFound();
   const sub = submission as Submission;
 
+  const { data: outlet } = sub.suggested_outlet_id
+    ? await supabase
+        .from("publication_opportunities")
+        .select("title, category, image_url, url")
+        .eq("id", sub.suggested_outlet_id)
+        .maybeSingle()
+    : { data: null };
+
   const [{ data: tracks }, { data: coAuthors }, { data: reviews }, { data: decisions }] =
     await Promise.all([
       supabase
@@ -107,34 +115,88 @@ export default async function AuthorSubmissionPage({
         </div>
       )}
 
-      {/* ---------------- Full paper (after acceptance) ---------------- */}
+      {/* ---------------- Full paper (after abstract acceptance) --------- */}
       {sub.submission_type === "full_paper_presentation" && (
         <Section title="Full paper">
           <div className="card card-pad">
-            {sub.status === "accepted" ? (
+            {sub.status === "abstract_accepted" ? (
               <>
-                <p className="text-sm text-slate-600 mb-3">
-                  Your abstract has been accepted. Upload the full paper (PDF).
-                </p>
+                <div className="card card-pad bg-teal-50 border-teal-200 mb-3">
+                  <p className="text-sm text-teal-900 font-medium">
+                    Your abstract has been accepted 🎉
+                  </p>
+                  <p className="text-sm text-teal-800 mt-1">
+                    Upload your full paper (PDF) and submit it for the next
+                    review round.
+                  </p>
+                </div>
                 <PaperUpload
                   submissionId={sub.id}
                   currentName={sub.file_name}
                   editable={true}
                 />
+                <ActionForm action={submitForReview} className="mt-4">
+                  <input type="hidden" name="id" value={sub.id} />
+                  <SubmitButton>Submit full paper</SubmitButton>
+                </ActionForm>
               </>
-            ) : sub.file_name ? (
-              <PaperUpload
-                submissionId={sub.id}
-                currentName={sub.file_name}
-                editable={false}
-              />
+            ) : sub.stage === "full_paper" || sub.file_name ? (
+              <>
+                <PaperUpload
+                  submissionId={sub.id}
+                  currentName={sub.file_name}
+                  editable={editable}
+                />
+                {editable && sub.status === "revisions_requested" && (
+                  <ActionForm action={submitForReview} className="mt-4">
+                    <input type="hidden" name="id" value={sub.id} />
+                    <SubmitButton>Resubmit full paper</SubmitButton>
+                  </ActionForm>
+                )}
+              </>
             ) : (
               <p className="text-sm text-slate-500">
                 The full paper upload becomes available once your abstract has
-                been reviewed and accepted by the reviewer, track editor and
-                convener.
+                been accepted (reviewer → track editor → convener).
               </p>
             )}
+          </div>
+        </Section>
+      )}
+
+      {/* ---------------- Suggested publication outlet ---------------- */}
+      {sub.status === "accepted" && outlet && (
+        <Section title="Publication opportunity">
+          <div className="card card-pad flex items-center gap-4">
+            {outlet.image_url && (
+              <img
+                src={outlet.image_url}
+                alt={outlet.title}
+                className="w-16 rounded border border-slate-200 bg-white shrink-0"
+              />
+            )}
+            <div>
+              <p className="text-sm text-slate-600">
+                Your paper has been highlighted for possible publication in:
+              </p>
+              <p className="text-sm font-medium text-slate-900 mt-0.5">
+                {outlet.url ? (
+                  <a
+                    href={outlet.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-700 hover:underline"
+                  >
+                    {outlet.title}
+                  </a>
+                ) : (
+                  outlet.title
+                )}
+              </p>
+              {outlet.category && (
+                <p className="text-xs text-slate-500">{outlet.category}</p>
+              )}
+            </div>
           </div>
         </Section>
       )}

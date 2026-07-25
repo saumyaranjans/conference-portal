@@ -211,10 +211,11 @@ export default async function ChiefSubmissionPage({
 
             <div>
               <label className="label">Decision</label>
-              <div className="grid sm:grid-cols-3 gap-2">
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2">
                 {[
                   ["accept", "Accept"],
-                  ["revisions_requested", "Request revisions"],
+                  ["minor_revision", "Minor Revision"],
+                  ["major_revision", "Major Revision"],
                   ["reject", "Reject"],
                 ].map(([value, label]) => (
                   <label

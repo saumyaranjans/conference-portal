@@ -20,6 +20,7 @@ export type SubmissionStatus =
   | "submitted"
   | "under_review"
   | "revisions_requested"
+  | "abstract_accepted"
   | "accepted"
   | "rejected"
   | "withdrawn";
@@ -221,6 +222,8 @@ export interface Submission {
   version: number;
   submission_type: string;
   participation_mode: string;
+  stage: string;
+  suggested_outlet_id: string | null;
   declared_original: boolean;
   declared_ai_assistance: boolean;
   declared_consent_publication: boolean;
@@ -312,6 +315,7 @@ export const STATUS_LABELS: Record<SubmissionStatus, string> = {
   submitted: "Submitted",
   under_review: "Under Review",
   revisions_requested: "Revisions Requested",
+  abstract_accepted: "Abstract Accepted",
   accepted: "Accepted",
   rejected: "Rejected",
   withdrawn: "Withdrawn",

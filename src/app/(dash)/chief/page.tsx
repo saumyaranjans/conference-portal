@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { assignTrackEditor } from "@/lib/actions";
+import { addTrackChair, removeTrackChair } from "@/lib/actions";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { DeleteSubmissionButton } from "@/components/DeleteSubmissionButton";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -32,7 +32,12 @@ export default async function ChiefDashboard() {
         .select("*, tracks(name)")
         .neq("status", "draft")
         .order("updated_at", { ascending: false }),
-      supabase.from("tracks").select("*, profiles(full_name, email)").order("name"),
+      supabase
+        .from("tracks")
+        .select(
+          "*, track_editors(profile_id, profiles(id, full_name, email))"
+        )
+        .order("name"),
       supabase.from("profiles").select("*").eq("is_active", true),
       supabase.from("conference_stats").select("*"),
     ]);
@@ -131,41 +136,76 @@ export default async function ChiefDashboard() {
         )}
       </Section>
 
-      {/* ---- Track editor assignment ---- */}
-      <Section title="Tracks & editors">
+      {/* ---- Track chairs (multiple per track) ---- */}
+      <Section title="Tracks & chairs">
         <div className="card divide-y divide-slate-100">
-          {((tracks ?? []) as (Track & { profiles: any })[]).map((t) => (
-            <div key={t.id} className="px-5 py-3">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-slate-800">{t.name}</p>
-                  <p className="text-xs text-slate-500">
-                    {t.profiles
-                      ? `Editor: ${t.profiles.full_name || t.profiles.email}`
-                      : "No editor assigned"}
-                  </p>
+          {((tracks ?? []) as (Track & { track_editors: any[] })[]).map((t) => {
+            const chairs = t.track_editors ?? [];
+            const chairIds = new Set(chairs.map((c) => c.profile_id));
+            return (
+              <div key={t.id} className="px-5 py-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-slate-800">
+                      {t.name}
+                    </p>
+                    {chairs.length === 0 ? (
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        No chair assigned
+                      </p>
+                    ) : (
+                      <div className="flex flex-wrap gap-1.5 mt-1.5">
+                        {chairs.map((c) => (
+                          <span
+                            key={c.profile_id}
+                            className="badge bg-blue-100 text-blue-800 inline-flex items-center gap-1.5"
+                          >
+                            {c.profiles?.full_name || c.profiles?.email}
+                            <ActionForm action={removeTrackChair}>
+                              <input type="hidden" name="track_id" value={t.id} />
+                              <input
+                                type="hidden"
+                                name="editor_id"
+                                value={c.profile_id}
+                              />
+                              <button
+                                type="submit"
+                                className="text-blue-700 hover:text-blue-900 leading-none"
+                                aria-label="Remove chair"
+                                title="Remove chair"
+                              >
+                                ×
+                              </button>
+                            </ActionForm>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <ActionForm action={addTrackChair} className="flex gap-2">
+                    <input type="hidden" name="track_id" value={t.id} />
+                    <select
+                      name="editor_id"
+                      defaultValue=""
+                      className="input py-1.5 text-sm"
+                    >
+                      <option value="">Add a chair…</option>
+                      {editors
+                        .filter((e) => !chairIds.has(e.id))
+                        .map((e) => (
+                          <option key={e.id} value={e.id}>
+                            {e.full_name || e.email}
+                          </option>
+                        ))}
+                    </select>
+                    <SubmitButton variant="secondary" className="text-sm py-1.5">
+                      Add
+                    </SubmitButton>
+                  </ActionForm>
                 </div>
-                <ActionForm action={assignTrackEditor} className="flex gap-2">
-                  <input type="hidden" name="track_id" value={t.id} />
-                  <select
-                    name="editor_id"
-                    defaultValue={t.editor_id ?? ""}
-                    className="input py-1.5 text-sm"
-                  >
-                    <option value="">— Unassigned —</option>
-                    {editors.map((e) => (
-                      <option key={e.id} value={e.id}>
-                        {e.full_name || e.email}
-                      </option>
-                    ))}
-                  </select>
-                  <SubmitButton variant="secondary" className="text-sm py-1.5">
-                    Save
-                  </SubmitButton>
-                </ActionForm>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </Section>
 

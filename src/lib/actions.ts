@@ -808,26 +808,72 @@ export async function deleteSubmission(formData: FormData): Promise<ActionResult
   return { ok: true, message: "Paper deleted." };
 }
 
-export async function assignTrackEditor(formData: FormData): Promise<ActionResult> {
+export async function addTrackChair(formData: FormData): Promise<ActionResult> {
   const profile = await requireRole("chief");
   const supabase = await createClient();
 
   const trackId = String(formData.get("track_id"));
   const editorId = String(formData.get("editor_id") ?? "");
+  if (!editorId) return { ok: false, message: "Choose a track editor to add." };
 
   const { error } = await supabase
-    .from("tracks")
-    .update({ editor_id: editorId || null })
-    .eq("id", trackId);
+    .from("track_editors")
+    .insert({ track_id: trackId, profile_id: editorId });
 
-  if (error) return { ok: false, message: error.message };
+  if (error) {
+    return {
+      ok: false,
+      message:
+        error.code === "23505"
+          ? "That person already chairs this track."
+          : error.message,
+    };
+  }
 
-  await audit(profile.id, "track.editor_assigned", "track", trackId, {
+  // Keep the legacy single column pointing at a current chair for any
+  // remaining references.
+  await supabase.from("tracks").update({ editor_id: editorId }).eq("id", trackId);
+
+  await audit(profile.id, "track.chair_added", "track", trackId, {
     editor_id: editorId,
   });
   revalidatePath("/chief");
   revalidatePath("/admin/tracks");
-  return { ok: true, message: "Track editor updated." };
+  return { ok: true, message: "Track chair added." };
+}
+
+export async function removeTrackChair(formData: FormData): Promise<ActionResult> {
+  const profile = await requireRole("chief");
+  const supabase = await createClient();
+
+  const trackId = String(formData.get("track_id"));
+  const editorId = String(formData.get("editor_id"));
+
+  const { error } = await supabase
+    .from("track_editors")
+    .delete()
+    .eq("track_id", trackId)
+    .eq("profile_id", editorId);
+
+  if (error) return { ok: false, message: error.message };
+
+  // Re-point (or clear) the legacy single column.
+  const { data: remaining } = await supabase
+    .from("track_editors")
+    .select("profile_id")
+    .eq("track_id", trackId)
+    .limit(1);
+  await supabase
+    .from("tracks")
+    .update({ editor_id: remaining?.[0]?.profile_id ?? null })
+    .eq("id", trackId);
+
+  await audit(profile.id, "track.chair_removed", "track", trackId, {
+    editor_id: editorId,
+  });
+  revalidatePath("/chief");
+  revalidatePath("/admin/tracks");
+  return { ok: true, message: "Track chair removed." };
 }
 
 // =====================================================================

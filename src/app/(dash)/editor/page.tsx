@@ -15,13 +15,16 @@ export default async function EditorDashboard() {
   const profile = await requireRole("editor");
   const supabase = await createClient();
 
-  // The tracks this person edits define their whole queue.
-  const { data: tracks } = await supabase
-    .from("tracks")
-    .select("*")
-    .eq("editor_id", profile.id);
+  // The tracks this person chairs define their whole queue.
+  const { data: chairRows } = await supabase
+    .from("track_editors")
+    .select("track_id, tracks(id, name)")
+    .eq("profile_id", profile.id);
 
-  const trackIds = ((tracks ?? []) as Track[]).map((t) => t.id);
+  const tracks = ((chairRows ?? []) as any[])
+    .map((r) => r.tracks)
+    .filter(Boolean) as Track[];
+  const trackIds = tracks.map((t) => t.id);
 
   const { data: subs } = trackIds.length
     ? await supabase
@@ -32,9 +35,10 @@ export default async function EditorDashboard() {
         .order("submitted_at", { ascending: true })
     : { data: [] };
 
-  const submissions = (subs ?? []) as (Submission & {
+  // Conflict of interest: a chair does not handle a paper they authored.
+  const submissions = ((subs ?? []) as (Submission & {
     tracks: { name: string } | null;
-  })[];
+  })[]).filter((s) => s.author_id !== profile.id);
 
   const { data: statsRows } = submissions.length
     ? await supabase

@@ -224,6 +224,9 @@ export interface Submission {
   participation_mode: string;
   stage: string;
   suggested_outlet_id: string | null;
+  similarity_index: number | null;
+  ai_percentage: number | null;
+  integrity_checked_at: string | null;
   declared_original: boolean;
   declared_ai_assistance: boolean;
   declared_consent_publication: boolean;

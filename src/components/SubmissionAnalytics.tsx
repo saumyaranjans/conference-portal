@@ -4,6 +4,7 @@ export type AnalyticsRow = {
   stage: string;
   status: string;
   submission_type: string;
+  participation_mode?: string;
   tracks?: { name: string; code: string } | null;
 };
 
@@ -82,14 +83,34 @@ function StageCards({ title, c }: { title: string; c: Counts }) {
   );
 }
 
+/** Breakdown of the participation choices authors made at submission. */
+function choiceCounts(rows: AnalyticsRow[]) {
+  const live = rows.filter(
+    (r) => r.status !== "withdrawn" && r.status !== "draft"
+  );
+  return {
+    abstractOnly: live.filter(
+      (r) => r.submission_type === "abstract_presentation"
+    ).length,
+    fullPaper: live.filter(
+      (r) => r.submission_type === "full_paper_presentation"
+    ).length,
+    online: live.filter((r) => r.participation_mode === "virtual").length,
+    onsite: live.filter((r) => r.participation_mode === "onsite").length,
+  };
+}
+
 export function SubmissionAnalytics({
   rows,
   perTrack = true,
+  showChoices = false,
 }: {
   rows: AnalyticsRow[];
   perTrack?: boolean;
+  showChoices?: boolean;
 }) {
   const overall = tally(rows);
+  const choices = choiceCounts(rows);
 
   // group by track for the breakdown table
   const groups = new Map<string, AnalyticsRow[]>();
@@ -103,6 +124,31 @@ export function SubmissionAnalytics({
 
   return (
     <div className="space-y-6">
+      {showChoices && (
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
+            Participation choices
+          </p>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {(
+              [
+                ["Abstract & Presentation only", choices.abstractOnly],
+                ["Full paper submission", choices.fullPaper],
+                ["Online (virtual)", choices.online],
+                ["On-site (institution visit)", choices.onsite],
+              ] as [string, number][]
+            ).map(([label, value]) => (
+              <div key={label} className="card card-pad">
+                <p className="text-xs text-slate-500">{label}</p>
+                <p className="text-2xl font-semibold text-slate-900 mt-1">
+                  {value}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <StageCards title="Abstract submissions" c={overall.abstract} />
       <StageCards title="Full paper submissions" c={overall.full} />
 

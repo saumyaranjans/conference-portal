@@ -96,7 +96,7 @@ export default async function ChiefDashboard() {
 
       {/* ---- Stage-wise analytics, overall and per track ---- */}
       <Section title="Submission analytics">
-        <SubmissionAnalytics rows={submissions as any} />
+        <SubmissionAnalytics rows={submissions as any} showChoices />
       </Section>
 
       {/* ---- Recommendations awaiting ratification ---- */}

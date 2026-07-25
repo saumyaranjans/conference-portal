@@ -22,7 +22,9 @@ export default async function AdminDashboard() {
       supabase.from("profiles").select("*"),
       supabase
         .from("submissions")
-        .select("stage, status, submission_type, tracks(name, code)")
+        .select(
+          "stage, status, submission_type, participation_mode, tracks(name, code)"
+        )
         .neq("status", "draft"),
       admin
         .from("audit_log")
@@ -50,7 +52,7 @@ export default async function AdminDashboard() {
       />
 
       <Section title="Submission analytics">
-        <SubmissionAnalytics rows={(subs ?? []) as any} />
+        <SubmissionAnalytics rows={(subs ?? []) as any} showChoices />
       </Section>
 
       <Section title="Users">

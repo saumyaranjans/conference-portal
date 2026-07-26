@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { recordFinalDecision, withdrawSubmission } from "@/lib/actions";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { PaperDownload } from "@/components/PaperUpload";
+import { DocumentViewer } from "@/components/DocumentViewer";
 import { DeleteSubmissionButton } from "@/components/DeleteSubmissionButton";
 import { ReviewPanel } from "@/components/ReviewPanel";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -140,6 +141,15 @@ export default async function ChiefSubmissionPage({
           </div>
 
           <PaperDownload filePath={sub.file_path} fileName={sub.file_name} />
+
+          {sub.file_path && (
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
+                Manuscript preview
+              </p>
+              <DocumentViewer filePath={sub.file_path} fileName={sub.file_name} />
+            </div>
+          )}
         </div>
       </Section>
 

@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { requireRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { ReviewForm } from "@/components/ReviewForm";
-import { PaperDownload } from "@/components/PaperUpload";
+import { CameraReadyPreview } from "@/components/CameraReadyPreview";
+import { DocumentViewer } from "@/components/DocumentViewer";
 import { PageHeader, Section } from "@/components/ui/Primitives";
 
 export default async function ReviewPage({
@@ -18,7 +19,7 @@ export default async function ReviewPage({
   const { data: assignment } = await supabase
     .from("assignments")
     .select(
-      "*, submissions(id, title, abstract, keywords, file_path, file_name, version, paper_id, tracks(name))"
+      "*, submissions(id, title, abstract, keywords, file_path, file_name, version, paper_id, stage, tracks(name, conferences(name)))"
     )
     .eq("id", id)
     .eq("reviewer_id", profile.id)
@@ -55,26 +56,29 @@ export default async function ReviewPage({
         }
       />
 
-      {/* The reviewer never sees author identities — single-blind by design. */}
-      <Section title="Abstract">
-        <div className="card card-pad">
-          <p className="text-sm text-slate-700 whitespace-pre-wrap">
-            {sub?.abstract}
-          </p>
-          {sub?.keywords?.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-4">
-              {sub.keywords.map((k: string) => (
-                <span key={k} className="badge bg-slate-100 text-slate-600">
-                  {k}
-                </span>
-              ))}
-            </div>
-          )}
-          <div className="mt-4">
-            <PaperDownload filePath={sub?.file_path} fileName={sub?.file_name} />
-          </div>
-        </div>
+      {/* The reviewer never sees author identities — single-blind by design,
+          so the camera-ready proof is shown with the author block withheld. */}
+      <Section title="Abstract (camera-ready)">
+        <CameraReadyPreview
+          conferenceName={sub?.tracks?.conferences?.name ?? "GLOGIFT 2027"}
+          trackName={sub?.tracks?.name ?? ""}
+          title={sub?.title ?? ""}
+          authors={[]}
+          abstract={sub?.abstract ?? ""}
+          keywords={(sub?.keywords ?? []).join(", ")}
+        />
+        <p className="text-xs text-slate-400 mt-2">
+          Author identities are withheld — reviews are single-blind.
+        </p>
       </Section>
+
+      {sub?.file_path && (
+        <Section
+          title={sub?.stage === "full_paper" ? "Full paper" : "Manuscript"}
+        >
+          <DocumentViewer filePath={sub.file_path} fileName={sub.file_name} />
+        </Section>
+      )}
 
       <Section title={locked ? "Your submitted review" : "Your review"}>
         {locked && (

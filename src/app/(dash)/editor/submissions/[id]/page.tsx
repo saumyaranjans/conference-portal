@@ -3,13 +3,14 @@ import { notFound } from "next/navigation";
 import { requireRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import {
-  addReviewerByEmail,
   assignReviewer,
   recordRecommendation,
   removeAssignment,
   setSuggestedOutlet,
 } from "@/lib/actions";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
+import { InviteReviewer } from "@/components/InviteReviewer";
+import { DocumentViewer } from "@/components/DocumentViewer";
 import { PaperDownload } from "@/components/PaperUpload";
 import { StatusBadge, RecommendationBadge } from "@/components/ui/StatusBadge";
 import { PageHeader, Section, formatDate } from "@/components/ui/Primitives";
@@ -150,6 +151,18 @@ export default async function EditorSubmissionPage({
           </div>
 
           <PaperDownload filePath={sub.file_path} fileName={sub.file_name} />
+
+          {sub.file_path && (
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
+                Manuscript preview
+              </p>
+              <DocumentViewer
+                filePath={sub.file_path}
+                fileName={sub.file_name}
+              />
+            </div>
+          )}
         </div>
       </Section>
 
@@ -236,28 +249,8 @@ export default async function EditorSubmissionPage({
             </ActionForm>
           )}
 
-          {/* Make another registered user available as a reviewer */}
-          {!isFinal && (
-            <ActionForm action={addReviewerByEmail} className="px-5 py-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
-                Add a reviewer
-              </p>
-              <div className="grid sm:grid-cols-[1fr_auto] gap-3">
-                <input
-                  name="email"
-                  type="email"
-                  required
-                  placeholder="Reviewer's registered email"
-                  className="input"
-                />
-                <SubmitButton variant="secondary">Add as reviewer</SubmitButton>
-              </div>
-              <p className="text-xs text-slate-400 mt-2">
-                They must already have a portal account. Once added they appear
-                in the list above and can be invited to review.
-              </p>
-            </ActionForm>
-          )}
+          {/* Invite an outside reviewer by their details */}
+          {!isFinal && <InviteReviewer submissionId={id} />}
         </div>
       </Section>
 

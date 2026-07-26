@@ -1,5 +1,6 @@
 "use server";
 
+import { randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
@@ -14,6 +15,17 @@ import {
 import type { AppRole, DecisionKind, Recommendation } from "@/lib/types";
 
 export type ActionResult = { ok: boolean; message?: string };
+
+/** Result of inviting a reviewer — either they already had an account (assigned
+ *  directly) or we minted an invitation and generated an email for the chair. */
+export type InviteResult =
+  | { ok: false; message: string }
+  | { ok: true; existing: true; message: string }
+  | {
+      ok: true;
+      existing: false;
+      invite: { link: string; subject: string; body: string };
+    };
 
 /** Append to the audit trail. Never throws — logging must not break a flow. */
 async function audit(
@@ -590,59 +602,6 @@ export async function saveReview(formData: FormData): Promise<ActionResult> {
 // EDITOR
 // =====================================================================
 
-/**
- * Track editor makes an existing portal user available as a reviewer.
- * Only ever *adds* the reviewer role — it never creates accounts, removes
- * roles, or grants anything else.
- */
-export async function addReviewerByEmail(
-  formData: FormData
-): Promise<ActionResult> {
-  const profile = await requireRole("editor", "chief");
-  const admin = createAdminClient();
-
-  const email = String(formData.get("email") ?? "")
-    .trim()
-    .toLowerCase();
-  if (!email) return { ok: false, message: "Enter an email address." };
-
-  const { data: target } = await admin
-    .from("profiles")
-    .select("id, full_name, email, roles")
-    .ilike("email", email)
-    .maybeSingle();
-
-  if (!target) {
-    return {
-      ok: false,
-      message:
-        "No registered user with that email. Ask them to create an account first, then add them here.",
-    };
-  }
-
-  const roles: string[] = target.roles ?? [];
-  if (roles.includes("reviewer")) {
-    return {
-      ok: true,
-      message: `${target.full_name || target.email} is already a reviewer.`,
-    };
-  }
-
-  const { error } = await admin
-    .from("profiles")
-    .update({ roles: [...roles, "reviewer"], updated_at: new Date().toISOString() })
-    .eq("id", target.id);
-
-  if (error) return { ok: false, message: error.message };
-
-  await audit(profile.id, "reviewer.added", "profile", target.id, { email });
-  revalidatePath("/editor");
-  return {
-    ok: true,
-    message: `${target.full_name || target.email} can now be assigned as a reviewer.`,
-  };
-}
-
 export async function assignReviewer(formData: FormData): Promise<ActionResult> {
   const profile = await requireRole("editor", "chief");
   const supabase = await createClient();
@@ -686,6 +645,245 @@ export async function removeAssignment(formData: FormData): Promise<ActionResult
   await audit(profile.id, "assignment.removed", "assignment", id);
   revalidatePath(`/editor/submissions/${submissionId}`);
   return { ok: true, message: "Assignment removed." };
+}
+
+// =====================================================================
+// REVIEWER INVITATIONS (chair invites an outside expert by details)
+// =====================================================================
+
+/** Base URL for invitation links. Falls back to the branded domain. */
+function siteUrl(): string {
+  return (
+    process.env.NEXT_PUBLIC_SITE_URL || "https://glogift2027.vercel.app"
+  ).replace(/\/$/, "");
+}
+
+/** Human label for a submission stage. */
+function stageLabel(stage: string | null): string {
+  return stage === "full_paper" ? "Full Paper" : "Abstract";
+}
+
+/**
+ * Build the invitation email the chair pastes into their own mail client.
+ * Names the Paper ID, title, stage and track — never the submitting author.
+ */
+function buildInviteEmail(opts: {
+  paperId: string | null;
+  title: string;
+  stage: string | null;
+  track: string;
+  conferenceName: string;
+  fullName: string;
+  link: string;
+}): { subject: string; body: string } {
+  const label = stageLabel(opts.stage);
+  const pid = opts.paperId ? opts.paperId : "(to be assigned)";
+  const greeting = opts.fullName ? `Dear ${opts.fullName},` : "Dear Colleague,";
+
+  const subject = `Invitation to review ${label} ${
+    opts.paperId ? `[${opts.paperId}]` : ""
+  } — ${opts.conferenceName}`.replace(/\s+/g, " ").trim();
+
+  const body = [
+    greeting,
+    "",
+    `You are invited to serve as a reviewer for the following ${label.toLowerCase()} submitted to ${opts.conferenceName}${
+      opts.track ? `, ${opts.track} track` : ""
+    }:`,
+    "",
+    `Paper ID: ${pid}`,
+    `Title: ${opts.title}`,
+    `Track: ${opts.track || "—"}`,
+    "",
+    "To accept, please complete a short reviewer registration here:",
+    opts.link,
+    "",
+    "Your name, designation and affiliation have already been filled in — you only need to set a password and confirm a few details. Once registered, the paper will appear in your reviewer dashboard for assessment.",
+    "",
+    "We would be grateful for your expertise.",
+    "",
+    "With thanks,",
+    `Track Session Chair, ${opts.conferenceName}`,
+  ].join("\n");
+
+  return { subject, body };
+}
+
+/**
+ * Chair invites a reviewer by their details. If a portal account already
+ * exists for that email, the reviewer role is granted and the paper assigned
+ * immediately. Otherwise an invitation token is minted and a ready-to-send
+ * email is generated for the chair to copy into their own mail client.
+ */
+export async function inviteReviewer(formData: FormData): Promise<InviteResult> {
+  const profile = await requireRole("editor", "chief");
+  const admin = createAdminClient();
+
+  const submissionId = String(formData.get("submission_id") ?? "");
+  const fullName = String(formData.get("full_name") ?? "").trim();
+  const designation = String(formData.get("designation") ?? "").trim();
+  const affiliation = String(formData.get("affiliation") ?? "").trim();
+  const email = String(formData.get("email") ?? "")
+    .trim()
+    .toLowerCase();
+
+  if (!submissionId) return { ok: false, message: "Missing submission." };
+  if (!fullName) return { ok: false, message: "Enter the reviewer's full name." };
+  if (!email || !email.includes("@"))
+    return { ok: false, message: "Enter a valid email address." };
+
+  const { data: sub } = await admin
+    .from("submissions")
+    .select(
+      "id, title, paper_id, stage, author_id, tracks(name, conferences(name))"
+    )
+    .eq("id", submissionId)
+    .single();
+  if (!sub) return { ok: false, message: "Submission not found." };
+
+  const s = sub as any;
+  const track: string = s.tracks?.name ?? "";
+  const conferenceName: string = s.tracks?.conferences?.name ?? "GLOGIFT 2027";
+
+  // If they already have an account, add the role and assign the paper now.
+  const { data: target } = await admin
+    .from("profiles")
+    .select("id, full_name, email, roles")
+    .ilike("email", email)
+    .maybeSingle();
+
+  if (target) {
+    if (target.id === s.author_id)
+      return {
+        ok: false,
+        message:
+          "That person is the submitting author and cannot review this paper.",
+      };
+
+    const roles: string[] = target.roles ?? [];
+    if (!roles.includes("reviewer")) {
+      await admin
+        .from("profiles")
+        .update({
+          roles: [...roles, "reviewer"],
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", target.id);
+    }
+
+    const { error: aErr } = await admin.from("assignments").insert({
+      submission_id: submissionId,
+      reviewer_id: target.id,
+      assigned_by: profile.id,
+    });
+    if (aErr && aErr.code !== "23505")
+      return { ok: false, message: aErr.message };
+
+    await audit(profile.id, "reviewer.invited_existing", "submission", submissionId, {
+      email,
+    });
+    revalidatePath(`/editor/submissions/${submissionId}`);
+    return {
+      ok: true,
+      existing: true,
+      message: `${
+        target.full_name || email
+      } already has an account — added as a reviewer and assigned to this paper.`,
+    };
+  }
+
+  // New person — mint an invitation token and generate the email.
+  const token = randomBytes(24).toString("hex");
+  const { error: iErr } = await admin.from("reviewer_invitations").insert({
+    submission_id: submissionId,
+    invited_by: profile.id,
+    token,
+    full_name: fullName,
+    designation,
+    affiliation,
+    email,
+  });
+  if (iErr) return { ok: false, message: iErr.message };
+
+  const link = `${siteUrl()}/reviewer-invite/${token}`;
+  const { subject, body } = buildInviteEmail({
+    paperId: s.paper_id,
+    title: s.title,
+    stage: s.stage,
+    track,
+    conferenceName,
+    fullName,
+    link,
+  });
+
+  await audit(profile.id, "reviewer.invited", "submission", submissionId, { email });
+  return { ok: true, existing: false, invite: { link, subject, body } };
+}
+
+/**
+ * Called after an invited reviewer signs up through the token link. Grants the
+ * reviewer role and assigns them to the invitation's submission. Idempotent.
+ */
+export async function acceptReviewerInvite(token: string): Promise<ActionResult> {
+  const profile = await requireProfile();
+  const admin = createAdminClient();
+
+  const { data: inv } = await admin
+    .from("reviewer_invitations")
+    .select("*")
+    .eq("token", token)
+    .maybeSingle();
+
+  if (!inv) return { ok: false, message: "This invitation link is invalid." };
+  if (inv.status === "revoked")
+    return { ok: false, message: "This invitation has been revoked." };
+
+  const { data: sub } = await admin
+    .from("submissions")
+    .select("author_id")
+    .eq("id", inv.submission_id)
+    .single();
+  if (sub && sub.author_id === profile.id)
+    return {
+      ok: false,
+      message: "You are the submitting author and cannot review this paper.",
+    };
+
+  const roles: string[] = profile.roles ?? [];
+  if (!roles.includes("reviewer")) {
+    await admin
+      .from("profiles")
+      .update({
+        roles: [...roles, "reviewer"],
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", profile.id);
+  }
+
+  const { error: aErr } = await admin.from("assignments").insert({
+    submission_id: inv.submission_id,
+    reviewer_id: profile.id,
+    assigned_by: inv.invited_by,
+  });
+  if (aErr && aErr.code !== "23505")
+    return { ok: false, message: aErr.message };
+
+  if (inv.status !== "accepted") {
+    await admin
+      .from("reviewer_invitations")
+      .update({
+        status: "accepted",
+        accepted_by: profile.id,
+        accepted_at: new Date().toISOString(),
+      })
+      .eq("id", inv.id);
+  }
+
+  await audit(profile.id, "reviewer.invite_accepted", "submission", inv.submission_id, {
+    invitation_id: inv.id,
+  });
+  revalidatePath("/reviewer");
+  return { ok: true, message: "You are now a reviewer for this paper." };
 }
 
 /** An editor's recommendation — advisory until the chief ratifies it. */

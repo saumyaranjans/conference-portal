@@ -36,7 +36,9 @@ export default async function proxy(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
 
-  if (!user && PROTECTED.some((p) => path.startsWith(p))) {
+  // Segment-aware match so /reviewer-invite (a public invitation link) is not
+  // caught by the /reviewer prefix.
+  if (!user && PROTECTED.some((p) => path === p || path.startsWith(p + "/"))) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("next", path);

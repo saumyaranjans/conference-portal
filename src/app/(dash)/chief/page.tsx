@@ -5,7 +5,6 @@ import { addTrackChair, removeTrackChair } from "@/lib/actions";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { ChairInviteComposer } from "@/components/ChairInviteComposer";
 import { DeleteSubmissionButton } from "@/components/DeleteSubmissionButton";
-import { SubmissionAnalytics } from "@/components/SubmissionAnalytics";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import {
   DataTable,
@@ -103,10 +102,7 @@ export default async function ChiefDashboard() {
         <StatCard label="Rejected" value={totals.rejected ?? 0} />
       </div>
 
-      {/* ---- Stage-wise analytics, overall and per track ---- */}
-      <Section title="Submission analytics">
-        <SubmissionAnalytics rows={submissions as any} showChoices />
-      </Section>
+      {/* Stage-wise analytics now lives on its own sidebar page: /chief/analytics */}
 
       {/* ---- Recommendations awaiting ratification ---- */}
       <Section title="Awaiting your decision">

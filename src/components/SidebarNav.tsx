@@ -19,6 +19,7 @@ const NAV: Record<AppRole, { href: string; label: string }[]> = {
   editor: [{ href: "/editor", label: "Track Queue" }],
   chief: [
     { href: "/chief", label: "Convener" },
+    { href: "/chief/analytics", label: "Submission Analytics" },
     { href: "/chief/attendance", label: "Attendance" },
   ],
   admin: [

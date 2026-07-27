@@ -16,7 +16,10 @@ const NAV: Record<AppRole, { href: string; label: string }[]> = {
     { href: "/author/submissions/new", label: "New Submission" },
   ],
   reviewer: [{ href: "/reviewer", label: "My Reviews" }],
-  editor: [{ href: "/editor", label: "Track Queue" }],
+  editor: [
+    { href: "/editor", label: "Track Queue" },
+    { href: "/editor/analytics", label: "Track Analytics" },
+  ],
   chief: [
     { href: "/chief", label: "Convener" },
     { href: "/chief/analytics", label: "Submission Analytics" },
@@ -40,7 +43,7 @@ const ROLE_ORDER: AppRole[] = ["author", "reviewer", "editor", "chief", "admin"]
  * they hold.
  */
 /** Roles that see the publication-opportunities panel. */
-const SHOW_OPPORTUNITIES: AppRole[] = ["author", "reviewer", "editor"];
+const SHOW_OPPORTUNITIES: AppRole[] = ["author", "reviewer"];
 
 export function SidebarNav({
   roles,

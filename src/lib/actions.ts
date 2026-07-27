@@ -1334,7 +1334,9 @@ export async function confirmAuthorAttendance(
   formData: FormData
 ): Promise<ActionResult> {
   const profile = await requireRole("chief");
-  const supabase = await createClient();
+  // Staff write: RLS on submission_authors only lets the paper's author update
+  // it, so use the admin client after the role check.
+  const supabase = createAdminClient();
 
   const id = String(formData.get("author_id"));
   const confirmed = String(formData.get("confirmed")) === "true";
@@ -1361,6 +1363,43 @@ export async function confirmAuthorAttendance(
   return {
     ok: true,
     message: confirmed ? "Marked as attended." : "Attendance cleared.",
+  };
+}
+
+/** Editorial Office / Convener records that a listed author paid the
+ *  registration fee, alongside attendance. */
+export async function markRegistrationFee(
+  formData: FormData
+): Promise<ActionResult> {
+  const profile = await requireRole("chief");
+  // Staff write (see confirmAuthorAttendance) — use the admin client.
+  const supabase = createAdminClient();
+
+  const id = String(formData.get("author_id"));
+  const paid = String(formData.get("paid")) === "true";
+
+  const { error } = await supabase
+    .from("submission_authors")
+    .update({
+      registration_fee_paid: paid,
+      registration_fee_paid_at: paid ? new Date().toISOString() : null,
+      registration_fee_paid_by: paid ? profile.id : null,
+    })
+    .eq("id", id);
+
+  if (error) return { ok: false, message: error.message };
+
+  await audit(
+    profile.id,
+    paid ? "registration.paid" : "registration.cleared",
+    "submission_author",
+    id
+  );
+  revalidatePath("/admin/attendance");
+  revalidatePath("/chief/attendance");
+  return {
+    ok: true,
+    message: paid ? "Registration fee marked paid." : "Registration fee cleared.",
   };
 }
 

@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { confirmAuthorAttendance } from "@/lib/actions";
+import { confirmAuthorAttendance, markRegistrationFee } from "@/lib/actions";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import {
   DataTable,
@@ -17,7 +17,7 @@ export async function AttendanceRegister() {
   const { data } = await supabase
     .from("submission_authors")
     .select(
-      "id, full_name, email, affiliation, attendance, attended_confirmed, attendance_confirmed_at, author_order, submissions!inner(id, paper_id, title, status)"
+      "id, full_name, email, affiliation, attendance, attended_confirmed, attendance_confirmed_at, registration_fee_paid, registration_fee_paid_at, author_order, submissions!inner(id, paper_id, title, status)"
     )
     .order("author_order");
 
@@ -27,6 +27,7 @@ export async function AttendanceRegister() {
 
   const attending = rows.filter((r) => r.attendance === "attending");
   const confirmed = attending.filter((r) => r.attended_confirmed);
+  const feesPaid = attending.filter((r) => r.registration_fee_paid);
   const notAttending = rows.filter((r) => r.attendance === "not_attending");
 
   return (
@@ -36,13 +37,14 @@ export async function AttendanceRegister() {
         subtitle="What each author declared, and who actually attended."
       />
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
         <StatCard label="Listed authors" value={rows.length} />
         <StatCard
           label="Declared attending"
           value={attending.length}
           hint="Registration fee applies"
         />
+        <StatCard label="Fees paid" value={feesPaid.length} />
         <StatCard label="Verified attended" value={confirmed.length} />
         <StatCard label="Not attending" value={notAttending.length} />
       </div>
@@ -58,10 +60,16 @@ export async function AttendanceRegister() {
             Attending — requires registration ({attending.length})
           </h2>
           <DataTable
-            headers={["Paper ID", "Author", "Affiliation", "Verified", ""]}
+            headers={[
+              "Paper ID",
+              "Author",
+              "Affiliation",
+              "Registration fee",
+              "Attended",
+            ]}
           >
             {attending.map((r) => (
-              <tr key={r.id} className="hover:bg-slate-50">
+              <tr key={r.id} className="hover:bg-slate-50 align-top">
                 <td className="td font-mono text-xs text-slate-500 whitespace-nowrap">
                   {r.submissions.paper_id ?? "—"}
                 </td>
@@ -74,35 +82,69 @@ export async function AttendanceRegister() {
                   </span>
                 </td>
                 <td className="td text-slate-500 max-w-xs">{r.affiliation}</td>
+
+                {/* Registration fee */}
                 <td className="td">
-                  {r.attended_confirmed ? (
-                    <span className="badge bg-emerald-100 text-emerald-800">
-                      Attended
-                      {r.attendance_confirmed_at
-                        ? ` · ${formatDate(r.attendance_confirmed_at)}`
-                        : ""}
-                    </span>
-                  ) : (
-                    <span className="badge bg-slate-100 text-slate-600">
-                      Not verified
-                    </span>
-                  )}
+                  <div className="space-y-1.5">
+                    {r.registration_fee_paid ? (
+                      <span className="badge bg-emerald-100 text-emerald-800">
+                        Paid
+                        {r.registration_fee_paid_at
+                          ? ` · ${formatDate(r.registration_fee_paid_at)}`
+                          : ""}
+                      </span>
+                    ) : (
+                      <span className="badge bg-amber-100 text-amber-800">
+                        Unpaid
+                      </span>
+                    )}
+                    <ActionForm action={markRegistrationFee}>
+                      <input type="hidden" name="author_id" value={r.id} />
+                      <input
+                        type="hidden"
+                        name="paid"
+                        value={String(!r.registration_fee_paid)}
+                      />
+                      <SubmitButton
+                        variant="secondary"
+                        className="text-xs py-1 px-2"
+                      >
+                        {r.registration_fee_paid ? "Undo" : "Mark paid"}
+                      </SubmitButton>
+                    </ActionForm>
+                  </div>
                 </td>
-                <td className="td text-right">
-                  <ActionForm action={confirmAuthorAttendance}>
-                    <input type="hidden" name="author_id" value={r.id} />
-                    <input
-                      type="hidden"
-                      name="confirmed"
-                      value={String(!r.attended_confirmed)}
-                    />
-                    <SubmitButton
-                      variant="secondary"
-                      className="text-xs py-1 px-2"
-                    >
-                      {r.attended_confirmed ? "Undo" : "Mark attended"}
-                    </SubmitButton>
-                  </ActionForm>
+
+                {/* Attendance */}
+                <td className="td">
+                  <div className="space-y-1.5">
+                    {r.attended_confirmed ? (
+                      <span className="badge bg-emerald-100 text-emerald-800">
+                        Attended
+                        {r.attendance_confirmed_at
+                          ? ` · ${formatDate(r.attendance_confirmed_at)}`
+                          : ""}
+                      </span>
+                    ) : (
+                      <span className="badge bg-slate-100 text-slate-600">
+                        Not verified
+                      </span>
+                    )}
+                    <ActionForm action={confirmAuthorAttendance}>
+                      <input type="hidden" name="author_id" value={r.id} />
+                      <input
+                        type="hidden"
+                        name="confirmed"
+                        value={String(!r.attended_confirmed)}
+                      />
+                      <SubmitButton
+                        variant="secondary"
+                        className="text-xs py-1 px-2"
+                      >
+                        {r.attended_confirmed ? "Undo" : "Mark attended"}
+                      </SubmitButton>
+                    </ActionForm>
+                  </div>
                 </td>
               </tr>
             ))}

@@ -92,7 +92,32 @@ export default async function EditorDashboard() {
           .join(", ")}`}
       />
 
-      {/* ---- Submissions (on top) ---- */}
+      {/* ---- Summary (on top) ---- */}
+      <Section title="Summary">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard label="In queue" value={submissions.length} />
+          <StatCard
+            label="Need reviewers"
+            value={needsReviewers}
+            hint="Fewer than 3 assigned"
+          />
+          <StatCard
+            label="Ready to decide"
+            value={readyToDecide}
+            hint="2+ reviews complete"
+          />
+          <StatCard
+            label="Decided"
+            value={
+              submissions.filter((s) =>
+                ["accepted", "rejected", "revisions_requested"].includes(s.status)
+              ).length
+            }
+          />
+        </div>
+      </Section>
+
+      {/* ---- Submissions ---- */}
       <Section title="Submissions">
         {submissions.length === 0 ? (
           <EmptyState
@@ -160,33 +185,6 @@ export default async function EditorDashboard() {
           </DataTable>
         )}
       </Section>
-
-      {/* ---- Summary (information dashboard) ---- */}
-      <Section title="Summary">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard label="In queue" value={submissions.length} />
-          <StatCard
-            label="Need reviewers"
-            value={needsReviewers}
-            hint="Fewer than 3 assigned"
-          />
-          <StatCard
-            label="Ready to decide"
-            value={readyToDecide}
-            hint="2+ reviews complete"
-          />
-          <StatCard
-            label="Decided"
-            value={
-              submissions.filter((s) =>
-                ["accepted", "rejected", "revisions_requested"].includes(s.status)
-              ).length
-            }
-          />
-        </div>
-      </Section>
-
-      {/* Analytics now lives on its own sidebar page: /editor/analytics */}
     </>
   );
 }

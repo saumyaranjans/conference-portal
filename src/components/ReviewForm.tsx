@@ -85,10 +85,13 @@ export function ReviewForm({
         </div>
 
         {/* ---- Confidence ---- */}
-        <div className="max-w-xs">
+        <div className="max-w-md">
           <label className="label" htmlFor="confidence">
-            Your confidence
+            How well does this paper match your expertise?
           </label>
+          <p className="text-xs text-slate-500 mb-1">
+            Tells the chair how much weight to give your assessment.
+          </p>
           <select
             id="confidence"
             name="confidence"
@@ -101,11 +104,11 @@ export function ReviewForm({
                 {n} —{" "}
                 {
                   [
-                    "Educated guess",
-                    "Low",
-                    "Moderate",
-                    "High",
-                    "Expert in this area",
+                    "Educated guess — outside my area",
+                    "Low — only slightly familiar with the topic",
+                    "Moderate — reasonably familiar with the topic",
+                    "High — very familiar with the topic",
+                    "Expert — I work directly in this area",
                   ][n - 1]
                 }
               </option>

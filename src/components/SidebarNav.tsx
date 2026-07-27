@@ -43,7 +43,7 @@ const ROLE_ORDER: AppRole[] = ["author", "reviewer", "editor", "chief", "admin"]
  * they hold.
  */
 /** Roles that see the publication-opportunities panel. */
-const SHOW_OPPORTUNITIES: AppRole[] = ["author", "reviewer"];
+const SHOW_OPPORTUNITIES: AppRole[] = ["author"];
 
 export function SidebarNav({
   roles,

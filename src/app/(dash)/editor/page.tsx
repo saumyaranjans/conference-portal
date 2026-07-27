@@ -2,7 +2,6 @@ import Link from "next/link";
 import { requireRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { SubmissionAnalytics } from "@/components/SubmissionAnalytics";
 import {
   DataTable,
   EmptyState,
@@ -187,12 +186,7 @@ export default async function EditorDashboard() {
         </div>
       </Section>
 
-      {/* ---- Analytics ---- */}
-      {submissions.length > 0 && (
-        <Section title="Analytics">
-          <SubmissionAnalytics rows={submissions as any} />
-        </Section>
-      )}
+      {/* Analytics now lives on its own sidebar page: /editor/analytics */}
     </>
   );
 }

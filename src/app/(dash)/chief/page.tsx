@@ -3,6 +3,7 @@ import { requireRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { addTrackChair, removeTrackChair } from "@/lib/actions";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
+import { ChairInviteComposer } from "@/components/ChairInviteComposer";
 import { DeleteSubmissionButton } from "@/components/DeleteSubmissionButton";
 import { SubmissionAnalytics } from "@/components/SubmissionAnalytics";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -73,6 +74,14 @@ export default async function ChiefDashboard() {
   const editors = ((staff ?? []) as Profile[]).filter((p) =>
     p.roles.includes("editor")
   );
+
+  // Open (non-final) submission count per track, for the chair-invitation email.
+  const openByTrack: Record<string, number> = {};
+  for (const s of submissions) {
+    if (s.track_id && ["submitted", "under_review"].includes(s.status)) {
+      openByTrack[s.track_id] = (openByTrack[s.track_id] ?? 0) + 1;
+    }
+  }
 
   return (
     <>
@@ -213,6 +222,19 @@ export default async function ChiefDashboard() {
             );
           })}
         </div>
+
+        <ChairInviteComposer
+          editors={editors.map((e) => ({
+            id: e.id,
+            full_name: e.full_name,
+            email: e.email,
+          }))}
+          tracks={((tracks ?? []) as Track[]).map((t) => ({
+            id: t.id,
+            name: t.name,
+          }))}
+          openByTrack={openByTrack}
+        />
       </Section>
 
       {/* ---- Full submission list ---- */}

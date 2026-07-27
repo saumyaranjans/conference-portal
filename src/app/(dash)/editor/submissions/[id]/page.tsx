@@ -10,6 +10,7 @@ import {
 } from "@/lib/actions";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { InviteReviewer } from "@/components/InviteReviewer";
+import { NotifyAuthor } from "@/components/NotifyAuthor";
 import { DocumentViewer } from "@/components/DocumentViewer";
 import { PaperDownload } from "@/components/PaperUpload";
 import { StatusBadge, RecommendationBadge } from "@/components/ui/StatusBadge";
@@ -360,6 +361,20 @@ export default async function EditorSubmissionPage({
             <SubmitButton>Record decision</SubmitButton>
           </ActionForm>
         )}
+      </Section>
+
+      {/* ---- Email the author (decision letter) ---- */}
+      <Section title="Email the author">
+        <NotifyAuthor
+          stage={sub.stage}
+          paperId={sub.paper_id}
+          title={sub.title}
+          track={sub.tracks?.name}
+          authorName={sub.profiles?.full_name}
+          authorEmail={sub.profiles?.email}
+          defaultDecision={((decisions ?? []) as any[])[0]?.decision}
+          defaultMessage={((decisions ?? []) as any[])[0]?.rationale}
+        />
       </Section>
 
       {/* ---- Highlight a publication outlet (accepted papers) ---- */}

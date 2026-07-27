@@ -23,6 +23,7 @@ const NAV: Record<AppRole, { href: string; label: string }[]> = {
   ],
   admin: [
     { href: "/admin", label: "Overview" },
+    { href: "/admin/announcements", label: "Announcements" },
     { href: "/admin/users", label: "Users & Roles" },
     { href: "/admin/tracks", label: "Conference & Tracks" },
     { href: "/admin/publications", label: "Publication Opportunities" },

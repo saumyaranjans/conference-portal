@@ -20,7 +20,12 @@ export type ActionResult = { ok: boolean; message?: string };
  *  directly) or we minted an invitation and generated an email for the chair. */
 export type InviteResult =
   | { ok: false; message: string }
-  | { ok: true; existing: true; message: string }
+  | {
+      ok: true;
+      existing: true;
+      message: string;
+      compose?: { to: string; subject: string; body: string };
+    }
   | {
       ok: true;
       existing: false;
@@ -783,12 +788,34 @@ export async function inviteReviewer(formData: FormData): Promise<InviteResult> 
       email,
     });
     revalidatePath(`/editor/submissions/${submissionId}`);
+
+    // Heads-up email the chair can send from their own client (optional).
+    const composeSubject = `${conferenceName} — You have been assigned a review${
+      s.paper_id ? ` (${s.paper_id})` : ""
+    }`;
+    const composeBody = [
+      `Dear ${target.full_name || "Reviewer"},`,
+      "",
+      `You have been assigned as a reviewer for a ${stageLabel(
+        s.stage
+      ).toLowerCase()} in the ${track} track of ${conferenceName}.`,
+      "",
+      `Paper ID: ${s.paper_id ?? "(pending)"}`,
+      `Title: ${s.title}`,
+      "",
+      `Please sign in to your reviewer dashboard to begin: ${siteUrl()}/reviewer`,
+      "",
+      "With thanks,",
+      `Track Session Chair, ${conferenceName}`,
+    ].join("\n");
+
     return {
       ok: true,
       existing: true,
       message: `${
         target.full_name || email
       } already has an account — added as a reviewer and assigned to this paper.`,
+      compose: { to: email, subject: composeSubject, body: composeBody },
     };
   }
 
@@ -1060,12 +1087,40 @@ export async function addTrackChair(formData: FormData): Promise<ActionResult> {
   // remaining references.
   await supabase.from("tracks").update({ editor_id: editorId }).eq("id", trackId);
 
+  // Grant the editor role if missing, and notify the new chair in-app.
+  const admin = createAdminClient();
+  const { data: track } = await admin
+    .from("tracks")
+    .select("name")
+    .eq("id", trackId)
+    .single();
+  const { data: target } = await admin
+    .from("profiles")
+    .select("roles")
+    .eq("id", editorId)
+    .single();
+  const roles: string[] = target?.roles ?? [];
+  if (!roles.includes("editor")) {
+    await admin
+      .from("profiles")
+      .update({ roles: [...roles, "editor"], updated_at: new Date().toISOString() })
+      .eq("id", editorId);
+  }
+  await admin.from("notifications").insert({
+    profile_id: editorId,
+    title: "You are now a Track Session Chair",
+    body: `You have been assigned as Track Session Chair for the ${
+      track?.name ?? "selected"
+    } track. Sign in and open the Track Queue to begin.`,
+    link: "/editor",
+  });
+
   await audit(profile.id, "track.chair_added", "track", trackId, {
     editor_id: editorId,
   });
   revalidatePath("/chief");
   revalidatePath("/admin/tracks");
-  return { ok: true, message: "Track chair added." };
+  return { ok: true, message: "Track chair added and notified." };
 }
 
 export async function removeTrackChair(formData: FormData): Promise<ActionResult> {
@@ -1100,6 +1155,75 @@ export async function removeTrackChair(formData: FormData): Promise<ActionResult
   revalidatePath("/chief");
   revalidatePath("/admin/tracks");
   return { ok: true, message: "Track chair removed." };
+}
+
+/**
+ * Editorial Office / Convener posts an announcement as an in-app notification
+ * to a chosen audience. Reliable, no email needed. Recipients are resolved
+ * server-side with the admin client (authoritative), then a notification row
+ * is inserted per recipient.
+ */
+export async function broadcastAnnouncement(
+  formData: FormData
+): Promise<ActionResult> {
+  const profile = await requireRole("admin", "chief");
+  const admin = createAdminClient();
+
+  const title = String(formData.get("title") ?? "").trim();
+  const body = String(formData.get("body") ?? "").trim();
+  const audience = String(formData.get("audience") ?? "all");
+  if (!title) return { ok: false, message: "Enter an announcement title." };
+
+  let ids: string[] = [];
+  if (audience.startsWith("track:")) {
+    const trackId = audience.slice(6);
+    const { data } = await admin
+      .from("submissions")
+      .select("author_id")
+      .eq("track_id", trackId)
+      .neq("status", "draft");
+    ids = [...new Set(((data ?? []) as any[]).map((r) => r.author_id))];
+  } else if (audience === "reviewers") {
+    const { data } = await admin
+      .from("profiles")
+      .select("id")
+      .contains("roles", ["reviewer"])
+      .eq("is_active", true);
+    ids = ((data ?? []) as any[]).map((r) => r.id);
+  } else if (audience === "authors") {
+    const { data } = await admin
+      .from("submissions")
+      .select("author_id")
+      .neq("status", "draft");
+    ids = [...new Set(((data ?? []) as any[]).map((r) => r.author_id))];
+  } else {
+    const { data } = await admin
+      .from("profiles")
+      .select("id")
+      .eq("is_active", true);
+    ids = ((data ?? []) as any[]).map((r) => r.id);
+  }
+
+  if (ids.length === 0)
+    return { ok: false, message: "No recipients for that audience." };
+
+  const rows = ids.map((pid) => ({
+    profile_id: pid,
+    title,
+    body,
+    link: "/",
+  }));
+  const { error } = await admin.from("notifications").insert(rows);
+  if (error) return { ok: false, message: error.message };
+
+  await audit(profile.id, "announcement.broadcast", "notification", null, {
+    audience,
+    count: ids.length,
+  });
+  return {
+    ok: true,
+    message: `Posted to ${ids.length} recipient${ids.length === 1 ? "" : "s"}.`,
+  };
 }
 
 // =====================================================================

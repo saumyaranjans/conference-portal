@@ -6,6 +6,7 @@ import { recordFinalDecision, withdrawSubmission } from "@/lib/actions";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { PaperDownload } from "@/components/PaperUpload";
 import { DocumentViewer } from "@/components/DocumentViewer";
+import { NotifyAuthor } from "@/components/NotifyAuthor";
 import { DeleteSubmissionButton } from "@/components/DeleteSubmissionButton";
 import { ReviewPanel } from "@/components/ReviewPanel";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -28,7 +29,9 @@ export default async function ChiefSubmissionPage({
 
   const { data: submission } = await supabase
     .from("submissions")
-    .select("*, tracks(name, profiles(full_name))")
+    .select(
+      "*, tracks(name, profiles(full_name)), author:profiles!submissions_author_id_fkey(full_name, email)"
+    )
     .eq("id", id)
     .single();
 
@@ -155,6 +158,20 @@ export default async function ChiefSubmissionPage({
 
       <Section title="Reviews">
         <ReviewPanel assignments={rows} showConfidential />
+      </Section>
+
+      {/* ---- Email the author (decision letter) ---- */}
+      <Section title="Email the author">
+        <NotifyAuthor
+          stage={(sub as any).stage}
+          paperId={sub.paper_id}
+          title={sub.title}
+          track={sub.tracks?.name}
+          authorName={(sub as any).author?.full_name}
+          authorEmail={(sub as any).author?.email}
+          defaultDecision={decisionRows[0]?.decision}
+          defaultMessage={decisionRows[0]?.rationale}
+        />
       </Section>
 
       {/* ---- Decision history ---- */}

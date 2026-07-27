@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { inviteReviewer, type InviteResult } from "@/lib/actions";
 import { InstitutionInput } from "@/components/InstitutionInput";
+import { ComposeEmail } from "@/components/ComposeEmail";
 
 /**
  * Chair-facing form to invite an outside reviewer by their details. If the
@@ -20,6 +21,9 @@ export function InviteReviewer({ submissionId }: { submissionId: string }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [existingMsg, setExistingMsg] = useState<string | null>(null);
+  const [existingCompose, setExistingCompose] = useState<
+    { to: string; subject: string; body: string } | null
+  >(null);
   const [invite, setInvite] =
     useState<Extract<InviteResult, { existing: false }>["invite"] | null>(null);
 
@@ -27,6 +31,7 @@ export function InviteReviewer({ submissionId }: { submissionId: string }) {
     e.preventDefault();
     setError(null);
     setExistingMsg(null);
+    setExistingCompose(null);
     setInvite(null);
     setBusy(true);
 
@@ -46,6 +51,7 @@ export function InviteReviewer({ submissionId }: { submissionId: string }) {
     }
     if (res.existing) {
       setExistingMsg(res.message);
+      setExistingCompose(res.compose ?? null);
       setFullName("");
       setDesignation("");
       setAffiliation("");
@@ -143,6 +149,18 @@ export function InviteReviewer({ submissionId }: { submissionId: string }) {
             <p className="text-sm text-emerald-700 bg-emerald-50 rounded-lg px-3 py-2">
               {existingMsg}
             </p>
+          )}
+          {existingCompose && (
+            <div className="border-t border-slate-100 pt-3 mt-1">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
+                Optional: email them a heads-up
+              </p>
+              <ComposeEmail
+                to={existingCompose.to}
+                subject={existingCompose.subject}
+                body={existingCompose.body}
+              />
+            </div>
           )}
         </form>
       ) : (

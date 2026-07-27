@@ -45,9 +45,14 @@ export default async function AdminDashboard() {
         title="Editorial Office"
         subtitle="System-wide health, users, and the audit trail."
         action={
-          <a href="/api/reports/submissions" className="btn-secondary">
-            Export submissions CSV
-          </a>
+          <div className="flex flex-wrap gap-2">
+            <Link href="/admin/announcements" className="btn-primary">
+              New announcement
+            </Link>
+            <a href="/api/reports/submissions" className="btn-secondary">
+              Export submissions CSV
+            </a>
+          </div>
         }
       />
 

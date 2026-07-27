@@ -30,6 +30,26 @@ export function NotificationBell({ unread }: { unread: number }) {
     setItems((prev) => prev.map((n) => ({ ...n, is_read: true })));
   }
 
+  async function deleteOne(
+    e: React.MouseEvent,
+    n: Notification
+  ) {
+    e.preventDefault();
+    e.stopPropagation();
+    const supabase = createClient();
+    await supabase.from("notifications").delete().eq("id", n.id);
+    setItems((prev) => prev.filter((x) => x.id !== n.id));
+    if (!n.is_read) setCount((c) => Math.max(0, c - 1));
+  }
+
+  async function clearAll() {
+    const supabase = createClient();
+    // RLS scopes the delete to the signed-in user's own notifications.
+    await supabase.from("notifications").delete().not("id", "is", null);
+    setItems([]);
+    setCount(0);
+  }
+
   return (
     <div className="relative">
       <button
@@ -61,12 +81,22 @@ export function NotificationBell({ unread }: { unread: number }) {
         <div className="absolute right-0 mt-2 w-80 card z-30 max-h-96 overflow-y-auto">
           <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100">
             <p className="text-sm font-semibold">Notifications</p>
-            <button
-              onClick={markAllRead}
-              className="text-xs text-blue-700 hover:underline"
-            >
-              Mark all read
-            </button>
+            {items.length > 0 && (
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={markAllRead}
+                  className="text-xs text-blue-700 hover:underline"
+                >
+                  Mark all read
+                </button>
+                <button
+                  onClick={clearAll}
+                  className="text-xs text-red-600 hover:underline"
+                >
+                  Clear all
+                </button>
+              </div>
+            )}
           </div>
           {items.length === 0 ? (
             <p className="px-4 py-6 text-sm text-slate-500 text-center">
@@ -75,10 +105,10 @@ export function NotificationBell({ unread }: { unread: number }) {
           ) : (
             <ul className="divide-y divide-slate-100">
               {items.map((n) => (
-                <li key={n.id}>
+                <li key={n.id} className="relative group">
                   <a
                     href={n.link ?? "#"}
-                    className={`block px-4 py-3 hover:bg-slate-50 ${
+                    className={`block px-4 py-3 pr-9 hover:bg-slate-50 ${
                       n.is_read ? "" : "bg-blue-50/50"
                     }`}
                   >
@@ -94,6 +124,16 @@ export function NotificationBell({ unread }: { unread: number }) {
                       {new Date(n.created_at).toLocaleString()}
                     </p>
                   </a>
+                  <button
+                    onClick={(e) => deleteOne(e, n)}
+                    aria-label="Delete notification"
+                    title="Delete"
+                    className="absolute top-2.5 right-2 w-6 h-6 rounded-md text-slate-400
+                               hover:bg-slate-200 hover:text-slate-700 flex items-center
+                               justify-center leading-none"
+                  >
+                    ×
+                  </button>
                 </li>
               ))}
             </ul>

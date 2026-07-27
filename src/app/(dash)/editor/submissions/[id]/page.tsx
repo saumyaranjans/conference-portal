@@ -45,7 +45,9 @@ export default async function EditorSubmissionPage({
     await Promise.all([
       supabase
         .from("assignments")
-        .select("*, profiles(full_name, email, affiliation), reviews(*)")
+        .select(
+          "*, profiles!assignments_reviewer_id_fkey(full_name, email, affiliation), reviews(*)"
+        )
         .eq("submission_id", id)
         .order("created_at"),
       supabase

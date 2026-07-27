@@ -42,7 +42,9 @@ export default async function ChiefSubmissionPage({
     await Promise.all([
       supabase
         .from("assignments")
-        .select("*, profiles(full_name, email), reviews(*)")
+        .select(
+          "*, profiles!assignments_reviewer_id_fkey(full_name, email), reviews(*)"
+        )
         .eq("submission_id", id),
       supabase
         .from("decisions")

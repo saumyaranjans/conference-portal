@@ -7,6 +7,7 @@ import {
   DataTable,
   EmptyState,
   PageHeader,
+  Section,
   StatCard,
   formatDate,
 } from "@/components/ui/Primitives";
@@ -92,98 +93,105 @@ export default async function EditorDashboard() {
           .join(", ")}`}
       />
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard label="In queue" value={submissions.length} />
-        <StatCard
-          label="Need reviewers"
-          value={needsReviewers}
-          hint="Fewer than 3 assigned"
-        />
-        <StatCard
-          label="Ready to decide"
-          value={readyToDecide}
-          hint="2+ reviews complete"
-        />
-        <StatCard
-          label="Decided"
-          value={
-            submissions.filter((s) =>
-              ["accepted", "rejected", "revisions_requested"].includes(s.status)
-            ).length
-          }
-        />
-      </div>
+      {/* ---- Submissions (on top) ---- */}
+      <Section title="Submissions">
+        {submissions.length === 0 ? (
+          <EmptyState
+            title="No submissions in your track yet"
+            description="Papers appear here as soon as authors submit them."
+          />
+        ) : (
+          <DataTable
+            headers={[
+              "Paper ID",
+              "Title",
+              "Status",
+              "Reviews",
+              "Avg score",
+              "Submitted",
+              "",
+            ]}
+          >
+            {submissions.map((s) => {
+              const st = stats.get(s.id);
+              const complete = st?.completed_count ?? 0;
+              const assigned = st?.assigned_count ?? 0;
+              return (
+                <tr key={s.id} className="hover:bg-slate-50">
+                  <td className="td font-mono text-xs text-slate-500 whitespace-nowrap">
+                    {s.paper_id ?? "—"}
+                  </td>
+                  <td className="td font-medium text-slate-900 max-w-sm">
+                    {s.title}
+                    <span className="block text-xs font-normal text-slate-400">
+                      v{s.version}
+                    </span>
+                  </td>
+                  <td className="td">
+                    <StatusBadge status={s.status} />
+                  </td>
+                  <td className="td">
+                    <span
+                      className={
+                        assigned === 0
+                          ? "text-red-600 font-medium"
+                          : complete < 2
+                            ? "text-amber-600"
+                            : "text-emerald-700"
+                      }
+                    >
+                      {complete}/{assigned}
+                    </span>
+                  </td>
+                  <td className="td">{st?.avg_score ?? "—"}</td>
+                  <td className="td text-slate-500">
+                    {formatDate(s.submitted_at)}
+                  </td>
+                  <td className="td text-right">
+                    <Link
+                      href={`/editor/submissions/${s.id}`}
+                      className="text-blue-700 hover:underline text-sm font-medium"
+                    >
+                      Manage
+                    </Link>
+                  </td>
+                </tr>
+              );
+            })}
+          </DataTable>
+        )}
+      </Section>
 
-      {submissions.length > 0 && (
-        <div className="mb-8">
-          <SubmissionAnalytics rows={submissions as any} />
+      {/* ---- Summary (information dashboard) ---- */}
+      <Section title="Summary">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard label="In queue" value={submissions.length} />
+          <StatCard
+            label="Need reviewers"
+            value={needsReviewers}
+            hint="Fewer than 3 assigned"
+          />
+          <StatCard
+            label="Ready to decide"
+            value={readyToDecide}
+            hint="2+ reviews complete"
+          />
+          <StatCard
+            label="Decided"
+            value={
+              submissions.filter((s) =>
+                ["accepted", "rejected", "revisions_requested"].includes(s.status)
+              ).length
+            }
+          />
         </div>
-      )}
+      </Section>
 
-      {submissions.length === 0 ? (
-        <EmptyState
-          title="No submissions in your track yet"
-          description="Papers appear here as soon as authors submit them."
-        />
-      ) : (
-        <DataTable
-          headers={[
-            "Paper ID",
-            "Title",
-            "Status",
-            "Reviews",
-            "Avg score",
-            "Submitted",
-            "",
-          ]}
-        >
-          {submissions.map((s) => {
-            const st = stats.get(s.id);
-            const complete = st?.completed_count ?? 0;
-            const assigned = st?.assigned_count ?? 0;
-            return (
-              <tr key={s.id} className="hover:bg-slate-50">
-                <td className="td font-mono text-xs text-slate-500 whitespace-nowrap">
-                  {s.paper_id ?? "—"}
-                </td>
-                <td className="td font-medium text-slate-900 max-w-sm">
-                  {s.title}
-                  <span className="block text-xs font-normal text-slate-400">
-                    v{s.version}
-                  </span>
-                </td>
-                <td className="td">
-                  <StatusBadge status={s.status} />
-                </td>
-                <td className="td">
-                  <span
-                    className={
-                      assigned === 0
-                        ? "text-red-600 font-medium"
-                        : complete < 2
-                          ? "text-amber-600"
-                          : "text-emerald-700"
-                    }
-                  >
-                    {complete}/{assigned}
-                  </span>
-                </td>
-                <td className="td">{st?.avg_score ?? "—"}</td>
-                <td className="td text-slate-500">
-                  {formatDate(s.submitted_at)}
-                </td>
-                <td className="td text-right">
-                  <Link
-                    href={`/editor/submissions/${s.id}`}
-                    className="text-blue-700 hover:underline text-sm font-medium"
-                  >
-                    Manage
-                  </Link>
-                </td>
-              </tr>
-            );
-          })}
-        </DataTable>
+      {/* ---- Analytics ---- */}
+      {submissions.length > 0 && (
+        <Section title="Analytics">
+          <SubmissionAnalytics rows={submissions as any} />
+        </Section>
       )}
     </>
   );

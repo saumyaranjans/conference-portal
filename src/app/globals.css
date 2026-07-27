@@ -13,7 +13,11 @@
 }
 
 body {
-  background: #f8fafc;
+  background:
+    radial-gradient(1100px 560px at 100% -8%, rgba(37, 99, 235, 0.07), transparent 60%),
+    radial-gradient(900px 480px at -8% 4%, rgba(124, 58, 237, 0.05), transparent 55%),
+    #f6f8fc;
+  background-attachment: fixed;
   color: var(--color-ink);
   -webkit-font-smoothing: antialiased;
 }
@@ -21,10 +25,84 @@ body {
 /* Shared primitives — keeps every dashboard visually consistent. */
 @layer components {
   .card {
-    @apply bg-white border border-slate-200 rounded-xl shadow-sm;
+    @apply bg-white border border-slate-200 rounded-2xl;
+    box-shadow:
+      0 1px 2px rgba(15, 23, 42, 0.04),
+      0 6px 20px -10px rgba(15, 23, 42, 0.12);
+  }
+  /* Lift on hover — opt-in for clickable cards. */
+  .card-hover {
+    @apply transition duration-200 ease-out;
+  }
+  .card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 2px 4px rgba(15, 23, 42, 0.06),
+      0 16px 32px -14px rgba(15, 23, 42, 0.22);
+    border-color: rgb(203 213 225);
   }
   .card-pad {
     @apply p-5;
+  }
+  /* Frosted, translucent app header (blur via backdrop-blur utility on the
+     element; this supplies the translucent tint the blur shows through). */
+  .app-header {
+    background-color: rgba(255, 255, 255, 0.72);
+  }
+  /* Sidebar nav items. */
+  .nav-item {
+    @apply relative block rounded-lg px-3 py-2 text-sm text-slate-700
+           transition-colors hover:text-blue-700;
+  }
+  .nav-item:hover {
+    background-color: rgba(255, 255, 255, 0.7);
+  }
+  .nav-item-active {
+    @apply text-blue-700 font-semibold;
+    background-color: #eff6ff;
+  }
+  .nav-item-active::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 7px;
+    bottom: 7px;
+    width: 3px;
+    border-radius: 0 2px 2px 0;
+    background-image: linear-gradient(180deg, #2563eb, #7c3aed);
+  }
+  /* Brand gradient hairline (header accent, dividers). */
+  .brand-rule {
+    height: 2px;
+    background-image: linear-gradient(
+      90deg,
+      #2563eb 0%,
+      #0891b2 30%,
+      #059669 55%,
+      #7c3aed 80%,
+      #db2777 100%
+    );
+    opacity: 0.85;
+  }
+  /* Thin brand-gradient bar across the top of a stat card. */
+  .stat-accent {
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-accent::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 3px;
+    background-image: linear-gradient(
+      90deg,
+      #2563eb 0%,
+      #0891b2 30%,
+      #059669 55%,
+      #7c3aed 80%,
+      #db2777 100%
+    );
+    opacity: 0.9;
   }
   /* Tailwind v4 cannot @apply one custom component class inside another,
      so each variant repeats the base rather than extending `.btn`. */
@@ -33,11 +111,20 @@ body {
   .btn-secondary,
   .btn-danger {
     @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2
-           text-sm font-medium transition-colors disabled:opacity-50
+           text-sm font-medium transition disabled:opacity-50
            disabled:cursor-not-allowed;
   }
   .btn-primary {
     @apply bg-blue-700 text-white hover:bg-blue-800;
+    box-shadow:
+      0 1px 2px rgba(29, 78, 216, 0.2),
+      0 8px 18px -10px rgba(29, 78, 216, 0.55);
+  }
+  .btn-primary:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow:
+      0 2px 4px rgba(29, 78, 216, 0.24),
+      0 12px 22px -10px rgba(29, 78, 216, 0.6);
   }
   .btn-secondary {
     @apply bg-white text-slate-700 border border-slate-300 hover:bg-slate-50;
@@ -54,11 +141,11 @@ body {
   }
   .badge {
     @apply inline-flex items-center rounded-full px-2.5 py-0.5
-           text-xs font-medium;
+           text-xs font-medium ring-1 ring-inset ring-black/5;
   }
   .th {
     @apply px-4 py-3 text-left text-xs font-semibold uppercase
-           tracking-wide text-slate-500;
+           tracking-wide text-slate-500 bg-slate-50/80;
   }
   .td {
     @apply px-4 py-3 text-sm text-slate-700 align-top;
@@ -76,7 +163,11 @@ body {
   color-scheme: dark;
 }
 .dark body {
-  background: #0b1120;
+  background:
+    radial-gradient(1100px 560px at 100% -8%, rgba(59, 130, 246, 0.12), transparent 60%),
+    radial-gradient(900px 480px at -8% 4%, rgba(124, 58, 237, 0.12), transparent 55%),
+    #0b1120;
+  background-attachment: fixed;
   color: #e2e8f0;
 }
 
@@ -104,7 +195,24 @@ body {
 .dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]) { border-color: #334155; }
 
 /* component primitives */
-.dark .card { background-color: #1e293b; border-color: #334155; }
+.dark .card {
+  background-color: #1e293b;
+  border-color: #334155;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.3),
+    0 8px 24px -12px rgba(0, 0, 0, 0.55);
+}
+.dark .card-hover:hover {
+  border-color: #475569;
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.35),
+    0 18px 34px -14px rgba(0, 0, 0, 0.65);
+}
+.dark .th { background-color: rgba(30, 41, 59, 0.6); }
+.dark .badge { --tw-ring-color: rgba(255, 255, 255, 0.08); }
+.dark .app-header { background-color: rgba(15, 23, 42, 0.68); }
+.dark .nav-item:hover { background-color: rgba(30, 41, 59, 0.7); }
+.dark .nav-item-active { background-color: rgba(37, 99, 235, 0.18); color: #bfdbfe; }
 .dark .input {
   background-color: #0f172a;
   border-color: #475569;

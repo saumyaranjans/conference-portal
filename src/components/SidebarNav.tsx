@@ -123,11 +123,7 @@ export function SidebarNav({
             <li key={item.href}>
               <Link
                 href={item.href}
-                className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
-                  active
-                    ? "bg-white text-blue-700 font-medium"
-                    : "text-slate-700 hover:bg-white hover:text-blue-700"
-                }`}
+                className={`nav-item ${active ? "nav-item-active" : ""}`}
               >
                 {item.label}
               </Link>

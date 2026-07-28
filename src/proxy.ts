@@ -47,7 +47,8 @@ export default async function proxy(request: NextRequest) {
 
   if (user && (path === "/login" || path === "/signup")) {
     const url = request.nextUrl.clone();
-    url.pathname = "/author";
+    // Home applies the multi-role landing priority (see src/app/page.tsx).
+    url.pathname = "/";
     url.search = "";
     return NextResponse.redirect(url);
   }

@@ -2,7 +2,9 @@ import { redirect } from "next/navigation";
 import { getProfile } from "@/lib/auth";
 import { ROLE_HOME, type AppRole } from "@/lib/types";
 
-const PRIORITY: AppRole[] = ["admin", "chief", "editor", "reviewer", "author"];
+// Landing priority for multi-role users: Convener → Track Editor → Author →
+// Reviewer → Editorial Office.
+const PRIORITY: AppRole[] = ["chief", "editor", "author", "reviewer", "admin"];
 
 export default async function Home() {
   const profile = await getProfile();

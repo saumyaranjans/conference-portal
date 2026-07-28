@@ -242,7 +242,9 @@ export default async function EditorSubmissionPage({
                   className="input"
                   aria-label="Due date"
                 />
-                <SubmitButton>Invite</SubmitButton>
+                <SubmitButton className="whitespace-nowrap">
+                  Invite &amp; send email
+                </SubmitButton>
               </div>
               {available.length === 0 && (
                 <p className="text-xs text-slate-400 mt-2">

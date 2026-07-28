@@ -709,8 +709,60 @@ export async function assignReviewer(formData: FormData): Promise<ActionResult> 
   await audit(profile.id, "assignment.created", "submission", submissionId, {
     reviewer_id: reviewerId,
   });
+
+  // Email the assigned reviewer (best-effort; no-op unless Resend is set up).
+  if (emailConfigured()) {
+    try {
+      const admin = createAdminClient();
+      const [{ data: rev }, { data: sub }] = await Promise.all([
+        admin.from("profiles").select("full_name, email").eq("id", reviewerId).single(),
+        admin
+          .from("submissions")
+          .select("paper_id, title, stage, tracks(name, conferences(name))")
+          .eq("id", submissionId)
+          .single(),
+      ]);
+      const to = (rev as any)?.email;
+      if (to) {
+        const s = sub as any;
+        const conf = s?.tracks?.conferences?.name ?? "GLOGIFT 2027";
+        const subject = `${conf} — Review assignment${
+          s?.paper_id ? ` (${s.paper_id})` : ""
+        }`;
+        const body = [
+          `Dear ${(rev as any).full_name || "Reviewer"},`,
+          "",
+          `You have been assigned to review a ${stageLabel(
+            s?.stage
+          ).toLowerCase()} submitted to ${conf}${
+            s?.tracks?.name ? `, ${s.tracks.name} track` : ""
+          }:`,
+          "",
+          `Paper ID: ${s?.paper_id ?? "(pending)"}`,
+          `Title: ${s?.title ?? ""}`,
+          dueDate ? `Due date: ${dueDate}` : "",
+          "",
+          `Please sign in to your reviewer dashboard to accept and begin: ${siteUrl()}/reviewer`,
+          "",
+          "With thanks,",
+          `Track Session Chair, ${conf}`,
+        ]
+          .filter(Boolean)
+          .join("\n");
+        await sendEmail({ to, subject, text: body });
+      }
+    } catch {
+      // best-effort — an email failure must not undo the assignment
+    }
+  }
+
   revalidatePath(`/editor/submissions/${submissionId}`);
-  return { ok: true, message: "Reviewer invited." };
+  return {
+    ok: true,
+    message: emailConfigured()
+      ? "Reviewer invited and emailed."
+      : "Reviewer invited.",
+  };
 }
 
 export async function removeAssignment(formData: FormData): Promise<ActionResult> {

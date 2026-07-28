@@ -5,6 +5,12 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { requireProfile, requireRole } from "@/lib/auth";
+import { emailConfigured, sendEmail } from "@/lib/email";
+import {
+  abstractDecisionEmail,
+  chairInviteEmail,
+  fullPaperDecisionEmail,
+} from "@/lib/emailTemplates";
 import {
   ABSTRACT_WORD_LIMIT,
   countWords,
@@ -51,6 +57,46 @@ async function audit(
     });
   } catch {
     // Swallow — the audit log is diagnostic, not load-bearing.
+  }
+}
+
+/**
+ * Email the corresponding author their decision (abstract or full-paper),
+ * best-effort. No-op unless Resend is configured; the in-app notification from
+ * the decision trigger fires regardless. Never throws.
+ */
+async function emailAuthorDecision(
+  submissionId: string,
+  decision: string,
+  rationale: string
+) {
+  if (!emailConfigured()) return;
+  try {
+    const admin = createAdminClient();
+    const { data } = await admin
+      .from("submissions")
+      .select(
+        "title, paper_id, stage, author:profiles!submissions_author_id_fkey(full_name, email), tracks(name, conferences(name))"
+      )
+      .eq("id", submissionId)
+      .single();
+    const s = data as any;
+    const to = s?.author?.email;
+    if (!to) return;
+    const build =
+      s.stage === "full_paper" ? fullPaperDecisionEmail : abstractDecisionEmail;
+    const { subject, body } = build({
+      paperId: s.paper_id,
+      title: s.title,
+      track: s.tracks?.name,
+      decision,
+      message: rationale,
+      name: s.author?.full_name,
+      conferenceName: s.tracks?.conferences?.name,
+    });
+    await sendEmail({ to, subject, text: body });
+  } catch {
+    // best-effort — a mail failure must not break the decision flow
   }
 }
 
@@ -809,6 +855,9 @@ export async function inviteReviewer(formData: FormData): Promise<InviteResult> 
       `Track Session Chair, ${conferenceName}`,
     ].join("\n");
 
+    // Auto-send the heads-up if email is configured (best-effort).
+    await sendEmail({ to: email, subject: composeSubject, text: composeBody });
+
     return {
       ok: true,
       existing: true,
@@ -844,6 +893,8 @@ export async function inviteReviewer(formData: FormData): Promise<InviteResult> 
   });
 
   await audit(profile.id, "reviewer.invited", "submission", submissionId, { email });
+  // Auto-send the invitation (with signup link) if email is configured.
+  await sendEmail({ to: email, subject, text: body });
   return { ok: true, existing: false, invite: { link, subject, body } };
 }
 
@@ -943,6 +994,11 @@ export async function recordRecommendation(
   await audit(profile.id, "decision.recorded", "submission", submissionId, {
     decision,
   });
+  await emailAuthorDecision(
+    submissionId,
+    decision,
+    String(formData.get("rationale") ?? "")
+  );
   revalidatePath(`/editor/submissions/${submissionId}`);
   revalidatePath("/chief");
   return { ok: true, message: "Decision recorded." };
@@ -1010,6 +1066,11 @@ export async function recordFinalDecision(
   await audit(profile.id, "decision.final", "submission", submissionId, {
     decision,
   });
+  await emailAuthorDecision(
+    submissionId,
+    decision,
+    String(formData.get("rationale") ?? "")
+  );
   revalidatePath("/chief");
   revalidatePath(`/chief/submissions/${submissionId}`);
   return { ok: true, message: "Final decision recorded." };
@@ -1096,7 +1157,7 @@ export async function addTrackChair(formData: FormData): Promise<ActionResult> {
     .single();
   const { data: target } = await admin
     .from("profiles")
-    .select("roles")
+    .select("roles, full_name, email")
     .eq("id", editorId)
     .single();
   const roles: string[] = target?.roles ?? [];
@@ -1114,6 +1175,15 @@ export async function addTrackChair(formData: FormData): Promise<ActionResult> {
     } track. Sign in and open the Track Queue to begin.`,
     link: "/editor",
   });
+
+  // Auto-send the Track Editor invitation if email is configured (best-effort).
+  if (target?.email) {
+    const { subject, body } = chairInviteEmail({
+      name: target.full_name || undefined,
+      track: track?.name ?? "your assigned",
+    });
+    await sendEmail({ to: target.email, subject, text: body });
+  }
 
   await audit(profile.id, "track.chair_added", "track", trackId, {
     editor_id: editorId,

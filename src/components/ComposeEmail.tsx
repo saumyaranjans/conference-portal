@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { sendComposedEmail } from "@/lib/actions";
 
 /** Copy-to-clipboard button with brief confirmation. Shared across dashboards. */
 export function CopyButton({ text, label }: { text: string; label: string }) {
@@ -28,26 +29,35 @@ export function CopyButton({ text, label }: { text: string; label: string }) {
 const MAILTO_BCC_LIMIT = 30;
 
 /**
- * Editable email draft that the sender launches in their own mail client
- * (Gmail/Outlook) via mailto:, or copies. The portal never sends the email.
- * Pass `to` for a single recipient, or `recipients` for a BCC broadcast.
+ * Editable email draft (a live preview). With `showSend` + a single `to`, the
+ * sender can send it directly through the portal (Resend) via "Send now";
+ * otherwise it opens in / is copied into their own mail client. Pass
+ * `recipients` for a BCC broadcast (copy-only — no direct send).
  */
 export function ComposeEmail({
   to,
   recipients,
   subject: initialSubject,
   body: initialBody,
+  showSend = false,
 }: {
   to?: string;
   recipients?: string[];
   subject: string;
   body: string;
+  /** Show a "Send now" button that emails via the portal (single `to` only). */
+  showSend?: boolean;
 }) {
   const [subject, setSubject] = useState(initialSubject);
   const [body, setBody] = useState(initialBody);
+  const [pending, startTransition] = useTransition();
+  const [result, setResult] = useState<{ ok: boolean; message: string } | null>(
+    null
+  );
 
   const bcc = recipients ?? [];
   const tooManyForMailto = bcc.length > MAILTO_BCC_LIMIT;
+  const canSend = showSend && !!to;
 
   const mailto = to
     ? `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(
@@ -56,6 +66,19 @@ export function ComposeEmail({
     : `mailto:?bcc=${encodeURIComponent(bcc.join(","))}&subject=${encodeURIComponent(
         subject
       )}&body=${encodeURIComponent(body)}`;
+
+  function send() {
+    if (!to) return;
+    setResult(null);
+    startTransition(async () => {
+      const fd = new FormData();
+      fd.set("to", to);
+      fd.set("subject", subject);
+      fd.set("body", body);
+      const res = await sendComposedEmail(fd);
+      setResult({ ok: res.ok, message: res.message ?? "" });
+    });
+  }
 
   return (
     <div className="space-y-3">
@@ -96,10 +119,21 @@ export function ComposeEmail({
         />
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center gap-2">
+        {canSend && (
+          <button
+            type="button"
+            onClick={send}
+            disabled={pending || result?.ok}
+            className="btn-primary"
+          >
+            {pending ? "Sending…" : result?.ok ? "Sent ✓" : "Send now"}
+          </button>
+        )}
+
         {!tooManyForMailto ? (
-          <a href={mailto} className="btn-primary">
-            Open in email
+          <a href={mailto} className={canSend ? "btn-secondary" : "btn-primary"}>
+            {canSend ? "Or open in your email" : "Open in email"}
           </a>
         ) : (
           <span className="text-xs text-amber-800 bg-amber-50 rounded-lg px-3 py-2">
@@ -112,9 +146,22 @@ export function ComposeEmail({
         )}
       </div>
 
+      {result && (
+        <p
+          className={`text-sm rounded-lg px-3 py-2 ${
+            result.ok
+              ? "text-emerald-700 bg-emerald-50"
+              : "text-red-600 bg-red-50"
+          }`}
+        >
+          {result.message}
+        </p>
+      )}
+
       <p className="text-xs text-slate-400">
-        This opens (or is copied into) your own email — the portal does not send
-        it for you. Edit the text above before sending if you wish.
+        {canSend
+          ? "Review the message above, then Send now to email it through the portal — or open/copy it to send from your own email."
+          : "This opens (or is copied into) your own email — the portal does not send it for you."}
       </p>
     </div>
   );

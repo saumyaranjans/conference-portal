@@ -35,7 +35,7 @@ export type InviteResult =
   | {
       ok: true;
       existing: false;
-      invite: { link: string; subject: string; body: string };
+      invite: { link: string; subject: string; body: string; to: string };
     };
 
 /** Append to the audit trail. Never throws — logging must not break a flow. */
@@ -98,6 +98,35 @@ async function emailAuthorDecision(
   } catch {
     // best-effort — a mail failure must not break the decision flow
   }
+}
+
+/**
+ * Preview-then-send: email a composed message to a single recipient via Resend.
+ * Backs the "Send now" button on the ComposeEmail preview. Staff only.
+ */
+export async function sendComposedEmail(
+  formData: FormData
+): Promise<ActionResult> {
+  await requireRole("editor", "chief", "admin");
+  const to = String(formData.get("to") ?? "").trim();
+  const subject = String(formData.get("subject") ?? "");
+  const body = String(formData.get("body") ?? "");
+
+  if (!to) return { ok: false, message: "No recipient address." };
+  if (!emailConfigured())
+    return {
+      ok: false,
+      message:
+        "Email sending isn't set up yet — copy the message and send it from your own email.",
+    };
+
+  const r = await sendEmail({ to, subject, text: body });
+  return r.sent
+    ? { ok: true, message: `Sent to ${to}.` }
+    : {
+        ok: false,
+        message: r.error ? `Send failed: ${r.error}` : "Could not send the email.",
+      };
 }
 
 // =====================================================================
@@ -855,9 +884,6 @@ export async function inviteReviewer(formData: FormData): Promise<InviteResult> 
       `Track Session Chair, ${conferenceName}`,
     ].join("\n");
 
-    // Auto-send the heads-up if email is configured (best-effort).
-    await sendEmail({ to: email, subject: composeSubject, text: composeBody });
-
     return {
       ok: true,
       existing: true,
@@ -893,9 +919,7 @@ export async function inviteReviewer(formData: FormData): Promise<InviteResult> 
   });
 
   await audit(profile.id, "reviewer.invited", "submission", submissionId, { email });
-  // Auto-send the invitation (with signup link) if email is configured.
-  await sendEmail({ to: email, subject, text: body });
-  return { ok: true, existing: false, invite: { link, subject, body } };
+  return { ok: true, existing: false, invite: { link, subject, body, to: email } };
 }
 
 /**

@@ -136,8 +136,8 @@ export function InviteReviewer({ submissionId }: { submissionId: string }) {
           </button>
 
           <p className="text-xs text-slate-400">
-            If they already have an account they are added and assigned straight
-            away. Otherwise you get an email to copy into your own mail client.
+            If they already have an account they are added and assigned. Either
+            way you can preview the invitation and send it from the portal.
           </p>
 
           {error && (
@@ -153,101 +153,35 @@ export function InviteReviewer({ submissionId }: { submissionId: string }) {
           {existingCompose && (
             <div className="border-t border-slate-100 pt-3 mt-1">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
-                Optional: email them a heads-up
+                Send them a heads-up
               </p>
               <ComposeEmail
                 to={existingCompose.to}
                 subject={existingCompose.subject}
                 body={existingCompose.body}
+                showSend
               />
             </div>
           )}
         </form>
       ) : (
-        <GeneratedEmail invite={invite} onDone={reset} />
+        <div className="space-y-4">
+          <p className="text-sm text-emerald-800 bg-emerald-50 rounded-lg px-3 py-2">
+            Invitation prepared. Review it below, then click <strong>Send now</strong>{" "}
+            to email it (with the signup link) to <strong>{invite.to}</strong>.
+          </p>
+          <ComposeEmail
+            to={invite.to}
+            subject={invite.subject}
+            body={invite.body}
+            showSend
+          />
+          <button type="button" onClick={reset} className="btn-secondary">
+            Invite another
+          </button>
+        </div>
       )}
     </div>
   );
 }
 
-function CopyButton({ text, label }: { text: string; label: string }) {
-  const [copied, setCopied] = useState(false);
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch {
-      setCopied(false);
-    }
-  }
-  return (
-    <button type="button" onClick={copy} className="btn-secondary text-xs py-1 px-2">
-      {copied ? "Copied ✓" : label}
-    </button>
-  );
-}
-
-function GeneratedEmail({
-  invite,
-  onDone,
-}: {
-  invite: { link: string; subject: string; body: string };
-  onDone: () => void;
-}) {
-  const mailto = `mailto:?subject=${encodeURIComponent(
-    invite.subject
-  )}&body=${encodeURIComponent(invite.body)}`;
-
-  return (
-    <div className="space-y-4">
-      <p className="text-sm text-emerald-800 bg-emerald-50 rounded-lg px-3 py-2">
-        Invitation ready. Copy the subject and message below into your email
-        (Gmail, Outlook, …) and send it to the reviewer.
-      </p>
-
-      <div>
-        <div className="flex items-center justify-between mb-1">
-          <label className="label mb-0">Subject</label>
-          <CopyButton text={invite.subject} label="Copy subject" />
-        </div>
-        <input readOnly className="input bg-slate-50" value={invite.subject} />
-      </div>
-
-      <div>
-        <div className="flex items-center justify-between mb-1">
-          <label className="label mb-0">Message</label>
-          <CopyButton text={invite.body} label="Copy message" />
-        </div>
-        <textarea
-          readOnly
-          rows={12}
-          className="input bg-slate-50 font-mono text-xs leading-relaxed"
-          value={invite.body}
-        />
-      </div>
-
-      <div>
-        <div className="flex items-center justify-between mb-1">
-          <label className="label mb-0">Invitation link</label>
-          <CopyButton text={invite.link} label="Copy link" />
-        </div>
-        <input readOnly className="input bg-slate-50 text-xs" value={invite.link} />
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        <a href={mailto} className="btn-secondary">
-          Open in mail app
-        </a>
-        <button type="button" onClick={onDone} className="btn-secondary">
-          Invite another
-        </button>
-      </div>
-
-      <p className="text-xs text-slate-400">
-        The reviewer appears in the list above only after they complete
-        registration from this link.
-      </p>
-    </div>
-  );
-}

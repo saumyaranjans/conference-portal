@@ -18,6 +18,7 @@ export function InviteReviewer({ submissionId }: { submissionId: string }) {
   const [designation, setDesignation] = useState("");
   const [affiliation, setAffiliation] = useState("");
   const [email, setEmail] = useState("");
+  const [dueDate, setDueDate] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [existingMsg, setExistingMsg] = useState<string | null>(null);
@@ -41,6 +42,7 @@ export function InviteReviewer({ submissionId }: { submissionId: string }) {
     fd.set("designation", designation);
     fd.set("affiliation", affiliation);
     fd.set("email", email);
+    fd.set("due_date", dueDate);
 
     const res = await inviteReviewer(fd);
     setBusy(false);
@@ -56,6 +58,7 @@ export function InviteReviewer({ submissionId }: { submissionId: string }) {
       setDesignation("");
       setAffiliation("");
       setEmail("");
+      setDueDate("");
       router.refresh();
       return;
     }
@@ -127,6 +130,18 @@ export function InviteReviewer({ submissionId }: { submissionId: string }) {
                 placeholder="reviewer@example.edu"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="label" htmlFor="inv-due">
+                Review deadline <span className="text-slate-400">(optional)</span>
+              </label>
+              <input
+                id="inv-due"
+                type="date"
+                className="input"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
               />
             </div>
           </div>

@@ -726,30 +726,41 @@ export async function assignReviewer(formData: FormData): Promise<ActionResult> 
       if (to) {
         const s = sub as any;
         const conf = s?.tracks?.conferences?.name ?? "GLOGIFT 2027";
+        const item = s?.stage === "full_paper" ? "manuscript" : "abstract";
         const subject = `${conf} — Review assignment${
           s?.paper_id ? ` (${s.paper_id})` : ""
         }`;
-        const body = [
+        const lines: string[] = [
           `Dear ${(rev as any).full_name || "Reviewer"},`,
           "",
-          `You have been assigned to review a ${stageLabel(
-            s?.stage
-          ).toLowerCase()} submitted to ${conf}${
-            s?.tracks?.name ? `, ${s.tracks.name} track` : ""
-          }:`,
+          "Greetings of the Day!",
           "",
-          `Paper ID: ${s?.paper_id ?? "(pending)"}`,
-          `Title: ${s?.title ?? ""}`,
-          dueDate ? `Due date: ${dueDate}` : "",
+          `We are pleased to assign you to review the ${item} titled "${
+            s?.title ?? ""
+          }" (Paper ID: ${s?.paper_id ?? "pending"})${
+            s?.tracks?.name ? `, in the ${s.tracks.name} track` : ""
+          } of ${conf}.`,
+          "",
+          "We thank you in advance for your time and valuable contribution to the review process.",
+        ];
+        if (dueDate)
+          lines.push(
+            "",
+            `We kindly request that you complete your review by ${prettyDate(dueDate)}.`
+          );
+        lines.push(
           "",
           `Please sign in to your reviewer dashboard to accept and begin: ${siteUrl()}/reviewer`,
           "",
-          "With thanks,",
-          `Track Session Chair, ${conf}`,
-        ]
-          .filter(Boolean)
-          .join("\n");
-        await sendEmail({ to, subject, text: body });
+          REVIEW_HELP,
+          "",
+          "With warm regards,"
+        );
+        if (profile.full_name) lines.push(profile.full_name);
+        lines.push(`Track Session Chair, ${conf}`);
+        const init = initialsOf(profile.full_name);
+        if (init) lines.push(init);
+        await sendEmail({ to, subject, text: lines.join("\n") });
       }
     } catch {
       // best-effort — an email failure must not undo the assignment
@@ -795,9 +806,40 @@ function stageLabel(stage: string | null): string {
   return stage === "full_paper" ? "Full Paper" : "Abstract";
 }
 
+/** Format a yyyy-mm-dd date for prose, e.g. "15 January 2027". */
+function prettyDate(d?: string): string {
+  if (!d) return "";
+  const dt = new Date(d);
+  return isNaN(dt.getTime())
+    ? d
+    : dt.toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+}
+
+/** Sender initials, e.g. "Saumyaranjan Sahoo" -> "S. S.". */
+function initialsOf(name?: string): string {
+  return (name ?? "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((p) => p[0].toUpperCase() + ".")
+    .join(" ");
+}
+
+/** The two organiser help contacts, shown at the foot of reviewer emails. */
+const REVIEW_HELP = [
+  "For further help, please contact:",
+  "1. glogift27.chair@iimsambalpur.ac.in",
+  "2. glogift27.coordinator@iimsambalpur.ac.in",
+].join("\n");
+
 /**
- * Build the invitation email the chair pastes into their own mail client.
- * Names the Paper ID, title, stage and track — never the submitting author.
+ * Build the reviewer invitation letter (for someone without an account yet).
+ * A warm letter: greeting, the article, thanks, deadline, sign-up link, help
+ * contacts, and the chair's initials — never the submitting author.
  */
 function buildInviteEmail(opts: {
   paperId: string | null;
@@ -807,38 +849,51 @@ function buildInviteEmail(opts: {
   conferenceName: string;
   fullName: string;
   link: string;
+  dueDate?: string;
+  inviterName?: string;
 }): { subject: string; body: string } {
-  const label = stageLabel(opts.stage);
+  const conf = opts.conferenceName || "GLOGIFT 2027";
+  const item = opts.stage === "full_paper" ? "manuscript" : "abstract";
   const pid = opts.paperId ? opts.paperId : "(to be assigned)";
-  const greeting = opts.fullName ? `Dear ${opts.fullName},` : "Dear Colleague,";
+  const name = opts.fullName?.trim() || "Reviewer";
+  const init = initialsOf(opts.inviterName);
 
-  const subject = `Invitation to review ${label} ${
-    opts.paperId ? `[${opts.paperId}]` : ""
-  } — ${opts.conferenceName}`.replace(/\s+/g, " ").trim();
+  const subject = `${conf} — Invitation to review ${item}${
+    opts.paperId ? ` (${opts.paperId})` : ""
+  }`;
 
-  const body = [
-    greeting,
+  const lines: string[] = [
+    `Dear ${name},`,
     "",
-    `You are invited to serve as a reviewer for the following ${label.toLowerCase()} submitted to ${opts.conferenceName}${
-      opts.track ? `, ${opts.track} track` : ""
-    }:`,
+    "Greetings of the Day!",
     "",
-    `Paper ID: ${pid}`,
-    `Title: ${opts.title}`,
-    `Track: ${opts.track || "—"}`,
+    `We are pleased to invite you to review the ${item} titled "${opts.title}" (Paper ID: ${pid})${
+      opts.track ? `, submitted to the ${opts.track} track` : ""
+    } of ${conf}.`,
     "",
-    "To accept, please complete a short reviewer registration here:",
+    "We would be truly grateful for your expertise, and we thank you in advance for your time and valuable contribution to the review process.",
+  ];
+  if (opts.dueDate)
+    lines.push(
+      "",
+      `We kindly request that you complete your review by ${prettyDate(
+        opts.dueDate
+      )}.`
+    );
+  lines.push(
+    "",
+    `To begin, please complete the reviewer sign-up on the conference website using the link below. Once registered, the ${item} will appear in your reviewer dashboard:`,
     opts.link,
     "",
-    "Your name, designation and affiliation have already been filled in — you only need to set a password and confirm a few details. Once registered, the paper will appear in your reviewer dashboard for assessment.",
+    REVIEW_HELP,
     "",
-    "We would be grateful for your expertise.",
-    "",
-    "With thanks,",
-    `Track Session Chair, ${opts.conferenceName}`,
-  ].join("\n");
+    "With warm regards,"
+  );
+  if (opts.inviterName) lines.push(opts.inviterName);
+  lines.push(`Track Session Chair, ${conf}`);
+  if (init) lines.push(init);
 
-  return { subject, body };
+  return { subject, body: lines.join("\n") };
 }
 
 /**
@@ -855,6 +910,7 @@ export async function inviteReviewer(formData: FormData): Promise<InviteResult> 
   const fullName = String(formData.get("full_name") ?? "").trim();
   const designation = String(formData.get("designation") ?? "").trim();
   const affiliation = String(formData.get("affiliation") ?? "").trim();
+  const dueDate = String(formData.get("due_date") ?? "").trim();
   const email = String(formData.get("email") ?? "")
     .trim()
     .toLowerCase();
@@ -916,25 +972,40 @@ export async function inviteReviewer(formData: FormData): Promise<InviteResult> 
     });
     revalidatePath(`/editor/submissions/${submissionId}`);
 
-    // Heads-up email the chair can send from their own client (optional).
-    const composeSubject = `${conferenceName} — You have been assigned a review${
+    // Heads-up email (the account already exists — no sign-up needed).
+    const item = s.stage === "full_paper" ? "manuscript" : "abstract";
+    const composeSubject = `${conferenceName} — Review assignment${
       s.paper_id ? ` (${s.paper_id})` : ""
     }`;
-    const composeBody = [
+    const composeLines: string[] = [
       `Dear ${target.full_name || "Reviewer"},`,
       "",
-      `You have been assigned as a reviewer for a ${stageLabel(
-        s.stage
-      ).toLowerCase()} in the ${track} track of ${conferenceName}.`,
+      "Greetings of the Day!",
       "",
-      `Paper ID: ${s.paper_id ?? "(pending)"}`,
-      `Title: ${s.title}`,
+      `We are pleased to assign you to review the ${item} titled "${s.title}" (Paper ID: ${
+        s.paper_id ?? "pending"
+      })${track ? `, in the ${track} track` : ""} of ${conferenceName}.`,
+      "",
+      "We thank you in advance for your time and valuable contribution to the review process.",
+    ];
+    if (dueDate)
+      composeLines.push(
+        "",
+        `We kindly request that you complete your review by ${prettyDate(dueDate)}.`
+      );
+    composeLines.push(
       "",
       `Please sign in to your reviewer dashboard to begin: ${siteUrl()}/reviewer`,
       "",
-      "With thanks,",
-      `Track Session Chair, ${conferenceName}`,
-    ].join("\n");
+      REVIEW_HELP,
+      "",
+      "With warm regards,"
+    );
+    if (profile.full_name) composeLines.push(profile.full_name);
+    composeLines.push(`Track Session Chair, ${conferenceName}`);
+    const compInit = initialsOf(profile.full_name);
+    if (compInit) composeLines.push(compInit);
+    const composeBody = composeLines.join("\n");
 
     return {
       ok: true,
@@ -968,6 +1039,8 @@ export async function inviteReviewer(formData: FormData): Promise<InviteResult> 
     conferenceName,
     fullName,
     link,
+    dueDate: dueDate || undefined,
+    inviterName: profile.full_name || undefined,
   });
 
   await audit(profile.id, "reviewer.invited", "submission", submissionId, { email });

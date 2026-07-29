@@ -26,6 +26,8 @@ const EMPTY = {
   designation: "",
   participantCategory: "",
   orcid: "",
+  glogiftMember: "",
+  glogiftMembershipNo: "",
   email: "",
   password: "",
   confirm: "",
@@ -89,6 +91,9 @@ export function SignupForm({
           designation: form.designation,
           participant_category: form.participantCategory,
           orcid: form.orcid.trim(),
+          glogift_member: form.glogiftMember === "yes",
+          glogift_membership_no:
+            form.glogiftMember === "yes" ? form.glogiftMembershipNo.trim() : "",
         },
       },
     });
@@ -304,6 +309,39 @@ export function SignupForm({
               16 digits in the form 0000-0000-0000-0000.
             </p>
           </div>
+          <div className="sm:col-span-2">
+            <label className="label" htmlFor="glogiftMember">
+              Do you have GLOGIFT Membership?
+            </label>
+            <select
+              id="glogiftMember"
+              required
+              className="input"
+              value={form.glogiftMember}
+              onChange={(e) => set("glogiftMember", e.target.value)}
+            >
+              <option value="">Select…</option>
+              <option value="no">No</option>
+              <option value="yes">Yes</option>
+            </select>
+          </div>
+
+          {form.glogiftMember === "yes" && (
+            <div className="sm:col-span-2">
+              <label className="label" htmlFor="glogiftMembershipNo">
+                GLOGIFT Membership number
+              </label>
+              <input
+                id="glogiftMembershipNo"
+                required
+                className="input"
+                placeholder="Your membership number"
+                value={form.glogiftMembershipNo}
+                onChange={(e) => set("glogiftMembershipNo", e.target.value)}
+              />
+            </div>
+          )}
+
           <div>
             <label className="label" htmlFor="participantCategory">
               Participant category

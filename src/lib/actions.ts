@@ -137,6 +137,11 @@ export async function updateProfile(formData: FormData): Promise<ActionResult> {
         formData.get("participant_category") ?? ""
       ).trim(),
       orcid: String(formData.get("orcid") ?? "").trim(),
+      glogift_member: String(formData.get("glogift_member") ?? "") === "yes",
+      glogift_membership_no:
+        String(formData.get("glogift_member") ?? "") === "yes"
+          ? String(formData.get("glogift_membership_no") ?? "").trim()
+          : "",
       updated_at: new Date().toISOString(),
     })
     .eq("id", profile.id);

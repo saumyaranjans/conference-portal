@@ -199,6 +199,32 @@ export default async function ProfilePage() {
               />
             </div>
             <div>
+              <label className="label" htmlFor="glogift_member">
+                Do you have GLOGIFT Membership?
+              </label>
+              <select
+                id="glogift_member"
+                name="glogift_member"
+                defaultValue={(profile as any).glogift_member ? "yes" : "no"}
+                className="input"
+              >
+                <option value="no">No</option>
+                <option value="yes">Yes</option>
+              </select>
+            </div>
+            <div>
+              <label className="label" htmlFor="glogift_membership_no">
+                GLOGIFT Membership number
+              </label>
+              <input
+                id="glogift_membership_no"
+                name="glogift_membership_no"
+                defaultValue={(profile as any).glogift_membership_no ?? ""}
+                placeholder="Only if you answered Yes"
+                className="input"
+              />
+            </div>
+            <div>
               <label className="label" htmlFor="participant_category">
                 Participant category
               </label>

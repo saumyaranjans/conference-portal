@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* The theme is a `.dark` class on <html>, toggled by the header switch — not
+   the OS setting. Without this, Tailwind's `dark:` utilities would follow
+   prefers-color-scheme instead and fire while the app is showing light. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-ink: #0f172a;
   --color-muted: #64748b;

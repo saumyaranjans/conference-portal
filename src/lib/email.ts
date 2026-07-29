@@ -5,7 +5,8 @@ import "server-only";
  * portal works unchanged until email is configured:
  *   RESEND_API_KEY   – Resend API key
  *   RESEND_FROM      – verified sender, e.g. "GLOGIFT 2027 <no-reply@glogift2027.co.in>"
- *   RESEND_REPLY_TO  – optional reply-to (e.g. the editorial office inbox)
+ *   RESEND_REPLY_TO  – optional reply-to; comma-separate for several inboxes,
+ *                      e.g. "chair@x.ac.in, coordinator@x.ac.in"
  *
  * When the key/from are absent, sendEmail() is a no-op and callers fall back
  * to the existing copy-paste + in-app-notification behaviour. It never throws —
@@ -16,10 +17,9 @@ export function emailConfigured(): boolean {
 }
 
 /**
- * Resend accepts only "a@b.com" or "Name <a@b.com>" — anything else (a blank
- * value, two addresses, a stray comma) 422s the whole request. Returns the
- * address when it is usable, otherwise undefined so the caller can omit it: a
- * bad reply-to must never cost us the message itself.
+ * One address, in either form Resend accepts: "a@b.com" or "Name <a@b.com>".
+ * Anything else (blank, several joined by a comma, a stray semicolon) would
+ * 422 the whole request, so it is dropped rather than sent.
  */
 function validAddress(value?: string | null): string | undefined {
   const s = (value ?? "").trim();
@@ -29,17 +29,49 @@ function validAddress(value?: string | null): string | undefined {
   return bare.test(s) || named.test(s) ? s : undefined;
 }
 
+/** How many reply-to addresses we will put on one message. */
+const MAX_REPLY_TO = 5;
+
+/**
+ * Split a comma-separated list into the addresses Resend will accept, dropping
+ * any that are malformed. A display name containing a comma cannot survive
+ * this, so keep names simple — or use the bare address.
+ */
+function addressList(value?: string | null): string[] {
+  return (value ?? "")
+    .split(",")
+    .map((p) => validAddress(p))
+    .filter((p): p is string => Boolean(p));
+}
+
+/** Just the address out of "Name <a@b.com>", lowercased, for de-duping. */
+function addressKey(value: string): string {
+  const m = value.match(/<([^>]+)>/);
+  return (m ? m[1] : value).trim().toLowerCase();
+}
+
 export async function sendEmail(args: {
   to: string;
   subject: string;
   text: string;
-  /** Per-message reply-to (e.g. the chair sending it). Falls back to the env. */
+  /** Per-message reply-to (e.g. the chair sending it), added ahead of the env. */
   replyTo?: string;
 }): Promise<{ sent: boolean; id?: string; error?: string }> {
   const key = process.env.RESEND_API_KEY;
   const from = process.env.RESEND_FROM;
-  const replyTo =
-    validAddress(args.replyTo) ?? validAddress(process.env.RESEND_REPLY_TO);
+
+  // A reply reaches the person who sent it *and* the organiser inboxes, with
+  // the sender first so mail clients offer them by default.
+  const replyTo: string[] = [];
+  for (const a of [
+    ...addressList(args.replyTo),
+    ...addressList(process.env.RESEND_REPLY_TO),
+  ]) {
+    if (replyTo.length >= MAX_REPLY_TO) break;
+    if (!replyTo.some((seen) => addressKey(seen) === addressKey(a))) {
+      replyTo.push(a);
+    }
+  }
 
   if (!key || !from) return { sent: false };
 
@@ -59,7 +91,10 @@ export async function sendEmail(args: {
         to: [to],
         subject: args.subject,
         text: args.text,
-        ...(replyTo ? { reply_to: replyTo } : {}),
+        // Resend takes one address as a string, several as an array.
+        ...(replyTo.length
+          ? { reply_to: replyTo.length === 1 ? replyTo[0] : replyTo }
+          : {}),
       }),
     });
     if (!res.ok) {

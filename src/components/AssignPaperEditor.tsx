@@ -14,11 +14,14 @@ export type ChairOption = { id: string; name: string };
 export function AssignPaperEditor({
   submissionId,
   chairs,
+  invitedCount = 0,
   currentId,
   defaultLabel,
 }: {
   submissionId: string;
   chairs: ChairOption[];
+  /** Invited but not yet accepted — they cannot be given a paper yet. */
+  invitedCount?: number;
   /** The per-paper override, when the Convener has set one. */
   currentId: string | null;
   /** What "no override" means for this paper — usually "Any track chair". */
@@ -32,7 +35,9 @@ export function AssignPaperEditor({
   if (chairs.length === 0) {
     return (
       <span className="text-xs text-slate-400">
-        No Track Editor on this track yet
+        {invitedCount > 0
+          ? `${invitedCount} invited — awaiting acceptance`
+          : "No Track Editor yet — invite one above"}
       </span>
     );
   }

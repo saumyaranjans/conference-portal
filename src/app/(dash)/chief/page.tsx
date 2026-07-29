@@ -62,6 +62,16 @@ export default async function ChiefDashboard() {
     );
   }
 
+  // Invited but not yet accepted — they cannot hold a paper, but the Convener
+  // should see that someone is already being asked.
+  const invitedByTrack = new Map<string, number>();
+  for (const t of ((tracks ?? []) as any[])) {
+    invitedByTrack.set(
+      t.id,
+      (t.track_editors ?? []).filter((te: any) => te.status !== "accepted").length
+    );
+  }
+
   const editorNames = new Map<string, string>();
   for (const p of ((staff ?? []) as Profile[])) {
     editorNames.set(p.id, p.full_name || p.email);
@@ -306,6 +316,7 @@ export default async function ChiefDashboard() {
                     <AssignPaperEditor
                       submissionId={s.id}
                       chairs={eligible}
+                      invitedCount={invitedByTrack.get((s as any).track_id) ?? 0}
                       currentId={assignedId}
                       defaultLabel={
                         eligible.length === 1

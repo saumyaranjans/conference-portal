@@ -121,8 +121,8 @@ export default async function EditorDashboard() {
       <Section title="Submissions">
         {submissions.length === 0 ? (
           <EmptyState
-            title="No submissions in your track yet"
-            description="Papers appear here as soon as authors submit them."
+            title="No papers assigned to you yet"
+            description="Chairing a track does not hand you its papers. Each one appears here when the Convener assigns it to you."
           />
         ) : (
           <DataTable

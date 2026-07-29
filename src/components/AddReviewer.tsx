@@ -192,19 +192,19 @@ export function AddReviewer({
           />
 
           {open && !adding && (
-            <div className="absolute z-20 mt-1 w-full rounded-xl border border-slate-200 bg-white shadow-lg overflow-hidden">
+            <div className="absolute z-20 mt-1 w-full rounded-xl border border-slate-200 bg-white shadow-lg overflow-hidden dark:border-slate-700 dark:bg-slate-800">
               {matches.map((c) => (
                 <button
                   key={c.reviewer_id}
                   type="button"
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => choose(c)}
-                  className="block w-full text-left px-3 py-2 hover:bg-slate-50"
+                  className="block w-full text-left px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-700"
                 >
-                  <span className="text-sm font-medium text-slate-800">
+                  <span className="text-sm font-medium text-slate-800 dark:text-slate-100">
                     {c.full_name || c.email}
                   </span>
-                  <span className="block text-xs text-slate-500">
+                  <span className="block text-xs text-slate-500 dark:text-slate-400">
                     {[
                       c.affiliation,
                       `${c.open_assignments} open`,
@@ -216,14 +216,20 @@ export function AddReviewer({
                 </button>
               ))}
 
+              {/* Bright by design — the way out when nobody in the list fits. */}
               <button
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={startAdding}
-                className="block w-full text-left px-3 py-2 text-sm text-blue-700 hover:bg-blue-50 border-t border-slate-100"
+                className="flex w-full items-center gap-2 px-3 py-2.5 text-sm font-semibold text-amber-900 bg-amber-100 hover:bg-amber-200 border-t border-amber-200 dark:text-amber-100 dark:bg-amber-500/25 dark:hover:bg-amber-500/35 dark:border-amber-500/40"
               >
-                ＋ Add{query.trim() ? ` “${query.trim()}”` : " someone"} as a new
-                reviewer
+                <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-500 text-white text-xs leading-none">
+                  +
+                </span>
+                <span>
+                  Add{query.trim() ? ` “${query.trim()}”` : " someone"} as a new
+                  reviewer
+                </span>
               </button>
             </div>
           )}

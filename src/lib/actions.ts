@@ -760,6 +760,7 @@ export async function assignReviewer(formData: FormData): Promise<AssignResult> 
     reviewerName,
     dueDate: dueDate || undefined,
     inviterName: profile.full_name,
+    inviterEmail: profile.email,
   });
 
   return { ok: true, message, compose: { to, subject, body } };
@@ -830,6 +831,7 @@ function buildInviteEmail(opts: {
   link: string;
   dueDate?: string;
   inviterName?: string;
+  inviterEmail?: string;
 }): { subject: string; body: string } {
   const conf = opts.conferenceName || "GLOGIFT 2027";
   const item = opts.stage === "full_paper" ? "manuscript" : "abstract";
@@ -867,15 +869,35 @@ function buildInviteEmail(opts: {
     "",
     "With warm regards,"
   );
-  if (opts.inviterName) lines.push(opts.inviterName);
-  lines.push(chairSignOff(opts.track, conf));
+  lines.push(
+    ...chairSignOff({
+      name: opts.inviterName,
+      track: opts.track,
+      conf,
+      email: opts.inviterEmail,
+    })
+  );
 
   return { subject, body: lines.join("\n") };
 }
 
-/** Sign-off line: "Track Session Chair, <track>, <conference>". */
-function chairSignOff(track: string, conf: string): string {
-  return `Track Session Chair, ${track ? `${track}, ` : ""}${conf}`;
+/**
+ * Sign-off block — the chair's name, "Track Session Chair, <track>,
+ * <conference>", then their email so the recipient can reply directly.
+ */
+function chairSignOff(opts: {
+  name?: string | null;
+  track: string;
+  conf: string;
+  email?: string | null;
+}): string[] {
+  const lines: string[] = [];
+  if (opts.name) lines.push(opts.name);
+  lines.push(
+    `Track Session Chair, ${opts.track ? `${opts.track}, ` : ""}${opts.conf}`
+  );
+  if (opts.email) lines.push(opts.email);
+  return lines;
 }
 
 /**
@@ -892,6 +914,7 @@ function buildAssignmentEmail(opts: {
   reviewerName?: string | null;
   dueDate?: string;
   inviterName?: string | null;
+  inviterEmail?: string | null;
 }): { subject: string; body: string } {
   const conf = opts.conferenceName || "GLOGIFT 2027";
   const item = opts.stage === "full_paper" ? "manuscript" : "abstract";
@@ -924,8 +947,14 @@ function buildAssignmentEmail(opts: {
     "",
     "With warm regards,"
   );
-  if (opts.inviterName) lines.push(opts.inviterName);
-  lines.push(chairSignOff(opts.track, conf));
+  lines.push(
+    ...chairSignOff({
+      name: opts.inviterName,
+      track: opts.track,
+      conf,
+      email: opts.inviterEmail,
+    })
+  );
 
   return { subject, body: lines.join("\n") };
 }
@@ -1018,6 +1047,7 @@ export async function inviteReviewer(formData: FormData): Promise<InviteResult> 
       reviewerName: target.full_name,
       dueDate: dueDate || undefined,
       inviterName: profile.full_name,
+      inviterEmail: profile.email,
     });
 
     return {
@@ -1058,6 +1088,7 @@ export async function inviteReviewer(formData: FormData): Promise<InviteResult> 
     link,
     dueDate: dueDate || undefined,
     inviterName: profile.full_name || undefined,
+    inviterEmail: profile.email || undefined,
   });
 
   await audit(profile.id, "reviewer.invited", "submission", submissionId, { email });

@@ -137,20 +137,34 @@ export async function updateProfile(formData: FormData): Promise<ActionResult> {
         formData.get("participant_category") ?? ""
       ).trim(),
       orcid: String(formData.get("orcid") ?? "").trim(),
-      glogift_member: String(formData.get("glogift_member") ?? "") === "yes",
-      glogift_membership_no:
-        String(formData.get("glogift_member") ?? "") === "yes"
-          ? String(formData.get("glogift_membership_no") ?? "").trim()
-          : "",
+
       updated_at: new Date().toISOString(),
     })
     .eq("id", profile.id);
 
   if (error) return { ok: false, message: error.message };
 
+  // Membership arrived in migration 0039; if that has not run yet, saving the
+  // rest of the profile should still work.
+  const isMember = String(formData.get("glogift_member") ?? "") === "yes";
+  const { error: mErr } = await supabase
+    .from("profiles")
+    .update({
+      glogift_member: isMember,
+      glogift_membership_no: isMember
+        ? String(formData.get("glogift_membership_no") ?? "").trim()
+        : "",
+    })
+    .eq("id", profile.id);
+
   await audit(profile.id, "profile.updated", "profile", profile.id);
   revalidatePath("/profile");
-  return { ok: true, message: "Profile updated." };
+  return {
+    ok: true,
+    message: mErr
+      ? "Profile updated. GLOGIFT membership could not be saved yet — migration 0039 is pending."
+      : "Profile updated.",
+  };
 }
 
 // =====================================================================

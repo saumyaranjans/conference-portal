@@ -1954,6 +1954,283 @@ export async function addTrackChair(formData: FormData): Promise<ActionResult> {
 }
 
 /**
+ * Draft the Track Editor invitation. Two shapes: someone already on the
+ * portal (picked from the list) gets an acceptance link; someone new gets a
+ * sign-up link carrying their details, so the form is pre-filled and the
+ * Track Editor dashboard opens the moment they finish.
+ *
+ * Nothing is emailed here - the Convener previews first.
+ */
+export async function prepareChairInvite(
+  formData: FormData
+): Promise<PrepareResult> {
+  const profile = await requireRole("chief");
+  const admin = createAdminClient();
+
+  const trackId = String(formData.get("track_id") ?? "");
+  const editorId = String(formData.get("editor_id") ?? "").trim();
+  const fullName = String(formData.get("full_name") ?? "").trim();
+  const designation = String(formData.get("designation") ?? "").trim();
+  const affiliation = String(formData.get("affiliation") ?? "").trim();
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+
+  if (!trackId) return { ok: false, message: "Choose a track." };
+
+  const { data: track } = await admin
+    .from("tracks")
+    .select("id, name, conferences(name, acronym, year)")
+    .eq("id", trackId)
+    .maybeSingle();
+  if (!track) return { ok: false, message: "Track not found." };
+
+  const t = track as any;
+  const conferenceName: string = t.conferences?.name ?? "GLOGIFT 2027";
+  const brand = shortConf(t.conferences);
+
+  const { count: openCount } = await admin
+    .from("submissions")
+    .select("id", { count: "exact", head: true })
+    .eq("track_id", trackId)
+    .in("status", ["submitted", "under_review"]);
+
+  let target:
+    | { id: string; full_name: string | null; email: string | null; roles?: string[] }
+    | null = null;
+  if (editorId) {
+    const { data } = await admin
+      .from("profiles")
+      .select("id, full_name, email, roles")
+      .eq("id", editorId)
+      .maybeSingle();
+    target = (data as any) ?? null;
+  } else if (email) {
+    const { data } = await admin
+      .from("profiles")
+      .select("id, full_name, email, roles")
+      .ilike("email", email)
+      .maybeSingle();
+    target = (data as any) ?? null;
+  }
+
+  if (!target) {
+    if (!fullName)
+      return { ok: false, message: "Enter the Track Editor's full name." };
+    if (!email || !email.includes("@"))
+      return { ok: false, message: "Enter a valid email address." };
+  }
+
+  let link: string;
+  let needsSignup: boolean;
+  let recipient: string;
+  let recipientName: string;
+
+  if (target) {
+    const { data: held } = await admin
+      .from("track_editors")
+      .select("track_id, status, token")
+      .eq("profile_id", target.id);
+    const rows = ((held as any[]) ?? []);
+    const already = rows.find((h) => h.track_id === trackId);
+    const otherAccepted = rows.filter(
+      (h) => h.status === "accepted" && h.track_id !== trackId
+    );
+    if (otherAccepted.length >= MAX_TRACKS_PER_CHAIR)
+      return {
+        ok: false,
+        message: `A Track Editor may chair at most ${MAX_TRACKS_PER_CHAIR} tracks, and they already chair ${otherAccepted.length}.`,
+      };
+
+    let token: string = already?.token ?? randomBytes(24).toString("hex");
+    if (!already) {
+      const { error } = await admin.from("track_editors").insert({
+        track_id: trackId,
+        profile_id: target.id,
+        status: "invited",
+        token,
+        invited_by: profile.id,
+        invited_at: new Date().toISOString(),
+      });
+      if (error) return { ok: false, message: error.message };
+    } else if (!already.token) {
+      await admin
+        .from("track_editors")
+        .update({ token })
+        .eq("track_id", trackId)
+        .eq("profile_id", target.id);
+    }
+
+    const roles: string[] = target.roles ?? [];
+    if (!roles.includes("editor")) {
+      await admin
+        .from("profiles")
+        .update({
+          roles: [...roles, "editor"],
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", target.id);
+    }
+
+    link = `${siteUrl()}/chair-invite/${token}`;
+    needsSignup = false;
+    recipient = target.email ?? email;
+    recipientName = target.full_name || recipient;
+  } else {
+    const token = randomBytes(24).toString("hex");
+    const { error } = await admin.from("track_editor_invitations").insert({
+      track_id: trackId,
+      invited_by: profile.id,
+      token,
+      full_name: fullName,
+      designation,
+      affiliation,
+      email,
+    });
+    if (error) return { ok: false, message: error.message };
+
+    link = `${siteUrl()}/track-editor-invite/${token}`;
+    needsSignup = true;
+    recipient = email;
+    recipientName = fullName;
+  }
+
+  const { subject, body } = chairInviteEmail({
+    name: recipientName,
+    track: t.name,
+    openCount: openCount ?? 0,
+    conferenceName,
+    brand,
+    siteUrl: siteUrl(),
+    link,
+    needsSignup,
+    convenerName: profile.full_name,
+    convenerEmail: profile.email,
+  });
+
+  await audit(profile.id, "track.editor_invite_prepared", "track", trackId, {
+    email: recipient,
+  });
+
+  return {
+    ok: true,
+    prepared: {
+      to: recipient,
+      subject,
+      body,
+      reviewerName: recipientName,
+      existing: !needsSignup,
+    },
+  };
+}
+
+/** Send the previewed Track Editor invitation through the portal. */
+export async function sendChairInvite(
+  formData: FormData
+): Promise<ActionResult> {
+  const profile = await requireRole("chief");
+
+  const to = String(formData.get("to") ?? "").trim();
+  const subject = String(formData.get("subject") ?? "");
+  const body = String(formData.get("body") ?? "");
+  if (!to) return { ok: false, message: "No recipient address." };
+
+  if (!emailConfigured())
+    return {
+      ok: false,
+      message:
+        "Email sending isn't set up yet - copy the message and send it from your own email.",
+    };
+
+  const r = await sendEmail({
+    to,
+    subject,
+    text: body,
+    replyTo: profile.email || undefined,
+  });
+  if (!r.sent)
+    return { ok: false, message: `Send failed: ${r.error ?? "unknown error"}` };
+
+  revalidatePath("/chief");
+  return { ok: true, message: `Invitation sent to ${to}.` };
+}
+
+/**
+ * A newly signed-up Track Editor accepts their invitation: grants the editor
+ * role and makes them a Track Editor for the invited track. Idempotent.
+ */
+export async function acceptTrackEditorInvite(
+  token: string
+): Promise<ActionResult> {
+  const profile = await requireProfile();
+  const admin = createAdminClient();
+
+  const { data: inv } = await admin
+    .from("track_editor_invitations")
+    .select("id, track_id, status, invited_by, tracks(name)")
+    .eq("token", token)
+    .maybeSingle();
+
+  if (!inv) return { ok: false, message: "This invitation link is invalid." };
+  const row = inv as any;
+  if (row.status === "revoked")
+    return { ok: false, message: "This invitation has been withdrawn." };
+
+  const { data: held } = await admin
+    .from("track_editors")
+    .select("track_id")
+    .eq("profile_id", profile.id)
+    .eq("status", "accepted");
+  const other = ((held as any[]) ?? []).filter((h) => h.track_id !== row.track_id);
+  if (other.length >= MAX_TRACKS_PER_CHAIR)
+    return {
+      ok: false,
+      message: `You already chair ${other.length} tracks, which is the maximum.`,
+    };
+
+  const roles: string[] = profile.roles ?? [];
+  if (!roles.includes("editor")) {
+    await admin
+      .from("profiles")
+      .update({
+        roles: [...roles, "editor"],
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", profile.id);
+  }
+
+  const { error } = await admin.from("track_editors").upsert(
+    {
+      track_id: row.track_id,
+      profile_id: profile.id,
+      status: "accepted",
+      accepted_at: new Date().toISOString(),
+      invited_by: row.invited_by ?? null,
+    },
+    { onConflict: "track_id,profile_id" }
+  );
+  if (error && error.code !== "23505")
+    return { ok: false, message: error.message };
+
+  if (row.status !== "accepted") {
+    await admin
+      .from("track_editor_invitations")
+      .update({
+        status: "accepted",
+        accepted_by: profile.id,
+        accepted_at: new Date().toISOString(),
+      })
+      .eq("id", row.id);
+  }
+
+  await audit(profile.id, "track.editor_invite_accepted", "track", row.track_id);
+  revalidatePath("/editor");
+  revalidatePath("/chief");
+  return {
+    ok: true,
+    message: `You are now the Track Editor for ${row.tracks?.name ?? "your track"}.`,
+  };
+}
+
+/**
  * The invited chair accepts. Only then do they chair the track — and even
  * then they see nothing until the Convener assigns them a specific paper.
  */

@@ -170,18 +170,33 @@ export function fullPaperDecisionEmail(o: DecisionOpts): EmailContent {
   return decisionEmail("full_paper", o);
 }
 
+/** Where to write for help with a Track Editor invitation. */
+const CHAIR_HELP = "glogift27.chair@iimsambalpur.ac.in";
+
 export function chairInviteEmail(o: {
   name?: string;
   track: string;
   openCount?: number;
   conferenceName?: string;
-  /** Acceptance link — chairing begins only once they accept. */
+  /** Short brand, e.g. "GLOGIFT 2027". */
+  brand?: string;
+  /** The conference's own web address. */
+  siteUrl?: string;
+  /** Acceptance or sign-up link — the invitation is only live once used. */
   link?: string;
+  /** True when the invitee has no account and the link starts a sign-up. */
+  needsSignup?: boolean;
+  convenerName?: string | null;
+  convenerEmail?: string | null;
 }): EmailContent {
   const conf = o.conferenceName || CONF_DEFAULT;
-  const subject = `${conf} — Invitation to serve as Track Editor (${o.track})`;
+  const brand = o.brand || CONF_DEFAULT;
+  const subject = `${brand} — Invitation to serve as Track Editor (${o.track})`;
+
   const body = compose([
     greeting(o.name, "Colleague"),
+    "",
+    "Greetings of the Day!",
     "",
     `You have kindly been invited to serve as the Track Editor for the ${o.track} track of ${conf}.`,
     typeof o.openCount === "number" && o.openCount > 0
@@ -190,13 +205,24 @@ export function chairInviteEmail(o: {
         } awaiting handling in this track.`
       : null,
     "",
-    "As Track Editor you will invite reviewers, manage assignments, and recommend decisions for the papers placed in your care. Papers are assigned to you individually by the Convener, and appear in your Track Queue as they are.",
+    "As Track Editor you will invite reviewers, manage assignments, and record decisions for the papers placed in your care. Papers are assigned to you individually by the Convener, and appear in your Track Queue as they are.",
+    o.siteUrl ? "" : null,
+    o.siteUrl ? `Conference portal: ${o.siteUrl}` : null,
     "",
-    o.link ? "Please accept the invitation using the link below:" : null,
+    o.link
+      ? o.needsSignup
+        ? "To begin, please complete the sign-up process on the conference portal using the link below. Your details are already filled in — set a password to finish, and your Track Editor dashboard opens straight away:"
+        : "Please accept the invitation using the link below. Your Track Editor dashboard opens as soon as you do:"
+      : null,
     o.link ?? null,
-    o.link ? "" : null,
+    "",
+    "For further information, please feel free to contact:",
+    CHAIR_HELP,
+    "",
     "With regards,",
-    `Convener, ${conf}`,
+    o.convenerName || null,
+    signOffLine({ role: "Convener", track: o.track, conf, brand }),
+    o.convenerEmail || null,
   ]);
   return { subject, body };
 }

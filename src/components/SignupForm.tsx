@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { acceptReviewerInvite } from "@/lib/actions";
+import { acceptReviewerInvite, acceptTrackEditorInvite } from "@/lib/actions";
 import {
   COUNTRIES,
   COUNTRY_DIAL_CODES,
@@ -41,10 +41,14 @@ export type SignupPrefill = Partial<typeof EMPTY>;
 export function SignupForm({
   prefill,
   inviteToken,
+  trackEditorInviteToken,
   emailLocked = false,
 }: {
   prefill?: SignupPrefill;
+  /** Reviewer invitation — lands them in the reviewer dashboard. */
   inviteToken?: string;
+  /** Track Editor invitation — lands them in the Track Queue. */
+  trackEditorInviteToken?: string;
   emailLocked?: boolean;
 }) {
   const router = useRouter();
@@ -91,7 +95,7 @@ export function SignupForm({
 
     if (error) {
       // Someone who already registered can't sign up again — guide them.
-      if (inviteToken && /already registered|already exists/i.test(error.message)) {
+      if ((inviteToken || trackEditorInviteToken) && /already registered|already exists/i.test(error.message)) {
         setError(
           "This email already has an account. Please sign in — the paper will appear in your reviewer dashboard."
         );
@@ -103,7 +107,15 @@ export function SignupForm({
     }
 
     if (data.session) {
-      if (inviteToken) {
+      if (trackEditorInviteToken) {
+        const res = await acceptTrackEditorInvite(trackEditorInviteToken);
+        if (!res.ok) {
+          setError(res.message ?? "Could not complete the invitation.");
+          setBusy(false);
+          return;
+        }
+        router.push("/editor");
+      } else if (inviteToken) {
         const res = await acceptReviewerInvite(inviteToken);
         if (!res.ok) {
           setError(res.message ?? "Could not complete the invitation.");

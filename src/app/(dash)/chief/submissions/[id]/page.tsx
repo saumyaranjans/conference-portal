@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { recordFinalDecision, withdrawSubmission } from "@/lib/actions";
+import { withdrawSubmission } from "@/lib/actions";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { PaperDownload } from "@/components/PaperUpload";
 import { DocumentViewer } from "@/components/DocumentViewer";
@@ -89,8 +89,8 @@ export default async function ChiefSubmissionPage({
   const conf = sub.tracks?.conferences;
   const conferenceBrand =
     conf?.acronym && conf?.year ? `${conf.acronym} ${conf.year}` : "GLOGIFT 2027";
-  const chairDecision = decisionRows[0] ?? null;
-  const recommendation = decisionRows.find((d) => !d.is_final);
+  // The decision that still stands; overridden ones live in the history below.
+  const chairDecision = decisionRows.find((d) => !d.superseded_at) ?? null;
   const isFinal = ["accepted", "rejected"].includes(sub.status);
 
   return (
@@ -251,12 +251,18 @@ export default async function ChiefSubmissionPage({
                   </span>
                   <span
                     className={`badge ${
-                      d.is_final
-                        ? "bg-emerald-100 text-emerald-800"
-                        : "bg-amber-100 text-amber-800"
+                      d.superseded_at
+                        ? "bg-slate-200 text-slate-600"
+                        : d.is_final
+                          ? "bg-emerald-100 text-emerald-800"
+                          : "bg-amber-100 text-amber-800"
                     }`}
                   >
-                    {d.is_final ? "Final" : "Editor recommendation"}
+                    {d.superseded_at
+                      ? "Overridden — visible to you only"
+                      : d.is_final
+                        ? "Final"
+                        : "Editor recommendation"}
                   </span>
                 </div>
                 <p className="text-xs text-slate-400 mt-1">
@@ -272,80 +278,6 @@ export default async function ChiefSubmissionPage({
           </div>
         </Section>
       )}
-
-      {/* ---- The final call ---- */}
-      <Section title="Final decision">
-        {isFinal ? (
-          <div className="card card-pad">
-            <p className="text-sm text-slate-600">
-              This submission has been finalised as{" "}
-              <strong className="capitalize">{sub.status}</strong>. The author has
-              been notified.
-            </p>
-          </div>
-        ) : (
-          <ActionForm
-            action={recordFinalDecision}
-            className="card card-pad space-y-4"
-            confirm="Record this as the final decision? The author will be notified immediately."
-          >
-            <input type="hidden" name="submission_id" value={id} />
-
-            {recommendation && (
-              <p className="text-sm text-blue-900 bg-blue-50 rounded-lg px-3 py-2">
-                The track editor recommends{" "}
-                <strong className="capitalize">
-                  {recommendation.decision.replace("_", " ")}
-                </strong>
-                . You may ratify or override it.
-              </p>
-            )}
-
-            <div>
-              <label className="label">Decision</label>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2">
-                {[
-                  ["accept", "Accept"],
-                  ["minor_revision", "Minor Revision"],
-                  ["major_revision", "Major Revision"],
-                  ["reject", "Reject"],
-                ].map(([value, label]) => (
-                  <label
-                    key={value}
-                    className="flex items-center gap-2 border border-slate-300 rounded-lg
-                               px-3 py-2 cursor-pointer hover:bg-slate-50
-                               has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50"
-                  >
-                    <input
-                      type="radio"
-                      name="decision"
-                      value={value}
-                      required
-                      defaultChecked={recommendation?.decision === value}
-                    />
-                    <span className="text-sm">{label}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <label className="label" htmlFor="rationale">
-                Message to the author
-              </label>
-              <textarea
-                id="rationale"
-                name="rationale"
-                rows={6}
-                className="input"
-                placeholder="This text is shown to the author alongside the decision."
-              />
-            </div>
-
-            <SubmitButton>Record final decision</SubmitButton>
-          </ActionForm>
-        )}
-      </Section>
 
       {/* ---- Withdraw on the author's behalf ---- */}
       {["submitted", "under_review", "revisions_requested"].includes(

@@ -1750,6 +1750,30 @@ export async function reassignTrackEditor(
     .eq("id", submissionId);
   if (error) return { ok: false, message: error.message };
 
+  // Handing the paper to someone else overrides whatever the previous Track
+  // Editor decided: the record is voided (Convener-only from here) and the
+  // paper returns to review so the new editor decides afresh.
+  const { data: voided } = await admin
+    .from("decisions")
+    .update({ superseded_at: new Date().toISOString(), superseded_by: profile.id })
+    .eq("submission_id", submissionId)
+    .is("superseded_at", null)
+    .select("id");
+
+  const overridden = ((voided as any[]) ?? []).length;
+  if (overridden > 0) {
+    await admin
+      .from("submissions")
+      .update({
+        status: "under_review",
+        // The incoming editor declares how they will review it themselves.
+        abstract_review_route: null,
+        abstract_review_route_by: null,
+        abstract_review_route_at: null,
+      })
+      .eq("id", submissionId);
+  }
+
   const s = sub as any;
   await admin.from("notifications").insert({
     profile_id: editorId,
@@ -1770,42 +1794,14 @@ export async function reassignTrackEditor(
   revalidatePath("/editor");
   return {
     ok: true,
-    message: `${
-      target.full_name || target.email
-    } now handles this paper and has been notified.`,
+    message: `${target.full_name || target.email} now handles this paper${
+      overridden > 0
+        ? `. The previous decision has been overridden and the paper is back under review — only you can still see the overridden record.`
+        : " and has been notified."
+    }`,
   };
 }
 
-/** The final call. The DB trigger moves the paper and notifies the author. */
-export async function recordFinalDecision(
-  formData: FormData
-): Promise<ActionResult> {
-  const profile = await requireRole("chief");
-  const supabase = await createClient();
-
-  const submissionId = String(formData.get("submission_id"));
-  const decision = String(formData.get("decision")) as DecisionKind;
-
-  const { error } = await supabase.from("decisions").insert({
-    submission_id: submissionId,
-    decided_by: profile.id,
-    decision,
-    rationale: String(formData.get("rationale") ?? ""),
-    is_final: true,
-  });
-
-  if (error) return { ok: false, message: error.message };
-
-  await audit(profile.id, "decision.final", "submission", submissionId, {
-    decision,
-  });
-  revalidatePath("/chief");
-  revalidatePath(`/chief/submissions/${submissionId}`);
-  return {
-    ok: true,
-    message: "Final decision recorded. Send the author the decision letter below.",
-  };
-}
 
 /** Convener/admin deletes a submitted or withdrawn paper (and its files). */
 export async function deleteSubmission(formData: FormData): Promise<ActionResult> {

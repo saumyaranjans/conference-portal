@@ -98,6 +98,11 @@ export default async function EditorSubmissionPage({
   const reviewRoute = (sub as any).abstract_review_route ?? null;
   const decisionUnlocked = !isAbstract || Boolean(reviewRoute);
   const hasDecision = ((decisions ?? []) as any[]).length > 0;
+  // A chair judging an abstract on their own expertise has no use for the
+  // reviewer sections. Anything already assigned still shows, so choosing
+  // "evaluate myself" after inviting someone never hides real work.
+  const showReviewers =
+    !isAbstract || reviewRoute === "facilitated" || rows.length > 0;
 
   const conf = sub.tracks?.conferences;
   const conferenceBrand =
@@ -252,7 +257,8 @@ export default async function EditorSubmissionPage({
         </Section>
       )}
 
-      {/* ---- Reviewer assignment ---- */}
+      {/* ---- Reviewer assignment — only when reviewers are part of the plan ---- */}
+      {showReviewers && (
       <Section title={`Reviewers (${completed.length}/${rows.length} complete)`}>
         <div className="card divide-y divide-slate-100">
           {rows.length === 0 && (
@@ -337,10 +343,14 @@ export default async function EditorSubmissionPage({
         </div>
       </Section>
 
+      )}
+
       {/* ---- Reviews received ---- */}
-      <Section title="Reviews received">
-        <ReviewPanel assignments={rows} showConfidential />
-      </Section>
+      {showReviewers && (
+        <Section title="Reviews received">
+          <ReviewPanel assignments={rows} showConfidential />
+        </Section>
+      )}
 
       {/* ---- Decision (track chair finalises) ---- */}
       {decisionUnlocked && (

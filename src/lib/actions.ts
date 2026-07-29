@@ -808,16 +808,6 @@ function prettyDate(d?: string): string {
       });
 }
 
-/** Sender initials, e.g. "Saumyaranjan Sahoo" -> "S. S.". */
-function initialsOf(name?: string): string {
-  return (name ?? "")
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((p) => p[0].toUpperCase() + ".")
-    .join(" ");
-}
-
 /** The two organiser help contacts, shown at the foot of reviewer emails. */
 const REVIEW_HELP = [
   "For further help, please contact:",
@@ -828,7 +818,7 @@ const REVIEW_HELP = [
 /**
  * Build the reviewer invitation letter (for someone without an account yet).
  * A warm letter: greeting, the article, thanks, deadline, sign-up link, help
- * contacts, and the chair's initials — never the submitting author.
+ * contacts, and the chair's sign-off — never the submitting author.
  */
 function buildInviteEmail(opts: {
   paperId: string | null;
@@ -845,7 +835,6 @@ function buildInviteEmail(opts: {
   const item = opts.stage === "full_paper" ? "manuscript" : "abstract";
   const pid = opts.paperId ? opts.paperId : "(to be assigned)";
   const name = opts.fullName?.trim() || "Reviewer";
-  const init = initialsOf(opts.inviterName);
 
   const subject = `${conf} — Invitation to review ${item}${
     opts.paperId ? ` (${opts.paperId})` : ""
@@ -879,10 +868,14 @@ function buildInviteEmail(opts: {
     "With warm regards,"
   );
   if (opts.inviterName) lines.push(opts.inviterName);
-  lines.push(`Track Session Chair, ${conf}`);
-  if (init) lines.push(init);
+  lines.push(chairSignOff(opts.track, conf));
 
   return { subject, body: lines.join("\n") };
+}
+
+/** Sign-off line: "Track Session Chair, <track>, <conference>". */
+function chairSignOff(track: string, conf: string): string {
+  return `Track Session Chair, ${track ? `${track}, ` : ""}${conf}`;
 }
 
 /**
@@ -902,7 +895,6 @@ function buildAssignmentEmail(opts: {
 }): { subject: string; body: string } {
   const conf = opts.conferenceName || "GLOGIFT 2027";
   const item = opts.stage === "full_paper" ? "manuscript" : "abstract";
-  const init = initialsOf(opts.inviterName ?? undefined);
 
   const subject = `${conf} — Invitation to review ${item}${
     opts.paperId ? ` (${opts.paperId})` : ""
@@ -933,8 +925,7 @@ function buildAssignmentEmail(opts: {
     "With warm regards,"
   );
   if (opts.inviterName) lines.push(opts.inviterName);
-  lines.push(`Track Session Chair, ${conf}`);
-  if (init) lines.push(init);
+  lines.push(chairSignOff(opts.track, conf));
 
   return { subject, body: lines.join("\n") };
 }

@@ -83,7 +83,7 @@ function decisionEmail(
     o.message && o.message.trim() ? `\nComments:\n${o.message.trim()}` : null,
     "",
     "With regards,",
-    `Track Session Chair, ${conf}`,
+    `Track Session Chair, ${o.track ? `${o.track}, ` : ""}${conf}`,
   ]);
 
   return { subject, body };

@@ -76,7 +76,9 @@ export default async function ChiefDashboard() {
       : Promise.resolve({ data: [] }),
     supabase
       .from("decisions")
-      .select("*, submissions(id, title, status), profiles(full_name)")
+      .select(
+        "*, submissions(id, title, status), profiles!decisions_decided_by_fkey(full_name)"
+      )
       .eq("is_final", false)
       .order("created_at", { ascending: false }),
   ]);

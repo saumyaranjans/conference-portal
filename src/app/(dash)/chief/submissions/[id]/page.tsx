@@ -50,7 +50,7 @@ export default async function ChiefSubmissionPage({
         .eq("submission_id", id),
       supabase
         .from("decisions")
-        .select("*, profiles(full_name)")
+        .select("*, profiles!decisions_decided_by_fkey(full_name)")
         .eq("submission_id", id)
         .order("created_at", { ascending: false }),
       supabase

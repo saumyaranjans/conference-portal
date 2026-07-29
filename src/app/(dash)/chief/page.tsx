@@ -5,6 +5,7 @@ import { addTrackChair, removeTrackChair } from "@/lib/actions";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { ChairInviteComposer } from "@/components/ChairInviteComposer";
 import { DeleteSubmissionButton } from "@/components/DeleteSubmissionButton";
+import { AssignPaperEditor } from "@/components/AssignPaperEditor";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import {
   DataTable,
@@ -14,6 +15,7 @@ import {
   StatCard,
   formatDate,
 } from "@/components/ui/Primitives";
+import { isAuthorOf } from "@/lib/coi";
 import {
   DELETABLE_SUBMISSION_STATUSES,
   type Profile,
@@ -30,7 +32,7 @@ export default async function ChiefDashboard() {
     await Promise.all([
       supabase
         .from("submissions")
-        .select("*, tracks(name, code)")
+        .select("*, tracks(name, code), submission_authors(full_name, email, affiliation), author:profiles!submissions_author_id_fkey(full_name, email, affiliation)")
         .neq("status", "draft")
         .order("updated_at", { ascending: false }),
       supabase
@@ -44,6 +46,23 @@ export default async function ChiefDashboard() {
     ]);
 
   const submissions = (subs ?? []) as (Submission & { tracks: any })[];
+
+  // Chairs are per track, so the Convener may only hand a paper to someone who
+  // already chairs its track — and never to one of its own authors.
+  const chairsByTrack = new Map<string, { id: string; full_name: string | null; email: string | null }[]>();
+  for (const t of ((tracks ?? []) as any[])) {
+    chairsByTrack.set(
+      t.id,
+      (t.track_editors ?? [])
+        .map((te: any) => te.profiles)
+        .filter(Boolean)
+    );
+  }
+
+  const editorNames = new Map<string, string>();
+  for (const p of ((staff ?? []) as Profile[])) {
+    editorNames.set(p.id, p.full_name || p.email);
+  }
 
   const [{ data: statsRows }, { data: pendingDecisions }] = await Promise.all([
     submissions.length
@@ -239,10 +258,19 @@ export default async function ChiefDashboard() {
           <EmptyState title="No submissions yet" />
         ) : (
           <DataTable
-            headers={["Paper ID", "Title", "Track", "Status", "Reviews", "Avg", "Updated", ""]}
+            headers={["Paper ID", "Title", "Track", "Status", "Track chair", "Reviews", "Avg", "Updated", ""]}
           >
             {submissions.map((s) => {
               const st = stats.get(s.id);
+              const authors = [
+                ...(((s as any).submission_authors ?? []) as any[]),
+                ...((s as any).author ? [(s as any).author] : []),
+              ];
+              // Only this track's chairs, and never one of its own authors.
+              const eligible = (chairsByTrack.get((s as any).track_id) ?? [])
+                .filter((c) => !isAuthorOf(c, authors))
+                .map((c) => ({ id: c.id, name: c.full_name || c.email || "—" }));
+              const assignedId = (s as any).assigned_editor_id ?? null;
               return (
                 <tr key={s.id} className="hover:bg-slate-50">
                   <td className="td font-mono text-xs text-slate-500 whitespace-nowrap">
@@ -254,6 +282,23 @@ export default async function ChiefDashboard() {
                   <td className="td text-slate-500">{s.tracks?.name ?? "—"}</td>
                   <td className="td">
                     <StatusBadge status={s.status} />
+                  </td>
+                  <td className="td">
+                    <AssignPaperEditor
+                      submissionId={s.id}
+                      chairs={eligible}
+                      currentId={assignedId}
+                      defaultLabel={
+                        eligible.length === 1
+                          ? `${eligible[0].name} (track chair)`
+                          : "Any chair of this track"
+                      }
+                    />
+                    {assignedId && (
+                      <span className="badge bg-blue-100 text-blue-800 mt-1 inline-block">
+                        Assigned by you
+                      </span>
+                    )}
                   </td>
                   <td className="td">
                     {st?.completed_count ?? 0}/{st?.assigned_count ?? 0}

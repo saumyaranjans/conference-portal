@@ -1672,7 +1672,7 @@ export async function reassignTrackEditor(
 
   const { data: sub } = await admin
     .from("submissions")
-    .select("paper_id, title, author_id, tracks(name)")
+    .select("paper_id, title, author_id, track_id, tracks(name)")
     .eq("id", submissionId)
     .maybeSingle();
   if (!sub) return { ok: false, message: "Submission not found." };
@@ -1696,10 +1696,23 @@ export async function reassignTrackEditor(
 
   const { data: target } = await admin
     .from("profiles")
-    .select("id, full_name, email, roles")
+    .select("id, full_name, email, affiliation, roles")
     .eq("id", editorId)
     .maybeSingle();
   if (!target) return { ok: false, message: "That editor no longer exists." };
+
+  // A paper may only go to someone who already chairs its track.
+  const { data: chairs } = await admin
+    .from("track_editors")
+    .select("profile_id")
+    .eq("track_id", (sub as any).track_id);
+  if (!((chairs as any[]) ?? []).some((c) => c.profile_id === editorId))
+    return {
+      ok: false,
+      message: `${
+        target.full_name || target.email
+      } does not chair this paper's track. Add them to the track first, under Tracks & chairs.`,
+    };
 
   if (target.id === (sub as any).author_id)
     return {

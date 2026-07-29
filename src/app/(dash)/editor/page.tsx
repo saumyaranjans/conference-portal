@@ -11,6 +11,10 @@ import {
   formatDate,
 } from "@/components/ui/Primitives";
 import type { ReviewStats, Submission, Track } from "@/lib/types";
+import {
+  AcceptTrackButton,
+  AcceptPaperButtons,
+} from "@/components/PendingAcceptances";
 
 export default async function EditorDashboard() {
   const profile = await requireRole("editor");
@@ -19,10 +23,15 @@ export default async function EditorDashboard() {
   // The tracks this person chairs define their whole queue.
   const { data: chairRows } = await supabase
     .from("track_editors")
-    .select("track_id, tracks(id, name)")
+    .select("track_id, status, tracks(id, name)")
     .eq("profile_id", profile.id);
 
-  const tracks = ((chairRows ?? []) as any[])
+  const chairAll = ((chairRows ?? []) as any[]);
+  const pendingTracks = chairAll
+    .filter((r) => r.status !== "accepted" && r.tracks)
+    .map((r) => r.tracks) as Track[];
+  const tracks = chairAll
+    .filter((r) => r.status === "accepted")
     .map((r) => r.tracks)
     .filter(Boolean) as Track[];
   const trackIds = tracks.map((t) => t.id);
@@ -40,6 +49,12 @@ export default async function EditorDashboard() {
   const submissions = ((subs ?? []) as (Submission & {
     tracks: { name: string } | null;
   })[]).filter((s) => s.author_id !== profile.id);
+
+  const offered = submissions.filter(
+    (s) =>
+      (s as any).assigned_editor_id === profile.id &&
+      !(s as any).editor_accepted_at
+  );
 
   const { data: statsRows } = submissions.length
     ? await supabase
@@ -116,6 +131,53 @@ export default async function EditorDashboard() {
           />
         </div>
       </Section>
+
+      {pendingTracks.length > 0 && (
+        <Section title="Invitations to chair">
+          <div className="card divide-y divide-slate-100">
+            {pendingTracks.map((t) => (
+              <div
+                key={t.id}
+                className="px-5 py-4 flex flex-wrap items-center justify-between gap-3"
+              >
+                <div>
+                  <p className="text-sm font-medium text-slate-800">{t.name}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    The Convener has invited you to be Track Editor for this
+                    track. Papers reach you one at a time after you accept.
+                  </p>
+                </div>
+                <AcceptTrackButton trackId={t.id} trackName={t.name} />
+              </div>
+            ))}
+          </div>
+        </Section>
+      )}
+
+      {offered.length > 0 && (
+        <Section title="Papers awaiting your acceptance">
+          <div className="card divide-y divide-slate-100">
+            {offered.map((s) => (
+              <div
+                key={s.id}
+                className="px-5 py-4 flex flex-wrap items-center justify-between gap-3"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-slate-800">
+                    {s.paper_id ? `${s.paper_id} — ` : ""}
+                    {s.title}
+                  </p>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Assigned to you by the Convener. Accept to begin, or hand it
+                    back for someone else.
+                  </p>
+                </div>
+                <AcceptPaperButtons submissionId={s.id} />
+              </div>
+            ))}
+          </div>
+        </Section>
+      )}
 
       {/* ---- Submissions ---- */}
       <Section title="Submissions">

@@ -1569,10 +1569,19 @@ export async function recordRecommendation(
 
   const { data: sub } = await admin
     .from("submissions")
-    .select("stage, author_id, abstract_review_route")
+    .select("stage, author_id, abstract_review_route, assigned_editor_id, editor_accepted_at")
     .eq("id", submissionId)
     .maybeSingle();
   if (!sub) return { ok: false, message: "Submission not found." };
+
+  if (
+    (sub as any).assigned_editor_id === profile.id &&
+    !(sub as any).editor_accepted_at
+  )
+    return {
+      ok: false,
+      message: "Accept this paper first — it is still an unanswered assignment.",
+    };
 
   if (sub.stage !== "full_paper" && !sub.abstract_review_route)
     return {
@@ -1765,6 +1774,7 @@ export async function reassignTrackEditor(
       assigned_editor_id: editorId,
       assigned_editor_at: new Date().toISOString(),
       assigned_editor_by: profile.id,
+      editor_accepted_at: null,
     })
     .eq("id", submissionId);
   if (error) return { ok: false, message: error.message };
@@ -2214,6 +2224,125 @@ export async function remindTrackEditor(
       } awaiting your decision`,
       body: lines.join("\n"),
     },
+  };
+}
+
+/**
+ * Accept an invitation to chair a track from the dashboard, without needing
+ * the emailed link. Same rules as the link: the two-track ceiling applies.
+ */
+export async function acceptTrackInvitation(
+  formData: FormData
+): Promise<ActionResult> {
+  const profile = await requireProfile();
+  const admin = createAdminClient();
+
+  const trackId = String(formData.get("track_id") ?? "");
+  if (!trackId) return { ok: false, message: "Missing track." };
+
+  const { data: row } = await admin
+    .from("track_editors")
+    .select("id, status, tracks(name)")
+    .eq("track_id", trackId)
+    .eq("profile_id", profile.id)
+    .maybeSingle();
+  if (!row) return { ok: false, message: "No invitation for that track." };
+  if ((row as any).status === "accepted")
+    return { ok: true, message: "You already chair this track." };
+
+  const { data: held } = await admin
+    .from("track_editors")
+    .select("track_id")
+    .eq("profile_id", profile.id)
+    .eq("status", "accepted");
+  const other = ((held as any[]) ?? []).filter((h) => h.track_id !== trackId);
+  if (other.length >= MAX_TRACKS_PER_CHAIR)
+    return {
+      ok: false,
+      message: `You already chair ${other.length} tracks, which is the maximum.`,
+    };
+
+  const { error } = await admin
+    .from("track_editors")
+    .update({ status: "accepted", accepted_at: new Date().toISOString() })
+    .eq("id", (row as any).id);
+  if (error) return { ok: false, message: error.message };
+
+  await audit(profile.id, "track.chair_accepted", "track", trackId);
+  revalidatePath("/editor");
+  revalidatePath("/chief");
+  return {
+    ok: true,
+    message: `You are now the Track Editor for ${
+      (row as any).tracks?.name ?? "this track"
+    }.`,
+  };
+}
+
+/**
+ * Accept — or hand back — a paper the Convener assigned. Declining returns it
+ * to the Convener rather than leaving it in limbo.
+ */
+export async function respondToPaperAssignment(
+  formData: FormData
+): Promise<ActionResult> {
+  const profile = await requireRole("editor", "chief");
+  const admin = createAdminClient();
+
+  const submissionId = String(formData.get("submission_id") ?? "");
+  const accept = String(formData.get("accept") ?? "") === "true";
+  if (!submissionId) return { ok: false, message: "Missing submission." };
+
+  const { data: sub } = await admin
+    .from("submissions")
+    .select("id, title, paper_id, assigned_editor_id, assigned_editor_by")
+    .eq("id", submissionId)
+    .maybeSingle();
+  if (!sub) return { ok: false, message: "Submission not found." };
+  if ((sub as any).assigned_editor_id !== profile.id)
+    return { ok: false, message: "That paper is not assigned to you." };
+
+  if (accept) {
+    const { error } = await admin
+      .from("submissions")
+      .update({ editor_accepted_at: new Date().toISOString() })
+      .eq("id", submissionId);
+    if (error) return { ok: false, message: error.message };
+
+    await audit(profile.id, "paper.editor_accepted", "submission", submissionId);
+    revalidatePath("/editor");
+    revalidatePath(`/editor/submissions/${submissionId}`);
+    return { ok: true, message: "Accepted. This paper is now yours to handle." };
+  }
+
+  const { error } = await admin
+    .from("submissions")
+    .update({
+      assigned_editor_id: null,
+      assigned_editor_at: null,
+      editor_accepted_at: null,
+    })
+    .eq("id", submissionId);
+  if (error) return { ok: false, message: error.message };
+
+  const s = sub as any;
+  if (s.assigned_editor_by) {
+    await admin.from("notifications").insert({
+      profile_id: s.assigned_editor_by,
+      title: "A Track Editor declined a paper",
+      body: `${profile.full_name || profile.email} has handed back "${s.title}"${
+        s.paper_id ? ` (${s.paper_id})` : ""
+      }. It needs a different Track Editor.`,
+      link: "/chief",
+    });
+  }
+
+  await audit(profile.id, "paper.editor_declined", "submission", submissionId);
+  revalidatePath("/editor");
+  revalidatePath("/chief");
+  return {
+    ok: true,
+    message: "Handed back to the Convener, who will assign someone else.",
   };
 }
 

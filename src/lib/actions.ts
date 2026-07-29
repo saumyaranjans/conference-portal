@@ -1753,12 +1753,24 @@ export async function reassignTrackEditor(
   // Handing the paper to someone else overrides whatever the previous Track
   // Editor decided: the record is voided (Convener-only from here) and the
   // paper returns to review so the new editor decides afresh.
-  const { data: voided } = await admin
+  const { data: voided, error: vErr } = await admin
     .from("decisions")
     .update({ superseded_at: new Date().toISOString(), superseded_by: profile.id })
     .eq("submission_id", submissionId)
     .is("superseded_at", null)
     .select("id");
+
+  // Say so rather than half-doing it: the editor has changed, but any earlier
+  // decision still stands until this succeeds.
+  if (vErr)
+    return {
+      ok: false,
+      message: `${
+        target.full_name || target.email
+      } now handles this paper, but the previous decision could NOT be overridden: ${
+        vErr.message
+      }`,
+    };
 
   const overridden = ((voided as any[]) ?? []).length;
   if (overridden > 0) {

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { addTrackChair, removeTrackChair } from "@/lib/actions";
+import { removeTrackChair } from "@/lib/actions";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { ChairInviteComposer } from "@/components/ChairInviteComposer";
 import { DeleteSubmissionButton } from "@/components/DeleteSubmissionButton";
@@ -202,7 +202,6 @@ export default async function ChiefDashboard() {
         <div className="card divide-y divide-slate-100">
           {((tracks ?? []) as (Track & { track_editors: any[] })[]).map((t) => {
             const chairs = t.track_editors ?? [];
-            const chairIds = new Set(chairs.map((c) => c.profile_id));
             return (
               <div key={t.id} className="px-5 py-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
@@ -253,26 +252,6 @@ export default async function ChiefDashboard() {
                       </div>
                     )}
                   </div>
-                  <ActionForm action={addTrackChair} className="flex gap-2">
-                    <input type="hidden" name="track_id" value={t.id} />
-                    <select
-                      name="editor_id"
-                      defaultValue=""
-                      className="input py-1.5 text-sm"
-                    >
-                      <option value="">Select a Track Editor…</option>
-                      {editors
-                        .filter((e) => !chairIds.has(e.id))
-                        .map((e) => (
-                          <option key={e.id} value={e.id}>
-                            {e.full_name || e.email}
-                          </option>
-                        ))}
-                    </select>
-                    <SubmitButton variant="secondary" className="text-sm py-1.5">
-                      Assign
-                    </SubmitButton>
-                  </ActionForm>
                 </div>
               </div>
             );

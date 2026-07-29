@@ -42,17 +42,16 @@ export function AssignPaperEditor({
     );
   }
 
-  async function choose(next: string) {
+  // Explicit: pick a name, then press Assign. Choosing alone changes nothing.
+  async function assign() {
     setError(null);
-    setValue(next);
     setBusy(true);
     const fd = new FormData();
     fd.set("submission_id", submissionId);
-    fd.set("editor_id", next);
+    fd.set("editor_id", value);
     const res = await reassignTrackEditor(fd);
     setBusy(false);
     if (!res.ok) {
-      setValue(currentId ?? "");
       setError(res.message ?? "Could not assign.");
       return;
     }
@@ -60,21 +59,31 @@ export function AssignPaperEditor({
   }
 
   return (
-    <div className="min-w-[11rem]">
-      <select
-        className="input py-1 text-xs"
-        value={value}
-        disabled={busy}
-        onChange={(e) => choose(e.target.value)}
-        aria-label="Track Editor for this paper"
-      >
-        <option value="">{defaultLabel}</option>
-        {chairs.map((c) => (
-          <option key={c.id} value={c.id}>
-            {c.name}
-          </option>
-        ))}
-      </select>
+    <div className="min-w-[12rem]">
+      <div className="flex items-center gap-1.5">
+        <select
+          className="input py-1 text-xs"
+          value={value}
+          disabled={busy}
+          onChange={(e) => setValue(e.target.value)}
+          aria-label="Track Editor for this paper"
+        >
+          <option value="">{defaultLabel}</option>
+          {chairs.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+        <button
+          type="button"
+          onClick={assign}
+          disabled={busy || value === (currentId ?? "")}
+          className="btn-secondary text-xs py-1 px-2 whitespace-nowrap"
+        >
+          {busy ? "…" : "Assign"}
+        </button>
+      </div>
       {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
     </div>
   );

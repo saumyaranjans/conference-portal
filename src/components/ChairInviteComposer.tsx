@@ -1,7 +1,9 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
+  addTrackChair,
   prepareChairInvite,
   sendChairInvite,
   type PreparedInvite,
@@ -28,6 +30,7 @@ export function ChairInviteComposer({
   /** Kept for callers that still pass it; the count is read server-side now. */
   openByTrack?: Record<string, number>;
 }) {
+  const router = useRouter();
   const [trackId, setTrackId] = useState("");
   const [personId, setPersonId] = useState("");
   const [adding, setAdding] = useState(false);
@@ -41,10 +44,30 @@ export function ChairInviteComposer({
   const [error, setError] = useState<string | null>(null);
   const [prepared, setPrepared] = useState<PreparedInvite | null>(null);
   const [sent, setSent] = useState(false);
+  const [assigned, setAssigned] = useState<string | null>(null);
 
   const ready = Boolean(
     trackId && (adding ? fullName.trim() && email.trim() : personId)
   );
+
+  // Put them on the track straight away. The letter is a separate step, so
+  // assigning never sends anything unpreviewed.
+  async function onAssign() {
+    setError(null);
+    setAssigned(null);
+    setBusy(true);
+    const fd = new FormData();
+    fd.set("track_id", trackId);
+    fd.set("editor_id", personId);
+    const res = await addTrackChair(fd);
+    setBusy(false);
+    if (!res.ok) {
+      setError(res.message ?? "Could not assign.");
+      return;
+    }
+    setAssigned(res.message ?? "Assigned.");
+    router.refresh();
+  }
 
   async function onPrepare() {
     setError(null);
@@ -236,14 +259,32 @@ export function ChairInviteComposer({
         </div>
       )}
 
-      <button
-        type="button"
-        onClick={onPrepare}
-        disabled={busy || !ready}
-        className="btn-primary"
-      >
-        {busy ? "Preparing…" : "Prepare invitation"}
-      </button>
+      <div className="flex flex-wrap items-center gap-2">
+        {!adding && (
+          <button
+            type="button"
+            onClick={onAssign}
+            disabled={busy || !trackId || !personId}
+            className="btn-primary"
+          >
+            {busy ? "Working…" : "Assign to track"}
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={onPrepare}
+          disabled={busy || !ready}
+          className={adding ? "btn-primary" : "btn-secondary"}
+        >
+          {busy ? "Preparing…" : "Prepare invitation email"}
+        </button>
+      </div>
+
+      {assigned && (
+        <p className="text-sm text-emerald-700 bg-emerald-50 rounded-lg px-3 py-2">
+          {assigned}
+        </p>
+      )}
 
       {error && (
         <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">
@@ -252,8 +293,10 @@ export function ChairInviteComposer({
       )}
 
       <p className="text-xs text-slate-400">
-        The invitation carries the conference link, sign-up instructions and a
-        contact address. It is previewed before anything is sent.
+        <strong>Assign to track</strong> puts them on the track and notifies
+        them in the portal. <strong>Prepare invitation email</strong> writes the
+        letter — with the conference link, sign-up instructions and a contact
+        address — for you to preview and send.
       </p>
     </div>
   );

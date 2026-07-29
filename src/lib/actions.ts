@@ -1926,20 +1926,6 @@ export async function addTrackChair(formData: FormData): Promise<ActionResult> {
     link: `/chair-invite/${token}`,
   });
 
-  if ((target as any)?.email) {
-    const { subject, body } = chairInviteEmail({
-      name: (target as any).full_name || undefined,
-      track: track?.name ?? "your assigned",
-      link,
-    });
-    await sendEmail({
-      to: (target as any).email,
-      subject,
-      text: body,
-      replyTo: profile.email || undefined,
-    });
-  }
-
   await audit(profile.id, "track.chair_invited", "track", trackId, {
     editor_id: editorId,
   });
@@ -1947,9 +1933,9 @@ export async function addTrackChair(formData: FormData): Promise<ActionResult> {
   revalidatePath("/admin/tracks");
   return {
     ok: true,
-    message: `Invitation sent. ${
+    message: `${
       (target as any)?.full_name || "They"
-    } will chair this track once they accept.`,
+    } is assigned to this track and has been notified. They appear as invited until they accept.`,
   };
 }
 

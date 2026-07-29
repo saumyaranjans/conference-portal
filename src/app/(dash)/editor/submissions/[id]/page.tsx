@@ -8,8 +8,7 @@ import {
   setSuggestedOutlet,
 } from "@/lib/actions";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
-import { AssignReviewer } from "@/components/AssignReviewer";
-import { InviteReviewer } from "@/components/InviteReviewer";
+import { AddReviewer } from "@/components/AddReviewer";
 import { NotifyAuthor } from "@/components/NotifyAuthor";
 import { DocumentViewer } from "@/components/DocumentViewer";
 import { PaperDownload } from "@/components/PaperUpload";
@@ -222,13 +221,8 @@ export default async function EditorSubmissionPage({
             </div>
           ))}
 
-          {/* Invite a new reviewer — sorted by lightest workload first. */}
-          {!isFinal && (
-            <AssignReviewer submissionId={id} available={available} />
-          )}
-
-          {/* Invite an outside reviewer by their details */}
-          {!isFinal && <InviteReviewer submissionId={id} />}
+          {/* Add a reviewer — search the portal's reviewers or add someone new. */}
+          {!isFinal && <AddReviewer submissionId={id} available={available} />}
         </div>
       </Section>
 

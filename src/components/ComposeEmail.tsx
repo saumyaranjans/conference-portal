@@ -41,6 +41,7 @@ export function ComposeEmail({
   body: initialBody,
   showSend = false,
   sendLabel = "Send now",
+  onSend,
 }: {
   to?: string;
   recipients?: string[];
@@ -48,8 +49,13 @@ export function ComposeEmail({
   body: string;
   /** Show a send button that emails via the portal (single `to` only). */
   showSend?: boolean;
-  /** Label for that button — e.g. "Invite & send email" on the invite flow. */
+  /** Label for that button — e.g. "Send invitation" on the reviewer flow. */
   sendLabel?: string;
+  /** Custom sender, for flows that do more than email (e.g. also assign). */
+  onSend?: (
+    subject: string,
+    body: string
+  ) => Promise<{ ok: boolean; message?: string }>;
 }) {
   const [subject, setSubject] = useState(initialSubject);
   const [body, setBody] = useState(initialBody);
@@ -74,11 +80,15 @@ export function ComposeEmail({
     if (!to) return;
     setResult(null);
     startTransition(async () => {
-      const fd = new FormData();
-      fd.set("to", to);
-      fd.set("subject", subject);
-      fd.set("body", body);
-      const res = await sendComposedEmail(fd);
+      const res = onSend
+        ? await onSend(subject, body)
+        : await (async () => {
+            const fd = new FormData();
+            fd.set("to", to);
+            fd.set("subject", subject);
+            fd.set("body", body);
+            return sendComposedEmail(fd);
+          })();
       setResult({ ok: res.ok, message: res.message ?? "" });
     });
   }

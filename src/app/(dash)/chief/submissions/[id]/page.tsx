@@ -6,7 +6,6 @@ import { recordFinalDecision, withdrawSubmission } from "@/lib/actions";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { PaperDownload } from "@/components/PaperUpload";
 import { DocumentViewer } from "@/components/DocumentViewer";
-import { NotifyAuthor } from "@/components/NotifyAuthor";
 import { DeleteSubmissionButton } from "@/components/DeleteSubmissionButton";
 import { ReviewPanel } from "@/components/ReviewPanel";
 import { ReassignEditor } from "@/components/ReassignEditor";
@@ -110,6 +109,22 @@ export default async function ChiefSubmissionPage({
         action={<StatusBadge status={sub.status} />}
       />
 
+      {/* ---- Who handles this paper (the Convener's only lever) ---- */}
+      <Section title="Track Editor for this paper">
+        <ReassignEditor
+          submissionId={id}
+          editors={(editorPool as any[]).filter(
+            (e) =>
+              !isAuthorOf(e, [
+                ...(((coAuthors ?? []) as any[]) ?? []),
+                ...((sub as any).author ? [(sub as any).author] : []),
+              ])
+          )}
+          currentEditorId={(sub as any).assigned_editor_id ?? null}
+          trackEditorName={sub.tracks?.profiles?.full_name}
+        />
+      </Section>
+
       {/* ---- Roll-up ---- */}
       {stats && (
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-8">
@@ -188,28 +203,8 @@ export default async function ChiefSubmissionPage({
         <ReviewPanel assignments={rows} showConfidential />
       </Section>
 
-      {/* ---- Email the author (decision letter) ---- */}
-      <Section title="Email the author">
-        <NotifyAuthor
-          stage={(sub as any).stage}
-          paperId={sub.paper_id}
-          title={sub.title}
-          track={sub.tracks?.name}
-          authorName={(sub as any).author?.full_name}
-          authorEmail={(sub as any).author?.email}
-          defaultDecision={decisionRows[0]?.decision}
-          defaultMessage={decisionRows[0]?.rationale}
-          reviews={authorFacingReviews}
-          chairName={profile.full_name}
-          chairEmail={profile.email}
-          signerRole="Convener"
-          conferenceName={sub.tracks?.conferences?.name}
-          brand={conferenceBrand}
-        />
-      </Section>
-
-      {/* ---- What the track chair decided ---- */}
-      <Section title="Track chair decision">
+      {/* ---- What the Track Editor decided ---- */}
+      <Section title="Track Editor decision">
         <div className="card card-pad space-y-2">
           {chairDecision ? (
             <>
@@ -218,7 +213,7 @@ export default async function ChiefSubmissionPage({
                   {chairDecision.decision.replace("_", " ")}
                 </span>
                 <span className="badge bg-emerald-100 text-emerald-800">
-                  Decided by the Track Session Chair
+                  Decided by the Track Editor
                 </span>
               </div>
               <p className="text-xs text-slate-500">
@@ -231,33 +226,17 @@ export default async function ChiefSubmissionPage({
                 </p>
               )}
               <p className="text-xs text-slate-500">
-                The Track Session Chair holds the final authority on this paper.
-                Override it below only if the decision is inappropriate, and
-                reassign the paper if it needs a different chair.
+                The Track Editor holds the final authority on this paper. If
+                the decision is inappropriate, reassign the paper to a different
+                Track Editor above.
               </p>
             </>
           ) : (
             <p className="text-sm text-slate-500">
-              The Track Session Chair has not recorded a decision yet.
+              The Track Editor has not recorded a decision yet.
             </p>
           )}
         </div>
-      </Section>
-
-      {/* ---- Hand this paper to a different chair ---- */}
-      <Section title="Track Session Chair for this paper">
-        <ReassignEditor
-          submissionId={id}
-          editors={(editorPool as any[]).filter(
-            (e) =>
-              !isAuthorOf(e, [
-                ...(((coAuthors ?? []) as any[]) ?? []),
-                ...((sub as any).author ? [(sub as any).author] : []),
-              ])
-          )}
-          currentEditorId={(sub as any).assigned_editor_id ?? null}
-          trackEditorName={sub.tracks?.profiles?.full_name}
-        />
       </Section>
 
       {/* ---- Decision history ---- */}

@@ -56,7 +56,7 @@ export function ReassignEditor({
     <form onSubmit={submit} className="card card-pad space-y-3">
       <p className="text-sm text-slate-600 dark:text-slate-300">
         {currentEditorId
-          ? "This paper is handled by a chair you assigned, overriding the track's own."
+          ? "This paper is handled by a Track Editor you assigned, overriding the track's own."
           : `This paper follows its track's chair${
               trackEditorName ? ` (${trackEditorName})` : ""
             }. Reassign it to hand it to someone else — for this paper only.`}
@@ -65,7 +65,7 @@ export function ReassignEditor({
       <div className="grid sm:grid-cols-2 gap-3">
         <div>
           <label className="label" htmlFor="reassign-editor">
-            Track Session Chair for this paper
+            Track Editor for this paper
           </label>
           <select
             id="reassign-editor"

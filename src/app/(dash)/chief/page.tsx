@@ -271,7 +271,7 @@ export default async function ChiefDashboard() {
           <EmptyState title="No submissions yet" />
         ) : (
           <DataTable
-            headers={["Paper ID", "Title", "Track", "Status", "Track chair", "Reviews", "Avg", "Updated", ""]}
+            headers={["Paper ID", "Title", "Track", "Status", "Track Editor", "Reviews", "Avg", "Updated", ""]}
           >
             {submissions.map((s) => {
               const st = stats.get(s.id);

@@ -32,7 +32,7 @@ export function AssignPaperEditor({
   if (chairs.length === 0) {
     return (
       <span className="text-xs text-slate-400">
-        No chair on this track yet
+        No Track Editor on this track yet
       </span>
     );
   }
@@ -61,7 +61,7 @@ export function AssignPaperEditor({
         value={value}
         disabled={busy}
         onChange={(e) => choose(e.target.value)}
-        aria-label="Track chair for this paper"
+        aria-label="Track Editor for this paper"
       >
         <option value="">{defaultLabel}</option>
         {chairs.map((c) => (

@@ -7,14 +7,13 @@ import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { requireProfile, requireRole } from "@/lib/auth";
 import { emailConfigured, sendEmail } from "@/lib/email";
 import {
-  abstractDecisionEmail,
   chairInviteEmail,
-  fullPaperDecisionEmail,
 } from "@/lib/emailTemplates";
 import {
   ABSTRACT_WORD_LIMIT,
   countWords,
   DELETABLE_SUBMISSION_STATUSES,
+  FULL_PAPER_ACCEPTS_REQUIRED,
   MAX_SUBMISSIONS_PER_AUTHOR,
   MIN_REVIEWS_PER_SUBMISSION,
 } from "@/lib/types";
@@ -34,6 +33,8 @@ export type PreparedInvite = {
   existing: boolean;
   /** Present only for an existing account. */
   reviewerId?: string;
+  /** Non-blocking conflict-of-interest note for the chair to weigh. */
+  warning?: string;
 };
 
 export type PrepareResult =
@@ -59,46 +60,6 @@ async function audit(
     });
   } catch {
     // Swallow — the audit log is diagnostic, not load-bearing.
-  }
-}
-
-/**
- * Email the corresponding author their decision (abstract or full-paper),
- * best-effort. No-op unless Resend is configured; the in-app notification from
- * the decision trigger fires regardless. Never throws.
- */
-async function emailAuthorDecision(
-  submissionId: string,
-  decision: string,
-  rationale: string
-) {
-  if (!emailConfigured()) return;
-  try {
-    const admin = createAdminClient();
-    const { data } = await admin
-      .from("submissions")
-      .select(
-        "title, paper_id, stage, author:profiles!submissions_author_id_fkey(full_name, email), tracks(name, conferences(name))"
-      )
-      .eq("id", submissionId)
-      .single();
-    const s = data as any;
-    const to = s?.author?.email;
-    if (!to) return;
-    const build =
-      s.stage === "full_paper" ? fullPaperDecisionEmail : abstractDecisionEmail;
-    const { subject, body } = build({
-      paperId: s.paper_id,
-      title: s.title,
-      track: s.tracks?.name,
-      decision,
-      message: rationale,
-      name: s.author?.full_name,
-      conferenceName: s.tracks?.conferences?.name,
-    });
-    await sendEmail({ to, subject, text: body });
-  } catch {
-    // best-effort — a mail failure must not break the decision flow
   }
 }
 
@@ -755,12 +716,18 @@ export async function prepareReviewerInvite(
     target = (data as any) ?? null;
   }
 
+  const authors = await submissionAuthors(admin, submissionId, s.author_id);
+
   if (target) {
-    if (target.id === s.author_id)
-      return {
-        ok: false,
-        message: "That person is the submitting author and cannot review this paper.",
-      };
+    const coi = conflictOfInterest(
+      {
+        full_name: target.full_name,
+        email: target.email,
+        affiliation: (target as any).affiliation,
+      },
+      authors
+    );
+    if (coi.block) return { ok: false, message: coi.block };
 
     const { data: dupe } = await admin
       .from("assignments")
@@ -795,9 +762,16 @@ export async function prepareReviewerInvite(
         reviewerId: target.id,
         reviewerName: target.full_name || target.email || email,
         existing: true,
+        warning: coi.warn,
       },
     };
   }
+
+  const newCoi = conflictOfInterest(
+    { full_name: fullName, email, affiliation },
+    authors
+  );
+  if (newCoi.block) return { ok: false, message: newCoi.block };
 
   // A new person — mint the invitation now so the preview carries a real
   // sign-up link. They are assigned only once they complete sign-up.
@@ -836,6 +810,7 @@ export async function prepareReviewerInvite(
       body,
       reviewerName: fullName,
       existing: false,
+      warning: newCoi.warn,
     },
   };
 }
@@ -927,6 +902,129 @@ export async function sendReviewerInvite(
   };
 }
 
+/**
+ * Draft a nudge for a reviewer who has run past their deadline. The chair says
+ * how many extra days to allow; the new date goes in the letter and is applied
+ * to the assignment only when they send it.
+ */
+export async function prepareReviewerReminder(
+  formData: FormData
+): Promise<PrepareResult> {
+  const profile = await requireRole("editor", "chief");
+  const admin = createAdminClient();
+
+  const assignmentId = String(formData.get("assignment_id") ?? "");
+  const extraDays = Number(formData.get("extra_days") ?? 0);
+  if (!assignmentId) return { ok: false, message: "Missing assignment." };
+
+  const { data: a } = await admin
+    .from("assignments")
+    .select(
+      "id, due_date, submission_id, profiles!assignments_reviewer_id_fkey(full_name, email), submissions(title, paper_id, stage, tracks(name, conferences(name)))"
+    )
+    .eq("id", assignmentId)
+    .maybeSingle();
+  if (!a) return { ok: false, message: "Assignment not found." };
+
+  const row = a as any;
+  const reviewer = row.profiles ?? {};
+  const s = row.submissions ?? {};
+  const to = reviewer.email;
+  if (!to) return { ok: false, message: "No email address for that reviewer." };
+
+  const newDue = extraDays > 0 ? addDays(new Date(), extraDays) : null;
+  const { subject, body } = buildReminderEmail({
+    paperId: s.paper_id ?? null,
+    title: s.title ?? "",
+    stage: s.stage ?? null,
+    track: s.tracks?.name ?? "",
+    conferenceName: s.tracks?.conferences?.name ?? "GLOGIFT 2027",
+    reviewerName: reviewer.full_name,
+    originalDue: row.due_date,
+    newDue,
+    inviterName: profile.full_name,
+    inviterEmail: profile.email,
+  });
+
+  return {
+    ok: true,
+    prepared: {
+      to,
+      subject,
+      body,
+      reviewerName: reviewer.full_name || to,
+      existing: true,
+    },
+  };
+}
+
+/** Send the previewed reminder and, if days were granted, extend the deadline. */
+export async function sendReviewerReminder(
+  formData: FormData
+): Promise<ActionResult> {
+  const profile = await requireRole("editor", "chief");
+  const admin = createAdminClient();
+
+  const assignmentId = String(formData.get("assignment_id") ?? "");
+  const submissionId = String(formData.get("submission_id") ?? "");
+  const extraDays = Number(formData.get("extra_days") ?? 0);
+  const to = String(formData.get("to") ?? "").trim();
+  const subject = String(formData.get("subject") ?? "");
+  const body = String(formData.get("body") ?? "");
+
+  if (!assignmentId) return { ok: false, message: "Missing assignment." };
+  if (!to) return { ok: false, message: "No recipient address." };
+
+  if (!emailConfigured())
+    return {
+      ok: false,
+      message:
+        "Email sending isn't set up yet — copy the message and send it from your own email.",
+    };
+
+  const r = await sendEmail({
+    to,
+    subject,
+    text: body,
+    replyTo: profile.email || undefined,
+  });
+  if (!r.sent)
+    return {
+      ok: false,
+      message: `The reminder failed to send: ${r.error ?? "unknown error"}`,
+    };
+
+  // Only move the deadline once the reviewer has actually been told.
+  const { data: current } = await admin
+    .from("assignments")
+    .select("reminder_count")
+    .eq("id", assignmentId)
+    .maybeSingle();
+
+  const patch: Record<string, unknown> = {
+    last_reminded_at: new Date().toISOString(),
+    reminder_count: ((current as any)?.reminder_count ?? 0) + 1,
+  };
+  if (extraDays > 0) patch.due_date = addDays(new Date(), extraDays).toISOString();
+  await admin.from("assignments").update(patch).eq("id", assignmentId);
+
+  await audit(profile.id, "assignment.reminded", "assignment", assignmentId, {
+    extra_days: extraDays,
+  });
+  revalidatePath(`/editor/submissions/${submissionId}`);
+
+  return {
+    ok: true,
+    message: `Reminder sent to ${to}.${
+      extraDays > 0
+        ? ` The deadline now falls on ${prettyDate(
+            addDays(new Date(), extraDays).toISOString().slice(0, 10)
+          )}.`
+        : ""
+    }`,
+  };
+}
+
 export async function removeAssignment(formData: FormData): Promise<ActionResult> {
   const profile = await requireRole("editor", "chief");
   const supabase = await createClient();
@@ -968,6 +1066,94 @@ function prettyDate(d?: string): string {
         month: "long",
         year: "numeric",
       });
+}
+
+// =====================================================================
+// CONFLICT OF INTEREST
+// =====================================================================
+
+/** Loose comparison key — case, spacing and punctuation are noise here. */
+function coiKey(v?: string | null): string {
+  return (v ?? "")
+    .toLowerCase()
+    .replace(/[.,()&'"-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+type Person = { full_name?: string | null; email?: string | null; affiliation?: string | null };
+
+/**
+ * Everyone who owns a submission: the submitting author plus every listed
+ * co-author. Used to keep authors off their own paper's review.
+ */
+async function submissionAuthors(
+  admin: ReturnType<typeof createAdminClient>,
+  submissionId: string,
+  authorId?: string | null
+): Promise<Person[]> {
+  const [{ data: listed }, { data: submitter }] = await Promise.all([
+    admin
+      .from("submission_authors")
+      .select("full_name, email, affiliation")
+      .eq("submission_id", submissionId),
+    authorId
+      ? admin
+          .from("profiles")
+          .select("full_name, email, affiliation")
+          .eq("id", authorId)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
+  return [...((listed as Person[]) ?? []), ...(submitter ? [submitter as Person] : [])];
+}
+
+/**
+ * Is this candidate conflicted on this paper? A person is the same person if
+ * their email matches, or if both their name and affiliation match — that
+ * catches an author who signed up under a second address. Sharing only an
+ * affiliation is not disqualifying on its own, but the chair should know.
+ */
+function conflictOfInterest(
+  candidate: Person,
+  authors: Person[]
+): { block?: string; warn?: string } {
+  const email = coiKey(candidate.email);
+  const name = coiKey(candidate.full_name);
+  const affil = coiKey(candidate.affiliation);
+
+  for (const a of authors) {
+    if (email && email === coiKey(a.email))
+      return {
+        block: `${
+          candidate.full_name || candidate.email
+        } is an author of this paper (same email address) and cannot review it.`,
+      };
+    if (name && affil && name === coiKey(a.full_name) && affil === coiKey(a.affiliation))
+      return {
+        block: `${
+          candidate.full_name || candidate.email
+        } appears to be an author of this paper — same name and affiliation (${
+          a.affiliation
+        }). They cannot review it.`,
+      };
+  }
+
+  if (affil) {
+    const shared = authors.find((a) => coiKey(a.affiliation) === affil);
+    if (shared)
+      return {
+        warn: `Possible conflict: they share an affiliation with an author of this paper (${shared.affiliation}). Invite them only if you are satisfied there is no conflict.`,
+      };
+  }
+  return {};
+}
+
+/** `n` days from `from`, as a new Date. */
+function addDays(from: Date, n: number): Date {
+  const d = new Date(from);
+  d.setDate(d.getDate() + n);
+  return d;
 }
 
 /** The two organiser help contacts, shown at the foot of reviewer emails. */
@@ -1121,6 +1307,85 @@ function buildAssignmentEmail(opts: {
 }
 
 /**
+ * Build the deadline reminder — courteous, never accusatory. States the paper,
+ * the date that passed, and the new date if the chair has granted more time.
+ */
+function buildReminderEmail(opts: {
+  paperId: string | null;
+  title: string;
+  stage: string | null;
+  track: string;
+  conferenceName: string;
+  reviewerName?: string | null;
+  originalDue?: string | null;
+  newDue: Date | null;
+  inviterName?: string | null;
+  inviterEmail?: string | null;
+}): { subject: string; body: string } {
+  const conf = opts.conferenceName || "GLOGIFT 2027";
+  const item = opts.stage === "full_paper" ? "manuscript" : "abstract";
+
+  const subject = `${conf} — Gentle reminder: review pending${
+    opts.paperId ? ` (${opts.paperId})` : ""
+  }`;
+
+  const lines: string[] = [
+    `Dear ${opts.reviewerName?.trim() || "Reviewer"},`,
+    "",
+    "Greetings of the Day!",
+    "",
+    `We write regarding the ${item} titled "${opts.title}" (Paper ID: ${
+      opts.paperId ?? "pending"
+    })${opts.track ? `, in the ${opts.track} track` : ""} of ${conf}, which you kindly agreed to review.`,
+  ];
+
+  if (opts.originalDue)
+    lines.push(
+      "",
+      `The review was due on ${prettyDate(
+        String(opts.originalDue).slice(0, 10)
+      )}, and we have not yet received it.`
+    );
+  else lines.push("", "We have not yet received your review.");
+
+  if (opts.newDue)
+    lines.push(
+      "",
+      `We understand that competing commitments are unavoidable, and we are pleased to extend your deadline to ${prettyDate(
+        opts.newDue.toISOString().slice(0, 10)
+      )}.`
+    );
+  else
+    lines.push(
+      "",
+      "We would be grateful if you could complete it at the earliest opportunity."
+    );
+
+  lines.push(
+    "",
+    "If you are no longer able to review this submission, please do let us know so that we may make alternative arrangements.",
+    "",
+    `You can submit your review here: ${siteUrl()}/reviewer`,
+    "",
+    "We thank you sincerely for your time and support.",
+    "",
+    REVIEW_HELP,
+    "",
+    "With warm regards,"
+  );
+  lines.push(
+    ...chairSignOff({
+      name: opts.inviterName,
+      track: opts.track,
+      conf,
+      email: opts.inviterEmail,
+    })
+  );
+
+  return { subject, body: lines.join("\n") };
+}
+
+/**
  * Called after an invited reviewer signs up through the token link. Grants the
  * reviewer role and assigns them to the invitation's submission. Idempotent.
  */
@@ -1186,22 +1451,65 @@ export async function acceptReviewerInvite(token: string): Promise<ActionResult>
   return { ok: true, message: "You are now a reviewer for this paper." };
 }
 
-/** An editor's recommendation — advisory until the chief ratifies it. */
 /**
  * Track chair (or Convener) records a final decision. Stage-aware status
- * change is handled by the on_decision_created trigger. There is no hard
- * review-count gate — the abstract stage is at the chair's discretion, and
- * at the full-paper stage the UI advises two accepts but the chair may
- * still finalize with one.
+ * change is handled by the on_decision_created trigger.
+ *
+ * Two rules are enforced here rather than merely advised: a chair who is an
+ * author of the paper cannot decide on it, and accepting a full paper takes
+ * two reviewers recommending accept. The abstract stage stays at the chair's
+ * discretion — they may decide with no reviews at all.
+ *
+ * Nothing is emailed here; the chair sends the decision letter from the
+ * "Email the author" card after previewing it.
  */
 export async function recordRecommendation(
   formData: FormData
 ): Promise<ActionResult> {
   const profile = await requireRole("editor", "chief");
   const supabase = await createClient();
+  const admin = createAdminClient();
 
   const submissionId = String(formData.get("submission_id"));
   const decision = String(formData.get("decision")) as DecisionKind;
+
+  const { data: sub } = await admin
+    .from("submissions")
+    .select("stage, author_id")
+    .eq("id", submissionId)
+    .maybeSingle();
+  if (!sub) return { ok: false, message: "Submission not found." };
+
+  const authors = await submissionAuthors(admin, submissionId, sub.author_id);
+  const coi = conflictOfInterest(
+    {
+      full_name: profile.full_name,
+      email: profile.email,
+      affiliation: profile.affiliation,
+    },
+    authors
+  );
+  if (coi.block)
+    return {
+      ok: false,
+      message:
+        "You are an author of this paper and cannot decide on it. Ask the Convener to reassign it.",
+    };
+
+  if (sub.stage === "full_paper" && decision === "accept") {
+    const { data: rows } = await admin
+      .from("assignments")
+      .select("reviews(recommendation, is_submitted)")
+      .eq("submission_id", submissionId);
+    const accepts = ((rows as any[]) ?? []).filter(
+      (a) => a.reviews?.[0]?.is_submitted && a.reviews[0].recommendation === "accept"
+    ).length;
+    if (accepts < FULL_PAPER_ACCEPTS_REQUIRED)
+      return {
+        ok: false,
+        message: `A full paper needs ${FULL_PAPER_ACCEPTS_REQUIRED} reviewers recommending Accept before it can move to the publication stage — ${accepts} so far. Invite another reviewer, or record a revision decision instead.`,
+      };
+  }
 
   const { error } = await supabase.from("decisions").insert({
     submission_id: submissionId,
@@ -1216,14 +1524,12 @@ export async function recordRecommendation(
   await audit(profile.id, "decision.recorded", "submission", submissionId, {
     decision,
   });
-  await emailAuthorDecision(
-    submissionId,
-    decision,
-    String(formData.get("rationale") ?? "")
-  );
   revalidatePath(`/editor/submissions/${submissionId}`);
   revalidatePath("/chief");
-  return { ok: true, message: "Decision recorded." };
+  return {
+    ok: true,
+    message: "Decision recorded. Send the author the decision letter below.",
+  };
 }
 
 /** Track chair / Convener highlights a publication outlet for an accepted paper. */
@@ -1288,14 +1594,12 @@ export async function recordFinalDecision(
   await audit(profile.id, "decision.final", "submission", submissionId, {
     decision,
   });
-  await emailAuthorDecision(
-    submissionId,
-    decision,
-    String(formData.get("rationale") ?? "")
-  );
   revalidatePath("/chief");
   revalidatePath(`/chief/submissions/${submissionId}`);
-  return { ok: true, message: "Final decision recorded." };
+  return {
+    ok: true,
+    message: "Final decision recorded. Send the author the decision letter below.",
+  };
 }
 
 /** Convener/admin deletes a submitted or withdrawn paper (and its files). */

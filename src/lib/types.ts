@@ -7,6 +7,13 @@ export const ABSTRACT_WORD_LIMIT = 500;
 /** Completed reviews required before a track editor may recommend. */
 export const MIN_REVIEWS_PER_SUBMISSION = 2;
 
+/**
+ * Reviewers who must recommend "accept" before a full paper can be accepted
+ * into the publication stage. A chair may invite more reviewers than this; the
+ * abstract stage has no such requirement and is at the chair's discretion.
+ */
+export const FULL_PAPER_ACCEPTS_REQUIRED = 2;
+
 /** Word count used for the abstract limit (whitespace separated). */
 export function countWords(text: string): number {
   const t = text.trim();

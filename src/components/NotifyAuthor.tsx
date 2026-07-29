@@ -16,8 +16,9 @@ const DECISIONS: [string, string][] = [
 
 /**
  * "Email the author" card. Prefills a decision letter (abstract or full-paper)
- * the chair/convener opens in their own mail client. The author also receives
- * the automatic in-app notification from the decision trigger.
+ * for the chair/convener to preview and then send from the portal. Nothing is
+ * emailed automatically when a decision is recorded — this is the deliberate
+ * step. The author also gets the in-app notification from the decision trigger.
  */
 export function NotifyAuthor({
   stage,
@@ -84,7 +85,19 @@ export function NotifyAuthor({
         </span>
       </div>
 
-      <ComposeEmail key={decision} to={authorEmail} subject={subject} body={body} />
+      <p className="text-sm text-slate-600 bg-slate-50 rounded-lg px-3 py-2 dark:bg-slate-800 dark:text-slate-300">
+        Recording a decision does not email the author. Review the letter below,
+        then send it.
+      </p>
+
+      <ComposeEmail
+        key={decision}
+        to={authorEmail}
+        subject={subject}
+        body={body}
+        showSend
+        sendLabel="Send decision email"
+      />
     </div>
   );
 }

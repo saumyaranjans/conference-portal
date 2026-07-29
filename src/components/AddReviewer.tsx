@@ -144,6 +144,11 @@ export function AddReviewer({
         <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
           Add a reviewer
         </p>
+        {prepared.warning && (
+          <p className="text-sm text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 dark:text-amber-100 dark:bg-amber-500/15 dark:border-amber-500/40">
+            ⚠ {prepared.warning}
+          </p>
+        )}
         <p className="text-sm text-emerald-800 bg-emerald-50 rounded-lg px-3 py-2">
           Invitation to <strong>{prepared.reviewerName}</strong> is ready. Review
           it below, then click <strong>Send invitation</strong> to email it to{" "}

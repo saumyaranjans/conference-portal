@@ -40,13 +40,16 @@ export function ComposeEmail({
   subject: initialSubject,
   body: initialBody,
   showSend = false,
+  sendLabel = "Send now",
 }: {
   to?: string;
   recipients?: string[];
   subject: string;
   body: string;
-  /** Show a "Send now" button that emails via the portal (single `to` only). */
+  /** Show a send button that emails via the portal (single `to` only). */
   showSend?: boolean;
+  /** Label for that button — e.g. "Invite & send email" on the invite flow. */
+  sendLabel?: string;
 }) {
   const [subject, setSubject] = useState(initialSubject);
   const [body, setBody] = useState(initialBody);
@@ -127,7 +130,7 @@ export function ComposeEmail({
             disabled={pending || result?.ok}
             className="btn-primary"
           >
-            {pending ? "Sending…" : result?.ok ? "Sent ✓" : "Send now"}
+            {pending ? "Sending…" : result?.ok ? "Sent ✓" : sendLabel}
           </button>
         )}
 
@@ -160,7 +163,7 @@ export function ComposeEmail({
 
       <p className="text-xs text-slate-400">
         {canSend
-          ? "Review the message above, then Send now to email it through the portal — or open/copy it to send from your own email."
+          ? `Review the message above, then “${sendLabel}” to email it through the portal — or open/copy it to send from your own email.`
           : "This opens (or is copied into) your own email — the portal does not send it for you."}
       </p>
     </div>

@@ -169,7 +169,7 @@ export function InviteReviewer({ submissionId }: { submissionId: string }) {
           )}
           <p className="text-sm text-emerald-800 bg-emerald-50 rounded-lg px-3 py-2">
             Invitation prepared. Review it below, then click{" "}
-            <strong>Send now</strong> to email it to{" "}
+            <strong>Invite &amp; send email</strong> to email it to{" "}
             <strong>{prepared.to}</strong>.
           </p>
           <ComposeEmail
@@ -177,6 +177,7 @@ export function InviteReviewer({ submissionId }: { submissionId: string }) {
             subject={prepared.subject}
             body={prepared.body}
             showSend
+            sendLabel={"Invite & send email"}
           />
           <button type="button" onClick={reset} className="btn-secondary">
             Invite another

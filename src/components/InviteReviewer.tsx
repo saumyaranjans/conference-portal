@@ -2,15 +2,25 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { inviteReviewer, type InviteResult } from "@/lib/actions";
+import { inviteReviewer } from "@/lib/actions";
 import { InstitutionInput } from "@/components/InstitutionInput";
 import { ComposeEmail } from "@/components/ComposeEmail";
 
+/** A prepared invitation, ready to preview and send to the reviewer. */
+type Prepared = {
+  to: string;
+  subject: string;
+  body: string;
+  /** Set when the reviewer already had an account (and is now assigned). */
+  note?: string;
+};
+
 /**
- * Chair-facing form to invite an outside reviewer by their details. If the
- * email already has an account they are assigned immediately; otherwise the
- * portal returns a ready-to-send invitation email the chair copies into their
- * own mail client (Gmail / Hotmail / …).
+ * Chair-facing form to invite an outside reviewer by their details. Either way
+ * the invitation is emailed to the reviewer through the portal: at the address
+ * on their profile if they already have an account (they are assigned to the
+ * paper straight away), otherwise at the address the chair typed here, with a
+ * sign-up link. The chair prepares the draft, previews it, then sends.
  */
 export function InviteReviewer({ submissionId }: { submissionId: string }) {
   const router = useRouter();
@@ -21,19 +31,12 @@ export function InviteReviewer({ submissionId }: { submissionId: string }) {
   const [dueDate, setDueDate] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [existingMsg, setExistingMsg] = useState<string | null>(null);
-  const [existingCompose, setExistingCompose] = useState<
-    { to: string; subject: string; body: string } | null
-  >(null);
-  const [invite, setInvite] =
-    useState<Extract<InviteResult, { existing: false }>["invite"] | null>(null);
+  const [prepared, setPrepared] = useState<Prepared | null>(null);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    setExistingMsg(null);
-    setExistingCompose(null);
-    setInvite(null);
+    setPrepared(null);
     setBusy(true);
 
     const fd = new FormData();
@@ -52,25 +55,20 @@ export function InviteReviewer({ submissionId }: { submissionId: string }) {
       return;
     }
     if (res.existing) {
-      setExistingMsg(res.message);
-      setExistingCompose(res.compose ?? null);
-      setFullName("");
-      setDesignation("");
-      setAffiliation("");
-      setEmail("");
-      setDueDate("");
+      setPrepared({ ...res.compose, note: res.message });
       router.refresh();
       return;
     }
-    setInvite(res.invite);
+    setPrepared(res.invite);
   }
 
   function reset() {
-    setInvite(null);
+    setPrepared(null);
     setFullName("");
     setDesignation("");
     setAffiliation("");
     setEmail("");
+    setDueDate("");
   }
 
   return (
@@ -79,7 +77,7 @@ export function InviteReviewer({ submissionId }: { submissionId: string }) {
         Invite a reviewer
       </p>
 
-      {!invite ? (
+      {!prepared ? (
         <form onSubmit={onSubmit} className="space-y-3">
           <div className="grid sm:grid-cols-2 gap-3">
             <div>
@@ -151,8 +149,9 @@ export function InviteReviewer({ submissionId }: { submissionId: string }) {
           </button>
 
           <p className="text-xs text-slate-400">
-            If they already have an account they are added and assigned. Either
-            way you can preview the invitation and send it from the portal.
+            The invitation is emailed to the reviewer — at the address on their
+            profile if they already have an account, otherwise at the address
+            you enter above. Prepare it, preview it, then send.
           </p>
 
           {error && (
@@ -160,35 +159,23 @@ export function InviteReviewer({ submissionId }: { submissionId: string }) {
               {error}
             </p>
           )}
-          {existingMsg && (
-            <p className="text-sm text-emerald-700 bg-emerald-50 rounded-lg px-3 py-2">
-              {existingMsg}
-            </p>
-          )}
-          {existingCompose && (
-            <div className="border-t border-slate-100 pt-3 mt-1">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
-                Send them a heads-up
-              </p>
-              <ComposeEmail
-                to={existingCompose.to}
-                subject={existingCompose.subject}
-                body={existingCompose.body}
-                showSend
-              />
-            </div>
-          )}
         </form>
       ) : (
         <div className="space-y-4">
+          {prepared.note && (
+            <p className="text-sm text-emerald-700 bg-emerald-50 rounded-lg px-3 py-2">
+              {prepared.note}
+            </p>
+          )}
           <p className="text-sm text-emerald-800 bg-emerald-50 rounded-lg px-3 py-2">
-            Invitation prepared. Review it below, then click <strong>Send now</strong>{" "}
-            to email it (with the signup link) to <strong>{invite.to}</strong>.
+            Invitation prepared. Review it below, then click{" "}
+            <strong>Send now</strong> to email it to{" "}
+            <strong>{prepared.to}</strong>.
           </p>
           <ComposeEmail
-            to={invite.to}
-            subject={invite.subject}
-            body={invite.body}
+            to={prepared.to}
+            subject={prepared.subject}
+            body={prepared.body}
             showSend
           />
           <button type="button" onClick={reset} className="btn-secondary">

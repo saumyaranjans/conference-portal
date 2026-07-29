@@ -22,15 +22,17 @@ import type { AppRole, DecisionKind, Recommendation } from "@/lib/types";
 
 export type ActionResult = { ok: boolean; message?: string };
 
-/** Result of inviting a reviewer — either they already had an account (assigned
- *  directly) or we minted an invitation and generated an email for the chair. */
+/** Result of inviting a reviewer. Either way the chair gets a prepared email
+ *  addressed to the reviewer — at their profile email if an account already
+ *  exists (and the paper is assigned straight away), otherwise at the address
+ *  the chair typed, carrying a sign-up link. */
 export type InviteResult =
   | { ok: false; message: string }
   | {
       ok: true;
       existing: true;
       message: string;
-      compose?: { to: string; subject: string; body: string };
+      compose: { to: string; subject: string; body: string };
     }
   | {
       ok: true;
@@ -899,8 +901,10 @@ function buildInviteEmail(opts: {
 /**
  * Chair invites a reviewer by their details. If a portal account already
  * exists for that email, the reviewer role is granted and the paper assigned
- * immediately. Otherwise an invitation token is minted and a ready-to-send
- * email is generated for the chair to copy into their own mail client.
+ * immediately. Otherwise an invitation token is minted and a sign-up link
+ * generated. Either way the reviewer is emailed — at the address on their
+ * profile if they have an account, else the one the chair typed — from a draft
+ * the chair previews and sends through the portal.
  */
 export async function inviteReviewer(formData: FormData): Promise<InviteResult> {
   const profile = await requireRole("editor", "chief");
@@ -974,7 +978,7 @@ export async function inviteReviewer(formData: FormData): Promise<InviteResult> 
 
     // Heads-up email (the account already exists — no sign-up needed).
     const item = s.stage === "full_paper" ? "manuscript" : "abstract";
-    const composeSubject = `${conferenceName} — Review assignment${
+    const composeSubject = `${conferenceName} — Invitation to review ${item}${
       s.paper_id ? ` (${s.paper_id})` : ""
     }`;
     const composeLines: string[] = [
@@ -1012,8 +1016,12 @@ export async function inviteReviewer(formData: FormData): Promise<InviteResult> 
       existing: true,
       message: `${
         target.full_name || email
-      } already has an account — added as a reviewer and assigned to this paper.`,
-      compose: { to: email, subject: composeSubject, body: composeBody },
+      } already has an account — added as a reviewer and assigned to this paper. The invitation below goes to their profile email.`,
+      compose: {
+        to: target.email || email,
+        subject: composeSubject,
+        body: composeBody,
+      },
     };
   }
 

@@ -1652,6 +1652,116 @@ export async function setSuggestedOutlet(
 // EDITOR-IN-CHIEF
 // =====================================================================
 
+/**
+ * The Convener hands one paper to a different Track Session Chair — used when
+ * the assigned chair has a conflict, or their handling of it was found
+ * inappropriate. Overrides the track's chair for this paper alone; the new
+ * chair gains editing rights and the previous one loses them.
+ */
+export async function reassignTrackEditor(
+  formData: FormData
+): Promise<ActionResult> {
+  const profile = await requireRole("chief");
+  const admin = createAdminClient();
+
+  const submissionId = String(formData.get("submission_id") ?? "");
+  const editorId = String(formData.get("editor_id") ?? "").trim();
+  const note = String(formData.get("note") ?? "").trim();
+
+  if (!submissionId) return { ok: false, message: "Missing submission." };
+
+  const { data: sub } = await admin
+    .from("submissions")
+    .select("paper_id, title, author_id, tracks(name)")
+    .eq("id", submissionId)
+    .maybeSingle();
+  if (!sub) return { ok: false, message: "Submission not found." };
+
+  // Clearing the override hands the paper back to the track's own chair.
+  if (!editorId) {
+    const { error } = await admin
+      .from("submissions")
+      .update({
+        assigned_editor_id: null,
+        assigned_editor_at: null,
+        assigned_editor_by: profile.id,
+      })
+      .eq("id", submissionId);
+    if (error) return { ok: false, message: error.message };
+
+    await audit(profile.id, "submission.editor_reset", "submission", submissionId);
+    revalidatePath(`/chief/submissions/${submissionId}`);
+    return { ok: true, message: "Handed back to the track's own chair." };
+  }
+
+  const { data: target } = await admin
+    .from("profiles")
+    .select("id, full_name, email, roles")
+    .eq("id", editorId)
+    .maybeSingle();
+  if (!target) return { ok: false, message: "That editor no longer exists." };
+
+  if (target.id === (sub as any).author_id)
+    return {
+      ok: false,
+      message: "That person is the author of this paper and cannot handle it.",
+    };
+
+  const authors = await submissionAuthors(admin, submissionId, (sub as any).author_id);
+  const coi = conflictOfInterest(
+    {
+      full_name: target.full_name,
+      email: target.email,
+      affiliation: (target as any).affiliation,
+    },
+    authors
+  );
+  if (coi.block) return { ok: false, message: coi.block };
+
+  const roles: string[] = (target as any).roles ?? [];
+  if (!roles.includes("editor")) {
+    await admin
+      .from("profiles")
+      .update({ roles: [...roles, "editor"], updated_at: new Date().toISOString() })
+      .eq("id", editorId);
+  }
+
+  const { error } = await admin
+    .from("submissions")
+    .update({
+      assigned_editor_id: editorId,
+      assigned_editor_at: new Date().toISOString(),
+      assigned_editor_by: profile.id,
+    })
+    .eq("id", submissionId);
+  if (error) return { ok: false, message: error.message };
+
+  const s = sub as any;
+  await admin.from("notifications").insert({
+    profile_id: editorId,
+    title: "A submission has been assigned to you",
+    body: `The Convener has asked you to handle "${s.title}"${
+      s.paper_id ? ` (${s.paper_id})` : ""
+    }${s.tracks?.name ? ` in the ${s.tracks.name} track` : ""}.${
+      note ? ` Note: ${note}` : ""
+    }`,
+    link: `/editor/submissions/${submissionId}`,
+  });
+
+  await audit(profile.id, "submission.editor_reassigned", "submission", submissionId, {
+    editor_id: editorId,
+    note,
+  });
+  revalidatePath(`/chief/submissions/${submissionId}`);
+  revalidatePath("/editor");
+  return {
+    ok: true,
+    message: `${
+      target.full_name || target.email
+    } now handles this paper and has been notified.`,
+  };
+}
+
 /** The final call. The DB trigger moves the paper and notifies the author. */
 export async function recordFinalDecision(
   formData: FormData

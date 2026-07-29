@@ -9,6 +9,7 @@ import { DocumentViewer } from "@/components/DocumentViewer";
 import { NotifyAuthor } from "@/components/NotifyAuthor";
 import { DeleteSubmissionButton } from "@/components/DeleteSubmissionButton";
 import { ReviewPanel } from "@/components/ReviewPanel";
+import { ReassignEditor } from "@/components/ReassignEditor";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { PageHeader, Section, formatDate } from "@/components/ui/Primitives";
 import {
@@ -64,6 +65,12 @@ export default async function ChiefSubmissionPage({
         .maybeSingle(),
     ]);
 
+  const { data: editorPool } = await supabase
+    .from("profiles")
+    .select("id, full_name, email, affiliation")
+    .contains("roles", ["editor"])
+    .order("full_name");
+
   const rows = (assignments ?? []) as any[];
   const decisionRows = (decisions ?? []) as any[];
 
@@ -78,6 +85,7 @@ export default async function ChiefSubmissionPage({
   const conf = sub.tracks?.conferences;
   const conferenceBrand =
     conf?.acronym && conf?.year ? `${conf.acronym} ${conf.year}` : "GLOGIFT 2027";
+  const chairDecision = decisionRows[0] ?? null;
   const recommendation = decisionRows.find((d) => !d.is_final);
   const isFinal = ["accepted", "rejected"].includes(sub.status);
 
@@ -192,6 +200,54 @@ export default async function ChiefSubmissionPage({
           signerRole="Convener"
           conferenceName={sub.tracks?.conferences?.name}
           brand={conferenceBrand}
+        />
+      </Section>
+
+      {/* ---- What the track chair decided ---- */}
+      <Section title="Track chair decision">
+        <div className="card card-pad space-y-2">
+          {chairDecision ? (
+            <>
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="font-medium capitalize text-slate-900 dark:text-slate-100">
+                  {chairDecision.decision.replace("_", " ")}
+                </span>
+                <span className="badge bg-emerald-100 text-emerald-800">
+                  Decided by the Track Session Chair
+                </span>
+              </div>
+              <p className="text-xs text-slate-500">
+                {chairDecision.profiles?.full_name ?? "—"} ·{" "}
+                {formatDate(chairDecision.created_at)}
+              </p>
+              {chairDecision.rationale && (
+                <p className="text-sm text-slate-700 whitespace-pre-wrap dark:text-slate-300">
+                  {chairDecision.rationale}
+                </p>
+              )}
+              <p className="text-xs text-slate-500">
+                The Track Session Chair holds the final authority on this paper.
+                Override it below only if the decision is inappropriate, and
+                reassign the paper if it needs a different chair.
+              </p>
+            </>
+          ) : (
+            <p className="text-sm text-slate-500">
+              The Track Session Chair has not recorded a decision yet.
+            </p>
+          )}
+        </div>
+      </Section>
+
+      {/* ---- Hand this paper to a different chair ---- */}
+      <Section title="Track Session Chair for this paper">
+        <ReassignEditor
+          submissionId={id}
+          editors={((editorPool ?? []) as any[]).filter(
+            (e) => e.id !== (sub as any).author_id
+          )}
+          currentEditorId={(sub as any).assigned_editor_id ?? null}
+          trackEditorName={sub.tracks?.profiles?.full_name}
         />
       </Section>
 

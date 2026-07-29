@@ -293,6 +293,55 @@ export default async function EditorSubmissionPage({
         </Section>
       )}
 
+      {/* ---- Manuscript stage: review is compulsory, no bypass ---- */}
+      {!isAbstract && !isFinal && (
+        <Section title="How will this manuscript be reviewed?">
+          <div className="card card-pad space-y-3">
+            <p className="text-sm text-slate-700 dark:text-slate-200">
+              At the manuscript stage the review process{" "}
+              <strong>cannot be bypassed</strong>. You must facilitate the review
+              and obtain <strong>at least {FULL_PAPER_ACCEPTS_REQUIRED} Accept
+              recommendations</strong> before this paper can move to the
+              publication stage. You may invite more than{" "}
+              {FULL_PAPER_ACCEPTS_REQUIRED} reviewers.
+            </p>
+            <div className="grid sm:grid-cols-3 gap-3">
+              {[
+                ["Reviewers invited", rows.length],
+                ["Reviews received", completed.length],
+                [
+                  "Accept recommendations",
+                  `${acceptCount} of ${FULL_PAPER_ACCEPTS_REQUIRED}`,
+                ],
+              ].map(([label, value]) => (
+                <div
+                  key={label as string}
+                  className="rounded-xl border border-slate-200 px-3 py-2 dark:border-slate-700"
+                >
+                  <p className="text-xs uppercase tracking-wide text-slate-500">
+                    {label as string}
+                  </p>
+                  <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                    {value as string | number}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <p
+              className={`text-sm rounded-lg px-3 py-2 ${
+                acceptsShort
+                  ? "text-amber-900 bg-amber-50 border border-amber-200"
+                  : "text-emerald-800 bg-emerald-50"
+              }`}
+            >
+              {acceptsShort
+                ? "Accept stays locked until the second Accept recommendation arrives. Revision and reject decisions are available now."
+                : "The requirement is met — you may accept this manuscript."}
+            </p>
+          </div>
+        </Section>
+      )}
+
       {/* ---- Decision (track chair finalises) ---- */}
       {decisionUnlocked && (
       <Section

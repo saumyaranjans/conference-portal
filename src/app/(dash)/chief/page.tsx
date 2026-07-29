@@ -6,6 +6,7 @@ import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { ChairInviteComposer } from "@/components/ChairInviteComposer";
 import { DeleteSubmissionButton } from "@/components/DeleteSubmissionButton";
 import { AssignPaperEditor } from "@/components/AssignPaperEditor";
+import { RemindTrackEditor } from "@/components/RemindTrackEditor";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import {
   DataTable,
@@ -77,33 +78,107 @@ export default async function ChiefDashboard() {
     editorNames.set(p.id, p.full_name || p.email);
   }
 
-  const [{ data: statsRows }, { data: pendingDecisions }] = await Promise.all([
+  const [{ data: statsRows }] = await Promise.all([
     submissions.length
       ? supabase
           .from("submission_review_stats")
           .select("*")
           .in("submission_id", submissions.map((s) => s.id))
       : Promise.resolve({ data: [] }),
-    supabase
-      .from("decisions")
-      .select(
-        "*, submissions(id, title, status), profiles!decisions_decided_by_fkey(full_name)"
-      )
-      .eq("is_final", false)
-      .order("created_at", { ascending: false }),
   ]);
+
+  const { data: overdueRows } = await supabase
+    .from("assignments")
+    .select("submission_id, due_date, status")
+    .not("due_date", "is", null)
+    .lt("due_date", new Date().toISOString())
+    .neq("status", "submitted");
 
   const stats = new Map<string, ReviewStats>(
     ((statsRows ?? []) as ReviewStats[]).map((r) => [r.submission_id, r])
   );
 
-  // A recommendation is still awaiting the chief if the paper hasn't moved
-  // to a terminal state yet.
-  const awaiting = ((pendingDecisions ?? []) as any[]).filter((d) =>
-    ["submitted", "under_review"].includes(d.submissions?.status)
+  const totals = ((confStats ?? []) as any[])[0] ?? {};
+
+  // Live papers with nobody handling them — the Convener's first job.
+  const LIVE = ["submitted", "under_review", "revisions_requested", "abstract_accepted"];
+  const pendingAssignment = submissions.filter(
+    (s) => !(s as any).assigned_editor_id && LIVE.includes(s.status)
+  ).length;
+
+  const overdueBySubmission = new Set(
+    ((overdueRows as any[]) ?? []).map((r) => r.submission_id)
   );
 
-  const totals = ((confStats ?? []) as any[])[0] ?? {};
+  // What each Track Editor is holding, and how it is going.
+  type EditorRow = {
+    id: string;
+    name: string;
+    abstracts: number;
+    aUnder: number;
+    aAccepted: number;
+    aRejected: number;
+    papers: number;
+    mUnder: number;
+    mAccepted: number;
+    mRejected: number;
+    missed: number;
+  };
+  const summary = new Map<string, EditorRow>();
+  const rowFor = (id: string): EditorRow => {
+    if (!summary.has(id)) {
+      summary.set(id, {
+        id,
+        name: editorNames.get(id) ?? "—",
+        abstracts: 0,
+        aUnder: 0,
+        aAccepted: 0,
+        aRejected: 0,
+        papers: 0,
+        mUnder: 0,
+        mAccepted: 0,
+        mRejected: 0,
+        missed: 0,
+      });
+    }
+    return summary.get(id)!;
+  };
+
+  // Everyone who holds a track appears, even with nothing assigned yet.
+  for (const t of ((tracks ?? []) as any[])) {
+    for (const te of t.track_editors ?? []) {
+      if (te.status === "accepted" && te.profiles?.id) rowFor(te.profiles.id);
+    }
+  }
+
+  for (const sub of submissions) {
+    const owner = (sub as any).assigned_editor_id as string | null;
+    if (!owner) continue;
+    const r = rowFor(owner);
+    const isAbstract = (sub as any).stage !== "full_paper";
+    const decided =
+      sub.status === "accepted"
+        ? "accepted"
+        : sub.status === "rejected"
+          ? "rejected"
+          : "under";
+    if (isAbstract) {
+      r.abstracts += 1;
+      if (decided === "accepted") r.aAccepted += 1;
+      else if (decided === "rejected") r.aRejected += 1;
+      else r.aUnder += 1;
+    } else {
+      r.papers += 1;
+      if (decided === "accepted") r.mAccepted += 1;
+      else if (decided === "rejected") r.mRejected += 1;
+      else r.mUnder += 1;
+    }
+    if (overdueBySubmission.has(sub.id)) r.missed += 1;
+  }
+
+  const editorSummary = [...summary.values()].sort((a, b) =>
+    a.name.localeCompare(b.name)
+  );
   const editors = ((staff ?? []) as Profile[]).filter((p) =>
     p.roles.includes("editor")
   );
@@ -129,55 +204,82 @@ export default async function ChiefDashboard() {
       />
 
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+        <StatCard
+          label="Pending Track Editor assignment"
+          value={pendingAssignment}
+        />
         <StatCard label="Submissions" value={totals.total_submissions ?? 0} />
         <StatCard label="Under review" value={totals.under_review ?? 0} />
-        <StatCard label="Awaiting your call" value={awaiting.length} />
         <StatCard label="Accepted" value={totals.accepted ?? 0} />
         <StatCard label="Rejected" value={totals.rejected ?? 0} />
       </div>
 
       {/* Stage-wise analytics now lives on its own sidebar page: /chief/analytics */}
 
-      {/* ---- Recommendations awaiting ratification ---- */}
-      <Section title="Awaiting your decision">
-        {awaiting.length === 0 ? (
+      {/* ---- What each Track Editor is holding ---- */}
+      <Section title="Decisions taken">
+        {editorSummary.length === 0 ? (
           <EmptyState
-            title="Nothing pending"
-            description="Editor recommendations will appear here for ratification."
+            title="No Track Editors yet"
+            description="Assign Track Editors to tracks below, then hand them papers from the list at the foot of this page."
           />
         ) : (
-          <div className="space-y-3">
-            {awaiting.map((d) => (
-              <div
-                key={d.id}
-                className="card card-pad flex flex-wrap items-start justify-between gap-4"
-              >
-                <div className="min-w-0">
-                  <p className="font-medium text-slate-900">
-                    {d.submissions?.title}
-                  </p>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    {d.profiles?.full_name ?? "An editor"} recommends{" "}
-                    <span className="font-medium capitalize">
-                      {d.decision.replace("_", " ")}
-                    </span>{" "}
-                    · {formatDate(d.created_at)}
-                  </p>
-                  {d.rationale && (
-                    <p className="text-sm text-slate-600 mt-2 line-clamp-2">
-                      {d.rationale}
-                    </p>
+          <DataTable
+            headers={[
+              "Track Editor",
+              "Abstracts",
+              "Abstract decisions",
+              "Manuscripts",
+              "Manuscript decisions",
+              "Missed deadline",
+              "",
+            ]}
+          >
+            {editorSummary.map((e) => (
+              <tr key={e.id} className="hover:bg-slate-50">
+                <td className="td font-medium text-slate-900">{e.name}</td>
+                <td className="td">{e.abstracts}</td>
+                <td className="td text-xs text-slate-600">
+                  {e.abstracts === 0 ? (
+                    "—"
+                  ) : (
+                    <>
+                      {e.aUnder} under review · {e.aAccepted} accepted ·{" "}
+                      {e.aRejected} rejected
+                    </>
                   )}
-                </div>
-                <Link
-                  href={`/chief/submissions/${d.submissions?.id}`}
-                  className="btn-primary shrink-0"
-                >
-                  Review & decide
-                </Link>
-              </div>
+                </td>
+                <td className="td">{e.papers}</td>
+                <td className="td text-xs text-slate-600">
+                  {e.papers === 0 ? (
+                    "—"
+                  ) : (
+                    <>
+                      {e.mUnder} under review · {e.mAccepted} accepted ·{" "}
+                      {e.mRejected} rejected
+                    </>
+                  )}
+                </td>
+                <td className="td">
+                  {e.missed > 0 ? (
+                    <span className="badge bg-amber-100 text-amber-900">
+                      {e.missed}
+                    </span>
+                  ) : (
+                    <span className="text-slate-400">0</span>
+                  )}
+                </td>
+                <td className="td text-right">
+                  <RemindTrackEditor
+                    editorId={e.id}
+                    name={e.name}
+                    pending={e.aUnder + e.mUnder}
+                    missed={e.missed}
+                  />
+                </td>
+              </tr>
             ))}
-          </div>
+          </DataTable>
         )}
       </Section>
 

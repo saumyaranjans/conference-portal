@@ -2108,6 +2108,96 @@ export async function prepareChairInvite(
   };
 }
 
+/** A reminder drafted for a Track Editor, ready to preview and send. */
+export type ReminderResult =
+  | { ok: false; message: string }
+  | { ok: true; draft: { to: string; subject: string; body: string } };
+
+/**
+ * Draft a nudge for a Track Editor still holding undecided papers. Lists what
+ * is outstanding, so the reminder is specific rather than a generic prod.
+ */
+export async function remindTrackEditor(
+  formData: FormData
+): Promise<ReminderResult> {
+  const profile = await requireRole("chief");
+  const admin = createAdminClient();
+
+  const editorId = String(formData.get("editor_id") ?? "").trim();
+  if (!editorId) return { ok: false, message: "Missing Track Editor." };
+
+  const { data: editor } = await admin
+    .from("profiles")
+    .select("full_name, email")
+    .eq("id", editorId)
+    .maybeSingle();
+  if (!editor?.email)
+    return { ok: false, message: "No email address for that Track Editor." };
+
+  const { data: subs } = await admin
+    .from("submissions")
+    .select("id, paper_id, title, stage, status, tracks(name, conferences(name, acronym, year))")
+    .eq("assigned_editor_id", editorId)
+    .in("status", ["submitted", "under_review", "revisions_requested", "abstract_accepted"]);
+
+  const open = ((subs as any[]) ?? []);
+  if (open.length === 0)
+    return { ok: false, message: "They have nothing outstanding." };
+
+  const conf = open[0]?.tracks?.conferences;
+  const conferenceName: string = conf?.name ?? "GLOGIFT 2027";
+  const brand = shortConf(conf);
+
+  const { data: overdue } = await admin
+    .from("assignments")
+    .select("submission_id")
+    .in("submission_id", open.map((o) => o.id))
+    .not("due_date", "is", null)
+    .lt("due_date", new Date().toISOString())
+    .neq("status", "submitted");
+  const late = new Set(((overdue as any[]) ?? []).map((o) => o.submission_id));
+
+  const lines: string[] = [
+    `Dear ${editor.full_name || "Track Editor"},`,
+    "",
+    "Greetings of the Day!",
+    "",
+    `You are currently handling ${open.length} submission${
+      open.length === 1 ? "" : "s"
+    } for ${brand} that ${open.length === 1 ? "is" : "are"} still awaiting your decision:`,
+    "",
+  ];
+  for (const o of open) {
+    lines.push(
+      `  • ${o.paper_id ?? "(no ID)"} — ${o.title} (${
+        o.stage === "full_paper" ? "manuscript" : "abstract"
+      })${late.has(o.id) ? " — a reviewer is past their deadline" : ""}`
+    );
+  }
+  lines.push(
+    "",
+    "We would be grateful if you could move these forward at your earliest convenience. If you need another Track Editor to take any of them on, please let me know and I will reassign.",
+    "",
+    `Your Track Queue: ${siteUrl()}/editor`,
+    "",
+    "With regards,"
+  );
+  if (profile.full_name) lines.push(profile.full_name);
+  lines.push(signOffLine({ role: "Convener", conf: conferenceName, brand }));
+  if (profile.email) lines.push(profile.email);
+
+  return {
+    ok: true,
+    draft: {
+      to: editor.email,
+      subject: `${brand} — ${open.length} submission${
+        open.length === 1 ? "" : "s"
+      } awaiting your decision`,
+      body: lines.join("\n"),
+    },
+  };
+}
+
 /** Send the previewed Track Editor invitation through the portal. */
 export async function sendChairInvite(
   formData: FormData

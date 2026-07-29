@@ -33,6 +33,9 @@ export function NotifyAuthor({
   reviews,
   chairName,
   chairEmail,
+  signerRole,
+  conferenceName,
+  brand,
 }: {
   stage: string;
   paperId: string | null;
@@ -46,6 +49,12 @@ export function NotifyAuthor({
   reviews?: ReviewComment[];
   chairName?: string | null;
   chairEmail?: string | null;
+  /** Chairs name their track in the signature; a Convener signs for the conference. */
+  signerRole?: "Track Session Chair" | "Convener";
+  /** Full conference title, for the signature. */
+  conferenceName?: string;
+  /** Short brand for the subject line, e.g. "GLOGIFT 2027". */
+  brand?: string;
 }) {
   const [decision, setDecision] = useState(defaultDecision || "accept");
 
@@ -71,6 +80,9 @@ export function NotifyAuthor({
     reviews,
     chairName,
     chairEmail,
+    signerRole,
+    conferenceName,
+    brand,
   });
 
   return (

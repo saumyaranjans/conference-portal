@@ -36,7 +36,9 @@ export default async function EditorSubmissionPage({
 
   const { data: submission } = await supabase
     .from("submissions")
-    .select("*, tracks(name), profiles!submissions_author_id_fkey(full_name, email, affiliation)")
+    .select(
+      "*, tracks(name, conferences(name, acronym, year)), profiles!submissions_author_id_fkey(full_name, email, affiliation)"
+    )
     .eq("id", id)
     .single();
 
@@ -88,6 +90,9 @@ export default async function EditorSubmissionPage({
     (a) => reviewOf(a)?.recommendation === "accept"
   ).length;
   const isFinal = ["accepted", "rejected"].includes(sub.status);
+  const conf = sub.tracks?.conferences;
+  const conferenceBrand =
+    conf?.acronym && conf?.year ? `${conf.acronym} ${conf.year}` : "GLOGIFT 2027";
   // Accepting a full paper is gated on two Accept recommendations.
   const acceptsShort =
     sub.stage === "full_paper" && acceptCount < FULL_PAPER_ACCEPTS_REQUIRED;
@@ -411,6 +416,9 @@ export default async function EditorSubmissionPage({
           reviews={authorFacingReviews}
           chairName={profile.full_name}
           chairEmail={profile.email}
+          signerRole="Track Session Chair"
+          conferenceName={sub.tracks?.conferences?.name}
+          brand={conferenceBrand}
         />
       </Section>
 

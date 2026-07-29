@@ -9,6 +9,26 @@ export type EmailContent = { subject: string; body: string };
 
 const CONF_DEFAULT = "GLOGIFT 2027";
 
+/**
+ * The role line of a signature: role, the track (chairs only), the full
+ * conference title, then the short brand — e.g.
+ * "Track Session Chair, Operations & Supply Chain, International Conference
+ * on …, GLOGIFT 2027". Empty parts are dropped rather than leaving stray
+ * commas, and a title identical to the brand is not repeated.
+ */
+export function signOffLine(o: {
+  role: string;
+  track?: string | null;
+  conf?: string | null;
+  brand?: string | null;
+}): string {
+  const brand = (o.brand ?? "").trim() || CONF_DEFAULT;
+  const conf = (o.conf ?? "").trim();
+  return [o.role, (o.track ?? "").trim(), conf === brand ? "" : conf, brand]
+    .filter(Boolean)
+    .join(", ");
+}
+
 function greeting(name?: string, fallback = "Author"): string {
   const n = (name ?? "").trim();
   return n ? `Dear ${n},` : `Dear ${fallback},`;
@@ -40,6 +60,10 @@ type DecisionOpts = {
   reviews?: ReviewComment[];
   chairName?: string | null;
   chairEmail?: string | null;
+  /** How the sender signs: a track chair names their track, a Convener does not. */
+  signerRole?: "Track Session Chair" | "Convener";
+  /** Short brand for the subject line, e.g. "GLOGIFT 2027". */
+  brand?: string;
 };
 
 /** "minor_revision" → "Minor revision". */
@@ -70,6 +94,8 @@ function decisionEmail(
   o: DecisionOpts
 ): EmailContent {
   const conf = o.conferenceName || CONF_DEFAULT;
+  const brand = o.brand || CONF_DEFAULT;
+  const role = o.signerRole ?? "Track Session Chair";
   const item = stage === "full_paper" ? "full paper" : "abstract";
   const label = stage === "full_paper" ? "Full Paper" : "Abstract";
   const pid = o.paperId || "(to be assigned)";
@@ -103,11 +129,11 @@ function decisionEmail(
       headline = `a decision has been recorded for your ${item}`;
   }
 
-  const subject = `${conf} — ${label} decision: ${pid}`;
+  const subject = `${brand} — ${label} decision: ${pid}`;
   const body = compose([
     greeting(o.name),
     "",
-    `Regarding your ${item} submitted to ${conf}${
+    `Regarding your ${item} submitted to ${brand}${
       o.track ? `, ${o.track} track` : ""
     }:`,
     "",
@@ -123,7 +149,13 @@ function decisionEmail(
     "",
     "With regards,",
     o.chairName || null,
-    `Track Session Chair, ${o.track ? `${o.track}, ` : ""}${conf}`,
+    signOffLine({
+      role,
+      // A Convener signs for the whole conference, not a single track.
+      track: role === "Convener" ? null : o.track,
+      conf,
+      brand,
+    }),
     o.chairEmail || null,
   ]);
 

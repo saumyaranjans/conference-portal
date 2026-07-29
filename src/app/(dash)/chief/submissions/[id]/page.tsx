@@ -31,7 +31,7 @@ export default async function ChiefSubmissionPage({
   const { data: submission } = await supabase
     .from("submissions")
     .select(
-      "*, tracks(name, profiles(full_name)), author:profiles!submissions_author_id_fkey(full_name, email)"
+      "*, tracks(name, conferences(name, acronym, year), profiles(full_name)), author:profiles!submissions_author_id_fkey(full_name, email)"
     )
     .eq("id", id)
     .single();
@@ -75,6 +75,9 @@ export default async function ChiefSubmissionPage({
       recommendation: reviewOf(a)?.recommendation,
       comments: reviewOf(a)?.comments_to_author,
     }));
+  const conf = sub.tracks?.conferences;
+  const conferenceBrand =
+    conf?.acronym && conf?.year ? `${conf.acronym} ${conf.year}` : "GLOGIFT 2027";
   const recommendation = decisionRows.find((d) => !d.is_final);
   const isFinal = ["accepted", "rejected"].includes(sub.status);
 
@@ -186,6 +189,9 @@ export default async function ChiefSubmissionPage({
           reviews={authorFacingReviews}
           chairName={profile.full_name}
           chairEmail={profile.email}
+          signerRole="Convener"
+          conferenceName={sub.tracks?.conferences?.name}
+          brand={conferenceBrand}
         />
       </Section>
 

@@ -6,9 +6,7 @@ import { redirect } from "next/navigation";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { requireProfile, requireRole } from "@/lib/auth";
 import { emailConfigured, sendEmail } from "@/lib/email";
-import {
-  chairInviteEmail,
-} from "@/lib/emailTemplates";
+import { chairInviteEmail, signOffLine } from "@/lib/emailTemplates";
 import {
   ABSTRACT_WORD_LIMIT,
   countWords,
@@ -1239,7 +1237,8 @@ function buildInviteEmail(opts: {
     ...chairSignOff({
       name: opts.inviterName,
       track: opts.track,
-      conf: brand,
+      conf,
+      brand,
       email: opts.inviterEmail,
     })
   );
@@ -1254,13 +1253,21 @@ function buildInviteEmail(opts: {
 function chairSignOff(opts: {
   name?: string | null;
   track: string;
+  /** Full conference title. */
   conf: string;
+  /** Short brand, e.g. "GLOGIFT 2027". */
+  brand: string;
   email?: string | null;
 }): string[] {
   const lines: string[] = [];
   if (opts.name) lines.push(opts.name);
   lines.push(
-    `Track Session Chair, ${opts.track ? `${opts.track}, ` : ""}${opts.conf}`
+    signOffLine({
+      role: "Track Session Chair",
+      track: opts.track,
+      conf: opts.conf,
+      brand: opts.brand,
+    })
   );
   if (opts.email) lines.push(opts.email);
   return lines;
@@ -1319,7 +1326,8 @@ function buildAssignmentEmail(opts: {
     ...chairSignOff({
       name: opts.inviterName,
       track: opts.track,
-      conf: brand,
+      conf,
+      brand,
       email: opts.inviterEmail,
     })
   );
@@ -1400,7 +1408,8 @@ function buildReminderEmail(opts: {
     ...chairSignOff({
       name: opts.inviterName,
       track: opts.track,
-      conf: brand,
+      conf,
+      brand,
       email: opts.inviterEmail,
     })
   );

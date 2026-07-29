@@ -8,10 +8,8 @@ import { PaperDownload } from "@/components/PaperUpload";
 import { DocumentViewer } from "@/components/DocumentViewer";
 import { DeleteSubmissionButton } from "@/components/DeleteSubmissionButton";
 import { ReviewPanel } from "@/components/ReviewPanel";
-import { ReassignEditor } from "@/components/ReassignEditor";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { PageHeader, Section, formatDate } from "@/components/ui/Primitives";
-import { isAuthorOf } from "@/lib/coi";
 import {
   DELETABLE_SUBMISSION_STATUSES,
   reviewOf,
@@ -65,16 +63,6 @@ export default async function ChiefSubmissionPage({
         .maybeSingle(),
     ]);
 
-  // Only chairs of this paper's own track may be handed the paper.
-  const { data: trackChairs } = await supabase
-    .from("track_editors")
-    .select("profile_id, profiles(id, full_name, email, affiliation)")
-    .eq("track_id", (sub as any).track_id);
-
-  const editorPool = ((trackChairs ?? []) as any[])
-    .map((te) => te.profiles)
-    .filter(Boolean);
-
   const rows = (assignments ?? []) as any[];
   const decisionRows = (decisions ?? []) as any[];
 
@@ -108,22 +96,6 @@ export default async function ChiefSubmissionPage({
         } · Version ${sub.version}`}
         action={<StatusBadge status={sub.status} />}
       />
-
-      {/* ---- Who handles this paper (the Convener's only lever) ---- */}
-      <Section title="Track Editor for this paper">
-        <ReassignEditor
-          submissionId={id}
-          editors={(editorPool as any[]).filter(
-            (e) =>
-              !isAuthorOf(e, [
-                ...(((coAuthors ?? []) as any[]) ?? []),
-                ...((sub as any).author ? [(sub as any).author] : []),
-              ])
-          )}
-          currentEditorId={(sub as any).assigned_editor_id ?? null}
-          trackEditorName={sub.tracks?.profiles?.full_name}
-        />
-      </Section>
 
       {/* ---- Roll-up ---- */}
       {stats && (

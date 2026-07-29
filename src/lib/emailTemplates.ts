@@ -175,6 +175,8 @@ export function chairInviteEmail(o: {
   track: string;
   openCount?: number;
   conferenceName?: string;
+  /** Acceptance link — chairing begins only once they accept. */
+  link?: string;
 }): EmailContent {
   const conf = o.conferenceName || CONF_DEFAULT;
   const subject = `${conf} — Invitation to serve as Track Session Chair (${o.track})`;
@@ -188,8 +190,11 @@ export function chairInviteEmail(o: {
         } awaiting handling in this track.`
       : null,
     "",
-    "As Track Session Chair you will invite reviewers, manage assignments, and recommend decisions for the submissions in your track. Please sign in to the portal to begin.",
+    "As Track Session Chair you will invite reviewers, manage assignments, and recommend decisions for the papers placed in your care. Papers are assigned to you individually by the Convener, and appear in your Track Queue as they are.",
     "",
+    o.link ? "Please accept the invitation using the link below:" : null,
+    o.link ?? null,
+    o.link ? "" : null,
     "With regards,",
     `Convener, ${conf}`,
   ]);

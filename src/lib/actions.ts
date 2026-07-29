@@ -13,6 +13,7 @@ import {
   DELETABLE_SUBMISSION_STATUSES,
   FULL_PAPER_ACCEPTS_REQUIRED,
   MAX_SUBMISSIONS_PER_AUTHOR,
+  MAX_TRACKS_PER_CHAIR,
   MIN_REVIEWS_PER_SUBMISSION,
   reviewOf,
 } from "@/lib/types";
@@ -1854,73 +1855,145 @@ export async function deleteSubmission(formData: FormData): Promise<ActionResult
 
 export async function addTrackChair(formData: FormData): Promise<ActionResult> {
   const profile = await requireRole("chief");
-  const supabase = await createClient();
+  const admin = createAdminClient();
 
   const trackId = String(formData.get("track_id"));
   const editorId = String(formData.get("editor_id") ?? "");
-  if (!editorId) return { ok: false, message: "Choose a track editor to add." };
+  if (!editorId) return { ok: false, message: "Choose a track editor to invite." };
 
-  const { error } = await supabase
+  // Rule: nobody chairs more than two tracks.
+  const { data: held } = await admin
     .from("track_editors")
-    .insert({ track_id: trackId, profile_id: editorId });
+    .select("track_id")
+    .eq("profile_id", editorId)
+    .eq("status", "accepted");
+  const other = ((held as any[]) ?? []).filter((h) => h.track_id !== trackId);
+  if (other.length >= MAX_TRACKS_PER_CHAIR)
+    return {
+      ok: false,
+      message: `A track chair may chair at most ${MAX_TRACKS_PER_CHAIR} tracks, and they already chair ${other.length}.`,
+    };
+
+  const token = randomBytes(24).toString("hex");
+  const { error } = await admin.from("track_editors").insert({
+    track_id: trackId,
+    profile_id: editorId,
+    status: "invited",
+    token,
+    invited_by: profile.id,
+    invited_at: new Date().toISOString(),
+  });
 
   if (error) {
     return {
       ok: false,
       message:
         error.code === "23505"
-          ? "That person already chairs this track."
+          ? "That person has already been invited to chair this track."
           : error.message,
     };
   }
 
-  // Keep the legacy single column pointing at a current chair for any
-  // remaining references.
-  await supabase.from("tracks").update({ editor_id: editorId }).eq("id", trackId);
+  const [{ data: track }, { data: target }] = await Promise.all([
+    admin.from("tracks").select("name").eq("id", trackId).single(),
+    admin.from("profiles").select("roles, full_name, email").eq("id", editorId).single(),
+  ]);
 
-  // Grant the editor role if missing, and notify the new chair in-app.
-  const admin = createAdminClient();
-  const { data: track } = await admin
-    .from("tracks")
-    .select("name")
-    .eq("id", trackId)
-    .single();
-  const { data: target } = await admin
-    .from("profiles")
-    .select("roles, full_name, email")
-    .eq("id", editorId)
-    .single();
-  const roles: string[] = target?.roles ?? [];
+  // They need the role to reach the acceptance page; it grants no papers.
+  const roles: string[] = (target as any)?.roles ?? [];
   if (!roles.includes("editor")) {
     await admin
       .from("profiles")
       .update({ roles: [...roles, "editor"], updated_at: new Date().toISOString() })
       .eq("id", editorId);
   }
+
+  const link = `${siteUrl()}/chair-invite/${token}`;
   await admin.from("notifications").insert({
     profile_id: editorId,
-    title: "You are now a Track Session Chair",
-    body: `You have been assigned as Track Session Chair for the ${
+    title: "Invitation to chair a track",
+    body: `You have been invited to serve as Track Session Chair for the ${
       track?.name ?? "selected"
-    } track. Sign in and open the Track Queue to begin.`,
-    link: "/editor",
+    } track. Open the invitation to accept.`,
+    link: `/chair-invite/${token}`,
   });
 
-  // Auto-send the Track Editor invitation if email is configured (best-effort).
-  if (target?.email) {
+  if ((target as any)?.email) {
     const { subject, body } = chairInviteEmail({
-      name: target.full_name || undefined,
+      name: (target as any).full_name || undefined,
       track: track?.name ?? "your assigned",
+      link,
     });
-    await sendEmail({ to: target.email, subject, text: body });
+    await sendEmail({
+      to: (target as any).email,
+      subject,
+      text: body,
+      replyTo: profile.email || undefined,
+    });
   }
 
-  await audit(profile.id, "track.chair_added", "track", trackId, {
+  await audit(profile.id, "track.chair_invited", "track", trackId, {
     editor_id: editorId,
   });
   revalidatePath("/chief");
   revalidatePath("/admin/tracks");
-  return { ok: true, message: "Track chair added and notified." };
+  return {
+    ok: true,
+    message: `Invitation sent. ${
+      (target as any)?.full_name || "They"
+    } will chair this track once they accept.`,
+  };
+}
+
+/**
+ * The invited chair accepts. Only then do they chair the track — and even
+ * then they see nothing until the Convener assigns them a specific paper.
+ */
+export async function acceptTrackChairInvite(token: string): Promise<ActionResult> {
+  const profile = await requireProfile();
+  const admin = createAdminClient();
+
+  const { data: inv } = await admin
+    .from("track_editors")
+    .select("id, track_id, profile_id, status, tracks(name)")
+    .eq("token", token)
+    .maybeSingle();
+
+  if (!inv) return { ok: false, message: "This invitation link is invalid." };
+  if ((inv as any).profile_id !== profile.id)
+    return { ok: false, message: "This invitation belongs to a different account." };
+  if ((inv as any).status === "accepted")
+    return { ok: true, message: "You already chair this track." };
+
+  const { data: held } = await admin
+    .from("track_editors")
+    .select("track_id")
+    .eq("profile_id", profile.id)
+    .eq("status", "accepted");
+  const other = ((held as any[]) ?? []).filter(
+    (h) => h.track_id !== (inv as any).track_id
+  );
+  if (other.length >= MAX_TRACKS_PER_CHAIR)
+    return {
+      ok: false,
+      message: `You already chair ${other.length} tracks, which is the maximum. Ask the Convener to release one first.`,
+    };
+
+  const { error } = await admin
+    .from("track_editors")
+    .update({ status: "accepted", accepted_at: new Date().toISOString() })
+    .eq("id", (inv as any).id);
+  if (error) return { ok: false, message: error.message };
+
+  await audit(profile.id, "track.chair_accepted", "track", (inv as any).track_id);
+  revalidatePath("/chief");
+  revalidatePath("/editor");
+  return {
+    ok: true,
+    message: `You now chair the ${
+      (inv as any).tracks?.name ?? "selected"
+    } track. Papers will appear here as the Convener assigns them to you.`,
+  };
 }
 
 export async function removeTrackChair(formData: FormData): Promise<ActionResult> {

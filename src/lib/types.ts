@@ -28,6 +28,9 @@ export function reviewOf(assignment: any): any | null {
   return Array.isArray(r) ? (r[0] ?? null) : r;
 }
 
+/** A track chair may chair at most this many tracks. */
+export const MAX_TRACKS_PER_CHAIR = 2;
+
 /** Word count used for the abstract limit (whitespace separated). */
 export function countWords(text: string): number {
   const t = text.trim();

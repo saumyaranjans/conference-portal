@@ -38,7 +38,7 @@ export default async function ChiefDashboard() {
       supabase
         .from("tracks")
         .select(
-          "*, track_editors(profile_id, profiles(id, full_name, email))"
+          "*, track_editors(profile_id, status, profiles(id, full_name, email, affiliation))"
         )
         .order("name"),
       supabase.from("profiles").select("*").eq("is_active", true),
@@ -54,6 +54,7 @@ export default async function ChiefDashboard() {
     chairsByTrack.set(
       t.id,
       (t.track_editors ?? [])
+        .filter((te: any) => te.status === "accepted")
         .map((te: any) => te.profiles)
         .filter(Boolean)
     );
@@ -181,16 +182,26 @@ export default async function ChiefDashboard() {
                     </p>
                     {chairs.length === 0 ? (
                       <p className="text-xs text-slate-500 mt-0.5">
-                        No chair assigned
+                        No chair invited yet
                       </p>
                     ) : (
                       <div className="flex flex-wrap gap-1.5 mt-1.5">
                         {chairs.map((c) => (
                           <span
                             key={c.profile_id}
-                            className="badge bg-blue-100 text-blue-800 inline-flex items-center gap-1.5"
+                            className={`badge inline-flex items-center gap-1.5 ${
+                              c.status === "accepted"
+                                ? "bg-blue-100 text-blue-800"
+                                : "bg-amber-100 text-amber-900"
+                            }`}
+                            title={
+                              c.status === "accepted"
+                                ? "Accepted the invitation"
+                                : "Invited — not yet accepted"
+                            }
                           >
                             {c.profiles?.full_name || c.profiles?.email}
+                            {c.status !== "accepted" && " · invited"}
                             <ActionForm action={removeTrackChair}>
                               <input type="hidden" name="track_id" value={t.id} />
                               <input
@@ -219,7 +230,7 @@ export default async function ChiefDashboard() {
                       defaultValue=""
                       className="input py-1.5 text-sm"
                     >
-                      <option value="">Add a chair…</option>
+                      <option value="">Invite a chair…</option>
                       {editors
                         .filter((e) => !chairIds.has(e.id))
                         .map((e) => (
@@ -229,7 +240,7 @@ export default async function ChiefDashboard() {
                         ))}
                     </select>
                     <SubmitButton variant="secondary" className="text-sm py-1.5">
-                      Add
+                      Invite
                     </SubmitButton>
                   </ActionForm>
                 </div>

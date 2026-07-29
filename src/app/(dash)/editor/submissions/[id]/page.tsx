@@ -3,12 +3,12 @@ import { notFound } from "next/navigation";
 import { requireRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import {
-  assignReviewer,
   recordRecommendation,
   removeAssignment,
   setSuggestedOutlet,
 } from "@/lib/actions";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
+import { AssignReviewer } from "@/components/AssignReviewer";
 import { InviteReviewer } from "@/components/InviteReviewer";
 import { NotifyAuthor } from "@/components/NotifyAuthor";
 import { DocumentViewer } from "@/components/DocumentViewer";
@@ -224,34 +224,7 @@ export default async function EditorSubmissionPage({
 
           {/* Invite a new reviewer — sorted by lightest workload first. */}
           {!isFinal && (
-            <ActionForm action={assignReviewer} className="px-5 py-4">
-              <input type="hidden" name="submission_id" value={id} />
-              <div className="grid sm:grid-cols-[1fr_auto_auto] gap-3">
-                <select name="reviewer_id" required className="input">
-                  <option value="">Select a reviewer…</option>
-                  {available.map((c) => (
-                    <option key={c.reviewer_id} value={c.reviewer_id}>
-                      {c.full_name || c.email} — {c.open_assignments} open
-                      {c.expertise?.length ? ` · ${c.expertise.join(", ")}` : ""}
-                    </option>
-                  ))}
-                </select>
-                <input
-                  type="date"
-                  name="due_date"
-                  className="input"
-                  aria-label="Due date"
-                />
-                <SubmitButton className="whitespace-nowrap">
-                  Invite &amp; send email
-                </SubmitButton>
-              </div>
-              {available.length === 0 && (
-                <p className="text-xs text-slate-400 mt-2">
-                  No further reviewers available — add one below.
-                </p>
-              )}
-            </ActionForm>
+            <AssignReviewer submissionId={id} available={available} />
           )}
 
           {/* Invite an outside reviewer by their details */}

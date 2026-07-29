@@ -22,6 +22,16 @@ import type { AppRole, DecisionKind, Recommendation } from "@/lib/types";
 
 export type ActionResult = { ok: boolean; message?: string };
 
+/** Result of assigning an existing reviewer — the paper is assigned straight
+ *  away and an invitation letter is prepared for the chair to preview + send. */
+export type AssignResult =
+  | { ok: false; message: string }
+  | {
+      ok: true;
+      message: string;
+      compose?: { to: string; subject: string; body: string };
+    };
+
 /** Result of inviting a reviewer. Either way the chair gets a prepared email
  *  addressed to the reviewer — at their profile email if an account already
  *  exists (and the paper is assigned straight away), otherwise at the address
@@ -684,13 +694,21 @@ export async function saveReview(formData: FormData): Promise<ActionResult> {
 // EDITOR
 // =====================================================================
 
-export async function assignReviewer(formData: FormData): Promise<ActionResult> {
+/**
+ * Assign a reviewer who already has a portal account, and prepare the
+ * invitation letter addressed to their profile email. The chair previews it
+ * and sends it from the portal — nothing is emailed by this action.
+ */
+export async function assignReviewer(formData: FormData): Promise<AssignResult> {
   const profile = await requireRole("editor", "chief");
   const supabase = await createClient();
 
   const submissionId = String(formData.get("submission_id"));
   const reviewerId = String(formData.get("reviewer_id"));
   const dueDate = String(formData.get("due_date") ?? "");
+
+  if (!submissionId) return { ok: false, message: "Missing submission." };
+  if (!reviewerId) return { ok: false, message: "Select a reviewer." };
 
   const { error } = await supabase.from("assignments").insert({
     submission_id: submissionId,
@@ -711,71 +729,40 @@ export async function assignReviewer(formData: FormData): Promise<ActionResult> 
   await audit(profile.id, "assignment.created", "submission", submissionId, {
     reviewer_id: reviewerId,
   });
-
-  // Email the assigned reviewer (best-effort; no-op unless Resend is set up).
-  if (emailConfigured()) {
-    try {
-      const admin = createAdminClient();
-      const [{ data: rev }, { data: sub }] = await Promise.all([
-        admin.from("profiles").select("full_name, email").eq("id", reviewerId).single(),
-        admin
-          .from("submissions")
-          .select("paper_id, title, stage, tracks(name, conferences(name))")
-          .eq("id", submissionId)
-          .single(),
-      ]);
-      const to = (rev as any)?.email;
-      if (to) {
-        const s = sub as any;
-        const conf = s?.tracks?.conferences?.name ?? "GLOGIFT 2027";
-        const item = s?.stage === "full_paper" ? "manuscript" : "abstract";
-        const subject = `${conf} — Review assignment${
-          s?.paper_id ? ` (${s.paper_id})` : ""
-        }`;
-        const lines: string[] = [
-          `Dear ${(rev as any).full_name || "Reviewer"},`,
-          "",
-          "Greetings of the Day!",
-          "",
-          `We are pleased to assign you to review the ${item} titled "${
-            s?.title ?? ""
-          }" (Paper ID: ${s?.paper_id ?? "pending"})${
-            s?.tracks?.name ? `, in the ${s.tracks.name} track` : ""
-          } of ${conf}.`,
-          "",
-          "We thank you in advance for your time and valuable contribution to the review process.",
-        ];
-        if (dueDate)
-          lines.push(
-            "",
-            `We kindly request that you complete your review by ${prettyDate(dueDate)}.`
-          );
-        lines.push(
-          "",
-          `Please sign in to your reviewer dashboard to accept and begin: ${siteUrl()}/reviewer`,
-          "",
-          REVIEW_HELP,
-          "",
-          "With warm regards,"
-        );
-        if (profile.full_name) lines.push(profile.full_name);
-        lines.push(`Track Session Chair, ${conf}`);
-        const init = initialsOf(profile.full_name);
-        if (init) lines.push(init);
-        await sendEmail({ to, subject, text: lines.join("\n") });
-      }
-    } catch {
-      // best-effort — an email failure must not undo the assignment
-    }
-  }
-
   revalidatePath(`/editor/submissions/${submissionId}`);
-  return {
-    ok: true,
-    message: emailConfigured()
-      ? "Reviewer invited and emailed."
-      : "Reviewer invited.",
-  };
+
+  // Prepare (do not send) the invitation, addressed to their profile email.
+  const admin = createAdminClient();
+  const [{ data: rev }, { data: sub }] = await Promise.all([
+    admin.from("profiles").select("full_name, email").eq("id", reviewerId).single(),
+    admin
+      .from("submissions")
+      .select("paper_id, title, stage, tracks(name, conferences(name))")
+      .eq("id", submissionId)
+      .single(),
+  ]);
+
+  const to = (rev as any)?.email;
+  const s = sub as any;
+  const reviewerName = (rev as any)?.full_name as string | null;
+  const message = `${
+    reviewerName || to || "Reviewer"
+  } is assigned to this paper. The invitation below goes to their profile email.`;
+
+  if (!to || !s) return { ok: true, message };
+
+  const { subject, body } = buildAssignmentEmail({
+    paperId: s.paper_id,
+    title: s.title,
+    stage: s.stage,
+    track: s.tracks?.name ?? "",
+    conferenceName: s.tracks?.conferences?.name ?? "GLOGIFT 2027",
+    reviewerName,
+    dueDate: dueDate || undefined,
+    inviterName: profile.full_name,
+  });
+
+  return { ok: true, message, compose: { to, subject, body } };
 }
 
 export async function removeAssignment(formData: FormData): Promise<ActionResult> {
@@ -899,6 +886,60 @@ function buildInviteEmail(opts: {
 }
 
 /**
+ * Build the invitation letter for a reviewer who already has a portal account
+ * (no sign-up link — they simply sign in). Same warm shape as the letter for
+ * an outside expert.
+ */
+function buildAssignmentEmail(opts: {
+  paperId: string | null;
+  title: string;
+  stage: string | null;
+  track: string;
+  conferenceName: string;
+  reviewerName?: string | null;
+  dueDate?: string;
+  inviterName?: string | null;
+}): { subject: string; body: string } {
+  const conf = opts.conferenceName || "GLOGIFT 2027";
+  const item = opts.stage === "full_paper" ? "manuscript" : "abstract";
+  const init = initialsOf(opts.inviterName ?? undefined);
+
+  const subject = `${conf} — Invitation to review ${item}${
+    opts.paperId ? ` (${opts.paperId})` : ""
+  }`;
+
+  const lines: string[] = [
+    `Dear ${opts.reviewerName?.trim() || "Reviewer"},`,
+    "",
+    "Greetings of the Day!",
+    "",
+    `We are pleased to assign you to review the ${item} titled "${opts.title}" (Paper ID: ${
+      opts.paperId ?? "pending"
+    })${opts.track ? `, in the ${opts.track} track` : ""} of ${conf}.`,
+    "",
+    "We thank you in advance for your time and valuable contribution to the review process.",
+  ];
+  if (opts.dueDate)
+    lines.push(
+      "",
+      `We kindly request that you complete your review by ${prettyDate(opts.dueDate)}.`
+    );
+  lines.push(
+    "",
+    `Please sign in to your reviewer dashboard to begin: ${siteUrl()}/reviewer`,
+    "",
+    REVIEW_HELP,
+    "",
+    "With warm regards,"
+  );
+  if (opts.inviterName) lines.push(opts.inviterName);
+  lines.push(`Track Session Chair, ${conf}`);
+  if (init) lines.push(init);
+
+  return { subject, body: lines.join("\n") };
+}
+
+/**
  * Chair invites a reviewer by their details. If a portal account already
  * exists for that email, the reviewer role is granted and the paper assigned
  * immediately. Otherwise an invitation token is minted and a sign-up link
@@ -976,40 +1017,17 @@ export async function inviteReviewer(formData: FormData): Promise<InviteResult> 
     });
     revalidatePath(`/editor/submissions/${submissionId}`);
 
-    // Heads-up email (the account already exists — no sign-up needed).
-    const item = s.stage === "full_paper" ? "manuscript" : "abstract";
-    const composeSubject = `${conferenceName} — Invitation to review ${item}${
-      s.paper_id ? ` (${s.paper_id})` : ""
-    }`;
-    const composeLines: string[] = [
-      `Dear ${target.full_name || "Reviewer"},`,
-      "",
-      "Greetings of the Day!",
-      "",
-      `We are pleased to assign you to review the ${item} titled "${s.title}" (Paper ID: ${
-        s.paper_id ?? "pending"
-      })${track ? `, in the ${track} track` : ""} of ${conferenceName}.`,
-      "",
-      "We thank you in advance for your time and valuable contribution to the review process.",
-    ];
-    if (dueDate)
-      composeLines.push(
-        "",
-        `We kindly request that you complete your review by ${prettyDate(dueDate)}.`
-      );
-    composeLines.push(
-      "",
-      `Please sign in to your reviewer dashboard to begin: ${siteUrl()}/reviewer`,
-      "",
-      REVIEW_HELP,
-      "",
-      "With warm regards,"
-    );
-    if (profile.full_name) composeLines.push(profile.full_name);
-    composeLines.push(`Track Session Chair, ${conferenceName}`);
-    const compInit = initialsOf(profile.full_name);
-    if (compInit) composeLines.push(compInit);
-    const composeBody = composeLines.join("\n");
+    // The account already exists — no sign-up link needed.
+    const { subject: composeSubject, body: composeBody } = buildAssignmentEmail({
+      paperId: s.paper_id,
+      title: s.title,
+      stage: s.stage,
+      track,
+      conferenceName,
+      reviewerName: target.full_name,
+      dueDate: dueDate || undefined,
+      inviterName: profile.full_name,
+    });
 
     return {
       ok: true,

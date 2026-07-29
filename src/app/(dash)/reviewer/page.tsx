@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { respondToAssignment } from "@/lib/actions";
+import { reviewOf } from "@/lib/types";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import {
   EmptyState,
@@ -125,7 +126,7 @@ export default async function ReviewerDashboard() {
                       href={`/reviewer/reviews/${a.id}`}
                       className="btn-primary shrink-0"
                     >
-                      {a.reviews?.[0] ? "Continue review" : "Start review"}
+                      {reviewOf(a) ? "Continue review" : "Start review"}
                     </Link>
                   </div>
                 </div>

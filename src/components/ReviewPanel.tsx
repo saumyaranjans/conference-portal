@@ -1,5 +1,6 @@
 import { RecommendationBadge } from "@/components/ui/StatusBadge";
 import { formatDate } from "@/components/ui/Primitives";
+import { reviewOf } from "@/lib/types";
 
 /**
  * Renders every completed review for a submission. `showConfidential`
@@ -13,7 +14,7 @@ export function ReviewPanel({
   assignments: any[];
   showConfidential?: boolean;
 }) {
-  const done = assignments.filter((a) => a.reviews?.[0]?.is_submitted);
+  const done = assignments.filter((a) => reviewOf(a)?.is_submitted);
 
   if (done.length === 0) {
     return (
@@ -26,7 +27,7 @@ export function ReviewPanel({
   return (
     <div className="space-y-4">
       {done.map((a, i) => {
-        const r = a.reviews[0];
+        const r = reviewOf(a);
         const avg =
           [
             r.score_originality,

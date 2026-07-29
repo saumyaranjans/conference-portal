@@ -14,6 +14,20 @@ export const MIN_REVIEWS_PER_SUBMISSION = 2;
  */
 export const FULL_PAPER_ACCEPTS_REQUIRED = 2;
 
+/**
+ * The review attached to an assignment.
+ *
+ * `reviews.assignment_id` is UNIQUE, so PostgREST treats the embed as a
+ * to-one relationship and returns an object — not the array a `select(...,
+ * reviews(*))` reads like. Older code indexed `[0]` and silently got
+ * `undefined`, which hid every review. Always go through this.
+ */
+export function reviewOf(assignment: any): any | null {
+  const r = assignment?.reviews;
+  if (!r) return null;
+  return Array.isArray(r) ? (r[0] ?? null) : r;
+}
+
 /** Word count used for the abstract limit (whitespace separated). */
 export function countWords(text: string): number {
   const t = text.trim();

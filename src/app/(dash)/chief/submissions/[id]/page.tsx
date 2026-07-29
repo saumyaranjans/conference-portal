@@ -13,6 +13,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { PageHeader, Section, formatDate } from "@/components/ui/Primitives";
 import {
   DELETABLE_SUBMISSION_STATUSES,
+  reviewOf,
   participationModeLabel,
   submissionTypeLabel,
   type Submission,
@@ -24,7 +25,7 @@ export default async function ChiefSubmissionPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  await requireRole("chief");
+  const profile = await requireRole("chief");
   const supabase = await createClient();
 
   const { data: submission } = await supabase
@@ -65,6 +66,15 @@ export default async function ChiefSubmissionPage({
 
   const rows = (assignments ?? []) as any[];
   const decisionRows = (decisions ?? []) as any[];
+
+  // Author-facing feedback only: numbered, unnamed, comments_to_author alone.
+  const authorFacingReviews = rows
+    .filter((a) => reviewOf(a)?.is_submitted)
+    .map((a, i) => ({
+      label: `Reviewer ${a.reviewer_number ?? i + 1}`,
+      recommendation: reviewOf(a)?.recommendation,
+      comments: reviewOf(a)?.comments_to_author,
+    }));
   const recommendation = decisionRows.find((d) => !d.is_final);
   const isFinal = ["accepted", "rejected"].includes(sub.status);
 
@@ -173,6 +183,9 @@ export default async function ChiefSubmissionPage({
           authorEmail={(sub as any).author?.email}
           defaultDecision={decisionRows[0]?.decision}
           defaultMessage={decisionRows[0]?.rationale}
+          reviews={authorFacingReviews}
+          chairName={profile.full_name}
+          chairEmail={profile.email}
         />
       </Section>
 

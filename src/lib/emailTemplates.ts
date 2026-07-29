@@ -19,15 +19,51 @@ function compose(lines: (string | null)[]): string {
   return lines.filter((l): l is string => l !== null).join("\n");
 }
 
+/** One reviewer's author-facing feedback. Identities are never disclosed. */
+export type ReviewComment = {
+  /** "Reviewer 1", "Reviewer 2", … — never a name. */
+  label: string;
+  recommendation?: string | null;
+  comments?: string | null;
+};
+
 type DecisionOpts = {
   paperId?: string | null;
   title: string;
   track?: string;
   decision: string;
+  /** The track chair's own message to the author. */
   message?: string;
   conferenceName?: string;
   name?: string;
+  /** Submitted reviews, author-facing comments only. */
+  reviews?: ReviewComment[];
+  chairName?: string | null;
+  chairEmail?: string | null;
 };
+
+/** "minor_revision" → "Minor revision". */
+function prettyRecommendation(r?: string | null): string {
+  if (!r) return "";
+  const s = r.replace(/_/g, " ");
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+/**
+ * The reviewers' feedback as the author should see it: numbered, never named,
+ * and only ever `comments_to_author` — the confidential notes to the chair are
+ * not passed in here at all.
+ */
+function reviewerSection(reviews?: ReviewComment[]): string | null {
+  const withText = (reviews ?? []).filter((r) => (r.comments ?? "").trim());
+  if (withText.length === 0) return null;
+
+  const blocks = withText.map((r) => {
+    const rec = prettyRecommendation(r.recommendation);
+    return `${r.label}${rec ? ` (${rec})` : ""}:\n${(r.comments ?? "").trim()}`;
+  });
+  return `\nREVIEWER COMMENTS\n\n${blocks.join("\n\n")}`;
+}
 
 function decisionEmail(
   stage: "abstract" | "full_paper",
@@ -80,10 +116,15 @@ function decisionEmail(
     "",
     `On behalf of the review committee, ${headline}.`,
     nextStep,
-    o.message && o.message.trim() ? `\nComments:\n${o.message.trim()}` : null,
+    reviewerSection(o.reviews),
+    o.message && o.message.trim()
+      ? `\nCOMMENTS FROM THE TRACK SESSION CHAIR\n\n${o.message.trim()}`
+      : null,
     "",
     "With regards,",
+    o.chairName || null,
     `Track Session Chair, ${o.track ? `${o.track}, ` : ""}${conf}`,
+    o.chairEmail || null,
   ]);
 
   return { subject, body };

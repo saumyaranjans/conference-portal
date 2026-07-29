@@ -16,6 +16,7 @@ import {
   FULL_PAPER_ACCEPTS_REQUIRED,
   MAX_SUBMISSIONS_PER_AUTHOR,
   MIN_REVIEWS_PER_SUBMISSION,
+  reviewOf,
 } from "@/lib/types";
 import type { AppRole, DecisionKind, Recommendation } from "@/lib/types";
 
@@ -682,7 +683,9 @@ export async function prepareReviewerInvite(
 
   const { data: sub } = await admin
     .from("submissions")
-    .select("id, title, paper_id, stage, author_id, tracks(name, conferences(name))")
+    .select(
+      "id, title, paper_id, stage, author_id, tracks(name, conferences(name, acronym, year))"
+    )
     .eq("id", submissionId)
     .single();
   if (!sub) return { ok: false, message: "Submission not found." };
@@ -690,6 +693,7 @@ export async function prepareReviewerInvite(
   const s = sub as any;
   const track: string = s.tracks?.name ?? "";
   const conferenceName: string = s.tracks?.conferences?.name ?? "GLOGIFT 2027";
+  const shortName: string = shortConf(s.tracks?.conferences);
 
   // Someone picked from the list, or a typed email that already has an account.
   let target: { id: string; full_name: string | null; email: string | null } | null =
@@ -747,6 +751,7 @@ export async function prepareReviewerInvite(
       stage: s.stage,
       track,
       conferenceName,
+      shortName,
       reviewerName: target.full_name,
       dueDate: dueDate || undefined,
       inviterName: profile.full_name,
@@ -794,6 +799,7 @@ export async function prepareReviewerInvite(
     stage: s.stage,
     track,
     conferenceName,
+    shortName,
     fullName,
     link,
     dueDate: dueDate || undefined,
@@ -920,7 +926,7 @@ export async function prepareReviewerReminder(
   const { data: a } = await admin
     .from("assignments")
     .select(
-      "id, due_date, submission_id, profiles!assignments_reviewer_id_fkey(full_name, email), submissions(title, paper_id, stage, tracks(name, conferences(name)))"
+      "id, due_date, submission_id, profiles!assignments_reviewer_id_fkey(full_name, email), submissions(title, paper_id, stage, tracks(name, conferences(name, acronym, year)))"
     )
     .eq("id", assignmentId)
     .maybeSingle();
@@ -939,6 +945,7 @@ export async function prepareReviewerReminder(
     stage: s.stage ?? null,
     track: s.tracks?.name ?? "",
     conferenceName: s.tracks?.conferences?.name ?? "GLOGIFT 2027",
+    shortName: shortConf(s.tracks?.conferences),
     reviewerName: reviewer.full_name,
     originalDue: row.due_date,
     newDue,
@@ -1149,6 +1156,16 @@ function conflictOfInterest(
   return {};
 }
 
+/**
+ * The short brand — "GLOGIFT 2027". The full conference title is far too long
+ * for a subject line or a sign-off, so it appears only in the body.
+ */
+function shortConf(conference?: { acronym?: string | null; year?: number | null }): string {
+  const acronym = conference?.acronym?.trim();
+  const year = conference?.year;
+  return acronym && year ? `${acronym} ${year}` : "GLOGIFT 2027";
+}
+
 /** `n` days from `from`, as a new Date. */
 function addDays(from: Date, n: number): Date {
   const d = new Date(from);
@@ -1174,6 +1191,7 @@ function buildInviteEmail(opts: {
   stage: string | null;
   track: string;
   conferenceName: string;
+  shortName: string;
   fullName: string;
   link: string;
   dueDate?: string;
@@ -1181,11 +1199,12 @@ function buildInviteEmail(opts: {
   inviterEmail?: string;
 }): { subject: string; body: string } {
   const conf = opts.conferenceName || "GLOGIFT 2027";
+  const brand = opts.shortName || "GLOGIFT 2027";
   const item = opts.stage === "full_paper" ? "manuscript" : "abstract";
   const pid = opts.paperId ? opts.paperId : "(to be assigned)";
   const name = opts.fullName?.trim() || "Reviewer";
 
-  const subject = `${conf} — Invitation to review ${item}${
+  const subject = `${brand} — Invitation to review ${item}${
     opts.paperId ? ` (${opts.paperId})` : ""
   }`;
 
@@ -1220,7 +1239,7 @@ function buildInviteEmail(opts: {
     ...chairSignOff({
       name: opts.inviterName,
       track: opts.track,
-      conf,
+      conf: brand,
       email: opts.inviterEmail,
     })
   );
@@ -1258,15 +1277,17 @@ function buildAssignmentEmail(opts: {
   stage: string | null;
   track: string;
   conferenceName: string;
+  shortName: string;
   reviewerName?: string | null;
   dueDate?: string;
   inviterName?: string | null;
   inviterEmail?: string | null;
 }): { subject: string; body: string } {
   const conf = opts.conferenceName || "GLOGIFT 2027";
+  const brand = opts.shortName || "GLOGIFT 2027";
   const item = opts.stage === "full_paper" ? "manuscript" : "abstract";
 
-  const subject = `${conf} — Invitation to review ${item}${
+  const subject = `${brand} — Invitation to review ${item}${
     opts.paperId ? ` (${opts.paperId})` : ""
   }`;
 
@@ -1298,7 +1319,7 @@ function buildAssignmentEmail(opts: {
     ...chairSignOff({
       name: opts.inviterName,
       track: opts.track,
-      conf,
+      conf: brand,
       email: opts.inviterEmail,
     })
   );
@@ -1316,6 +1337,7 @@ function buildReminderEmail(opts: {
   stage: string | null;
   track: string;
   conferenceName: string;
+  shortName: string;
   reviewerName?: string | null;
   originalDue?: string | null;
   newDue: Date | null;
@@ -1323,9 +1345,10 @@ function buildReminderEmail(opts: {
   inviterEmail?: string | null;
 }): { subject: string; body: string } {
   const conf = opts.conferenceName || "GLOGIFT 2027";
+  const brand = opts.shortName || "GLOGIFT 2027";
   const item = opts.stage === "full_paper" ? "manuscript" : "abstract";
 
-  const subject = `${conf} — Gentle reminder: review pending${
+  const subject = `${brand} — Gentle reminder: review pending${
     opts.paperId ? ` (${opts.paperId})` : ""
   }`;
 
@@ -1377,7 +1400,7 @@ function buildReminderEmail(opts: {
     ...chairSignOff({
       name: opts.inviterName,
       track: opts.track,
-      conf,
+      conf: brand,
       email: opts.inviterEmail,
     })
   );
@@ -1502,7 +1525,7 @@ export async function recordRecommendation(
       .select("reviews(recommendation, is_submitted)")
       .eq("submission_id", submissionId);
     const accepts = ((rows as any[]) ?? []).filter(
-      (a) => a.reviews?.[0]?.is_submitted && a.reviews[0].recommendation === "accept"
+      (a) => reviewOf(a)?.is_submitted && reviewOf(a).recommendation === "accept"
     ).length;
     if (accepts < FULL_PAPER_ACCEPTS_REQUIRED)
       return {

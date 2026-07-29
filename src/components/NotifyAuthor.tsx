@@ -5,6 +5,7 @@ import { ComposeEmail } from "@/components/ComposeEmail";
 import {
   abstractDecisionEmail,
   fullPaperDecisionEmail,
+  type ReviewComment,
 } from "@/lib/emailTemplates";
 
 const DECISIONS: [string, string][] = [
@@ -29,6 +30,9 @@ export function NotifyAuthor({
   authorEmail,
   defaultDecision,
   defaultMessage,
+  reviews,
+  chairName,
+  chairEmail,
 }: {
   stage: string;
   paperId: string | null;
@@ -38,6 +42,10 @@ export function NotifyAuthor({
   authorEmail?: string | null;
   defaultDecision?: string;
   defaultMessage?: string;
+  /** Submitted reviews — author-facing comments only, reviewers unnamed. */
+  reviews?: ReviewComment[];
+  chairName?: string | null;
+  chairEmail?: string | null;
 }) {
   const [decision, setDecision] = useState(defaultDecision || "accept");
 
@@ -60,6 +68,9 @@ export function NotifyAuthor({
     decision,
     message: defaultMessage,
     name: authorName,
+    reviews,
+    chairName,
+    chairEmail,
   });
 
   return (
@@ -86,8 +97,9 @@ export function NotifyAuthor({
       </div>
 
       <p className="text-sm text-slate-600 bg-slate-50 rounded-lg px-3 py-2 dark:bg-slate-800 dark:text-slate-300">
-        Recording a decision does not email the author. Review the letter below,
-        then send it.
+        Recording a decision does not email the author. The letter carries every
+        submitted reviewer&rsquo;s comments to the author (unnamed) and your own
+        message. Review it below, then send it.
       </p>
 
       <ComposeEmail

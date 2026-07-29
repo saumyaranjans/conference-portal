@@ -19,6 +19,7 @@ import { ReviewPanel } from "@/components/ReviewPanel";
 import {
   FULL_PAPER_ACCEPTS_REQUIRED,
   MIN_REVIEWS_PER_SUBMISSION,
+  reviewOf,
   participationModeLabel,
   submissionTypeLabel,
   type Submission,
@@ -30,7 +31,7 @@ export default async function EditorSubmissionPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  await requireRole("editor");
+  const profile = await requireRole("editor");
   const supabase = await createClient();
 
   const { data: submission } = await supabase
@@ -82,14 +83,22 @@ export default async function EditorSubmissionPage({
     (c) => !assignedIds.has(c.reviewer_id) && c.reviewer_id !== sub.author_id
   );
 
-  const completed = rows.filter((a) => a.reviews?.[0]?.is_submitted);
+  const completed = rows.filter((a) => reviewOf(a)?.is_submitted);
   const acceptCount = completed.filter(
-    (a) => a.reviews?.[0]?.recommendation === "accept"
+    (a) => reviewOf(a)?.recommendation === "accept"
   ).length;
   const isFinal = ["accepted", "rejected"].includes(sub.status);
   // Accepting a full paper is gated on two Accept recommendations.
   const acceptsShort =
     sub.stage === "full_paper" && acceptCount < FULL_PAPER_ACCEPTS_REQUIRED;
+
+  // What the author may see: numbered, never named, and only the comments the
+  // reviewer wrote for them — comments_to_editor stays confidential.
+  const authorFacingReviews = completed.map((a, i) => ({
+    label: `Reviewer ${a.reviewer_number ?? i + 1}`,
+    recommendation: reviewOf(a)?.recommendation,
+    comments: reviewOf(a)?.comments_to_author,
+  }));
 
   return (
     <>
@@ -399,6 +408,9 @@ export default async function EditorSubmissionPage({
           authorEmail={sub.profiles?.email}
           defaultDecision={((decisions ?? []) as any[])[0]?.decision}
           defaultMessage={((decisions ?? []) as any[])[0]?.rationale}
+          reviews={authorFacingReviews}
+          chairName={profile.full_name}
+          chairEmail={profile.email}
         />
       </Section>
 

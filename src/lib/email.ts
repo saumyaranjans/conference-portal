@@ -19,10 +19,12 @@ export async function sendEmail(args: {
   to: string;
   subject: string;
   text: string;
-}): Promise<{ sent: boolean; error?: string }> {
+  /** Per-message reply-to (e.g. the chair sending it). Falls back to the env. */
+  replyTo?: string;
+}): Promise<{ sent: boolean; id?: string; error?: string }> {
   const key = process.env.RESEND_API_KEY;
   const from = process.env.RESEND_FROM;
-  const replyTo = process.env.RESEND_REPLY_TO;
+  const replyTo = args.replyTo?.trim() || process.env.RESEND_REPLY_TO;
 
   const to = args.to?.trim();
   if (!key || !from || !to) return { sent: false };
@@ -45,7 +47,9 @@ export async function sendEmail(args: {
     if (!res.ok) {
       return { sent: false, error: `${res.status} ${(await res.text()).slice(0, 200)}` };
     }
-    return { sent: true };
+    // Resend returns { id }, the key for looking the message up in its log.
+    const data = (await res.json().catch(() => null)) as { id?: string } | null;
+    return { sent: true, id: data?.id };
   } catch (e) {
     return { sent: false, error: e instanceof Error ? e.message : String(e) };
   }

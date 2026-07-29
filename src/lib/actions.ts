@@ -119,7 +119,7 @@ async function emailAuthorDecision(
 export async function sendComposedEmail(
   formData: FormData
 ): Promise<ActionResult> {
-  await requireRole("editor", "chief", "admin");
+  const profile = await requireRole("editor", "chief", "admin");
   const to = String(formData.get("to") ?? "").trim();
   const subject = String(formData.get("subject") ?? "");
   const body = String(formData.get("body") ?? "");
@@ -132,9 +132,20 @@ export async function sendComposedEmail(
         "Email sending isn't set up yet — copy the message and send it from your own email.",
     };
 
-  const r = await sendEmail({ to, subject, text: body });
+  // Replies go to the staff member who sent it, not the no-reply sender.
+  const r = await sendEmail({
+    to,
+    subject,
+    text: body,
+    replyTo: profile.email || undefined,
+  });
   return r.sent
-    ? { ok: true, message: `Sent to ${to}.` }
+    ? {
+        ok: true,
+        message: `Sent to ${to}.${
+          r.id ? ` Resend id ${r.id} — check the Resend log if it does not arrive.` : ""
+        }`,
+      }
     : {
         ok: false,
         message: r.error ? `Send failed: ${r.error}` : "Could not send the email.",

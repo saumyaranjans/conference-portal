@@ -18,7 +18,10 @@ export default async function ChairInvitePage({
 
   const { data: inv } = await admin
     .from("track_editors")
-    .select("id, status, profile_id, tracks(name), profiles(full_name, email)")
+    // Named FK: track_editors reaches profiles via profile_id and invited_by.
+    .select(
+      "id, status, profile_id, tracks(name), profiles!track_editors_profile_id_fkey(full_name, email)"
+    )
     .eq("token", token)
     .maybeSingle();
 

@@ -15,6 +15,20 @@ export function emailConfigured(): boolean {
   return Boolean(process.env.RESEND_API_KEY && process.env.RESEND_FROM);
 }
 
+/**
+ * Resend accepts only "a@b.com" or "Name <a@b.com>" — anything else (a blank
+ * value, two addresses, a stray comma) 422s the whole request. Returns the
+ * address when it is usable, otherwise undefined so the caller can omit it: a
+ * bad reply-to must never cost us the message itself.
+ */
+function validAddress(value?: string | null): string | undefined {
+  const s = (value ?? "").trim();
+  if (!s) return undefined;
+  const bare = /^[^\s<>@,;]+@[^\s<>@,;]+\.[^\s<>@,;]+$/;
+  const named = /^[^<>,;]+<\s*[^\s<>@,;]+@[^\s<>@,;]+\.[^\s<>@,;]+\s*>$/;
+  return bare.test(s) || named.test(s) ? s : undefined;
+}
+
 export async function sendEmail(args: {
   to: string;
   subject: string;
@@ -24,10 +38,14 @@ export async function sendEmail(args: {
 }): Promise<{ sent: boolean; id?: string; error?: string }> {
   const key = process.env.RESEND_API_KEY;
   const from = process.env.RESEND_FROM;
-  const replyTo = args.replyTo?.trim() || process.env.RESEND_REPLY_TO;
+  const replyTo =
+    validAddress(args.replyTo) ?? validAddress(process.env.RESEND_REPLY_TO);
 
-  const to = args.to?.trim();
-  if (!key || !from || !to) return { sent: false };
+  if (!key || !from) return { sent: false };
+
+  const to = validAddress(args.to);
+  if (!to)
+    return { sent: false, error: `"${args.to?.trim()}" is not a valid email address.` };
 
   try {
     const res = await fetch("https://api.resend.com/emails", {

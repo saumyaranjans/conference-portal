@@ -38,7 +38,9 @@ export default async function ChiefDashboard() {
       supabase
         .from("tracks")
         .select(
-          "*, track_editors(profile_id, status, profiles(id, full_name, email, affiliation))"
+          // track_editors points at profiles twice (profile_id, invited_by),
+          // so the chair embed must name its foreign key or PostgREST refuses.
+          "*, track_editors(profile_id, status, profiles!track_editors_profile_id_fkey(id, full_name, email, affiliation))"
         )
         .order("name"),
       supabase.from("profiles").select("*").eq("is_active", true),

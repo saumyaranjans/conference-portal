@@ -1248,7 +1248,7 @@ function buildInviteEmail(opts: {
 }
 
 /**
- * Sign-off block — the chair's name, "Track Session Chair, <track>,
+ * Sign-off block — the chair's name, "Track Editor, <track>,
  * <conference>", then their email so the recipient can reply directly.
  */
 function chairSignOff(opts: {
@@ -1264,7 +1264,7 @@ function chairSignOff(opts: {
   if (opts.name) lines.push(opts.name);
   lines.push(
     signOffLine({
-      role: "Track Session Chair",
+      role: "Track Editor",
       track: opts.track,
       conf: opts.conf,
       brand: opts.brand,
@@ -1654,9 +1654,9 @@ export async function setSuggestedOutlet(
 // =====================================================================
 
 /**
- * The Convener hands one paper to a different Track Session Chair — used when
+ * The Convener hands one paper to a different Track Editor — used when
  * the assigned chair has a conflict, or their handling of it was found
- * inappropriate. Overrides the track's chair for this paper alone; the new
+ * inappropriate. Overrides the track's Track Editor for this paper alone; the new
  * chair gains editing rights and the previous one loses them.
  */
 export async function reassignTrackEditor(
@@ -1678,7 +1678,7 @@ export async function reassignTrackEditor(
     .maybeSingle();
   if (!sub) return { ok: false, message: "Submission not found." };
 
-  // Clearing the override hands the paper back to the track's own chair.
+  // Clearing the override hands the paper back to the track's own Track Editor.
   if (!editorId) {
     const { error } = await admin
       .from("submissions")
@@ -1692,7 +1692,7 @@ export async function reassignTrackEditor(
 
     await audit(profile.id, "submission.editor_reset", "submission", submissionId);
     revalidatePath(`/chief/submissions/${submissionId}`);
-    return { ok: true, message: "Handed back to the track's own chair." };
+    return { ok: true, message: "Handed back to the track's own Track Editor." };
   }
 
   const { data: target } = await admin
@@ -1712,7 +1712,7 @@ export async function reassignTrackEditor(
       ok: false,
       message: `${
         target.full_name || target.email
-      } does not chair this paper's track. Add them to the track first, under Tracks & chairs.`,
+      } does not chair this paper's track. Add them to the track first, under Tracks & Track Editors.`,
     };
 
   if (target.id === (sub as any).author_id)
@@ -1879,7 +1879,7 @@ export async function addTrackChair(formData: FormData): Promise<ActionResult> {
   if (other.length >= MAX_TRACKS_PER_CHAIR)
     return {
       ok: false,
-      message: `A track chair may chair at most ${MAX_TRACKS_PER_CHAIR} tracks, and they already chair ${other.length}.`,
+      message: `A Track Editor may chair at most ${MAX_TRACKS_PER_CHAIR} tracks, and they already chair ${other.length}.`,
     };
 
   const token = randomBytes(24).toString("hex");
@@ -1920,7 +1920,7 @@ export async function addTrackChair(formData: FormData): Promise<ActionResult> {
   await admin.from("notifications").insert({
     profile_id: editorId,
     title: "Invitation to chair a track",
-    body: `You have been invited to serve as Track Session Chair for the ${
+    body: `You have been invited to serve as Track Editor for the ${
       track?.name ?? "selected"
     } track. Open the invitation to accept.`,
     link: `/chair-invite/${token}`,

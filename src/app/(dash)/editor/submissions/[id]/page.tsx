@@ -415,7 +415,7 @@ export default async function EditorSubmissionPage({
             ) : reviewRoute === "self" ? (
               <p className="text-sm text-slate-600 bg-slate-50 rounded-lg px-3 py-2">
                 You are deciding this abstract <strong>in your own capacity</strong>{" "}
-                as Track Session Chair — the review process is bypassed because
+                as Track Editor — the review process is bypassed because
                 the topic falls within your expertise. The Convener can override
                 your decision.
               </p>
@@ -519,7 +519,7 @@ export default async function EditorSubmissionPage({
           reviews={authorFacingReviews}
           chairName={profile.full_name}
           chairEmail={profile.email}
-          signerRole="Track Session Chair"
+          signerRole="Track Editor"
           conferenceName={sub.tracks?.conferences?.name}
           brand={conferenceBrand}
         />

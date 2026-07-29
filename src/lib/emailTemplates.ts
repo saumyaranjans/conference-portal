@@ -12,7 +12,7 @@ const CONF_DEFAULT = "GLOGIFT 2027";
 /**
  * The role line of a signature: role, the track (chairs only), the full
  * conference title, then the short brand — e.g.
- * "Track Session Chair, Operations & Supply Chain, International Conference
+ * "Track Editor, Operations & Supply Chain, International Conference
  * on …, GLOGIFT 2027". Empty parts are dropped rather than leaving stray
  * commas, and a title identical to the brand is not repeated.
  */
@@ -61,7 +61,7 @@ type DecisionOpts = {
   chairName?: string | null;
   chairEmail?: string | null;
   /** How the sender signs: a track chair names their track, a Convener does not. */
-  signerRole?: "Track Session Chair" | "Convener";
+  signerRole?: "Track Editor" | "Convener";
   /** Short brand for the subject line, e.g. "GLOGIFT 2027". */
   brand?: string;
 };
@@ -95,7 +95,7 @@ function decisionEmail(
 ): EmailContent {
   const conf = o.conferenceName || CONF_DEFAULT;
   const brand = o.brand || CONF_DEFAULT;
-  const role = o.signerRole ?? "Track Session Chair";
+  const role = o.signerRole ?? "Track Editor";
   const item = stage === "full_paper" ? "full paper" : "abstract";
   const label = stage === "full_paper" ? "Full Paper" : "Abstract";
   const pid = o.paperId || "(to be assigned)";
@@ -144,7 +144,7 @@ function decisionEmail(
     nextStep,
     reviewerSection(o.reviews),
     o.message && o.message.trim()
-      ? `\nCOMMENTS FROM THE TRACK SESSION CHAIR\n\n${o.message.trim()}`
+      ? `\nCOMMENTS FROM THE TRACK EDITOR\n\n${o.message.trim()}`
       : null,
     "",
     "With regards,",
@@ -179,18 +179,18 @@ export function chairInviteEmail(o: {
   link?: string;
 }): EmailContent {
   const conf = o.conferenceName || CONF_DEFAULT;
-  const subject = `${conf} — Invitation to serve as Track Session Chair (${o.track})`;
+  const subject = `${conf} — Invitation to serve as Track Editor (${o.track})`;
   const body = compose([
     greeting(o.name, "Colleague"),
     "",
-    `You have kindly been invited to serve as the Track Session Chair for the ${o.track} track of ${conf}.`,
+    `You have kindly been invited to serve as the Track Editor for the ${o.track} track of ${conf}.`,
     typeof o.openCount === "number" && o.openCount > 0
       ? `There ${o.openCount === 1 ? "is" : "are"} currently ${o.openCount} submission${
           o.openCount === 1 ? "" : "s"
         } awaiting handling in this track.`
       : null,
     "",
-    "As Track Session Chair you will invite reviewers, manage assignments, and recommend decisions for the papers placed in your care. Papers are assigned to you individually by the Convener, and appear in your Track Queue as they are.",
+    "As Track Editor you will invite reviewers, manage assignments, and recommend decisions for the papers placed in your care. Papers are assigned to you individually by the Convener, and appear in your Track Queue as they are.",
     "",
     o.link ? "Please accept the invitation using the link below:" : null,
     o.link ?? null,

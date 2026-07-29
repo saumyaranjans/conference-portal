@@ -50,7 +50,7 @@ export function NotifyAuthor({
   chairName?: string | null;
   chairEmail?: string | null;
   /** Chairs name their track in the signature; a Convener signs for the conference. */
-  signerRole?: "Track Session Chair" | "Convener";
+  signerRole?: "Track Editor" | "Convener";
   /** Full conference title, for the signature. */
   conferenceName?: string;
   /** Short brand for the subject line, e.g. "GLOGIFT 2027". */

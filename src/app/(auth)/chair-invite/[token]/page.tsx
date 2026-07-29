@@ -5,7 +5,7 @@ import { getProfile } from "@/lib/auth";
 import { AcceptChairInvite } from "@/components/AcceptChairInvite";
 
 /**
- * Where an invited Track Session Chair accepts. Chairing begins only here —
+ * Where an invited Track Editor accepts. Chairing begins only here —
  * and even then the chair sees no papers until the Convener assigns them.
  */
 export default async function ChairInvitePage({
@@ -56,7 +56,7 @@ export default async function ChairInvitePage({
 
   if (row.status === "accepted") {
     return (
-      <Shell title={`You chair the ${trackName} track`}>
+      <Shell title={`You are the Track Editor for ${trackName}`}>
         <p className="text-sm text-slate-600">
           You have already accepted this invitation. Papers appear in your Track
           Queue as the Convener assigns them to you.
@@ -69,9 +69,9 @@ export default async function ChairInvitePage({
   }
 
   return (
-    <Shell title={`Chair the ${trackName} track?`}>
+    <Shell title={`Serve as Track Editor for ${trackName}?`}>
       <p className="text-sm text-slate-600">
-        The Convener has invited you to serve as Track Session Chair for the{" "}
+        The Convener has invited you to serve as Track Editor for the{" "}
         <strong>{trackName}</strong> track.
       </p>
       <p className="text-sm text-slate-600 mt-3">

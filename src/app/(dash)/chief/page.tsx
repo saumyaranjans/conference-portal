@@ -171,8 +171,24 @@ export default async function ChiefDashboard() {
         )}
       </Section>
 
-      {/* ---- Track chairs (multiple per track) ---- */}
-      <Section title="Tracks & chairs">
+      {/* ---- Invite a Track Editor by email ---- */}
+      <Section title="Invite a Track Editor">
+        <ChairInviteComposer
+          editors={editors.map((e) => ({
+            id: e.id,
+            full_name: e.full_name,
+            email: e.email,
+          }))}
+          tracks={((tracks ?? []) as Track[]).map((t) => ({
+            id: t.id,
+            name: t.name,
+          }))}
+          openByTrack={openByTrack}
+        />
+      </Section>
+
+      {/* ---- Tracks and their Track Editors ---- */}
+      <Section title="Tracks & Track Editors">
         <div className="card divide-y divide-slate-100">
           {((tracks ?? []) as (Track & { track_editors: any[] })[]).map((t) => {
             const chairs = t.track_editors ?? [];
@@ -186,7 +202,7 @@ export default async function ChiefDashboard() {
                     </p>
                     {chairs.length === 0 ? (
                       <p className="text-xs text-slate-500 mt-0.5">
-                        No chair invited yet
+                        No Track Editor assigned yet
                       </p>
                     ) : (
                       <div className="flex flex-wrap gap-1.5 mt-1.5">
@@ -234,7 +250,7 @@ export default async function ChiefDashboard() {
                       defaultValue=""
                       className="input py-1.5 text-sm"
                     >
-                      <option value="">Invite a chair…</option>
+                      <option value="">Select a Track Editor…</option>
                       {editors
                         .filter((e) => !chairIds.has(e.id))
                         .map((e) => (
@@ -244,7 +260,7 @@ export default async function ChiefDashboard() {
                         ))}
                     </select>
                     <SubmitButton variant="secondary" className="text-sm py-1.5">
-                      Invite
+                      Assign
                     </SubmitButton>
                   </ActionForm>
                 </div>
@@ -253,18 +269,6 @@ export default async function ChiefDashboard() {
           })}
         </div>
 
-        <ChairInviteComposer
-          editors={editors.map((e) => ({
-            id: e.id,
-            full_name: e.full_name,
-            email: e.email,
-          }))}
-          tracks={((tracks ?? []) as Track[]).map((t) => ({
-            id: t.id,
-            name: t.name,
-          }))}
-          openByTrack={openByTrack}
-        />
       </Section>
 
       {/* ---- Full submission list ---- */}
@@ -305,8 +309,8 @@ export default async function ChiefDashboard() {
                       currentId={assignedId}
                       defaultLabel={
                         eligible.length === 1
-                          ? `${eligible[0].name} (track chair)`
-                          : "Any chair of this track"
+                          ? `${eligible[0].name} (track editor)`
+                          : "Any Track Editor on this track"
                       }
                     />
                     {assignedId && (

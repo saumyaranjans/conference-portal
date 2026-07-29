@@ -8,9 +8,9 @@ type Person = { id: string; full_name: string; email: string };
 type TrackOpt = { id: string; name: string };
 
 /**
- * Convener composes an "invitation to serve as Track Session Chair" email for a
+ * Convener composes an "invitation to serve as Track Editor" email for a
  * chosen person + track, opened in their own mail client. Assigning the chair
- * (which also notifies them in-app) is done separately in the Tracks & chairs list.
+ * (which also notifies them in-app) is done separately in the Tracks & Track Editors list.
  */
 export function ChairInviteComposer({
   editors,
@@ -39,7 +39,7 @@ export function ChairInviteComposer({
   return (
     <div className="card card-pad space-y-4 mt-4">
       <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-        Invite a chair by email
+        Invite a Track Editor by email
       </p>
       <div className="grid sm:grid-cols-2 gap-3">
         <select

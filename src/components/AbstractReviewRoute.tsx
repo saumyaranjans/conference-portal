@@ -9,7 +9,7 @@ const CHOICES = [
     value: "self",
     title: "I will evaluate this myself",
     detail:
-      "The topic falls directly within my area of expertise, so I am bypassing the review process and deciding as Track Session Chair.",
+      "The topic falls directly within my area of expertise, so I am bypassing the review process and deciding as Track Editor.",
   },
   {
     value: "facilitated",
@@ -100,7 +100,7 @@ export function AbstractReviewRoute({
       {current && (
         <p className="text-xs text-slate-500 dark:text-slate-400">
           {current === "self"
-            ? "You are evaluating this abstract in your capacity as Track Session Chair. Select the other option if you would rather send it out."
+            ? "You are evaluating this abstract in your capacity as Track Editor. Select the other option if you would rather send it out."
             : "This abstract is going out for review. Invite reviewers in the section above; you can still record your decision below."}
         </p>
       )}

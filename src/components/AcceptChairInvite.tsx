@@ -38,7 +38,7 @@ export function AcceptChairInvite({
           ? "Accepting…"
           : result?.ok
             ? "Accepted ✓"
-            : `Accept and chair ${trackName}`}
+            : `Accept — Track Editor for ${trackName}`}
       </button>
 
       {result && (

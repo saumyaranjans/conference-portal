@@ -28,7 +28,7 @@ export function reviewOf(assignment: any): any | null {
   return Array.isArray(r) ? (r[0] ?? null) : r;
 }
 
-/** A track chair may chair at most this many tracks. */
+/** A Track Editor may chair at most this many tracks. */
 export const MAX_TRACKS_PER_CHAIR = 2;
 
 /** Word count used for the abstract limit (whitespace separated). */

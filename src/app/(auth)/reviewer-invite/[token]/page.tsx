@@ -32,7 +32,7 @@ export default async function ReviewerInvitePage({
           <h1 className="text-xl font-semibold">Invitation not found</h1>
           <p className="text-sm text-slate-600">
             This reviewer invitation link is invalid or has been withdrawn.
-            Please check with the track chair who invited you.
+            Please check with the Track Editor who invited you.
           </p>
           <Link href="/login" className="text-blue-700 hover:underline text-sm">
             Go to sign in

@@ -1484,6 +1484,48 @@ export async function acceptReviewerInvite(token: string): Promise<ActionResult>
 }
 
 /**
+ * The chair declares how an abstract will be judged before any decision form
+ * opens: on their own expertise, or through reviewers they invite because the
+ * topic falls outside it. Recorded on the submission and reversible — a chair
+ * who starts down one route may switch.
+ */
+export async function setAbstractReviewRoute(
+  formData: FormData
+): Promise<ActionResult> {
+  const profile = await requireRole("editor", "chief");
+  const admin = createAdminClient();
+
+  const submissionId = String(formData.get("submission_id") ?? "");
+  const route = String(formData.get("route") ?? "");
+
+  if (!submissionId) return { ok: false, message: "Missing submission." };
+  if (route !== "self" && route !== "facilitated")
+    return { ok: false, message: "Choose how this abstract will be reviewed." };
+
+  const { error } = await admin
+    .from("submissions")
+    .update({
+      abstract_review_route: route,
+      abstract_review_route_by: profile.id,
+      abstract_review_route_at: new Date().toISOString(),
+    })
+    .eq("id", submissionId);
+  if (error) return { ok: false, message: error.message };
+
+  await audit(profile.id, "abstract.route_set", "submission", submissionId, {
+    route,
+  });
+  revalidatePath(`/editor/submissions/${submissionId}`);
+  return {
+    ok: true,
+    message:
+      route === "self"
+        ? "Recorded: you will evaluate this abstract yourself. The decision form is now open."
+        : "Recorded: this abstract goes out for review. Invite reviewers above.",
+  };
+}
+
+/**
  * Track chair (or Convener) records a final decision. Stage-aware status
  * change is handled by the on_decision_created trigger.
  *
@@ -1507,10 +1549,17 @@ export async function recordRecommendation(
 
   const { data: sub } = await admin
     .from("submissions")
-    .select("stage, author_id")
+    .select("stage, author_id, abstract_review_route")
     .eq("id", submissionId)
     .maybeSingle();
   if (!sub) return { ok: false, message: "Submission not found." };
+
+  if (sub.stage !== "full_paper" && !sub.abstract_review_route)
+    return {
+      ok: false,
+      message:
+        "First say how this abstract will be reviewed — within your expertise, or through reviewers you invite.",
+    };
 
   const authors = await submissionAuthors(admin, submissionId, sub.author_id);
   const coi = conflictOfInterest(

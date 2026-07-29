@@ -8,6 +8,7 @@ import {
   setSuggestedOutlet,
 } from "@/lib/actions";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
+import { AbstractReviewRoute } from "@/components/AbstractReviewRoute";
 import { AddReviewer } from "@/components/AddReviewer";
 import { RemindReviewer } from "@/components/RemindReviewer";
 import { NotifyAuthor } from "@/components/NotifyAuthor";
@@ -90,6 +91,14 @@ export default async function EditorSubmissionPage({
     (a) => reviewOf(a)?.recommendation === "accept"
   ).length;
   const isFinal = ["accepted", "rejected"].includes(sub.status);
+
+  // The abstract stage runs as a sequence: declare how it will be reviewed →
+  // record the decision → send the letter. Each step opens the next.
+  const isAbstract = sub.stage !== "full_paper";
+  const reviewRoute = (sub as any).abstract_review_route ?? null;
+  const decisionUnlocked = !isAbstract || Boolean(reviewRoute);
+  const hasDecision = ((decisions ?? []) as any[]).length > 0;
+
   const conf = sub.tracks?.conferences;
   const conferenceBrand =
     conf?.acronym && conf?.year ? `${conf.acronym} ${conf.year}` : "GLOGIFT 2027";
@@ -277,7 +286,15 @@ export default async function EditorSubmissionPage({
         <ReviewPanel assignments={rows} showConfidential />
       </Section>
 
+      {/* ---- How this abstract is judged (gates the decision form) ---- */}
+      {isAbstract && !isFinal && (
+        <Section title="How will this abstract be reviewed?">
+          <AbstractReviewRoute submissionId={id} current={reviewRoute} />
+        </Section>
+      )}
+
       {/* ---- Decision (track chair finalises) ---- */}
+      {decisionUnlocked && (
       <Section
         title={
           sub.stage === "full_paper"
@@ -336,12 +353,25 @@ export default async function EditorSubmissionPage({
                   accepted for the publication stage.
                 </p>
               )
+            ) : reviewRoute === "self" ? (
+              <p className="text-sm text-slate-600 bg-slate-50 rounded-lg px-3 py-2">
+                You are deciding this abstract <strong>in your own capacity</strong>{" "}
+                as Track Session Chair — the review process is bypassed because
+                the topic falls within your expertise. The Convener can override
+                your decision.
+              </p>
+            ) : completed.length === 0 ? (
+              <p className="text-sm text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                You chose to send this abstract out for review and{" "}
+                <strong>no review has come in yet</strong>. You may still decide
+                at your discretion, but the usual course is to wait for the
+                reviewers you invited.
+              </p>
             ) : (
               <p className="text-sm text-slate-600 bg-slate-50 rounded-lg px-3 py-2">
-                Abstract stage — <strong>no reviews are required</strong>. As
-                track chair you may decide in your own capacity;{" "}
                 {completed.length} review{completed.length === 1 ? "" : "s"}{" "}
-                received so far. The Convener can override your decision.
+                received from the reviewers you invited. The Convener can
+                override your decision.
               </p>
             )}
 
@@ -401,8 +431,22 @@ export default async function EditorSubmissionPage({
           </ActionForm>
         )}
       </Section>
+      )}
 
-      {/* ---- Email the author (decision letter) ---- */}
+      {/* ---- Email the author — only once a decision exists to convey ---- */}
+      {decisionUnlocked && !hasDecision && (
+        <Section title="Email the author">
+          <div className="card card-pad">
+            <p className="text-sm text-slate-500">
+              Record the decision above first. The letter to the author — with
+              the reviewers&rsquo; comments and your own message — opens here
+              once you have.
+            </p>
+          </div>
+        </Section>
+      )}
+
+      {hasDecision && (
       <Section title="Email the author">
         <NotifyAuthor
           stage={sub.stage}
@@ -421,6 +465,7 @@ export default async function EditorSubmissionPage({
           brand={conferenceBrand}
         />
       </Section>
+      )}
 
       {/* ---- Highlight a publication outlet (accepted papers) ---- */}
       {sub.status === "accepted" && (

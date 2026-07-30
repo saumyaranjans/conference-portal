@@ -154,7 +154,7 @@ const SESSIONS: {
 
 const GUIDELINES = [
   ["Stage 1 — Abstract (mandatory)", "Submit a 500-word abstract through the portal, naming the track it belongs to. State your intended Stage 2 pathway at this point."],
-  ["Stage 2 — Choose your pathway", "Pathway A: present without a full paper. Pathway B: submit a full paper for the proceedings after your abstract is accepted."],
+  ["Stage 2 — Choose your pathway", "Pathway A: present without a full paper. Pathway B: submit a full paper for the proceedings after your abstract is accepted, using the template sent with the acceptance email — maximum 10,000 words including references, tables, figures and appendices."],
   ["Review", "Abstracts are reviewed by the Track Editor, who may seek reviewers or decide directly. Pathway B full papers undergo double-blind peer review by the Scientific Committee."],
   ["Notification", "You are told of acceptance, rejection or required revisions, with feedback."],
   ["Your place is secured by the abstract", "If a Pathway B full paper is not accepted, you may still register, attend and present on the strength of the accepted abstract."],
@@ -391,10 +391,16 @@ export function LandingPage() {
               doctoral scholars and practitioners on any aspect of AI-driven
               management. Every submission begins with a{" "}
               <strong>500-word abstract</strong> naming one of the ten tracks
-              below; authors then choose whether to present on the abstract
-              alone or to take a full paper through peer review into the
-              proceedings. Interdisciplinary work, industry case studies and
+              below. Interdisciplinary work, industry case studies and
               policy-oriented research are all welcome.
+            </p>
+            <p className="mt-3">
+              Once your abstract is accepted, and if you chose the full-paper
+              pathway, you may be advised to submit the paper in the{" "}
+              <strong>template shared with your acceptance email</strong>. The
+              paper must not exceed{" "}
+              <strong>10,000 words in total</strong> — including references,
+              tables, figures and any appendices.
             </p>
           </div>
 

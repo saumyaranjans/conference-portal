@@ -35,6 +35,22 @@ export async function DashboardShell({
     .order("sort_order")
     .limit(6);
 
+  // Email volume, shown in the Convener's sidebar. Counts only.
+  const isChief = profile.roles.includes("chief") || profile.roles.includes("admin");
+  let emailStats: { today: number; total: number } | undefined;
+  if (isChief) {
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    const [{ count: today }, { count: total }] = await Promise.all([
+      supabase
+        .from("email_log")
+        .select("id", { count: "exact", head: true })
+        .gte("created_at", startOfToday.toISOString()),
+      supabase.from("email_log").select("id", { count: "exact", head: true }),
+    ]);
+    emailStats = { today: today ?? 0, total: total ?? 0 };
+  }
+
   // Admins get every nav group so they can inspect any part of the portal.
   const visibleRoles = profile.roles.includes("admin")
     ? ROLE_ORDER
@@ -81,6 +97,7 @@ export async function DashboardShell({
           <SidebarNav
             roles={visibleRoles}
             opportunities={(opportunities ?? []) as PublicationOpportunity[]}
+            emailStats={emailStats}
           />
         </aside>
 

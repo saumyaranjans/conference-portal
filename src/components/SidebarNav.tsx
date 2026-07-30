@@ -48,9 +48,12 @@ const SHOW_OPPORTUNITIES: AppRole[] = ["author"];
 export function SidebarNav({
   roles,
   opportunities = [],
+  emailStats,
 }: {
   roles: AppRole[];
   opportunities?: PublicationOpportunity[];
+  /** Convener only: how much mail the portal has sent. */
+  emailStats?: { today: number; total: number };
 }) {
   const pathname = usePathname();
 
@@ -131,6 +134,28 @@ export function SidebarNav({
           );
         })}
       </ul>
+
+      {emailStats && current === "chief" && (
+        <section className="mt-6">
+          <p className="px-3 text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2">
+            Emails sent
+          </p>
+          <div className="space-y-2">
+            <div className="card px-3 py-2">
+              <p className="text-xs text-slate-500">Today</p>
+              <p className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+                {emailStats.today}
+              </p>
+            </div>
+            <div className="card px-3 py-2">
+              <p className="text-xs text-slate-500">Total to date</p>
+              <p className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+                {emailStats.total}
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
 
       {SHOW_OPPORTUNITIES.includes(current) && opportunities.length > 0 && (
         <section className="mt-8">

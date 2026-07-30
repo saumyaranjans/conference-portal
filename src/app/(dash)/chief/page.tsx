@@ -87,17 +87,6 @@ export default async function ChiefDashboard() {
       : Promise.resolve({ data: [] }),
   ]);
 
-  // Email volume: today and all-time. Counts only, no addresses read.
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
-  const [{ count: emailsToday }, { count: emailsTotal }] = await Promise.all([
-    supabase
-      .from("email_log")
-      .select("id", { count: "exact", head: true })
-      .gte("created_at", startOfToday.toISOString()),
-    supabase.from("email_log").select("id", { count: "exact", head: true }),
-  ]);
-
   const { data: overdueRows } = await supabase
     .from("assignments")
     .select("submission_id, due_date, status")
@@ -213,19 +202,6 @@ export default async function ChiefDashboard() {
           </a>
         }
       />
-
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-        <StatCard
-          label="Emails sent today"
-          value={emailsToday ?? 0}
-          hint="Invitations, reminders and letters"
-        />
-        <StatCard
-          label="Emails sent in total"
-          value={emailsTotal ?? 0}
-          hint="Since the portal opened"
-        />
-      </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
         <StatCard

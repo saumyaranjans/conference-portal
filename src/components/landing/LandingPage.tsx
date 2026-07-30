@@ -240,7 +240,7 @@ function CommitteePanel({
     <div className={`rounded-2xl border p-4 ${group.panel} ${className ?? ""}`}>
       <p
         className={`text-xs font-semibold uppercase tracking-wide mb-3 ${group.label} ${
-          hideLabel ? "lg:invisible" : ""
+          hideLabel ? "hidden lg:block lg:invisible" : ""
         }`}
       >
         {group.group}
@@ -738,13 +738,14 @@ export function LandingPage() {
             <CommitteePanel
               group={FACULTY}
               people={FACULTY.people.slice(0, 6)}
-              className="lg:col-span-6"
+              className="-mb-4 pb-2 rounded-b-none border-b-0
+                         lg:col-span-6 lg:mb-0 lg:pb-4 lg:rounded-2xl lg:border-b"
               wide
             />
             <CommitteePanel
               group={FACULTY}
               people={FACULTY.people.slice(6)}
-              className="lg:col-span-2"
+              className="pt-2 rounded-t-none lg:col-span-2 lg:pt-4 lg:rounded-2xl"
               hideLabel
             />
             <CommitteePanel group={POST_DOC} people={POST_DOC.people} className="lg:col-span-2" />

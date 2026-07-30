@@ -276,3 +276,21 @@ body {
   color: transparent;
   -webkit-text-fill-color: transparent;
 }
+
+/* Landing-page session icons: small, looping motions that hint at each
+   session's subject. Anyone who asks for reduced motion gets none of it. */
+@keyframes sway { 0%, 100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg); } }
+@keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+@keyframes spin-slow { to { transform: rotate(360deg); } }
+@keyframes lift { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(2px, -5px); } }
+@keyframes tip { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-10deg); } }
+
+.anim-sway { animation: sway 3.2s ease-in-out infinite; transform-origin: 50% 85%; }
+.anim-bob { animation: bob 2.6s ease-in-out infinite; }
+.anim-spin-slow { animation: spin-slow 14s linear infinite; transform-origin: 50% 50%; }
+.anim-lift { animation: lift 2.8s ease-in-out infinite; }
+.anim-tip { animation: tip 3.6s ease-in-out infinite; transform-origin: 50% 70%; }
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-sway, .anim-bob, .anim-spin-slow, .anim-lift, .anim-tip { animation: none; }
+}

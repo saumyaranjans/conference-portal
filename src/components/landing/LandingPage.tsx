@@ -94,12 +94,48 @@ const PUBLICATIONS = [
   },
 ];
 
-const SESSIONS = [
-  "AI and Sustainability Leadership Forum",
-  "Industry–Academia Conclave on Digital Finance",
-  "Policy Roundtable on Decarbonization and Inclusive Growth",
-  "Startup Showcase on FinTech and Smart Operations",
-  "Doctoral Colloquium for Emerging Researchers",
+/** Each session gets a colour and a small motion that suits its subject. */
+const SESSIONS: {
+  title: string;
+  tint: string;
+  anim: string;
+  icon: React.ReactNode;
+}[] = [
+  {
+    title: "AI and Sustainability Leadership Forum",
+    tint: "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300",
+    anim: "anim-sway",
+    // A leaf, swaying.
+    icon: <path d="M4 20c8 2 16-4 16-14 0-1-.2-2-.5-3-9 0-15 5-15 11 0 2 .6 4 1.5 5Zm0 0 7-7" />,
+  },
+  {
+    title: "Industry–Academia Conclave on Digital Finance",
+    tint: "bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-300",
+    anim: "anim-bob",
+    // A bridge between two banks.
+    icon: <path d="M3 17h18M5 17v-4m14 4v-4M3 13c4-5 14-5 18 0M8 17v-3m8 3v-3" />,
+  },
+  {
+    title: "Policy Roundtable on Decarbonization and Inclusive Growth",
+    tint: "bg-teal-50 text-teal-600 dark:bg-teal-500/15 dark:text-teal-300",
+    anim: "anim-spin-slow",
+    // A globe, turning.
+    icon: <path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 0c3 3 3 15 0 18M3.5 9h17M3.5 15h17" />,
+  },
+  {
+    title: "Startup Showcase on FinTech and Smart Operations",
+    tint: "bg-violet-50 text-violet-600 dark:bg-violet-500/15 dark:text-violet-300",
+    anim: "anim-lift",
+    // A rocket, lifting.
+    icon: <path d="M12 3c3 2 5 6 5 10l-3 3h-4l-3-3c0-4 2-8 5-10Zm0 6.5v.01M9 19l-2 2m8-2 2 2" />,
+  },
+  {
+    title: "Doctoral Colloquium for Emerging Researchers",
+    tint: "bg-rose-50 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300",
+    anim: "anim-tip",
+    // A graduation cap, tipping.
+    icon: <path d="m12 5 9 4-9 4-9-4 9-4Zm-5 6v4c0 1.7 2.2 3 5 3s5-1.3 5-3v-4" />,
+  },
 ];
 
 const GUIDELINES = [
@@ -304,12 +340,29 @@ export function LandingPage() {
             Special sessions &amp; panels
           </p>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {SESSIONS.map((sn, i) => (
-              <div key={sn} className="card card-pad flex items-start gap-3">
-                <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-xs font-semibold text-indigo-800">
-                  {i + 1}
+            {SESSIONS.map((sn) => (
+              <div
+                key={sn.title}
+                className="card card-pad card-hover flex items-start gap-3"
+              >
+                <span
+                  className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${sn.tint}`}
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    className={`h-6 w-6 ${sn.anim}`}
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    {sn.icon}
+                  </svg>
                 </span>
-                <p className="text-sm text-slate-800 dark:text-slate-200">{sn}</p>
+                <p className="text-sm text-slate-800 pt-1.5 dark:text-slate-200">
+                  {sn.title}
+                </p>
               </div>
             ))}
           </div>

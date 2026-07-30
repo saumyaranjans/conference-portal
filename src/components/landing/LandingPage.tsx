@@ -520,27 +520,15 @@ export function LandingPage() {
         {/* ---- 6. Registration fees ---- */}
         <section>
           <Heading id="fees">Registration fees</Heading>
-          <p className="text-sm text-slate-600 mb-4 dark:text-slate-300">
+          <p className="text-sm text-slate-600 mb-5 dark:text-slate-300">
             Fees include the conference kit, certificates, working lunches,
             refreshments and the conference dinner. GST extra; travel and
-            accommodation are not included.
+            accommodation are not included. We would love to welcome you on
+            campus &mdash; the kit, printed certificates and meals can be
+            availed only on site. Virtual delegates receive e-certificates of
+            attendance instead; the Book of Abstracts and the Conference
+            Proceedings with ISBN reach every participant in digital format.
           </p>
-          {/* What a virtual delegate does and does not receive — asked often
-              enough that it belongs beside the fees, not in an email reply. */}
-          <div className="rounded-2xl border border-blue-100 bg-blue-50/70 p-4 mb-5 text-sm text-slate-700 dark:border-blue-500/25 dark:bg-blue-500/10 dark:text-slate-200">
-            <p>
-              We would love to welcome you on campus and share our hospitality
-              with you. The registration kit, printed certificates and meals can
-              be availed only during an on-site visit.
-            </p>
-            <p className="mt-2">
-              Delegates attending over the virtual conference platform cannot be
-              sent the conference kit or physical certificates; e-certificates of
-              attendance are issued instead. The Book of Abstracts and the
-              Conference Proceedings with ISBN are circulated to every
-              participant in digital format.
-            </p>
-          </div>
           {[
             { title: "Indian participants (INR, per delegate)", rows: FEES_INR, symbol: "₹" },
             { title: "Foreign delegates (USD, per delegate)", rows: FEES_USD, symbol: "$" },

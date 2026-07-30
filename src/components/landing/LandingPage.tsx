@@ -297,7 +297,7 @@ function CommitteePanel({
 }
 
 function Avatar({ name, size }: { name: string; size: "lg" | "sm" }) {
-  const dim = size === "lg" ? "h-32 w-32 text-3xl" : "h-16 w-16 text-base";
+  const dim = size === "lg" ? "h-32 w-32 text-3xl" : "h-24 w-24 text-xl";
   const ring = "ring-4 ring-white shadow-md dark:ring-slate-800";
   const photo = PORTRAITS[name];
   if (photo) {

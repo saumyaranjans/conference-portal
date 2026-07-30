@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { TRACKS } from "@/components/landing/tracks";
@@ -326,64 +327,103 @@ const TRACK_ICONS: { tint: string; icon: React.ReactNode }[] = [
 ];
 
 /**
- * Slide 2 - the call for submissions: all ten tracks as boxed cards. Built in
- * HTML rather than SVG so the names wrap on their own; `cqw` units size
- * everything against the banner's own width, keeping it identical in
- * proportion to the SVG panel at any screen size.
+ * Slide 2 - the call for submissions: all ten tracks as boxed cards, each in
+ * its own colour, over a multi-hue wash. Built in HTML rather than SVG so the
+ * names wrap on their own; `cqw` units size everything against the banner's
+ * own width, keeping it identical in proportion to the SVG panel at any
+ * screen size.
  */
 function TracksSlide() {
   return (
     <div
       className="relative w-full aspect-[12/5] overflow-hidden
-                 bg-[linear-gradient(135deg,#ffffff_0%,#eef2ff_55%,#dbeafe_100%)]"
+                 bg-[linear-gradient(120deg,#fff7ed_0%,#ffe4e6_20%,#ede9fe_45%,#dbeafe_70%,#ccfbf1_100%)]"
       style={{ containerType: "inline-size" }}
     >
-      <div className="absolute inset-0 flex flex-col px-[2.6cqw] py-[2.2cqw]">
+      {/* Soft colour blooms, for depth behind the cards. */}
+      <div className="pointer-events-none absolute -left-[6cqw] -top-[8cqw] h-[26cqw] w-[26cqw] rounded-full bg-[radial-gradient(circle,#f472b666,transparent_70%)]" />
+      <div className="pointer-events-none absolute -right-[5cqw] top-[2cqw] h-[24cqw] w-[24cqw] rounded-full bg-[radial-gradient(circle,#38bdf866,transparent_70%)]" />
+      <div className="pointer-events-none absolute bottom-[-10cqw] left-[38cqw] h-[28cqw] w-[28cqw] rounded-full bg-[radial-gradient(circle,#fbbf2455,transparent_70%)]" />
+
+      <div className="absolute inset-0 flex flex-col px-[2.4cqw] py-[1.9cqw]">
         <div className="text-center">
-          <p className="text-gradient text-[3.2cqw] font-extrabold leading-none tracking-tight">
+          <p className="text-gradient text-[3.1cqw] font-extrabold leading-none tracking-tight">
             Call for Submissions
           </p>
-          <p className="mt-[0.7cqw] text-[1.35cqw] font-medium text-[#475569]">
+          <p className="mt-[0.6cqw] text-[1.3cqw] font-medium text-[#3f3f6b]">
             Ten tracks &middot; abstracts and full papers invited &middot; GLOGIFT 2027
           </p>
         </div>
 
-        <div className="mt-[1.6cqw] grid flex-1 grid-cols-5 gap-[0.9cqw]">
+        <div className="mt-[1.3cqw] grid flex-1 grid-cols-5 gap-[0.85cqw]">
           {TRACKS.map(([name], i) => {
             const { tint, icon } = TRACK_ICONS[i];
             return (
               <div
                 key={name}
-                className="flex flex-col items-center rounded-[1.1cqw] border
-                           border-[#dbe3f5] bg-white/80 px-[0.7cqw] py-[0.9cqw] text-center"
+                className="flex flex-col items-center rounded-[1.1cqw] border px-[0.7cqw] py-[0.8cqw] text-center"
+                style={{
+                  // The card takes its own hue: a wash of the tint fading into
+                  // white, so ten cards read as ten colours, not one grid.
+                  background: `linear-gradient(160deg, ${tint}33 0%, #ffffffe6 75%)`,
+                  borderColor: `${tint}66`,
+                }}
               >
                 <span
-                  className="grid place-items-center rounded-[1.6cqw]"
+                  className="grid shrink-0 place-items-center rounded-[1.5cqw]"
                   style={{
-                    width: "6.4cqw",
-                    height: "6.4cqw",
-                    backgroundColor: `${tint}1f`,
-                    color: tint,
+                    width: "5.8cqw",
+                    height: "5.8cqw",
+                    backgroundColor: tint,
+                    color: "#ffffff",
+                    boxShadow: `0 0.5cqw 1.2cqw -0.4cqw ${tint}cc`,
                   }}
                 >
                   <svg
                     viewBox="0 0 24 24"
-                    style={{ width: "4cqw", height: "4cqw" }}
+                    style={{ width: "3.7cqw", height: "3.7cqw" }}
                     fill="none"
                     stroke="currentColor"
-                    strokeWidth="1.7"
+                    strokeWidth="1.8"
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   >
                     {icon}
                   </svg>
                 </span>
-                <p className="mt-[0.7cqw] text-[1.2cqw] font-semibold leading-tight text-[#0f172a]">
+                <p className="mt-[0.6cqw] text-[1.15cqw] font-semibold leading-tight text-[#111c3a]">
                   {name}
                 </p>
               </div>
             );
           })}
+        </div>
+
+        <div className="mt-[1.2cqw] flex justify-center">
+          <Link
+            href="/login"
+            className="inline-flex items-center gap-[0.7cqw] rounded-full
+                       px-[2.4cqw] py-[0.95cqw] text-[1.4cqw] font-semibold text-white
+                       transition hover:brightness-110"
+            style={{
+              backgroundImage:
+                "linear-gradient(90deg,#2563eb 0%,#7c3aed 45%,#db2777 100%)",
+              boxShadow: "0 0.6cqw 1.6cqw -0.5cqw #7c3aedcc",
+            }}
+          >
+            Submit through the portal
+            <svg
+              viewBox="0 0 24 24"
+              style={{ width: "1.5cqw", height: "1.5cqw" }}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
+          </Link>
         </div>
       </div>
     </div>
@@ -477,7 +517,9 @@ export function Banner() {
             </svg>
           </button>
 
-          <div className="absolute inset-x-0 bottom-3 flex justify-center gap-2">
+          {/* Bottom-right rather than centred, so they never crowd a slide's
+              own call to action. */}
+          <div className="absolute bottom-3 right-4 flex gap-2">
             {SLIDES.map((s, i) => (
               <button
                 key={s.key}

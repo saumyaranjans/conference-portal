@@ -169,10 +169,10 @@ const FEES_USD = [
 ];
 
 const LEADERSHIP = [
-  { name: "Prof (Dr) M. P. Jaiswal", role: "Conference Patron", org: "Director, IIM Sambalpur", photo: "/people/mp-jaiswal.jpg" },
-  { name: "Prof (Dr) Sushil", role: "GLOGIFT President", org: "Founder, GLOGIFT Society · Emeritus Professor, IIT Delhi", photo: "/people/sushil.jpg" },
-  { name: "Prof (Dr) Seema Gupta", role: "Conference Convenor", org: "IIM Sambalpur", photo: "/people/seema-gupta.jpg" },
-  { name: "Prof (Dr) Saumyaranjan Sahoo", role: "Conference Co-Convenor", org: "IIM Sambalpur", photo: "/people/saumyaranjan-sahoo.jpg" },
+  { name: "Prof (Dr) M. P. Jaiswal", role: "Conference Patron", org: "Director, IIM Sambalpur" },
+  { name: "Prof (Dr) Sushil", role: "GLOGIFT President", org: "Founder, GLOGIFT Society · Emeritus Professor, IIT Delhi" },
+  { name: "Prof (Dr) Seema Gupta", role: "Conference Convenor", org: "IIM Sambalpur" },
+  { name: "Prof (Dr) Saumyaranjan Sahoo", role: "Conference Co-Convenor", org: "IIM Sambalpur" },
 ];
 
 /* Members are listed alphabetically, ignoring the honorific — sorted here
@@ -226,6 +226,16 @@ function initials(name: string) {
     .join("");
 }
 
+/* Portraits, keyed by the exact name used in the lists above. Anyone absent
+   falls back to their initials. Files live in public/people. */
+const PORTRAITS: Record<string, string> = {
+  "Prof (Dr) M. P. Jaiswal": "/people/mp-jaiswal.jpg",
+  "Prof (Dr) Sushil": "/people/sushil.jpg",
+  "Prof (Dr) Seema Gupta": "/people/seema-gupta.jpg",
+  "Prof (Dr) Saumyaranjan Sahoo": "/people/saumyaranjan-sahoo.jpg",
+  "Prof (Dr) A. Manish Kumar": "/people/a-manish-kumar.jpg",
+};
+
 const [FACULTY, POST_DOC, STAFF] = COMMITTEE;
 
 /**
@@ -275,17 +285,10 @@ function CommitteePanel({
   );
 }
 
-function Avatar({
-  name,
-  size,
-  photo,
-}: {
-  name: string;
-  size: "lg" | "sm";
-  photo?: string;
-}) {
+function Avatar({ name, size }: { name: string; size: "lg" | "sm" }) {
   const dim = size === "lg" ? "h-32 w-32 text-3xl" : "h-16 w-16 text-base";
   const ring = "ring-4 ring-white shadow-md dark:ring-slate-800";
+  const photo = PORTRAITS[name];
   if (photo) {
     return (
       <img
@@ -758,7 +761,7 @@ export function LandingPage() {
             {LEADERSHIP.map((p) => (
               <div key={p.name} className="card card-pad text-center card-hover">
                 <div className="flex justify-center mb-4">
-                  <Avatar name={p.name} size="lg" photo={p.photo} />
+                  <Avatar name={p.name} size="lg" />
                 </div>
                 <p className="badge bg-blue-100 text-blue-800">{p.role}</p>
                 <p className="text-base font-semibold text-slate-900 mt-2 dark:text-slate-100">

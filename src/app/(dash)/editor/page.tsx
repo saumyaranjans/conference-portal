@@ -53,7 +53,7 @@ export default async function EditorDashboard() {
   const offered = submissions.filter(
     (s) =>
       (s as any).assigned_editor_id === profile.id &&
-      !(s as any).editor_accepted_at
+      (s as any).editor_accepted_at === null
   );
 
   const { data: statsRows } = submissions.length

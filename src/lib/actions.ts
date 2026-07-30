@@ -1569,14 +1569,14 @@ export async function recordRecommendation(
 
   const { data: sub } = await admin
     .from("submissions")
-    .select("stage, author_id, abstract_review_route, assigned_editor_id, editor_accepted_at")
+    .select("*")
     .eq("id", submissionId)
     .maybeSingle();
   if (!sub) return { ok: false, message: "Submission not found." };
 
   if (
     (sub as any).assigned_editor_id === profile.id &&
-    !(sub as any).editor_accepted_at
+    (sub as any).editor_accepted_at === null
   )
     return {
       ok: false,

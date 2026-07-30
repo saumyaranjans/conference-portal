@@ -1,4 +1,5 @@
 import "server-only";
+import { createAdminClient } from "@/lib/supabase/server";
 
 /**
  * Best-effort transactional email via Resend. Gated behind env vars so the
@@ -56,6 +57,10 @@ export async function sendEmail(args: {
   text: string;
   /** Per-message reply-to (e.g. the chair sending it), added ahead of the env. */
   replyTo?: string;
+  /** What this message is, for the Convener's email counts. */
+  kind?: string;
+  /** Who sent it. */
+  sentBy?: string;
 }): Promise<{ sent: boolean; id?: string; error?: string }> {
   const key = process.env.RESEND_API_KEY;
   const from = process.env.RESEND_FROM;
@@ -102,6 +107,23 @@ export async function sendEmail(args: {
     }
     // Resend returns { id }, the key for looking the message up in its log.
     const data = (await res.json().catch(() => null)) as { id?: string } | null;
+
+    // Record it, best-effort: a logging failure must not look like a send
+    // failure, and the table only arrived in migration 0041.
+    try {
+      await createAdminClient()
+        .from("email_log")
+        .insert({
+          to_email: to,
+          subject: args.subject,
+          kind: args.kind ?? "other",
+          sent_by: args.sentBy ?? null,
+          resend_id: data?.id ?? null,
+        });
+    } catch {
+      // ignored on purpose
+    }
+
     return { sent: true, id: data?.id };
   } catch (e) {
     return { sent: false, error: e instanceof Error ? e.message : String(e) };

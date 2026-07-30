@@ -89,6 +89,8 @@ export async function sendComposedEmail(
     subject,
     text: body,
     replyTo: profile.email || undefined,
+    kind: "composed",
+    sentBy: profile.id,
   });
   return r.sent
     ? {
@@ -908,6 +910,8 @@ export async function sendReviewerInvite(
     subject,
     text: body,
     replyTo: profile.email || undefined,
+    kind: "reviewer_invitation",
+    sentBy: profile.id,
   });
 
   if (!r.sent)
@@ -1012,6 +1016,8 @@ export async function sendReviewerReminder(
     subject,
     text: body,
     replyTo: profile.email || undefined,
+    kind: "reviewer_reminder",
+    sentBy: profile.id,
   });
   if (!r.sent)
     return {
@@ -2424,6 +2430,8 @@ export async function sendChairInvite(
     subject,
     text: body,
     replyTo: profile.email || undefined,
+    kind: "track_editor_invitation",
+    sentBy: profile.id,
   });
   if (!r.sent)
     return { ok: false, message: `Send failed: ${r.error ?? "unknown error"}` };

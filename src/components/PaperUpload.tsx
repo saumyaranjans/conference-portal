@@ -39,6 +39,13 @@ export function PaperUpload({
       return;
     }
 
+    if (kind === "paper" && !/\.(doc|docx)$/i.test(file.name)) {
+      setError(
+        "The full paper must be a Word file (.doc or .docx)."
+      );
+      return;
+    }
+
     setBusy(true);
     setError(null);
     const supabase = createClient();
@@ -107,7 +114,7 @@ export function PaperUpload({
           <span className="sr-only">Upload paper</span>
           <input
             type="file"
-            accept=".pdf,.doc,.docx"
+            accept={kind === "paper" ? ".doc,.docx" : ".pdf,.doc,.docx"}
             onChange={onChange}
             disabled={busy}
             className="block w-full text-sm text-slate-600 file:mr-3 file:py-2 file:px-4

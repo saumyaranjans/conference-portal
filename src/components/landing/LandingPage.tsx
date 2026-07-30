@@ -572,9 +572,13 @@ export function LandingPage() {
               </div>
             </div>
           ))}
-          <p className="text-xs text-slate-500">
-            On-campus twin-sharing accommodation from ₹1,800 per night for
-            Indian delegates, including room, meals and Wi-Fi.
+          <p className="text-xs leading-relaxed text-slate-500">
+            On-campus rooms include meals and Wi-Fi, at ₹1,800 / $19 per night
+            twin-sharing and ₹3,600 / $38 per night for a single room, with 18%
+            GST charged extra. The same rates apply to accompanying spouses,
+            relatives and guests. Rooms are limited and allotted on a
+            first-come, first-served basis; off-campus hotel options will be
+            shared on the conference website.
           </p>
         </section>
 

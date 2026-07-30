@@ -243,6 +243,8 @@ const PORTRAITS: Record<string, string> = {
   "Prof (Dr) Ramakrushna Padhy": "/people/ramakrushna-padhy.jpg",
   "Dr Jayjit Chakraborty": "/people/jayjit-chakraborty.jpg",
   "Dr Jogeshwar Mahato": "/people/jogeshwar-mahato.jpg",
+  "Ms Sasmita Mohanty": "/people/sasmita-mohanty.jpg",
+  "Ms Sunita Sahu": "/people/sunita-sahu.jpg",
 };
 
 const [FACULTY, POST_DOC, STAFF] = COMMITTEE;

@@ -39,15 +39,19 @@ const OBJECTIVES: { icon: React.ReactNode; text: string }[] = [
   },
 ];
 
+/* `dot`/`halo` are written out in full because Tailwind only sees class names
+   it can find as literal strings. Hues follow the pathway bands: blues across
+   the abstract stretch, ambers for the Pathway B full-paper stretch, greens
+   through registration, pink for the conference itself. */
 const MILESTONES = [
-  { date: "2026-09-21", label: "Registration opens" },
-  { date: "2026-11-23", label: "Abstract submission closes", note: "All authors" },
-  { date: "2026-11-30", label: "Abstract decisions announced", note: "All authors" },
-  { date: "2026-12-08", label: "Full paper submission closes", note: "Pathway B" },
-  { date: "2026-12-15", label: "Full paper decisions announced", note: "Pathway B" },
-  { date: "2026-12-20", label: "Early bird registration closes" },
-  { date: "2027-01-24", label: "Regular registration closes" },
-  { date: "2027-02-25", label: "Conference, 25–27 February", note: "IIM Sambalpur" },
+  { date: "2026-09-21", label: "Registration opens", dot: "bg-sky-500", halo: "group-hover:shadow-sky-500/50" },
+  { date: "2026-11-23", label: "Abstract submission closes", note: "All authors", dot: "bg-blue-600", halo: "group-hover:shadow-blue-600/50" },
+  { date: "2026-11-30", label: "Abstract decisions announced", note: "All authors", dot: "bg-indigo-500", halo: "group-hover:shadow-indigo-500/50" },
+  { date: "2026-12-08", label: "Full paper submission closes", note: "Pathway B", dot: "bg-amber-500", halo: "group-hover:shadow-amber-500/50" },
+  { date: "2026-12-15", label: "Full paper decisions announced", note: "Pathway B", dot: "bg-orange-500", halo: "group-hover:shadow-orange-500/50" },
+  { date: "2026-12-20", label: "Early bird registration closes", dot: "bg-emerald-500", halo: "group-hover:shadow-emerald-500/50" },
+  { date: "2027-01-24", label: "Regular registration closes", dot: "bg-teal-500", halo: "group-hover:shadow-teal-500/50" },
+  { date: "2027-02-25", label: "Conference, 25–27 February", note: "IIM Sambalpur", dot: "bg-pink-600", halo: "group-hover:shadow-pink-600/50" },
 ];
 
 const TRACKS = [
@@ -544,7 +548,11 @@ export function LandingPage() {
                   const past = new Date(m.date) < today;
                   const above = i % 2 === 0;
                   const label = (
-                    <div className="text-center px-1">
+                    <div
+                      className={`text-center px-1 transition-transform duration-200 ease-out group-hover:scale-110 ${
+                        above ? "origin-bottom" : "origin-top"
+                      }`}
+                    >
                       <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
                         {fmt(m.date)}
                       </p>
@@ -565,14 +573,20 @@ export function LandingPage() {
                     </div>
                   );
                   return (
-                    <div key={m.date} className="flex flex-col items-center">
+                    /* `group` scopes the hover to this milestone alone; z-10 on
+                       hover keeps the enlarged label above its neighbours. */
+                    <div
+                      key={m.date}
+                      className="group relative flex flex-col items-center hover:z-10"
+                    >
                       <div className="h-28 w-full flex items-end justify-center pb-3">
                         {above ? label : null}
                       </div>
                       <span
-                        className={`h-4 w-4 shrink-0 rounded-full ring-4 ring-white dark:ring-slate-900 ${
-                          past ? "bg-slate-300" : "bg-blue-600"
-                        }`}
+                        className={`h-4 w-4 shrink-0 rounded-full ring-4 ring-white dark:ring-slate-900
+                          transition-transform duration-200 ease-out group-hover:scale-[1.6]
+                          shadow-[0_0_0_0_transparent] group-hover:shadow-[0_0_0_6px_var(--tw-shadow-color)]
+                          ${past ? "bg-slate-300 group-hover:shadow-slate-400/50" : `${m.dot} ${m.halo}`}`}
                       />
                       <div className="h-28 w-full flex items-start justify-center pt-3">
                         {above ? null : label}
@@ -580,6 +594,56 @@ export function LandingPage() {
                     </div>
                   );
                 })}
+              </div>
+
+              {/* Each pathway's own route: solid where it applies, dashed
+                  where that pathway skips ahead. */}
+              <div className="mt-6 space-y-3">
+                {[
+                  {
+                    name: "Pathway A",
+                    detail: "abstract & presentation",
+                    colour: "bg-blue-500",
+                    faint: "bg-blue-200 dark:bg-blue-500/25",
+                    skips: true,
+                  },
+                  {
+                    name: "Pathway B",
+                    detail: "abstract, full paper & presentation",
+                    colour: "bg-amber-500",
+                    faint: "bg-amber-200 dark:bg-amber-500/25",
+                    skips: false,
+                  },
+                ].map((route) => (
+                  <div key={route.name} className="flex items-center gap-3">
+                    <span className="w-44 shrink-0 text-right">
+                      <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                        {route.name}
+                      </span>
+                      <span className="block text-[11px] text-slate-500">
+                        {route.detail}
+                      </span>
+                    </span>
+                    <span className="grid grid-cols-8 gap-3 flex-1">
+                      <span className={`col-span-3 h-1.5 rounded-full ${route.colour}`} />
+                      <span
+                        className={`col-span-2 h-1.5 rounded-full ${
+                          route.skips ? route.faint : route.colour
+                        }`}
+                        title={
+                          route.skips
+                            ? "Pathway A skips the full-paper stage"
+                            : undefined
+                        }
+                      />
+                      <span className={`col-span-3 h-1.5 rounded-full ${route.colour}`} />
+                    </span>
+                  </div>
+                ))}
+                <p className="text-[11px] text-slate-500 pl-[12.25rem]">
+                  The faded stretch is the full-paper stage, which Pathway A
+                  skips — both pathways rejoin to register and present.
+                </p>
               </div>
             </div>
           </div>

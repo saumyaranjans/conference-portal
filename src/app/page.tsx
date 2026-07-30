@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getProfile } from "@/lib/auth";
 import { ROLE_HOME, type AppRole } from "@/lib/types";
+import { LandingPage } from "@/components/landing/LandingPage";
 
 // Landing priority for multi-role users: Convener → Track Editor → Author →
 // Reviewer → Editorial Office.
@@ -15,6 +16,7 @@ export default async function Home() {
     redirect(ROLE_HOME[primary]);
   }
 
-  // Not signed in? The front door is the Sign In page.
-  redirect("/login");
+  // Not signed in? The conference landing page is the front door; the portal
+  // is one click away from it.
+  return <LandingPage />;
 }

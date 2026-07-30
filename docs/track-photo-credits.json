@@ -1,0 +1,72 @@
+{
+  "finance": {
+    "title": "Stockmarket Charts",
+    "license": "cc0",
+    "source": "stocksnap",
+    "page": "https://stocksnap.io/photo/stockmarket-charts-G3YOGRBLF3",
+    "creator": "Negative Space"
+  },
+  "operations": {
+    "title": "Containers",
+    "license": "cc0",
+    "source": "flickr",
+    "page": "https://www.flickr.com/photos/52775988@N00/52170384752",
+    "creator": "Mussi Katz"
+  },
+  "digital": {
+    "title": "2024 Data Center Details",
+    "license": "pdm",
+    "source": "flickr",
+    "page": "https://www.flickr.com/photos/53950384@N02/53958179352",
+    "creator": "Jefferson Lab"
+  },
+  "sustainability": {
+    "title": "Wind Turbine",
+    "license": "cc0",
+    "source": "stocksnap",
+    "page": "https://stocksnap.io/photo/wind-turbine-JRS7H54AAV",
+    "creator": "Tom Swinnen"
+  },
+  "marketing": {
+    "title": "Magnetic Man in Tokyo Shibuya crossing",
+    "license": "cc0",
+    "source": "flickr",
+    "page": "https://www.flickr.com/photos/62608635@N04/55102473952",
+    "creator": "Miroslaw Magola alias Magneticman"
+  },
+  "governance": {
+    "title": "Florida Supreme Court Building Tallahassee",
+    "license": "cc0",
+    "source": "rawpixel",
+    "page": "https://www.rawpixel.com/image/8050260/photo-image-public-domain-city-united-states",
+    "creator": "Carol M Highsmith"
+  },
+  "analytics": {
+    "title": "Business Working",
+    "license": "cc0",
+    "source": "stocksnap",
+    "page": "https://stocksnap.io/photo/business-working-PHE63L27S6",
+    "creator": "Marc Chouinard"
+  },
+  "people": {
+    "title": "Team Meeting",
+    "license": "cc0",
+    "source": "stocksnap",
+    "page": "https://stocksnap.io/photo/team-meeting-JBW2PXDOL6",
+    "creator": "Startup Stock Photos"
+  },
+  "strategy": {
+    "title": "Chess Board",
+    "license": "cc0",
+    "source": "stocksnap",
+    "page": "https://stocksnap.io/photo/chess-board-NUAITIXILP",
+    "creator": "Kristin Hardwick"
+  },
+  "global": {
+    "title": "City Skyline",
+    "license": "cc0",
+    "source": "stocksnap",
+    "page": "https://stocksnap.io/photo/city-skyline-KFA0ZJHD66",
+    "creator": "Joe deSousa"
+  }
+}

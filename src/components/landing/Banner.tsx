@@ -213,117 +213,20 @@ function LatticeSlide() {
   );
 }
 
-/* One glyph per track, in the track's own colour. Drawn at 24x24 with a
-   stroke so they stay crisp at the large size the boxes use. */
-const TRACK_ICONS: { tint: string; icon: React.ReactNode }[] = [
-  {
-    // Banknote - finance, FinTech, digital assets.
-    tint: "#10b981",
-    icon: (
-      <>
-        <rect x="2.5" y="6" width="19" height="12" rx="2" />
-        <circle cx="12" cy="12" r="2.6" />
-        <path d="M6 12h.01M18 12h.01" />
-      </>
-    ),
-  },
-  {
-    // Delivery truck - operations and supply chain.
-    tint: "#f59e0b",
-    icon: (
-      <>
-        <path d="M3 16.5V7a1 1 0 0 1 1-1h9v10.5" />
-        <path d="M13 10h4l3.5 3.5v3H18" />
-        <circle cx="7.5" cy="17.5" r="1.9" />
-        <circle cx="16.5" cy="17.5" r="1.9" />
-      </>
-    ),
-  },
-  {
-    // Cloud with an upward arrow - digital transformation.
-    tint: "#0ea5e9",
-    icon: (
-      <>
-        <path d="M6.5 18a4 4 0 0 1 .6-7.95A5.5 5.5 0 0 1 18 10.5a3.75 3.75 0 0 1 0 7.5H6.5Z" />
-        <path d="M12 16v-4.5M9.8 13.2 12 11l2.2 2.2" />
-      </>
-    ),
-  },
-  {
-    // Leaf - sustainable finance and decarbonization.
-    tint: "#22c55e",
-    icon: (
-      <>
-        <path d="M4 20c8 2 16-4 16-14 0-1-.2-2-.5-3-9 0-15 5-15 11 0 2 .6 4 1.5 5Z" />
-        <path d="m4 20 7-7" />
-      </>
-    ),
-  },
-  {
-    // Megaphone - marketing and customer engagement.
-    tint: "#ec4899",
-    icon: (
-      <>
-        <path d="m3.5 11 13-5.5v13L3.5 13z" />
-        <path d="M7 13.2V17a2 2 0 0 0 4 0v-2.6" />
-        <path d="M20 9.5v5" />
-      </>
-    ),
-  },
-  {
-    // Scales - governance, ethics, responsible AI.
-    tint: "#6366f1",
-    icon: (
-      <>
-        <path d="M12 3.5v17M7.5 20.5h9M5 7.5h14" />
-        <path d="m5 7.5-2.4 5.6a2.9 2.9 0 0 0 4.8 0Z" />
-        <path d="m19 7.5-2.4 5.6a2.9 2.9 0 0 0 4.8 0Z" />
-      </>
-    ),
-  },
-  {
-    // Bar chart - analytics and big data.
-    tint: "#8b5cf6",
-    icon: (
-      <>
-        <path d="M3 20.5h18" />
-        <path d="M6.5 20.5v-8M11 20.5V6M15.5 20.5v-6M20 20.5v-3.5" />
-      </>
-    ),
-  },
-  {
-    // Two people - human capital and leadership.
-    tint: "#f97316",
-    icon: (
-      <>
-        <circle cx="9" cy="8" r="3.2" />
-        <path d="M3.2 20a5.8 5.8 0 0 1 11.6 0" />
-        <path d="M16 5.4a3 3 0 0 1 0 5.9" />
-        <path d="M20.8 20a5.6 5.6 0 0 0-3.4-4.7" />
-      </>
-    ),
-  },
-  {
-    // Lightbulb - strategy, innovation, new business models.
-    tint: "#ef4444",
-    icon: (
-      <>
-        <path d="M12 3a6 6 0 0 0-3.4 10.9c.6.5.9 1.2.9 1.9v.2h5v-.2c0-.7.3-1.4.9-1.9A6 6 0 0 0 12 3Z" />
-        <path d="M9.5 19h5M10.5 21.5h3" />
-      </>
-    ),
-  },
-  {
-    // Globe - inclusive growth and global transformation.
-    tint: "#06b6d4",
-    icon: (
-      <>
-        <circle cx="12" cy="12" r="9" />
-        <path d="M3 12h18" />
-        <path d="M12 3c3 3.5 3 14.5 0 18-3-3.5-3-14.5 0-18Z" />
-      </>
-    ),
-  },
+/* One photograph per track, in TRACKS order, each paired with the accent
+   colour used for its card. The images are CC0 / public domain; provenance is
+   recorded in docs/track-photos.md. */
+const TRACK_ART: { tint: string; photo: string }[] = [
+  { tint: "#10b981", photo: "/tracks/finance.jpg" },
+  { tint: "#f59e0b", photo: "/tracks/operations.jpg" },
+  { tint: "#0ea5e9", photo: "/tracks/digital.jpg" },
+  { tint: "#22c55e", photo: "/tracks/sustainability.jpg" },
+  { tint: "#ec4899", photo: "/tracks/marketing.jpg" },
+  { tint: "#6366f1", photo: "/tracks/governance.jpg" },
+  { tint: "#8b5cf6", photo: "/tracks/analytics.jpg" },
+  { tint: "#f97316", photo: "/tracks/people.jpg" },
+  { tint: "#ef4444", photo: "/tracks/strategy.jpg" },
+  { tint: "#06b6d4", photo: "/tracks/global.jpg" },
 ];
 
 /**
@@ -357,41 +260,29 @@ function TracksSlide() {
 
         <div className="mt-[1.3cqw] grid flex-1 grid-cols-5 gap-[0.85cqw]">
           {TRACKS.map(([name], i) => {
-            const { tint, icon } = TRACK_ICONS[i];
+            const { tint, photo } = TRACK_ART[i];
             return (
               <div
                 key={name}
-                className="flex flex-col items-center rounded-[1.1cqw] border px-[0.7cqw] py-[0.8cqw] text-center"
-                style={{
-                  // The card takes its own hue: a wash of the tint fading into
-                  // white, so ten cards read as ten colours, not one grid.
-                  background: `linear-gradient(160deg, ${tint}33 0%, #ffffffe6 75%)`,
-                  borderColor: `${tint}66`,
-                }}
+                className="flex flex-col overflow-hidden rounded-[1.1cqw] border bg-white/90"
+                style={{ borderColor: `${tint}66` }}
               >
+                <div className="relative w-full" style={{ height: "7.2cqw" }}>
+                  {/* Decorative: the track name below already says what this
+                      is, so the photo carries no alt text. */}
+                  <img src={photo} alt="" className="h-full w-full object-cover" />
+                  <span
+                    className="absolute inset-0"
+                    style={{
+                      background: `linear-gradient(180deg, transparent 50%, ${tint}59 100%)`,
+                    }}
+                  />
+                </div>
                 <span
-                  className="grid shrink-0 place-items-center rounded-[1.5cqw]"
-                  style={{
-                    width: "5.8cqw",
-                    height: "5.8cqw",
-                    backgroundColor: tint,
-                    color: "#ffffff",
-                    boxShadow: `0 0.5cqw 1.2cqw -0.4cqw ${tint}cc`,
-                  }}
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    style={{ width: "3.7cqw", height: "3.7cqw" }}
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    {icon}
-                  </svg>
-                </span>
-                <p className="mt-[0.6cqw] text-[1.15cqw] font-semibold leading-tight text-[#111c3a]">
+                  className="block w-full"
+                  style={{ height: "0.35cqw", backgroundColor: tint }}
+                />
+                <p className="flex-1 px-[0.55cqw] py-[0.65cqw] text-center text-[1.15cqw] font-semibold leading-tight text-[#111c3a]">
                   {name}
                 </p>
               </div>

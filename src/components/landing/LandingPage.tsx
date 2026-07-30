@@ -516,6 +516,29 @@ export function LandingPage() {
           <div className="hidden md:block overflow-x-auto pb-2">
             <div className="relative min-w-[52rem] px-4">
               <div className="absolute left-4 right-4 top-1/2 h-0.5 -translate-y-1/2 bg-slate-200 dark:bg-slate-700" />
+              {/* Which milestones belong to which pathway. Abstract steps are
+                  common to both; only the two full-paper steps are B-only. */}
+              <div className="grid grid-cols-8 gap-3 mb-2">
+                <div className="col-span-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-blue-700 text-center">
+                    Pathway A &amp; B — abstract
+                  </p>
+                  <div className="h-1.5 rounded-full bg-blue-500/70" />
+                </div>
+                <div className="col-span-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-700 text-center">
+                    Pathway B only — full paper
+                  </p>
+                  <div className="h-1.5 rounded-full bg-amber-500/70" />
+                </div>
+                <div className="col-span-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 text-center">
+                    Pathway A &amp; B — register &amp; present
+                  </p>
+                  <div className="h-1.5 rounded-full bg-slate-300" />
+                </div>
+              </div>
+
               <div className="relative grid grid-cols-8 gap-3">
                 {MILESTONES.map((m, i) => {
                   const past = new Date(m.date) < today;

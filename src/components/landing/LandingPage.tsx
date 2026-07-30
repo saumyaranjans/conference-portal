@@ -174,6 +174,15 @@ const LEADERSHIP = [
   { name: "Prof (Dr) Saumyaranjan Sahoo", role: "Conference Convenor", org: "IIM Sambalpur" },
 ];
 
+/* Members are listed alphabetically, ignoring the honorific — sorted here
+   rather than in the arrays below so a name added later lands in place. */
+/* Strips "Prof (Dr) ", "Dr ", "Ms " and the like. The parenthesised part
+   is matched only in brackets, so a plain "Dr Jayjit Chakraborty" keeps
+   the given name instead of losing it to the title. */
+const TITLE = /^(Prof|Dr|Mr|Ms|Mrs)\.?\s+(\([A-Za-z.]+\)\s+)?/i;
+const byName = (a: string, b: string) =>
+  a.replace(TITLE, "").localeCompare(b.replace(TITLE, ""), "en");
+
 const COMMITTEE = [
   {
     group: "Conference Committee — Faculty (IIM Sambalpur)",
@@ -197,7 +206,7 @@ const COMMITTEE = [
     label: "text-amber-700 dark:text-amber-300",
     people: ["Ms Sasmita Mohanty", "Ms Sunita Sahu"],
   },
-];
+].map((g) => ({ ...g, people: [...g.people].sort(byName) }));
 
 function fmt(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", {
@@ -209,7 +218,7 @@ function fmt(iso: string) {
 
 function initials(name: string) {
   return name
-    .replace(/^(Prof|Dr|Mr|Ms|Mrs)\s*\(?[A-Za-z.]*\)?\.?\s+/i, "")
+    .replace(TITLE, "")
     .split(/\s+/)
     .slice(0, 2)
     .map((w) => w[0])

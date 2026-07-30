@@ -176,15 +176,15 @@ const LEADERSHIP = [
 
 const COMMITTEE = [
   {
-    group: "Conference Committee — Faculty",
+    group: "Conference Committee — Faculty (IIM Sambalpur)",
     people: [
       "Prof Aarti Singh", "Prof Aqueeb Sohail Shaik", "Prof Atul Prashar",
       "Prof Dharen Kumar Pandey", "Prof Hemachandra Padhan", "Prof A. Manish Kumar",
       "Prof Prasanta Kumar Chopdhar", "Prof Ramakrushna Padhy",
     ],
   },
-  { group: "Post-Doctoral", people: ["Dr Jogeshwar Mahato", "Dr Jayjit Chakraborty"] },
-  { group: "Conference Staff", people: ["Ms Sasmita Mohanty", "Ms Sunita Sahu"] },
+  { group: "Conference Committee — Post Doctoral (IIM Sambalpur)", people: ["Dr Jogeshwar Mahato", "Dr Jayjit Chakraborty"] },
+  { group: "Conference Committee — Staff (IIM Sambalpur)", people: ["Ms Sasmita Mohanty", "Ms Sunita Sahu"] },
 ];
 
 function fmt(iso: string) {

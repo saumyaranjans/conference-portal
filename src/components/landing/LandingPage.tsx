@@ -520,7 +520,7 @@ export function LandingPage() {
         {/* ---- 6. Registration fees ---- */}
         <section>
           <Heading id="fees">Registration fees</Heading>
-          <p className="text-sm text-slate-600 mb-5 dark:text-slate-300">
+          <p className="text-xs leading-relaxed text-slate-600 mb-5 dark:text-slate-300">
             Fees include the conference kit, certificates, working lunches,
             refreshments and the conference dinner. GST extra; travel and
             accommodation are not included. We would love to welcome you on

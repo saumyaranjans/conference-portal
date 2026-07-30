@@ -745,9 +745,21 @@ export function LandingPage() {
           </div>
         </section>
 
-        <footer className="text-center text-xs text-slate-500 pb-6">
-          © GLOGIFT 2027 — AI-Driven Solutions in Management: Flexibility,
-          Digitalisation &amp; Decarbonization
+        <footer className="border-t border-slate-200 dark:border-slate-700 pt-5 pb-6 text-center text-xs text-slate-500">
+          {/* Separators break onto their own lines on narrow screens rather
+              than leaving a bar stranded at the start of a line. */}
+          <span className="font-semibold text-slate-700 dark:text-slate-300">
+            GLOGIFT 2027
+          </span>
+          <span aria-hidden className="mx-2 text-slate-300 dark:text-slate-600">
+            |
+          </span>
+          International Conference on AI-Driven Solutions in Management:
+          Flexibility, Digitalisation &amp; Decarbonization
+          <span aria-hidden className="mx-2 text-slate-300 dark:text-slate-600">
+            |
+          </span>
+          © Indian Institute of Management Sambalpur
         </footer>
       </div>
     </main>

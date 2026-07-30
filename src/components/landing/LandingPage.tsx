@@ -651,9 +651,9 @@ export function LandingPage() {
           </ol>
         </section>
 
-        {/* ---- 8. Committees ---- */}
+        {/* ---- 8. Conference Advisory Committee ---- */}
         <section>
-          <Heading id="committee">Committees</Heading>
+          <Heading id="committee">Conference Advisory Committee</Heading>
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
             {LEADERSHIP.map((p) => (

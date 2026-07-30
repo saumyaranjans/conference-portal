@@ -471,11 +471,11 @@ export function LandingPage() {
                       <th className="th">GLOGIFT members</th>
                       <th className="th">
                         Early bird
-                        <span className="block font-normal text-xs">to 20 Dec 2026</span>
+                        <span className="block font-normal text-xs">On or before 20 Dec 2026</span>
                       </th>
                       <th className="th">
                         Regular
-                        <span className="block font-normal text-xs">to 24 Jan 2027</span>
+                        <span className="block font-normal text-xs">On or before 24 Jan 2027</span>
                       </th>
                     </tr>
                   </thead>

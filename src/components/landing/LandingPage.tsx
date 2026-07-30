@@ -238,6 +238,7 @@ const PORTRAITS: Record<string, string> = {
   "Prof (Dr) Aqueeb Sohail Shaik": "/people/aqueeb-sohail-shaik.jpg",
   "Prof (Dr) Atul Prashar": "/people/atul-prashar.jpg",
   "Prof (Dr) Dharen Kumar Pandey": "/people/dharen-kumar-pandey.jpg",
+  "Prof (Dr) Hemachandra Padhan": "/people/hemachandra-padhan.jpg",
 };
 
 const [FACULTY, POST_DOC, STAFF] = COMMITTEE;

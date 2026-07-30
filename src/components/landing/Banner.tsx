@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { TRACKS } from "@/components/landing/tracks";
+
 /**
  * The hero banner: a slider of hand-drawn SVG panels at 2400×1000, so every
  * slide stays sharp at any width and can be edited in place. Add a slide by
@@ -210,147 +212,181 @@ function LatticeSlide() {
   );
 }
 
-/** Slide 2 — light and centred, with a circuit-trace backdrop. */
-function CircuitSlide() {
-  /* Traces fanning in from the edge, drawn as right-angled runs the way a
-     board is actually routed. */
-  const traces = Array.from({ length: 7 }, (_, i) => {
-    const y = 140 + i * 120;
-    const bend = 620 + (i % 3) * 90;
-    return { d: `M 0 ${y} H ${bend} V 500`, key: `l${i}` };
-  });
+/* One glyph per track, in the track's own colour. Drawn at 24x24 with a
+   stroke so they stay crisp at the large size the boxes use. */
+const TRACK_ICONS: { tint: string; icon: React.ReactNode }[] = [
+  {
+    // Banknote - finance, FinTech, digital assets.
+    tint: "#10b981",
+    icon: (
+      <>
+        <rect x="2.5" y="6" width="19" height="12" rx="2" />
+        <circle cx="12" cy="12" r="2.6" />
+        <path d="M6 12h.01M18 12h.01" />
+      </>
+    ),
+  },
+  {
+    // Delivery truck - operations and supply chain.
+    tint: "#f59e0b",
+    icon: (
+      <>
+        <path d="M3 16.5V7a1 1 0 0 1 1-1h9v10.5" />
+        <path d="M13 10h4l3.5 3.5v3H18" />
+        <circle cx="7.5" cy="17.5" r="1.9" />
+        <circle cx="16.5" cy="17.5" r="1.9" />
+      </>
+    ),
+  },
+  {
+    // Cloud with an upward arrow - digital transformation.
+    tint: "#0ea5e9",
+    icon: (
+      <>
+        <path d="M6.5 18a4 4 0 0 1 .6-7.95A5.5 5.5 0 0 1 18 10.5a3.75 3.75 0 0 1 0 7.5H6.5Z" />
+        <path d="M12 16v-4.5M9.8 13.2 12 11l2.2 2.2" />
+      </>
+    ),
+  },
+  {
+    // Leaf - sustainable finance and decarbonization.
+    tint: "#22c55e",
+    icon: (
+      <>
+        <path d="M4 20c8 2 16-4 16-14 0-1-.2-2-.5-3-9 0-15 5-15 11 0 2 .6 4 1.5 5Z" />
+        <path d="m4 20 7-7" />
+      </>
+    ),
+  },
+  {
+    // Megaphone - marketing and customer engagement.
+    tint: "#ec4899",
+    icon: (
+      <>
+        <path d="m3.5 11 13-5.5v13L3.5 13z" />
+        <path d="M7 13.2V17a2 2 0 0 0 4 0v-2.6" />
+        <path d="M20 9.5v5" />
+      </>
+    ),
+  },
+  {
+    // Scales - governance, ethics, responsible AI.
+    tint: "#6366f1",
+    icon: (
+      <>
+        <path d="M12 3.5v17M7.5 20.5h9M5 7.5h14" />
+        <path d="m5 7.5-2.4 5.6a2.9 2.9 0 0 0 4.8 0Z" />
+        <path d="m19 7.5-2.4 5.6a2.9 2.9 0 0 0 4.8 0Z" />
+      </>
+    ),
+  },
+  {
+    // Bar chart - analytics and big data.
+    tint: "#8b5cf6",
+    icon: (
+      <>
+        <path d="M3 20.5h18" />
+        <path d="M6.5 20.5v-8M11 20.5V6M15.5 20.5v-6M20 20.5v-3.5" />
+      </>
+    ),
+  },
+  {
+    // Two people - human capital and leadership.
+    tint: "#f97316",
+    icon: (
+      <>
+        <circle cx="9" cy="8" r="3.2" />
+        <path d="M3.2 20a5.8 5.8 0 0 1 11.6 0" />
+        <path d="M16 5.4a3 3 0 0 1 0 5.9" />
+        <path d="M20.8 20a5.6 5.6 0 0 0-3.4-4.7" />
+      </>
+    ),
+  },
+  {
+    // Lightbulb - strategy, innovation, new business models.
+    tint: "#ef4444",
+    icon: (
+      <>
+        <path d="M12 3a6 6 0 0 0-3.4 10.9c.6.5.9 1.2.9 1.9v.2h5v-.2c0-.7.3-1.4.9-1.9A6 6 0 0 0 12 3Z" />
+        <path d="M9.5 19h5M10.5 21.5h3" />
+      </>
+    ),
+  },
+  {
+    // Globe - inclusive growth and global transformation.
+    tint: "#06b6d4",
+    icon: (
+      <>
+        <circle cx="12" cy="12" r="9" />
+        <path d="M3 12h18" />
+        <path d="M12 3c3 3.5 3 14.5 0 18-3-3.5-3-14.5 0-18Z" />
+      </>
+    ),
+  },
+];
 
+/**
+ * Slide 2 - the call for submissions: all ten tracks as boxed cards. Built in
+ * HTML rather than SVG so the names wrap on their own; `cqw` units size
+ * everything against the banner's own width, keeping it identical in
+ * proportion to the SVG panel at any screen size.
+ */
+function TracksSlide() {
   return (
-    <svg
-      viewBox="0 0 2400 1000"
-      className="w-full h-auto block"
-      role="img"
-      aria-label="GLOGIFT 2027 — International Conference on AI-Driven Solutions in Management, 25 to 27 February 2027, IIM Sambalpur"
+    <div
+      className="relative w-full aspect-[12/5] overflow-hidden
+                 bg-[linear-gradient(135deg,#ffffff_0%,#eef2ff_55%,#dbeafe_100%)]"
+      style={{ containerType: "inline-size" }}
     >
-      <defs>
-        <linearGradient id="c-bg" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#ffffff" />
-          <stop offset="55%" stopColor="#eef2ff" />
-          <stop offset="100%" stopColor="#dbeafe" />
-        </linearGradient>
-        <linearGradient id="c-word" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="#2563eb" />
-          <stop offset="35%" stopColor="#0891b2" />
-          <stop offset="70%" stopColor="#7c3aed" />
-          <stop offset="100%" stopColor="#db2777" />
-        </linearGradient>
-      </defs>
+      <div className="absolute inset-0 flex flex-col px-[2.6cqw] py-[2.2cqw]">
+        <div className="text-center">
+          <p className="text-gradient text-[3.2cqw] font-extrabold leading-none tracking-tight">
+            Call for Submissions
+          </p>
+          <p className="mt-[0.7cqw] text-[1.35cqw] font-medium text-[#475569]">
+            Ten tracks &middot; abstracts and full papers invited &middot; GLOGIFT 2027
+          </p>
+        </div>
 
-      <rect width="2400" height="1000" fill="url(#c-bg)" />
-
-      <g stroke="#93c5fd" strokeOpacity="0.55" strokeWidth="3" fill="none">
-        {traces.map((t) => (
-          <path key={t.key} d={t.d} />
-        ))}
-        {traces.map((t) => (
-          <path
-            key={`${t.key}r`}
-            d={t.d}
-            transform="translate(2400,1000) rotate(180)"
-          />
-        ))}
-      </g>
-      <g fill="#60a5fa" fillOpacity="0.5">
-        {traces.map((t, i) => (
-          <circle key={t.key} cx={0} cy={140 + i * 120} r="9" />
-        ))}
-      </g>
-
-      <Organiser
-        logo={IIM_CREST}
-        label="IIM SAMBALPUR"
-        cx={920}
-        top={90}
-        size={110}
-        baseline={262}
-        fill="#1e3a8a"
-      />
-      <text
-        x="1185"
-        y="262"
-        textAnchor="middle"
-        fill="#1e3a8a"
-        fontSize="34"
-        fontWeight="600"
-        fontFamily="system-ui, sans-serif"
-      >
-        ·
-      </text>
-      <Organiser
-        logo={GLOGIFT_LOGO}
-        label="GLOGIFT SOCIETY"
-        cx={1450}
-        top={90}
-        size={110}
-        baseline={262}
-        fill="#1e3a8a"
-      />
-
-      <text
-        x="1200"
-        y="420"
-        textAnchor="middle"
-        fill="#4f46e5"
-        fontSize="34"
-        letterSpacing="12"
-        fontWeight="600"
-        fontFamily="system-ui, sans-serif"
-      >
-        INTERNATIONAL CONFERENCE ON
-      </text>
-      <text
-        x="1200"
-        y="530"
-        textAnchor="middle"
-        fill="#0f172a"
-        fontSize="88"
-        fontWeight="700"
-        fontFamily="system-ui, sans-serif"
-      >
-        AI-Driven Solutions in Management
-      </text>
-      <text
-        x="1200"
-        y="600"
-        textAnchor="middle"
-        fill="#475569"
-        fontSize="40"
-        fontFamily="system-ui, sans-serif"
-      >
-        Flexibility, Digitalisation &amp; Decarbonization
-      </text>
-
-      <text
-        x="1200"
-        y="760"
-        textAnchor="middle"
-        fill="url(#c-word)"
-        fontSize="116"
-        fontWeight="800"
-        fontFamily="Georgia, 'Times New Roman', serif"
-        letterSpacing="2"
-      >
-        GLOGIFT 2027
-      </text>
-
-      <line x1="820" y1="820" x2="1580" y2="820" stroke="#c7d2fe" strokeWidth="3" />
-      <text
-        x="1200"
-        y="890"
-        textAnchor="middle"
-        fill="#1e293b"
-        fontSize="38"
-        fontWeight="600"
-        fontFamily="system-ui, sans-serif"
-      >
-        25 – 27 February 2027 · IIM Sambalpur, Odisha, India · In-Person | Hybrid
-      </text>
-    </svg>
+        <div className="mt-[1.6cqw] grid flex-1 grid-cols-5 gap-[0.9cqw]">
+          {TRACKS.map(([name], i) => {
+            const { tint, icon } = TRACK_ICONS[i];
+            return (
+              <div
+                key={name}
+                className="flex flex-col items-center rounded-[1.1cqw] border
+                           border-[#dbe3f5] bg-white/80 px-[0.7cqw] py-[0.9cqw] text-center"
+              >
+                <span
+                  className="grid place-items-center rounded-[1.6cqw]"
+                  style={{
+                    width: "6.4cqw",
+                    height: "6.4cqw",
+                    backgroundColor: `${tint}1f`,
+                    color: tint,
+                  }}
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    style={{ width: "4cqw", height: "4cqw" }}
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.7"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    {icon}
+                  </svg>
+                </span>
+                <p className="mt-[0.7cqw] text-[1.2cqw] font-semibold leading-tight text-[#0f172a]">
+                  {name}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -358,7 +394,7 @@ function CircuitSlide() {
    lengthening the rotation. */
 const SLIDES: { key: string; label: string; render: () => React.ReactNode }[] = [
   { key: "lattice", label: "Navy lattice", render: () => <LatticeSlide /> },
-  { key: "circuit", label: "Light circuit", render: () => <CircuitSlide /> },
+  { key: "tracks", label: "Call for submissions", render: () => <TracksSlide /> },
 ].slice(0, MAX_SLIDES);
 
 export function Banner() {

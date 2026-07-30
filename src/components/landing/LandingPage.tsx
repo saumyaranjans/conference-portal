@@ -41,10 +41,10 @@ const OBJECTIVES: { icon: React.ReactNode; text: string }[] = [
 
 const MILESTONES = [
   { date: "2026-09-21", label: "Registration opens" },
-  { date: "2026-11-23", label: "Abstract submission closes" },
-  { date: "2026-11-30", label: "Abstract decisions announced" },
+  { date: "2026-11-23", label: "Abstract submission closes", note: "All authors" },
+  { date: "2026-11-30", label: "Abstract decisions announced", note: "All authors" },
   { date: "2026-12-08", label: "Full paper submission closes", note: "Pathway B" },
-  { date: "2026-12-15", label: "Full paper decisions announced" },
+  { date: "2026-12-15", label: "Full paper decisions announced", note: "Pathway B" },
   { date: "2026-12-20", label: "Early bird registration closes" },
   { date: "2027-01-24", label: "Regular registration closes" },
   { date: "2027-02-25", label: "Conference, 25–27 February", note: "IIM Sambalpur" },
@@ -511,7 +511,58 @@ export function LandingPage() {
         {/* ---- 7. Important dates ---- */}
         <section>
           <Heading id="dates">Important dates</Heading>
-          <ol className="relative border-l-2 border-slate-200 ml-3 dark:border-slate-700">
+          {/* Horizontal on wide screens: labels alternate above and below the
+              rail so long text never collides with its neighbour. */}
+          <div className="hidden md:block overflow-x-auto pb-2">
+            <div className="relative min-w-[52rem] px-4">
+              <div className="absolute left-4 right-4 top-1/2 h-0.5 -translate-y-1/2 bg-slate-200 dark:bg-slate-700" />
+              <div className="relative grid grid-cols-8 gap-3">
+                {MILESTONES.map((m, i) => {
+                  const past = new Date(m.date) < today;
+                  const above = i % 2 === 0;
+                  const label = (
+                    <div className="text-center px-1">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                        {fmt(m.date)}
+                      </p>
+                      <p
+                        className={`text-xs font-medium leading-snug ${
+                          past
+                            ? "text-slate-400 line-through"
+                            : "text-slate-900 dark:text-slate-100"
+                        }`}
+                      >
+                        {m.label}
+                      </p>
+                      {m.note && (
+                        <span className="badge bg-slate-100 text-slate-600 mt-1">
+                          {m.note}
+                        </span>
+                      )}
+                    </div>
+                  );
+                  return (
+                    <div key={m.date} className="flex flex-col items-center">
+                      <div className="h-28 w-full flex items-end justify-center pb-3">
+                        {above ? label : null}
+                      </div>
+                      <span
+                        className={`h-4 w-4 shrink-0 rounded-full ring-4 ring-white dark:ring-slate-900 ${
+                          past ? "bg-slate-300" : "bg-blue-600"
+                        }`}
+                      />
+                      <div className="h-28 w-full flex items-start justify-center pt-3">
+                        {above ? null : label}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Vertical on narrow screens, where a rail cannot fit. */}
+          <ol className="md:hidden relative border-l-2 border-slate-200 ml-3 dark:border-slate-700">
             {MILESTONES.map((m) => {
               const past = new Date(m.date) < today;
               return (

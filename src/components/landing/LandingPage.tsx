@@ -150,7 +150,7 @@ function Avatar({ name, size }: { name: string; size: "lg" | "sm" }) {
 
 function Heading({ id, children }: { id?: string; children: React.ReactNode }) {
   return (
-    <h2 id={id} className="text-2xl font-semibold text-gradient mb-5 scroll-mt-8">
+    <h2 id={id} className="text-2xl font-semibold text-gradient mb-4 scroll-mt-8">
       {children}
     </h2>
   );
@@ -161,9 +161,9 @@ export function LandingPage() {
 
   return (
     <main className="min-h-screen">
-      <div className="max-w-6xl mx-auto px-4 py-6 space-y-16">
+      <div className="max-w-6xl mx-auto px-4 py-4 space-y-10">
         {/* ---- Hero ---- */}
-        <section className="space-y-6">
+        <section className="space-y-4">
           <Banner />
           <div className="flex flex-wrap items-center justify-center gap-3">
             <Link href="/login" className="btn-primary text-base px-6 py-3">
@@ -401,7 +401,7 @@ export function LandingPage() {
         <section>
           <Heading id="committee">Committees</Heading>
 
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-10">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
             {LEADERSHIP.map((p) => (
               <div key={p.name} className="card card-pad text-center card-hover">
                 <div className="flex justify-center mb-4">
@@ -516,7 +516,7 @@ export function LandingPage() {
           </div>
         </section>
 
-        <footer className="text-center text-xs text-slate-500 pb-10">
+        <footer className="text-center text-xs text-slate-500 pb-6">
           © GLOGIFT 2027 — AI-Driven Solutions in Management: Flexibility,
           Digitalisation &amp; Decarbonization
         </footer>

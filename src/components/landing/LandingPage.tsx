@@ -172,7 +172,7 @@ const LEADERSHIP = [
   { name: "Prof (Dr) M. P. Jaiswal", role: "Conference Patron", org: "Director, IIM Sambalpur", photo: "/people/mp-jaiswal.jpg" },
   { name: "Prof (Dr) Sushil", role: "GLOGIFT President", org: "Founder, GLOGIFT Society · Emeritus Professor, IIT Delhi", photo: "/people/sushil.jpg" },
   { name: "Prof (Dr) Seema Gupta", role: "Conference Convenor", org: "IIM Sambalpur", photo: "/people/seema-gupta.jpg" },
-  { name: "Prof (Dr) Saumyaranjan Sahoo", role: "Conference Convenor", org: "IIM Sambalpur" },
+  { name: "Prof (Dr) Saumyaranjan Sahoo", role: "Conference Convenor", org: "IIM Sambalpur", photo: "/people/saumyaranjan-sahoo.jpg" },
 ];
 
 /* Members are listed alphabetically, ignoring the honorific — sorted here

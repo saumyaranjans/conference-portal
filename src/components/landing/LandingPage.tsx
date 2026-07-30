@@ -508,7 +508,43 @@ export function LandingPage() {
           </p>
         </section>
 
-        {/* ---- 7. Committees ---- */}
+        {/* ---- 7. Important dates ---- */}
+        <section>
+          <Heading id="dates">Important dates</Heading>
+          <ol className="relative border-l-2 border-slate-200 ml-3 dark:border-slate-700">
+            {MILESTONES.map((m) => {
+              const past = new Date(m.date) < today;
+              return (
+                <li key={m.date} className="ml-6 pb-6 last:pb-0">
+                  <span
+                    className={`absolute -left-[9px] flex h-4 w-4 items-center justify-center rounded-full ring-4 ring-white dark:ring-slate-900 ${
+                      past ? "bg-slate-300" : "bg-blue-600"
+                    }`}
+                  />
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    {fmt(m.date)}
+                  </p>
+                  <p
+                    className={`text-sm font-medium ${
+                      past
+                        ? "text-slate-400 line-through"
+                        : "text-slate-900 dark:text-slate-100"
+                    }`}
+                  >
+                    {m.label}
+                    {m.note && (
+                      <span className="ml-2 badge bg-slate-100 text-slate-600">
+                        {m.note}
+                      </span>
+                    )}
+                  </p>
+                </li>
+              );
+            })}
+          </ol>
+        </section>
+
+        {/* ---- 8. Committees ---- */}
         <section>
           <Heading id="committee">Committees</Heading>
 
@@ -548,42 +584,6 @@ export function LandingPage() {
               </div>
             ))}
           </div>
-        </section>
-
-        {/* ---- 8. Important dates ---- */}
-        <section>
-          <Heading id="dates">Important dates</Heading>
-          <ol className="relative border-l-2 border-slate-200 ml-3 dark:border-slate-700">
-            {MILESTONES.map((m) => {
-              const past = new Date(m.date) < today;
-              return (
-                <li key={m.date} className="ml-6 pb-6 last:pb-0">
-                  <span
-                    className={`absolute -left-[9px] flex h-4 w-4 items-center justify-center rounded-full ring-4 ring-white dark:ring-slate-900 ${
-                      past ? "bg-slate-300" : "bg-blue-600"
-                    }`}
-                  />
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    {fmt(m.date)}
-                  </p>
-                  <p
-                    className={`text-sm font-medium ${
-                      past
-                        ? "text-slate-400 line-through"
-                        : "text-slate-900 dark:text-slate-100"
-                    }`}
-                  >
-                    {m.label}
-                    {m.note && (
-                      <span className="ml-2 badge bg-slate-100 text-slate-600">
-                        {m.note}
-                      </span>
-                    )}
-                  </p>
-                </li>
-              );
-            })}
-          </ol>
         </section>
 
         {/* ---- 9. Contact ---- */}

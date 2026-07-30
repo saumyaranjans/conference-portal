@@ -170,17 +170,17 @@ const FEES_USD = [
 const LEADERSHIP = [
   { name: "Prof (Dr) M. P. Jaiswal", role: "Conference Patron", org: "Director, IIM Sambalpur" },
   { name: "Prof (Dr) Sushil", role: "GLOGIFT President", org: "Founder, GLOGIFT Society · Emeritus Professor, IIT Delhi" },
-  { name: "Prof Seema Gupta", role: "Conference Convenor", org: "IIM Sambalpur" },
-  { name: "Prof Saumyaranjan Sahoo", role: "Conference Convenor", org: "IIM Sambalpur" },
+  { name: "Prof (Dr) Seema Gupta", role: "Conference Convenor", org: "IIM Sambalpur" },
+  { name: "Prof (Dr) Saumyaranjan Sahoo", role: "Conference Convenor", org: "IIM Sambalpur" },
 ];
 
 const COMMITTEE = [
   {
     group: "Conference Committee — Faculty (IIM Sambalpur)",
     people: [
-      "Prof Aarti Singh", "Prof Aqueeb Sohail Shaik", "Prof Atul Prashar",
-      "Prof Dharen Kumar Pandey", "Prof Hemachandra Padhan", "Prof A. Manish Kumar",
-      "Prof Prasanta Kumar Chopdhar", "Prof Ramakrushna Padhy",
+      "Prof (Dr) Aarti Singh", "Prof (Dr) Aqueeb Sohail Shaik", "Prof (Dr) Atul Prashar",
+      "Prof (Dr) Dharen Kumar Pandey", "Prof (Dr) Hemachandra Padhan", "Prof (Dr) A. Manish Kumar",
+      "Prof (Dr) Prasanta Kumar Chopdhar", "Prof (Dr) Ramakrushna Padhy",
     ],
   },
   { group: "Conference Committee — Post Doctoral (IIM Sambalpur)", people: ["Dr Jogeshwar Mahato", "Dr Jayjit Chakraborty"] },

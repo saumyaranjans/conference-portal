@@ -143,12 +143,12 @@ const SESSIONS: {
     icon: <path d="m12 5 9 4-9 4-9-4 9-4Zm-5 6v4c0 1.7 2.2 3 5 3s5-1.3 5-3v-4" />,
   },
   {
-    title: "Campus experience at IIM Sambalpur, on the Mahanadi",
+    title: "Directors’ Panel on Leadership in an AI-Driven Economy",
     tint: "bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-300",
     card: "bg-amber-50/60 border-amber-100 dark:bg-amber-500/10 dark:border-amber-500/25",
     anim: "anim-bob",
-    // Campus buildings beside flowing water.
-    icon: <path d="M3 21h18M6 21V9l5-3 5 3v12M9 12h1m4 0h1m-6 4h1m4 0h1M3 18c1.5-1 3-1 4.5 0s3 1 4.5 0 3-1 4.5 0 3 1 4.5 0" />,
+    // Speakers behind a panel table.
+    icon: <path d="M4 20h16M6 20v-4m12 4v-4M3 16h18M7.5 12.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm9 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm-4.5-1a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />,
   },
 ];
 
@@ -351,7 +351,7 @@ export function LandingPage() {
           </div>
 
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-3">
-            Special sessions, panels &amp; experiences
+            Special sessions &amp; panels
           </p>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {SESSIONS.map((sn) => (

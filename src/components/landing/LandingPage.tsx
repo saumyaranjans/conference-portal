@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Banner } from "@/components/landing/Banner";
+import { IkatStrip } from "@/components/landing/IkatStrip";
 import { TRACKS } from "@/components/landing/tracks";
 
 /**
@@ -298,6 +299,8 @@ export function LandingPage() {
 
   return (
     <main className="min-h-screen">
+      {/* Sambalpuri Ikat borders, top and bottom of the page. */}
+      <IkatStrip />
       <div className="max-w-6xl mx-auto px-4 py-4 space-y-10">
         {/* ---- Hero ---- */}
         <section className="space-y-4">
@@ -824,6 +827,7 @@ export function LandingPage() {
           © Indian Institute of Management Sambalpur
         </footer>
       </div>
+      <IkatStrip flip />
     </main>
   );
 }

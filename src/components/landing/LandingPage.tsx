@@ -456,8 +456,8 @@ export function LandingPage() {
             and accommodation are not included.
           </p>
           {[
-            { title: "Indian participants (INR, per delegate)", rows: FEES_INR },
-            { title: "Foreign delegates (USD, per delegate)", rows: FEES_USD },
+            { title: "Indian participants (INR, per delegate)", rows: FEES_INR, symbol: "₹" },
+            { title: "Foreign delegates (USD, per delegate)", rows: FEES_USD, symbol: "$" },
           ].map((table) => (
             <div key={table.title} className="mb-6">
               <p className="text-sm font-semibold text-slate-800 mb-2 dark:text-slate-200">
@@ -485,9 +485,9 @@ export function LandingPage() {
                         <td className="td font-medium text-slate-800 dark:text-slate-200">
                           {r[0]}
                         </td>
-                        <td className="td">{r[1]}</td>
-                        <td className="td">{r[2]}</td>
-                        <td className="td">{r[3]}</td>
+                        <td className="td">{table.symbol}{r[1]}</td>
+                        <td className="td">{table.symbol}{r[2]}</td>
+                        <td className="td">{table.symbol}{r[3]}</td>
                       </tr>
                     ))}
                   </tbody>

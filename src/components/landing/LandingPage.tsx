@@ -165,17 +165,6 @@ export function LandingPage() {
         {/* ---- Hero ---- */}
         <section className="space-y-4">
           <Banner />
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            <Link href="/login" className="btn-primary text-base px-6 py-3">
-              Submit your abstract
-            </Link>
-            <a href="#dates" className="btn-secondary text-base px-6 py-3">
-              Important dates
-            </a>
-            <a href="#submission" className="btn-secondary text-base px-6 py-3">
-              Call for submission
-            </a>
-          </div>
         </section>
 
         {/* ---- 1. About ---- */}

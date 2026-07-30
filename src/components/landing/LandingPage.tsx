@@ -177,14 +177,26 @@ const LEADERSHIP = [
 const COMMITTEE = [
   {
     group: "Conference Committee — Faculty (IIM Sambalpur)",
+    panel: "bg-blue-50/80 border-blue-100 dark:bg-blue-500/10 dark:border-blue-500/25",
+    label: "text-blue-700 dark:text-blue-300",
     people: [
       "Prof (Dr) Aarti Singh", "Prof (Dr) Aqueeb Sohail Shaik", "Prof (Dr) Atul Prashar",
       "Prof (Dr) Dharen Kumar Pandey", "Prof (Dr) Hemachandra Padhan", "Prof (Dr) A. Manish Kumar",
       "Prof (Dr) Prasanta Kumar Chopdhar", "Prof (Dr) Ramakrushna Padhy",
     ],
   },
-  { group: "Conference Committee — Post Doctoral (IIM Sambalpur)", people: ["Dr Jogeshwar Mahato", "Dr Jayjit Chakraborty"] },
-  { group: "Conference Committee — Staff (IIM Sambalpur)", people: ["Ms Sasmita Mohanty", "Ms Sunita Sahu"] },
+  {
+    group: "Conference Committee — Post Doctoral (IIM Sambalpur)",
+    panel: "bg-emerald-50/80 border-emerald-100 dark:bg-emerald-500/10 dark:border-emerald-500/25",
+    label: "text-emerald-700 dark:text-emerald-300",
+    people: ["Dr Jogeshwar Mahato", "Dr Jayjit Chakraborty"],
+  },
+  {
+    group: "Conference Committee — Staff (IIM Sambalpur)",
+    panel: "bg-amber-50/80 border-amber-100 dark:bg-amber-500/10 dark:border-amber-500/25",
+    label: "text-amber-700 dark:text-amber-300",
+    people: ["Ms Sasmita Mohanty", "Ms Sunita Sahu"],
+  },
 ];
 
 function fmt(iso: string) {
@@ -202,6 +214,55 @@ function initials(name: string) {
     .slice(0, 2)
     .map((w) => w[0])
     .join("");
+}
+
+const [FACULTY, POST_DOC, STAFF] = COMMITTEE;
+
+/**
+ * One membership type on its own coloured surface. `wide` lays the cards out
+ * across a full row; the narrow panels sit two-abreast beside each other.
+ */
+function CommitteePanel({
+  group,
+  people,
+  className,
+  wide,
+  hideLabel,
+}: {
+  group: (typeof COMMITTEE)[number];
+  people: string[];
+  className?: string;
+  wide?: boolean;
+  hideLabel?: boolean;
+}) {
+  if (people.length === 0) return null;
+  return (
+    <div className={`rounded-2xl border p-4 ${group.panel} ${className ?? ""}`}>
+      <p
+        className={`text-xs font-semibold uppercase tracking-wide mb-3 ${group.label} ${
+          hideLabel ? "lg:invisible" : ""
+        }`}
+      >
+        {group.group}
+      </p>
+      <div
+        className={`grid gap-3 grid-cols-2 ${
+          wide ? "sm:grid-cols-3 lg:grid-cols-6" : ""
+        }`}
+      >
+        {people.map((name) => (
+          <div key={name} className="card card-pad text-center">
+            <div className="flex justify-center mb-2">
+              <Avatar name={name} size="sm" />
+            </div>
+            <p className="text-xs font-medium text-slate-800 dark:text-slate-200">
+              {name}
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function Avatar({ name, size }: { name: string; size: "lg" | "sm" }) {
@@ -670,26 +731,24 @@ export function LandingPage() {
             ))}
           </div>
 
-          <div className="space-y-8">
-            {COMMITTEE.map((g) => (
-              <div key={g.group}>
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-3">
-                  {g.group}
-                </p>
-                <div className="grid gap-4 grid-cols-2 sm:grid-cols-4 lg:grid-cols-6">
-                  {g.people.map((name) => (
-                    <div key={name} className="card card-pad text-center">
-                      <div className="flex justify-center mb-2">
-                        <Avatar name={name} size="sm" />
-                      </div>
-                      <p className="text-xs font-medium text-slate-800 dark:text-slate-200">
-                        {name}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
+          {/* Each membership type gets its own tinted surface. The faculty
+              list runs a full row wide and its overflow sits beside the other
+              two panels, so the row never ends in empty space. */}
+          <div className="grid gap-4 lg:grid-cols-6">
+            <CommitteePanel
+              group={FACULTY}
+              people={FACULTY.people.slice(0, 6)}
+              className="lg:col-span-6"
+              wide
+            />
+            <CommitteePanel
+              group={FACULTY}
+              people={FACULTY.people.slice(6)}
+              className="lg:col-span-2"
+              hideLabel
+            />
+            <CommitteePanel group={POST_DOC} people={POST_DOC.people} className="lg:col-span-2" />
+            <CommitteePanel group={STAFF} people={STAFF.people} className="lg:col-span-2" />
           </div>
         </section>
 

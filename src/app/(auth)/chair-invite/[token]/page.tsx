@@ -20,7 +20,7 @@ export default async function ChairInvitePage({
     .from("track_editors")
     // Named FK: track_editors reaches profiles via profile_id and invited_by.
     .select(
-      "id, status, profile_id, tracks(name), profiles!track_editors_profile_id_fkey(full_name, email)"
+      "id, status, profile_id, track_id, tracks(name), profiles!track_editors_profile_id_fkey(full_name, email)"
     )
     .eq("token", token)
     .maybeSingle();
@@ -79,7 +79,11 @@ export default async function ChairInvitePage({
         Convener assigns papers to you one at a time, and each appears in your
         Track Queue as it is handed over.
       </p>
-      <AcceptChairInvite token={token} trackName={trackName} />
+      <AcceptChairInvite
+        token={token}
+        trackName={trackName}
+        trackId={row.track_id}
+      />
     </Shell>
   );
 }

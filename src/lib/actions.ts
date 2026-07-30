@@ -2280,6 +2280,61 @@ export async function acceptTrackInvitation(
 }
 
 /**
+ * Decline an invitation to chair a track. The row is removed rather than kept
+ * as a refusal, so the Convener can invite someone else — or the same person
+ * again later — with a clean slate. They are notified either way.
+ */
+export async function declineTrackInvitation(
+  formData: FormData
+): Promise<ActionResult> {
+  const profile = await requireProfile();
+  const admin = createAdminClient();
+
+  const trackId = String(formData.get("track_id") ?? "");
+  if (!trackId) return { ok: false, message: "Missing track." };
+
+  const { data: row } = await admin
+    .from("track_editors")
+    .select("id, status, invited_by, tracks(name)")
+    .eq("track_id", trackId)
+    .eq("profile_id", profile.id)
+    .maybeSingle();
+  if (!row) return { ok: false, message: "No invitation for that track." };
+  if ((row as any).status === "accepted")
+    return {
+      ok: false,
+      message:
+        "You already chair this track. Ask the Convener to release you from it.",
+    };
+
+  const { error } = await admin
+    .from("track_editors")
+    .delete()
+    .eq("id", (row as any).id);
+  if (error) return { ok: false, message: error.message };
+
+  const trackName = (row as any).tracks?.name ?? "a track";
+  if ((row as any).invited_by) {
+    await admin.from("notifications").insert({
+      profile_id: (row as any).invited_by,
+      title: "A Track Editor invitation was declined",
+      body: `${
+        profile.full_name || profile.email
+      } has declined to chair ${trackName}. The track needs someone else.`,
+      link: "/chief",
+    });
+  }
+
+  await audit(profile.id, "track.chair_declined", "track", trackId);
+  revalidatePath("/editor");
+  revalidatePath("/chief");
+  return {
+    ok: true,
+    message: `Declined. The Convener has been told that ${trackName} needs another Track Editor.`,
+  };
+}
+
+/**
  * Accept — or hand back — a paper the Convener assigned. Declining returns it
  * to the Convener rather than leaving it in limbo.
  */

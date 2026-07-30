@@ -2,15 +2,21 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { acceptTrackChairInvite } from "@/lib/actions";
+import {
+  acceptTrackChairInvite,
+  declineTrackInvitation,
+} from "@/lib/actions";
 
 /** The accept button on a track-chair invitation. */
 export function AcceptChairInvite({
   token,
   trackName,
+  trackId,
 }: {
   token: string;
   trackName: string;
+  /** Present when the invitation can also be declined from here. */
+  trackId?: string;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -21,6 +27,17 @@ export function AcceptChairInvite({
   async function accept() {
     setBusy(true);
     const res = await acceptTrackChairInvite(token);
+    setBusy(false);
+    setResult({ ok: res.ok, message: res.message ?? "" });
+    if (res.ok) router.refresh();
+  }
+
+  async function reject() {
+    if (!trackId) return;
+    setBusy(true);
+    const fd = new FormData();
+    fd.set("track_id", trackId);
+    const res = await declineTrackInvitation(fd);
     setBusy(false);
     setResult({ ok: res.ok, message: res.message ?? "" });
     if (res.ok) router.refresh();
@@ -40,6 +57,17 @@ export function AcceptChairInvite({
             ? "Accepted ✓"
             : `Accept — Track Editor for ${trackName}`}
       </button>
+
+      {trackId && !result?.ok && (
+        <button
+          type="button"
+          onClick={reject}
+          disabled={busy}
+          className="btn-secondary ml-2"
+        >
+          Reject
+        </button>
+      )}
 
       {result && (
         <p

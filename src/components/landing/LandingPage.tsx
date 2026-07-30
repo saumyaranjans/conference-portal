@@ -98,12 +98,14 @@ const PUBLICATIONS = [
 const SESSIONS: {
   title: string;
   tint: string;
+  card: string;
   anim: string;
   icon: React.ReactNode;
 }[] = [
   {
     title: "AI and Sustainability Leadership Forum",
     tint: "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300",
+    card: "bg-emerald-50/60 border-emerald-100 dark:bg-emerald-500/10 dark:border-emerald-500/25",
     anim: "anim-sway",
     // A leaf, swaying.
     icon: <path d="M4 20c8 2 16-4 16-14 0-1-.2-2-.5-3-9 0-15 5-15 11 0 2 .6 4 1.5 5Zm0 0 7-7" />,
@@ -111,6 +113,7 @@ const SESSIONS: {
   {
     title: "Industry–Academia Conclave on Digital Finance",
     tint: "bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-300",
+    card: "bg-blue-50/60 border-blue-100 dark:bg-blue-500/10 dark:border-blue-500/25",
     anim: "anim-bob",
     // A bridge between two banks.
     icon: <path d="M3 17h18M5 17v-4m14 4v-4M3 13c4-5 14-5 18 0M8 17v-3m8 3v-3" />,
@@ -118,6 +121,7 @@ const SESSIONS: {
   {
     title: "Policy Roundtable on Decarbonization and Inclusive Growth",
     tint: "bg-teal-50 text-teal-600 dark:bg-teal-500/15 dark:text-teal-300",
+    card: "bg-teal-50/60 border-teal-100 dark:bg-teal-500/10 dark:border-teal-500/25",
     anim: "anim-spin-slow",
     // A globe, turning.
     icon: <path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 0c3 3 3 15 0 18M3.5 9h17M3.5 15h17" />,
@@ -125,6 +129,7 @@ const SESSIONS: {
   {
     title: "Startup Showcase on FinTech and Smart Operations",
     tint: "bg-violet-50 text-violet-600 dark:bg-violet-500/15 dark:text-violet-300",
+    card: "bg-violet-50/60 border-violet-100 dark:bg-violet-500/10 dark:border-violet-500/25",
     anim: "anim-lift",
     // A rocket, lifting.
     icon: <path d="M12 3c3 2 5 6 5 10l-3 3h-4l-3-3c0-4 2-8 5-10Zm0 6.5v.01M9 19l-2 2m8-2 2 2" />,
@@ -132,9 +137,18 @@ const SESSIONS: {
   {
     title: "Doctoral Colloquium for Emerging Researchers",
     tint: "bg-rose-50 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300",
+    card: "bg-rose-50/60 border-rose-100 dark:bg-rose-500/10 dark:border-rose-500/25",
     anim: "anim-tip",
     // A graduation cap, tipping.
     icon: <path d="m12 5 9 4-9 4-9-4 9-4Zm-5 6v4c0 1.7 2.2 3 5 3s5-1.3 5-3v-4" />,
+  },
+  {
+    title: "Campus experience at IIM Sambalpur, on the Mahanadi",
+    tint: "bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-300",
+    card: "bg-amber-50/60 border-amber-100 dark:bg-amber-500/10 dark:border-amber-500/25",
+    anim: "anim-bob",
+    // Campus buildings beside flowing water.
+    icon: <path d="M3 21h18M6 21V9l5-3 5 3v12M9 12h1m4 0h1m-6 4h1m4 0h1M3 18c1.5-1 3-1 4.5 0s3 1 4.5 0 3-1 4.5 0 3 1 4.5 0" />,
   },
 ];
 
@@ -337,13 +351,13 @@ export function LandingPage() {
           </div>
 
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-3">
-            Special sessions &amp; panels
+            Special sessions, panels &amp; experiences
           </p>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {SESSIONS.map((sn) => (
               <div
                 key={sn.title}
-                className="card card-pad card-hover flex items-start gap-3"
+                className={`card card-pad card-hover flex items-start gap-3 ${sn.card}`}
               >
                 <span
                   className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${sn.tint}`}

@@ -169,7 +169,7 @@ const FEES_USD = [
 ];
 
 const LEADERSHIP = [
-  { name: "Prof (Dr) M. P. Jaiswal", role: "Conference Patron", org: "Director, IIM Sambalpur" },
+  { name: "Prof (Dr) M. P. Jaiswal", role: "Conference Patron", org: "Director, IIM Sambalpur", photo: "/people/mp-jaiswal.jpg" },
   { name: "Prof (Dr) Sushil", role: "GLOGIFT President", org: "Founder, GLOGIFT Society · Emeritus Professor, IIT Delhi" },
   { name: "Prof (Dr) Seema Gupta", role: "Conference Convenor", org: "IIM Sambalpur" },
   { name: "Prof (Dr) Saumyaranjan Sahoo", role: "Conference Convenor", org: "IIM Sambalpur" },
@@ -275,8 +275,26 @@ function CommitteePanel({
   );
 }
 
-function Avatar({ name, size }: { name: string; size: "lg" | "sm" }) {
+function Avatar({
+  name,
+  size,
+  photo,
+}: {
+  name: string;
+  size: "lg" | "sm";
+  photo?: string;
+}) {
   const dim = size === "lg" ? "h-32 w-32 text-3xl" : "h-16 w-16 text-base";
+  const ring = "ring-4 ring-white shadow-md dark:ring-slate-800";
+  if (photo) {
+    return (
+      <img
+        src={photo}
+        alt={name}
+        className={`${dim} rounded-full object-cover ${ring}`}
+      />
+    );
+  }
   return (
     <span
       className={`${dim} flex items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 font-semibold text-white ring-4 ring-white shadow-md dark:ring-slate-800`}
@@ -740,7 +758,7 @@ export function LandingPage() {
             {LEADERSHIP.map((p) => (
               <div key={p.name} className="card card-pad text-center card-hover">
                 <div className="flex justify-center mb-4">
-                  <Avatar name={p.name} size="lg" />
+                  <Avatar name={p.name} size="lg" photo={p.photo} />
                 </div>
                 <p className="badge bg-blue-100 text-blue-800">{p.role}</p>
                 <p className="text-base font-semibold text-slate-900 mt-2 dark:text-slate-100">

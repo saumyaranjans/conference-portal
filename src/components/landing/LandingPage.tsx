@@ -64,10 +64,34 @@ const TRACKS = [
 ];
 
 const PUBLICATIONS = [
-  ["Conference Proceedings", "Reputed publisher", "All accepted and presented papers appear in a dedicated proceedings volume."],
-  ["Global Journal of Flexible Manufacturing", "ABDC ‘A’ · Springer", "Selected best papers fast-tracked after further peer review and revision."],
-  ["International Journal of Global Business and Competitiveness", "ABDC ‘C’ · Springer", "Selected best papers fast-tracked after further peer review and revision."],
-  ["Book Series on Flexible Systems Management", "Springer · Scopus-indexed", "Selected best papers fast-tracked as book chapters."],
+  {
+    title: "GLOGIFT 2027 Conference Proceedings",
+    badge: "Book with ISBN",
+    cover: "/journals/proceedings.svg",
+    url: "",
+    detail: "All accepted and presented papers appear in a dedicated proceedings volume.",
+  },
+  {
+    title: "Global Journal of Flexible Systems Management",
+    badge: "Springer · ABDC-A",
+    cover: "/journals/gjfsm.jpg",
+    url: "https://link.springer.com/journal/40171",
+    detail: "Selected best papers fast-tracked after further peer review and revision.",
+  },
+  {
+    title: "International Journal of Global Business & Competitiveness",
+    badge: "Springer · ABDC-C",
+    cover: "/journals/ijgbc.jpg",
+    url: "https://link.springer.com/journal/42943",
+    detail: "Selected best papers fast-tracked after further peer review and revision.",
+  },
+  {
+    title: "Book Series on Flexible Systems Management",
+    badge: "Springer · Scopus-indexed",
+    cover: "/journals/book-series.jpg",
+    url: "https://link.springer.com/series/10780",
+    detail: "Selected best papers fast-tracked as book chapters.",
+  },
 ];
 
 const SESSIONS = [
@@ -238,17 +262,42 @@ export function LandingPage() {
             Publishing outlets
           </p>
           <div className="grid gap-4 sm:grid-cols-2 mb-8">
-            {PUBLICATIONS.map(([title, badge, detail]) => (
-              <div key={title} className="card card-pad card-hover">
-                <span className="badge bg-amber-100 text-amber-900">{badge}</span>
-                <p className="text-sm font-semibold text-slate-900 mt-2 dark:text-slate-100">
-                  {title}
-                </p>
-                <p className="text-xs text-slate-600 mt-1.5 dark:text-slate-400">
-                  {detail}
-                </p>
-              </div>
-            ))}
+            {PUBLICATIONS.map((pub) => {
+              const body = (
+                <div className="card card-pad card-hover flex gap-4 h-full">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={pub.cover}
+                    alt=""
+                    className="h-24 w-[4.5rem] shrink-0 rounded-md object-cover ring-1 ring-slate-200 bg-white dark:ring-slate-700"
+                  />
+                  <div className="min-w-0">
+                    <span className="badge bg-amber-100 text-amber-900">
+                      {pub.badge}
+                    </span>
+                    <p className="text-sm font-semibold text-slate-900 mt-2 dark:text-slate-100">
+                      {pub.title}
+                    </p>
+                    <p className="text-xs text-slate-600 mt-1.5 dark:text-slate-400">
+                      {pub.detail}
+                    </p>
+                  </div>
+                </div>
+              );
+              return pub.url ? (
+                <a
+                  key={pub.title}
+                  href={pub.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block"
+                >
+                  {body}
+                </a>
+              ) : (
+                <div key={pub.title}>{body}</div>
+              );
+            })}
           </div>
 
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-3">

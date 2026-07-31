@@ -445,7 +445,6 @@ const NAV_LINKS: { href: string; label: string; accent?: boolean }[] = [
   // The one link that leaves the page, so it carries the colour and pulse
   // that mark it out from the section jumps.
   { href: "/travelogue", label: "Sambalpur travelogue", accent: true },
-  { href: "/how-to-reach", label: "How to reach", accent: true },
 ];
 
 function NavLinks({ className }: { className: string }) {

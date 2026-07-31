@@ -923,16 +923,16 @@ export function LandingPage() {
                     skips: false,
                   },
                 ].map((route) => (
-                  <div key={route.name} className="flex items-center gap-3">
-                    <span className="w-44 shrink-0 text-right">
+                  <div key={route.name}>
+                    <div className="mb-1 flex items-baseline gap-2">
                       <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
                         {route.name}
                       </span>
-                      <span className="block text-[11px] text-slate-500">
+                      <span className="text-[11px] text-slate-500">
                         {route.detail}
                       </span>
-                    </span>
-                    <span className="grid grid-cols-9 gap-3 flex-1">
+                    </div>
+                    <div className="grid grid-cols-9 gap-3">
                       <span
                         className={`col-span-4 h-1.5 rounded-full ${route.colour}`}
                       />
@@ -949,10 +949,10 @@ export function LandingPage() {
                       <span
                         className={`col-span-3 h-1.5 rounded-full ${route.colour}`}
                       />
-                    </span>
+                    </div>
                   </div>
                 ))}
-                <p className="text-[11px] text-slate-500 pl-[12.25rem]">
+                <p className="text-[11px] text-slate-500">
                   The faded stretch is the full-paper stage, which Pathway A
                   skips — both pathways rejoin to register and present.
                 </p>

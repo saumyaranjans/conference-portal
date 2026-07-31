@@ -156,9 +156,6 @@ export function TraveloguePage() {
             while you are here, and where to find the Sambalpuri Ikat the region
             is known for.
           </p>
-          <div className="mt-5">
-            <DownloadButton />
-          </div>
         </section>
 
         <section className="card card-pad">

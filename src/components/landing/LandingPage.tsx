@@ -469,12 +469,14 @@ export function LandingPage() {
             narrow screens, where the row would not fit beside the actions. */}
           <div className="hidden lg:flex items-center gap-1 text-sm">
             {[
-              ["#submission", "Conference tracks"],
-              ["#guidelines", "Submit abstract/full paper"],
-              ["#fees", "Register for conference"],
-              ["#dates", "Important dates"],
-              ["/travelogue", "Sambalpur travelogue"],
-            ].map(([href, label]) => (
+              { href: "#submission", label: "Conference tracks" },
+              { href: "#guidelines", label: "Submit abstract/full paper" },
+              { href: "#fees", label: "Register for conference" },
+              { href: "#dates", label: "Important dates" },
+              // The one link that leaves the page, so it carries the colour
+              // and pulse that mark it out from the section jumps.
+              { href: "/travelogue", label: "Sambalpur travelogue", accent: true },
+            ].map(({ href, label, accent }) => (
               <a
                 key={href}
                 href={href}
@@ -482,7 +484,13 @@ export function LandingPage() {
                          hover:bg-white hover:text-blue-700
                          dark:text-slate-200 dark:hover:bg-slate-800"
               >
-                {label}
+                {accent ? (
+                  <span className="text-gradient text-attention font-semibold">
+                    {label}
+                  </span>
+                ) : (
+                  label
+                )}
               </a>
             ))}
           </div>

@@ -313,9 +313,14 @@ body {
 .btn-attention > span {
   animation: attention-fade 2s ease-in-out infinite;
 }
+/* The same soft pulse for a link, without the ring. */
+.text-attention {
+  animation: attention-fade 2s ease-in-out infinite;
+}
 @media (prefers-reduced-motion: reduce) {
   .btn-attention,
-  .btn-attention > span {
+  .btn-attention > span,
+  .text-attention {
     animation: none;
   }
 }

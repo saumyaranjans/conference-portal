@@ -473,6 +473,7 @@ export function LandingPage() {
               ["#guidelines", "Submit abstract/full paper"],
               ["#fees", "Register for conference"],
               ["#dates", "Important dates"],
+              ["/travelogue", "Sambalpur travelogue"],
             ].map(([href, label]) => (
               <a
                 key={href}

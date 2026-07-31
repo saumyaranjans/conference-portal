@@ -3,9 +3,18 @@ import { headers } from "next/headers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "GLOGIFT 2027 — Conference Submission Portal",
+  metadataBase: new URL("https://glogift2027.in"),
+  title: "GLOGIFT2027 - IIM SAMBALPUR",
   description:
     "International Conference on AI-Driven Solutions in Management: Flexibility, Digitalisation and Decarbonization — GLOGIFT 2027, IIM Sambalpur.",
+  openGraph: {
+    title: "GLOGIFT2027 - IIM SAMBALPUR",
+    description:
+      "International Conference on AI-Driven Solutions in Management: Flexibility, Digitalisation and Decarbonization — GLOGIFT 2027, IIM Sambalpur.",
+    url: "https://glogift2027.in",
+    siteName: "GLOGIFT2027 - IIM SAMBALPUR",
+    type: "website",
+  },
 };
 
 export default async function RootLayout({

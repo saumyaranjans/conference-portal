@@ -48,16 +48,60 @@ const OBJECTIVES: { icon: React.ReactNode; text: string }[] = [
    the abstract stretch, ambers for the Pathway B full-paper stretch, greens
    through registration, pink for the conference itself. */
 const MILESTONES = [
-  { date: "2026-09-21", label: "Registration opens", dot: "bg-sky-500", halo: "group-hover:shadow-sky-500/50" },
-  { date: "2026-11-23", label: "Abstract submission closes", note: "All authors", dot: "bg-blue-600", halo: "group-hover:shadow-blue-600/50" },
-  { date: "2026-11-30", label: "Abstract decisions announced", note: "All authors", dot: "bg-indigo-500", halo: "group-hover:shadow-indigo-500/50" },
-  { date: "2026-12-08", label: "Full paper submission closes", note: "Pathway B", dot: "bg-amber-500", halo: "group-hover:shadow-amber-500/50" },
-  { date: "2026-12-15", label: "Full paper decisions announced", note: "Pathway B", dot: "bg-orange-500", halo: "group-hover:shadow-orange-500/50" },
-  { date: "2026-12-20", label: "Early bird registration closes", dot: "bg-emerald-500", halo: "group-hover:shadow-emerald-500/50" },
-  { date: "2027-01-24", label: "Regular registration closes", dot: "bg-teal-500", halo: "group-hover:shadow-teal-500/50" },
-  { date: "2027-02-25", label: "Conference, 25–27 February", note: "IIM Sambalpur", dot: "bg-pink-600", halo: "group-hover:shadow-pink-600/50" },
+  {
+    date: "2026-09-21",
+    label: "Registration opens",
+    dot: "bg-sky-500",
+    halo: "group-hover:shadow-sky-500/50",
+  },
+  {
+    date: "2026-11-23",
+    label: "Abstract submission closes",
+    note: "All authors",
+    dot: "bg-blue-600",
+    halo: "group-hover:shadow-blue-600/50",
+  },
+  {
+    date: "2026-11-30",
+    label: "Abstract decisions announced",
+    note: "All authors",
+    dot: "bg-indigo-500",
+    halo: "group-hover:shadow-indigo-500/50",
+  },
+  {
+    date: "2026-12-08",
+    label: "Full paper submission closes",
+    note: "Pathway B",
+    dot: "bg-amber-500",
+    halo: "group-hover:shadow-amber-500/50",
+  },
+  {
+    date: "2026-12-15",
+    label: "Full paper decisions announced",
+    note: "Pathway B",
+    dot: "bg-orange-500",
+    halo: "group-hover:shadow-orange-500/50",
+  },
+  {
+    date: "2026-12-20",
+    label: "Early bird registration closes",
+    dot: "bg-emerald-500",
+    halo: "group-hover:shadow-emerald-500/50",
+  },
+  {
+    date: "2027-01-24",
+    label: "Regular registration closes",
+    dot: "bg-teal-500",
+    halo: "group-hover:shadow-teal-500/50",
+  },
+  {
+    date: "2027-02-25",
+    label: "Conference, 25–27 February",
+    note: "IIM Sambalpur",
+    dot: "bg-pink-600",
+    halo: "group-hover:shadow-pink-600/50",
+  },
 ];
-
 
 const PUBLICATIONS = [
   {
@@ -65,21 +109,24 @@ const PUBLICATIONS = [
     badge: "Book with ISBN",
     cover: "/journals/proceedings.svg",
     url: "",
-    detail: "All accepted and presented papers appear in a dedicated proceedings volume.",
+    detail:
+      "All accepted and presented papers appear in a dedicated proceedings volume.",
   },
   {
     title: "Global Journal of Flexible Systems Management",
     badge: "Springer · ABDC-A",
     cover: "/journals/gjfsm.jpg",
     url: "https://link.springer.com/journal/40171",
-    detail: "Selected best papers fast-tracked after further peer review and revision.",
+    detail:
+      "Selected best papers fast-tracked after further peer review and revision.",
   },
   {
     title: "International Journal of Global Business & Competitiveness",
     badge: "Springer · ABDC-C",
     cover: "/journals/ijgbc.jpg",
     url: "https://link.springer.com/journal/42943",
-    detail: "Selected best papers fast-tracked after further peer review and revision.",
+    detail:
+      "Selected best papers fast-tracked after further peer review and revision.",
   },
   {
     title: "Book Series on Flexible Systems Management",
@@ -104,7 +151,9 @@ const SESSIONS: {
     card: "bg-emerald-50/60 border-emerald-100 dark:bg-emerald-500/10 dark:border-emerald-500/25",
     anim: "anim-sway",
     // A leaf, swaying.
-    icon: <path d="M4 20c8 2 16-4 16-14 0-1-.2-2-.5-3-9 0-15 5-15 11 0 2 .6 4 1.5 5Zm0 0 7-7" />,
+    icon: (
+      <path d="M4 20c8 2 16-4 16-14 0-1-.2-2-.5-3-9 0-15 5-15 11 0 2 .6 4 1.5 5Zm0 0 7-7" />
+    ),
   },
   {
     title: "Industry–Academia Conclave on Digital Finance",
@@ -112,7 +161,9 @@ const SESSIONS: {
     card: "bg-blue-50/60 border-blue-100 dark:bg-blue-500/10 dark:border-blue-500/25",
     anim: "anim-bob",
     // A bridge between two banks.
-    icon: <path d="M3 17h18M5 17v-4m14 4v-4M3 13c4-5 14-5 18 0M8 17v-3m8 3v-3" />,
+    icon: (
+      <path d="M3 17h18M5 17v-4m14 4v-4M3 13c4-5 14-5 18 0M8 17v-3m8 3v-3" />
+    ),
   },
   {
     title: "Policy Roundtable on Decarbonization and Inclusive Growth",
@@ -120,7 +171,9 @@ const SESSIONS: {
     card: "bg-teal-50/60 border-teal-100 dark:bg-teal-500/10 dark:border-teal-500/25",
     anim: "anim-spin-slow",
     // A globe, turning.
-    icon: <path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 0c3 3 3 15 0 18M3.5 9h17M3.5 15h17" />,
+    icon: (
+      <path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 0c3 3 3 15 0 18M3.5 9h17M3.5 15h17" />
+    ),
   },
   {
     title: "Startup Showcase on FinTech and Smart Operations",
@@ -128,7 +181,9 @@ const SESSIONS: {
     card: "bg-violet-50/60 border-violet-100 dark:bg-violet-500/10 dark:border-violet-500/25",
     anim: "anim-lift",
     // A rocket, lifting.
-    icon: <path d="M12 3c3 2 5 6 5 10l-3 3h-4l-3-3c0-4 2-8 5-10Zm0 6.5v.01M9 19l-2 2m8-2 2 2" />,
+    icon: (
+      <path d="M12 3c3 2 5 6 5 10l-3 3h-4l-3-3c0-4 2-8 5-10Zm0 6.5v.01M9 19l-2 2m8-2 2 2" />
+    ),
   },
   {
     title: "Doctoral Colloquium for Emerging Researchers",
@@ -136,7 +191,9 @@ const SESSIONS: {
     card: "bg-rose-50/60 border-rose-100 dark:bg-rose-500/10 dark:border-rose-500/25",
     anim: "anim-tip",
     // A graduation cap, tipping.
-    icon: <path d="m12 5 9 4-9 4-9-4 9-4Zm-5 6v4c0 1.7 2.2 3 5 3s5-1.3 5-3v-4" />,
+    icon: (
+      <path d="m12 5 9 4-9 4-9-4 9-4Zm-5 6v4c0 1.7 2.2 3 5 3s5-1.3 5-3v-4" />
+    ),
   },
   {
     title: "Directors’ Panel on Leadership in an AI-Driven Economy",
@@ -144,17 +201,37 @@ const SESSIONS: {
     card: "bg-amber-50/60 border-amber-100 dark:bg-amber-500/10 dark:border-amber-500/25",
     anim: "anim-bob",
     // Speakers behind a panel table.
-    icon: <path d="M4 20h16M6 20v-4m12 4v-4M3 16h18M7.5 12.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm9 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm-4.5-1a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />,
+    icon: (
+      <path d="M4 20h16M6 20v-4m12 4v-4M3 16h18M7.5 12.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm9 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm-4.5-1a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />
+    ),
   },
 ];
 
 const GUIDELINES = [
-  ["Stage 1 — Abstract (mandatory)", "Submit a 500-word abstract through the portal, naming the track it belongs to. State your intended Stage 2 pathway at this point."],
-  ["Stage 2 — Choose your pathway", "Pathway A: present without a full paper. Pathway B: after your abstract is accepted, prepare the full paper in accordance with the Paper Submission Guidelines sent with the acceptance email — maximum 10,000 words including references, tables, figures and appendices."],
-  ["Review", "Abstracts are reviewed by the Track Editor, who may seek reviewers or decide directly. Pathway B full papers undergo double-blind peer review by the Scientific Committee."],
-  ["Notification", "You are told of acceptance, rejection or required revisions, with feedback."],
-  ["Your place is secured by the abstract", "If a Pathway B full paper is not accepted, you may still register, attend and present on the strength of the accepted abstract."],
-  ["Registration and final formatting", "Accepted authors register. Pathway B authors submit a formatted paper; others submit presentation materials."],
+  [
+    "Stage 1 — Abstract (mandatory)",
+    "Submit a 500-word abstract through the portal, naming the track it belongs to. State your intended Stage 2 pathway at this point.",
+  ],
+  [
+    "Stage 2 — Choose your pathway",
+    "Pathway A: present without a full paper. Pathway B: after your abstract is accepted, prepare the full paper in accordance with the Paper Submission Guidelines sent with the acceptance email — maximum 10,000 words including references, tables, figures and appendices.",
+  ],
+  [
+    "Review",
+    "Abstracts are reviewed by the Track Editor, who may seek reviewers or decide directly. Pathway B full papers undergo double-blind peer review by the Scientific Committee.",
+  ],
+  [
+    "Notification",
+    "You are told of acceptance, rejection or required revisions, with feedback.",
+  ],
+  [
+    "Your place is secured by the abstract",
+    "If a Pathway B full paper is not accepted, you may still register, attend and present on the strength of the accepted abstract.",
+  ],
+  [
+    "Registration and final formatting",
+    "Accepted authors register. Pathway B authors submit a formatted paper; others submit presentation materials.",
+  ],
 ];
 
 const FEES_INR = [
@@ -171,10 +248,26 @@ const FEES_USD = [
 ];
 
 const LEADERSHIP = [
-  { name: "Prof (Dr) M. P. Jaiswal", role: "Conference Patron", org: "Director, IIM Sambalpur" },
-  { name: "Prof (Dr) Sushil", role: "GLOGIFT President", org: "Founder, GLOGIFT Society · Emeritus Professor, IIT Delhi" },
-  { name: "Prof (Dr) Seema Gupta", role: "Conference Convenor", org: "IIM Sambalpur" },
-  { name: "Prof (Dr) Saumyaranjan Sahoo", role: "Conference Co-Convenor", org: "IIM Sambalpur" },
+  {
+    name: "Prof (Dr) M. P. Jaiswal",
+    role: "Conference Patron",
+    org: "Director, IIM Sambalpur",
+  },
+  {
+    name: "Prof (Dr) Sushil",
+    role: "GLOGIFT President",
+    org: "Founder, GLOGIFT Society · Emeritus Professor, IIT Delhi",
+  },
+  {
+    name: "Prof (Dr) Seema Gupta",
+    role: "Conference Convenor",
+    org: "IIM Sambalpur",
+  },
+  {
+    name: "Prof (Dr) Saumyaranjan Sahoo",
+    role: "Conference Co-Convenor",
+    org: "IIM Sambalpur",
+  },
 ];
 
 /* Members are listed alphabetically, ignoring the honorific — sorted here
@@ -189,23 +282,31 @@ const byName = (a: string, b: string) =>
 const COMMITTEE = [
   {
     group: "Conference Committee — Faculty (IIM Sambalpur)",
-    panel: "bg-blue-50/80 border-blue-100 dark:bg-blue-500/10 dark:border-blue-500/25",
+    panel:
+      "bg-blue-50/80 border-blue-100 dark:bg-blue-500/10 dark:border-blue-500/25",
     label: "text-blue-700 dark:text-blue-300",
     people: [
-      "Prof (Dr) Aarti Singh", "Prof (Dr) Aqueeb Sohail Shaik", "Prof (Dr) Atul Prashar",
-      "Prof (Dr) Dharen Kumar Pandey", "Prof (Dr) Hemachandra Padhan", "Prof (Dr) A. Manish Kumar",
-      "Prof (Dr) Prasanta Kumar Chopdhar", "Prof (Dr) Ramakrushna Padhy",
+      "Prof (Dr) Aarti Singh",
+      "Prof (Dr) Aqueeb Sohail Shaik",
+      "Prof (Dr) Atul Prashar",
+      "Prof (Dr) Dharen Kumar Pandey",
+      "Prof (Dr) Hemachandra Padhan",
+      "Prof (Dr) A. Manish Kumar",
+      "Prof (Dr) Prasanta Kumar Chopdhar",
+      "Prof (Dr) Ramakrushna Padhy",
     ],
   },
   {
     group: "Conference Committee — Post Doctoral (IIM Sambalpur)",
-    panel: "bg-emerald-50/80 border-emerald-100 dark:bg-emerald-500/10 dark:border-emerald-500/25",
+    panel:
+      "bg-emerald-50/80 border-emerald-100 dark:bg-emerald-500/10 dark:border-emerald-500/25",
     label: "text-emerald-700 dark:text-emerald-300",
     people: ["Dr Jogeshwar Mahato", "Dr Jayjit Chakraborty"],
   },
   {
     group: "Conference Committee — Staff (IIM Sambalpur)",
-    panel: "bg-amber-50/80 border-amber-100 dark:bg-amber-500/10 dark:border-amber-500/25",
+    panel:
+      "bg-amber-50/80 border-amber-100 dark:bg-amber-500/10 dark:border-amber-500/25",
     label: "text-amber-700 dark:text-amber-300",
     people: ["Ms Sasmita Mohanty", "Ms Sunita Sahu"],
   },
@@ -322,7 +423,10 @@ function Avatar({ name, size }: { name: string; size: "lg" | "sm" }) {
 
 function Heading({ id, children }: { id?: string; children: React.ReactNode }) {
   return (
-    <h2 id={id} className="text-2xl font-semibold text-gradient mb-4 scroll-mt-8">
+    <h2
+      id={id}
+      className="text-2xl font-semibold text-gradient mb-4 scroll-mt-8"
+    >
       {children}
     </h2>
   );
@@ -339,17 +443,49 @@ export function LandingPage() {
       {/* Slim utility row: home on the left, the two portal actions on the
           right. Kept above the banner so the hero stays uninterrupted. */}
       <nav className="max-w-6xl mx-auto px-4 pt-3 flex items-center justify-between gap-3">
-        <a
-          href="#top"
-          className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm
+        <div className="flex items-center gap-1">
+          <a
+            href="#top"
+            className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm
                      font-medium text-slate-700 transition hover:bg-white hover:text-blue-700
                      dark:text-slate-200 dark:hover:bg-slate-800"
-        >
-          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-            <path d="M3 11l9-8 9 8M6 10v10h12V10" />
-          </svg>
-          Home
-        </a>
+          >
+            <svg
+              viewBox="0 0 24 24"
+              className="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
+              <path d="M3 11l9-8 9 8M6 10v10h12V10" />
+            </svg>
+            Home
+          </a>
+
+          {/* Jumps to the three sections visitors arrive looking for. Hidden on
+            narrow screens, where the row would not fit beside the actions. */}
+          <div className="hidden lg:flex items-center gap-1 text-sm">
+            {[
+              ["#submission", "Conference Tracks"],
+              ["#guidelines", "Submit Abstract/Full Paper"],
+              ["#fees", "Register for Conference"],
+            ].map(([href, label]) => (
+              <a
+                key={href}
+                href={href}
+                className="rounded-lg px-2.5 py-1.5 font-medium text-slate-700 transition
+                         hover:bg-white hover:text-blue-700
+                         dark:text-slate-200 dark:hover:bg-slate-800"
+              >
+                {label}
+              </a>
+            ))}
+          </div>
+        </div>
+
         <div className="flex items-center gap-2">
           <ThemeToggle />
           <Link href="/login" className="btn-secondary px-4 py-1.5 text-sm">
@@ -372,8 +508,11 @@ export function LandingPage() {
           <Heading id="about">About GLOGIFT 2027</Heading>
           <div className="card card-pad space-y-4 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
             <p>
-              The <strong>International Conference on AI-Driven Solutions in
-              Management: Flexibility, Digitalisation &amp; Decarbonization</strong>{" "}
+              The{" "}
+              <strong>
+                International Conference on AI-Driven Solutions in Management:
+                Flexibility, Digitalisation &amp; Decarbonization
+              </strong>{" "}
               is jointly organised by the Indian Institute of Management
               Sambalpur and the GLOGIFT Society — Global Institute of Flexible
               Systems Management — at IIM Sambalpur, Odisha, from 25 to 27
@@ -383,10 +522,9 @@ export function LandingPage() {
               The theme joins three forces reshaping management at once.{" "}
               <strong>Flexibility</strong> is the capacity of organisations to
               absorb shocks and reconfigure quickly — the founding concern of
-              flexible systems management.{" "}
-              <strong>Digitalisation</strong> is the movement of intelligence
-              into the operating core of the firm, from algorithmic finance to
-              digital twins on the factory floor.{" "}
+              flexible systems management. <strong>Digitalisation</strong> is
+              the movement of intelligence into the operating core of the firm,
+              from algorithmic finance to digital twins on the factory floor.{" "}
               <strong>Decarbonization</strong> is the obligation now shaping
               investment, supply chains and public policy alike.
             </p>
@@ -408,7 +546,10 @@ export function LandingPage() {
           <Heading>The objective of the conference is to</Heading>
           <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
             {OBJECTIVES.map((o) => (
-              <div key={o.text} className="card card-pad text-center card-hover">
+              <div
+                key={o.text}
+                className="card card-pad text-center card-hover"
+              >
                 <span className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-700 dark:bg-blue-500/15">
                   <svg
                     viewBox="0 0 24 24"
@@ -593,8 +734,16 @@ export function LandingPage() {
             Proceedings with ISBN reach every participant in digital format.
           </p>
           {[
-            { title: "Indian participants (INR, per delegate)", rows: FEES_INR, symbol: "₹" },
-            { title: "Foreign delegates (USD, per delegate)", rows: FEES_USD, symbol: "$" },
+            {
+              title: "Indian participants (INR, per delegate)",
+              rows: FEES_INR,
+              symbol: "₹",
+            },
+            {
+              title: "Foreign delegates (USD, per delegate)",
+              rows: FEES_USD,
+              symbol: "$",
+            },
           ].map((table) => (
             <div key={table.title} className="mb-6">
               <p className="text-sm font-semibold text-slate-800 mb-2 dark:text-slate-200">
@@ -608,11 +757,15 @@ export function LandingPage() {
                       <th className="th">GLOGIFT members</th>
                       <th className="th">
                         Early bird
-                        <span className="block font-normal text-xs">On or before 20 Dec 2026</span>
+                        <span className="block font-normal text-xs">
+                          On or before 20 Dec 2026
+                        </span>
                       </th>
                       <th className="th">
                         Regular
-                        <span className="block font-normal text-xs">On or before 24 Jan 2027</span>
+                        <span className="block font-normal text-xs">
+                          On or before 24 Jan 2027
+                        </span>
                       </th>
                     </tr>
                   </thead>
@@ -622,9 +775,18 @@ export function LandingPage() {
                         <td className="td font-medium text-slate-800 dark:text-slate-200">
                           {r[0]}
                         </td>
-                        <td className="td">{table.symbol}{r[1]}</td>
-                        <td className="td">{table.symbol}{r[2]}</td>
-                        <td className="td">{table.symbol}{r[3]}</td>
+                        <td className="td">
+                          {table.symbol}
+                          {r[1]}
+                        </td>
+                        <td className="td">
+                          {table.symbol}
+                          {r[2]}
+                        </td>
+                        <td className="td">
+                          {table.symbol}
+                          {r[3]}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -735,7 +897,9 @@ export function LandingPage() {
                       </span>
                     </span>
                     <span className="grid grid-cols-8 gap-3 flex-1">
-                      <span className={`col-span-3 h-1.5 rounded-full ${route.colour}`} />
+                      <span
+                        className={`col-span-3 h-1.5 rounded-full ${route.colour}`}
+                      />
                       <span
                         className={`col-span-2 h-1.5 rounded-full ${
                           route.skips ? route.faint : route.colour
@@ -746,7 +910,9 @@ export function LandingPage() {
                             : undefined
                         }
                       />
-                      <span className={`col-span-3 h-1.5 rounded-full ${route.colour}`} />
+                      <span
+                        className={`col-span-3 h-1.5 rounded-full ${route.colour}`}
+                      />
                     </span>
                   </div>
                 ))}
@@ -798,7 +964,10 @@ export function LandingPage() {
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
             {LEADERSHIP.map((p) => (
-              <div key={p.name} className="card card-pad text-center card-hover">
+              <div
+                key={p.name}
+                className="card card-pad text-center card-hover"
+              >
                 <div className="flex justify-center mb-4">
                   <Avatar name={p.name} size="lg" />
                 </div>
@@ -828,8 +997,16 @@ export function LandingPage() {
               className="pt-2 rounded-t-none lg:col-span-2 lg:pt-4 lg:rounded-2xl"
               hideLabel
             />
-            <CommitteePanel group={POST_DOC} people={POST_DOC.people} className="lg:col-span-2" />
-            <CommitteePanel group={STAFF} people={STAFF.people} className="lg:col-span-2" />
+            <CommitteePanel
+              group={POST_DOC}
+              people={POST_DOC.people}
+              className="lg:col-span-2"
+            />
+            <CommitteePanel
+              group={STAFF}
+              people={STAFF.people}
+              className="lg:col-span-2"
+            />
           </div>
         </section>
 
@@ -852,7 +1029,8 @@ export function LandingPage() {
                 Co-organised with
               </p>
               <p className="text-slate-600 mt-1 dark:text-slate-400">
-                GLOGIFT Society — Global Institute of Flexible Systems Management
+                GLOGIFT Society — Global Institute of Flexible Systems
+                Management
                 <br />
                 B-51 (Basement), Sarvodaya Enclave, New Delhi 110017
               </p>

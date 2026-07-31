@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Banner } from "@/components/landing/Banner";
 import { IkatStrip } from "@/components/landing/IkatStrip";
+import { BackToTop } from "@/components/landing/BackToTop";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { TRACKS } from "@/components/landing/tracks";
 
 /**
@@ -333,7 +335,33 @@ export function LandingPage() {
     <main className="min-h-screen">
       {/* Sambalpuri Ikat borders, top and bottom of the page. */}
       <IkatStrip />
-      <div className="max-w-6xl mx-auto px-4 py-4 space-y-10">
+
+      {/* Slim utility row: home on the left, the two portal actions on the
+          right. Kept above the banner so the hero stays uninterrupted. */}
+      <nav className="max-w-6xl mx-auto px-4 pt-3 flex items-center justify-between gap-3">
+        <a
+          href="#top"
+          className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm
+                     font-medium text-slate-700 transition hover:bg-white hover:text-blue-700
+                     dark:text-slate-200 dark:hover:bg-slate-800"
+        >
+          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M3 11l9-8 9 8M6 10v10h12V10" />
+          </svg>
+          Home
+        </a>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <Link href="/login" className="btn-secondary px-4 py-1.5 text-sm">
+            Login
+          </Link>
+          <Link href="/signup" className="btn-primary px-4 py-1.5 text-sm">
+            Submit
+          </Link>
+        </div>
+      </nav>
+
+      <div id="top" className="max-w-6xl mx-auto px-4 py-4 space-y-10">
         {/* ---- Hero ---- */}
         <section className="space-y-4">
           <Banner />
@@ -864,6 +892,7 @@ export function LandingPage() {
         </footer>
       </div>
       <IkatStrip flip />
+      <BackToTop />
     </main>
   );
 }

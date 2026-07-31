@@ -356,7 +356,7 @@ export function LandingPage() {
             Login
           </Link>
           <Link href="/signup" className="btn-primary px-4 py-1.5 text-sm">
-            Submit
+            Sign up
           </Link>
         </div>
       </nav>

@@ -105,11 +105,18 @@ function Heading({ id, children }: { id?: string; children: React.ReactNode }) {
 
 function DownloadButton({ className = "" }: { className?: string }) {
   return (
-    <a href={PDF} download className={`btn-primary ${className}`}>
-      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <a
+      href={PDF}
+      download
+      className={`btn-attention inline-flex items-center gap-2 rounded-full border-2
+                  border-blue-600 bg-white px-6 py-2.5 text-sm font-semibold
+                  transition hover:bg-blue-50 dark:bg-slate-900 dark:hover:bg-slate-800
+                  ${className}`}
+    >
+      <svg viewBox="0 0 24 24" className="h-4 w-4 text-blue-700 dark:text-blue-300" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
         <path d="M12 3v12m-4-4 4 4 4-4M4 19h16" />
       </svg>
-      Download the travelogue (PDF)
+      <span className="text-gradient">Download the travelogue (PDF)</span>
     </a>
   );
 }

@@ -294,3 +294,28 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .anim-sway, .anim-bob, .anim-spin-slow, .anim-lift, .anim-tip { animation: none; }
 }
+
+/* An attention pulse for a single call to action — a ring that ripples out
+   rather than a hard flash, which would be both ugly and an accessibility
+   hazard. Anyone asking for reduced motion gets a static button. */
+@keyframes attention-ring {
+  0%   { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.5); }
+  70%  { box-shadow: 0 0 0 12px rgba(37, 99, 235, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+}
+@keyframes attention-fade {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.72; }
+}
+.btn-attention {
+  animation: attention-ring 2s ease-out infinite;
+}
+.btn-attention > span {
+  animation: attention-fade 2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn-attention,
+  .btn-attention > span {
+    animation: none;
+  }
+}

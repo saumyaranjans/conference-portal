@@ -465,13 +465,14 @@ export function LandingPage() {
             Home
           </a>
 
-          {/* Jumps to the three sections visitors arrive looking for. Hidden on
+          {/* Jumps to the sections visitors arrive looking for. Hidden on
             narrow screens, where the row would not fit beside the actions. */}
           <div className="hidden lg:flex items-center gap-1 text-sm">
             {[
-              ["#submission", "Conference Tracks"],
-              ["#guidelines", "Submit Abstract/Full Paper"],
-              ["#fees", "Register for Conference"],
+              ["#submission", "Conference tracks"],
+              ["#guidelines", "Submit abstract/full paper"],
+              ["#fees", "Register for conference"],
+              ["#dates", "Important dates"],
             ].map(([href, label]) => (
               <a
                 key={href}

@@ -746,12 +746,14 @@ export function LandingPage() {
               symbol: "$",
             },
           ].map((table) => (
-            <div key={table.title} className="mb-6">
+            <div key={table.title} className="mb-4">
               <p className="text-sm font-semibold text-slate-800 mb-2 dark:text-slate-200">
                 {table.title}
               </p>
+              {/* Tighter rows than the portal's default table: this one is
+                  read at a glance, not worked through. */}
               <div className="card overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full text-sm [&_td]:py-1.5 [&_th]:py-2">
                   <thead>
                     <tr className="text-left">
                       <th className="th">Category</th>

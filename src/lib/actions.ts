@@ -1077,7 +1077,7 @@ export async function removeAssignment(formData: FormData): Promise<ActionResult
 /** Base URL for invitation links. Falls back to the branded domain. */
 function siteUrl(): string {
   return (
-    process.env.NEXT_PUBLIC_SITE_URL || "https://glogift2027.vercel.app"
+    process.env.NEXT_PUBLIC_SITE_URL || "https://glogift2027.in"
   ).replace(/\/$/, "");
 }
 

@@ -12,31 +12,36 @@ import { TRACKS } from "@/components/landing/tracks";
  * fees → committees → dates → contact.
  */
 
-const OBJECTIVES: { icon: React.ReactNode; text: string }[] = [
+const OBJECTIVES: { icon: React.ReactNode; text: string; tint: string }[] = [
   {
     text: "Advance AI-driven management research",
+    tint: "bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-300",
     icon: (
       <path d="M12 3v3m0 12v3m9-9h-3M6 12H3m14.5-6.5-2 2m-7 7-2 2m0-11 2 2m7 7 2 2M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z" />
     ),
   },
   {
     text: "Bridge academia and industry",
+    tint: "bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-300",
     icon: <path d="M3 21h18M6 21V8l6-4 6 4v13M10 21v-5h4v5" />,
   },
   {
     text: "Accelerate decarbonisation and sustainability",
+    tint: "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300",
     icon: (
       <path d="M12 21c5-3 8-7 8-11a8 8 0 1 0-16 0c0 4 3 8 8 11Zm0-9a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
     ),
   },
   {
     text: "Shape responsible AI governance",
+    tint: "bg-violet-50 text-violet-600 dark:bg-violet-500/15 dark:text-violet-300",
     icon: (
       <path d="M12 3 4 6v6c0 5 3.4 8.4 8 9 4.6-.6 8-4 8-9V6l-8-3Zm0 7v5m0-8v.01" />
     ),
   },
   {
     text: "Publish and disseminate scholarship",
+    tint: "bg-rose-50 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300",
     icon: (
       <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H12v18H6.5A2.5 2.5 0 0 1 4 18.5v-13ZM12 3h5.5A2.5 2.5 0 0 1 20 5.5v13a2.5 2.5 0 0 1-2.5 2.5H12" />
     ),
@@ -560,7 +565,9 @@ export function LandingPage() {
                 key={o.text}
                 className="card card-pad text-center card-hover"
               >
-                <span className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-700 dark:bg-blue-500/15">
+                <span
+                  className={`mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl ${o.tint}`}
+                >
                   <svg
                     viewBox="0 0 24 24"
                     className="h-7 w-7"

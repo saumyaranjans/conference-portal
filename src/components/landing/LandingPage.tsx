@@ -1084,19 +1084,24 @@ export function LandingPage() {
             </Link>
           </div>
 
-          <div className="mt-5 flex flex-wrap gap-4 text-sm">
-            <a
-              href="mailto:glogift27.chair@iimsambalpur.ac.in"
-              className="text-blue-700 hover:underline"
-            >
-              glogift27.chair@iimsambalpur.ac.in
-            </a>
-            <a
-              href="mailto:glogift27.coordinator@iimsambalpur.ac.in"
-              className="text-blue-700 hover:underline"
-            >
-              glogift27.coordinator@iimsambalpur.ac.in
-            </a>
+          <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+            {[
+              "glogift27.chair@iimsambalpur.ac.in",
+              "glogift27.coordinator@iimsambalpur.ac.in",
+            ].map((address) => (
+              <a
+                key={address}
+                href={`mailto:${address}`}
+                className="inline-flex items-center gap-2 text-blue-700 hover:underline
+                           dark:text-blue-300"
+              >
+                <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <rect x="2.5" y="5" width="19" height="14" rx="2" />
+                  <path d="m3 7 9 6 9-6" />
+                </svg>
+                {address}
+              </a>
+            ))}
           </div>
         </section>
 

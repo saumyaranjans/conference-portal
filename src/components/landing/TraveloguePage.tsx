@@ -356,6 +356,19 @@ export function TraveloguePage() {
           </p>
           <div className="mt-4 flex flex-wrap justify-center gap-3">
             <DownloadButton />
+            <Link
+              href="/how-to-reach"
+              className="inline-flex items-center gap-2 rounded-full border-2
+                         border-blue-600 bg-white px-5 py-2.5 text-sm font-semibold
+                         transition hover:bg-blue-50
+                         dark:bg-slate-900 dark:hover:bg-slate-800"
+            >
+              <svg viewBox="0 0 24 24" className="h-4 w-4 text-blue-700 dark:text-blue-300" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11Z" />
+                <circle cx="12" cy="10" r="2.6" />
+              </svg>
+              <span className="text-gradient">How to reach IIM Sambalpur</span>
+            </Link>
             <Link href="/#dates" className="btn-secondary">
               Conference timeline
             </Link>

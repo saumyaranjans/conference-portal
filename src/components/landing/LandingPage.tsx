@@ -804,9 +804,9 @@ export function LandingPage() {
           </p>
         </section>
 
-        {/* ---- 7. Important dates ---- */}
+        {/* ---- 7. Conference timeline ---- */}
         <section>
-          <Heading id="dates">Important dates</Heading>
+          <Heading id="dates">Conference timeline</Heading>
           {/* Horizontal on wide screens: labels alternate above and below the
               rail so long text never collides with its neighbour. */}
           <div className="hidden md:block overflow-x-auto pb-2">

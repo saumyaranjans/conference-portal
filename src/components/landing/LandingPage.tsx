@@ -55,9 +55,15 @@ const OBJECTIVES: { icon: React.ReactNode; text: string; tint: string }[] = [
 const MILESTONES = [
   {
     date: "2026-08-07",
-    label: "Open for Abstract Submission",
-    dot: "bg-sky-500",
-    halo: "group-hover:shadow-sky-500/50",
+    label: "Open for abstract submission",
+    dot: "bg-cyan-500",
+    halo: "group-hover:shadow-cyan-500/50",
+  },
+  {
+    date: "2026-09-21",
+    label: "Registration opens",
+    dot: "bg-violet-500",
+    halo: "group-hover:shadow-violet-500/50",
   },
   {
     date: "2026-11-23",
@@ -840,15 +846,15 @@ export function LandingPage() {
           {/* Horizontal on wide screens: labels alternate above and below the
               rail so long text never collides with its neighbour. */}
           <div className="hidden md:block overflow-x-auto pb-2">
-            <div className="relative min-w-[52rem] px-4">
-              <div className="relative grid grid-cols-8 gap-3">
+            <div className="relative min-w-[60rem] px-4">
+              <div className="relative grid grid-cols-9 gap-3">
                 {/* The rail sits on the dots, not at the wrapper's midpoint —
                     7rem clears the upper label row, +0.5rem centres it on the
                     1rem dot. */}
                 <div className="absolute inset-x-0 top-[7.5rem] h-0.5 -translate-y-1/2 bg-slate-200 dark:bg-slate-700" />
                 {MILESTONES.map((m, i) => {
                   const past = new Date(m.date) < today;
-                  const above = i % 2 === 0;
+                  const above = i % 2 === 1;
                   const label = (
                     <div
                       className={`text-center px-1 transition-transform duration-200 ease-out group-hover:scale-110 ${
@@ -926,9 +932,9 @@ export function LandingPage() {
                         {route.detail}
                       </span>
                     </span>
-                    <span className="grid grid-cols-8 gap-3 flex-1">
+                    <span className="grid grid-cols-9 gap-3 flex-1">
                       <span
-                        className={`col-span-3 h-1.5 rounded-full ${route.colour}`}
+                        className={`col-span-4 h-1.5 rounded-full ${route.colour}`}
                       />
                       <span
                         className={`col-span-2 h-1.5 rounded-full ${

@@ -74,12 +74,95 @@ function Organiser({
   );
 }
 
+/**
+ * Slide 1 on a phone: the same panel redrawn in a 5:4 box with everything
+ * centred, so the type is legible instead of being the desktop layout shrunk
+ * to a quarter of its size.
+ */
+function LatticeSlideMobile() {
+  return (
+    <svg viewBox="0 0 1000 800" className="w-full h-auto block sm:hidden" role="img"
+      aria-label="GLOGIFT 2027 — International Conference on AI-Driven Solutions in Management, 25 to 27 February 2027, IIM Sambalpur">
+      <defs>
+        <linearGradient id="m-sky" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#0f172a" />
+          <stop offset="45%" stopColor="#1e3a8a" />
+          <stop offset="100%" stopColor="#312e81" />
+        </linearGradient>
+        <linearGradient id="m-accent" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor="#38bdf8" />
+          <stop offset="35%" stopColor="#818cf8" />
+          <stop offset="70%" stopColor="#f472b6" />
+          <stop offset="100%" stopColor="#fbbf24" />
+        </linearGradient>
+        <radialGradient id="m-glow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.55" />
+          <stop offset="100%" stopColor="#60a5fa" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+
+      <rect width="1000" height="800" fill="url(#m-sky)" />
+      <circle cx="820" cy="140" r="330" fill="url(#m-glow)" />
+      <circle cx="140" cy="700" r="280" fill="url(#m-glow)" opacity="0.6" />
+      <g stroke="#93c5fd" strokeOpacity="0.2" strokeWidth="2" fill="none">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <path key={i} d={`M ${60 + i * 220} 800 C ${200 + i * 220} ${560 - i * 30}, ${
+            20 + i * 220} ${300 + i * 24}, ${140 + i * 220} 0`} />
+        ))}
+      </g>
+      <rect y="0" width="1000" height="8" fill="url(#m-accent)" />
+
+      <image href={IIM_CREST} x="360" y="48" width="110" height="92"
+        preserveAspectRatio="xMidYMid meet" style={CREST_WHITE} />
+      <image href={GLOGIFT_LOGO} x="520" y="48" width="120" height="92"
+        preserveAspectRatio="xMidYMid meet" />
+      <text x="500" y="190" textAnchor="middle" fill="#bfdbfe" fontSize="28"
+        letterSpacing="4" fontWeight="600" fontFamily="system-ui, sans-serif">
+        IIM SAMBALPUR · GLOGIFT SOCIETY
+      </text>
+
+      <text x="500" y="320" textAnchor="middle" fill="#ffffff" fontSize="96"
+        fontWeight="800" fontFamily="Georgia, 'Times New Roman', serif">
+        GLOGIFT 2027
+      </text>
+      <text x="500" y="378" textAnchor="middle" fill="#a5b4fc" fontSize="28"
+        letterSpacing="6" fontWeight="600" fontFamily="system-ui, sans-serif">
+        INTERNATIONAL CONFERENCE ON
+      </text>
+      <text x="500" y="450" textAnchor="middle" fill="#e0e7ff" fontSize="44"
+        fontWeight="600" fontFamily="system-ui, sans-serif">
+        AI-Driven Solutions in Management
+      </text>
+      <text x="500" y="506" textAnchor="middle" fill="#a5b4fc" fontSize="31"
+        fontFamily="system-ui, sans-serif">
+        Flexibility, Digitalisation &amp; Decarbonization
+      </text>
+
+      <rect x="330" y="576" width="340" height="4" fill="url(#m-accent)" />
+      <text x="500" y="646" textAnchor="middle" fill="#ffffff" fontSize="42"
+        fontWeight="700" fontFamily="system-ui, sans-serif">
+        25 – 27 February 2027
+      </text>
+      <text x="500" y="700" textAnchor="middle" fill="#c7d2fe" fontSize="30"
+        fontFamily="system-ui, sans-serif">
+        IIM Sambalpur, Odisha, India
+      </text>
+      <text x="500" y="748" textAnchor="middle" fill="#c7d2fe" fontSize="30"
+        fontFamily="system-ui, sans-serif">
+        In-Person | Hybrid
+      </text>
+    </svg>
+  );
+}
+
 /** Slide 1 — the original navy panel: lattice backdrop, left-aligned text. */
 function LatticeSlide() {
   return (
+    <>
+    <LatticeSlideMobile />
     <svg
       viewBox="0 0 2400 1000"
-      className="w-full h-auto block"
+      className="w-full h-auto hidden sm:block"
       role="img"
       aria-label="GLOGIFT 2027 — International Conference on AI-Driven Solutions in Management, 25 to 27 February 2027, IIM Sambalpur"
     >
@@ -210,6 +293,7 @@ function LatticeSlide() {
         IIM Sambalpur, Odisha, India · In-Person | Hybrid
       </text>
     </svg>
+    </>
   );
 }
 
@@ -239,7 +323,7 @@ const TRACK_ART: { tint: string; photo: string }[] = [
 function TracksSlide() {
   return (
     <div
-      className="relative w-full aspect-[12/5] overflow-hidden
+      className="relative w-full aspect-[5/4] sm:aspect-[12/5] overflow-hidden
                  bg-[linear-gradient(120deg,#fff7ed_0%,#ffe4e6_20%,#ede9fe_45%,#dbeafe_70%,#ccfbf1_100%)]"
       style={{ containerType: "inline-size" }}
     >
@@ -248,17 +332,29 @@ function TracksSlide() {
       <div className="pointer-events-none absolute -right-[5cqw] top-[2cqw] h-[24cqw] w-[24cqw] rounded-full bg-[radial-gradient(circle,#38bdf866,transparent_70%)]" />
       <div className="pointer-events-none absolute bottom-[-10cqw] left-[38cqw] h-[28cqw] w-[28cqw] rounded-full bg-[radial-gradient(circle,#fbbf2455,transparent_70%)]" />
 
-      <div className="absolute inset-0 flex flex-col px-[2.4cqw] py-[1.9cqw]">
+      <div className="absolute inset-0 flex flex-col px-[2.4cqw] py-[1.9cqw] sm:py-[1.9cqw]">
         <div className="text-center">
-          <p className="text-gradient text-[3.1cqw] font-extrabold leading-none tracking-tight">
+          <p className="text-gradient text-[6cqw] sm:text-[3.1cqw] font-extrabold leading-none tracking-tight">
             Call for Submissions
           </p>
-          <p className="mt-[0.6cqw] text-[1.3cqw] font-medium text-[#3f3f6b]">
+          <p className="mt-[1.4cqw] sm:mt-[0.6cqw] text-[2.9cqw] sm:text-[1.3cqw] font-medium text-[#3f3f6b]">
             Ten tracks &middot; abstracts and full papers invited &middot; GLOGIFT 2027
           </p>
         </div>
 
-        <div className="mt-[1.3cqw] grid flex-1 grid-cols-5 gap-[0.85cqw]">
+        {/* Phones get the tracks named in prose: ten photo cards at this width
+            would render the labels at about four pixels. */}
+        <div className="sm:hidden flex flex-1 flex-col items-center justify-center px-[4cqw] text-center">
+          <p className="text-[3.1cqw] font-semibold leading-relaxed text-[#111c3a]">
+            Finance &amp; FinTech &middot; Operations &amp; Supply Chain &middot;
+            Digital Transformation &middot; Sustainable Finance &middot;
+            Marketing &middot; Governance &amp; Ethics &middot; Analytics &amp;
+            Big Data &middot; Human Capital &middot; Strategy &amp; Innovation
+            &middot; Inclusive Growth
+          </p>
+        </div>
+
+        <div className="hidden sm:grid mt-[1.3cqw] flex-1 grid-cols-5 gap-[0.85cqw]">
           {TRACKS.map(([name], i) => {
             const { tint, photo } = TRACK_ART[i];
             return (
@@ -282,7 +378,7 @@ function TracksSlide() {
                   className="block w-full"
                   style={{ height: "0.35cqw", backgroundColor: tint }}
                 />
-                <p className="flex-1 px-[0.55cqw] py-[0.65cqw] text-center text-[1.15cqw] font-semibold leading-tight text-[#111c3a]">
+                <p className="flex-1 px-[0.55cqw] py-[0.65cqw] text-center text-[1.5cqw] lg:text-[1.15cqw] font-semibold leading-tight text-[#111c3a]">
                   {name}
                 </p>
               </div>
@@ -290,11 +386,12 @@ function TracksSlide() {
           })}
         </div>
 
-        <div className="mt-[1.2cqw] flex justify-center">
+        <div className="mt-[2cqw] sm:mt-[1.2cqw] flex justify-center">
           <Link
             href="/login"
             className="inline-flex items-center gap-[0.7cqw] rounded-full
-                       px-[2.4cqw] py-[0.95cqw] text-[1.4cqw] font-semibold text-white
+                       px-[4cqw] py-[1.8cqw] text-[2.8cqw]
+                       sm:px-[2.4cqw] sm:py-[0.95cqw] sm:text-[1.4cqw] font-semibold text-white
                        transition hover:brightness-110"
             style={{
               backgroundImage:
@@ -305,7 +402,7 @@ function TracksSlide() {
             Submit through the portal
             <svg
               viewBox="0 0 24 24"
-              style={{ width: "1.5cqw", height: "1.5cqw" }}
+              className="w-[3cqw] h-[3cqw] sm:w-[1.5cqw] sm:h-[1.5cqw]"
               fill="none"
               stroke="currentColor"
               strokeWidth="2.4"

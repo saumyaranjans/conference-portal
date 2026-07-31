@@ -437,6 +437,40 @@ function Heading({ id, children }: { id?: string; children: React.ReactNode }) {
   );
 }
 
+const NAV_LINKS: { href: string; label: string; accent?: boolean }[] = [
+  { href: "#submission", label: "Conference tracks" },
+  { href: "#guidelines", label: "Submit abstract/full paper" },
+  { href: "#fees", label: "Register for conference" },
+  { href: "#dates", label: "Important dates" },
+  // The one link that leaves the page, so it carries the colour and pulse
+  // that mark it out from the section jumps.
+  { href: "/travelogue", label: "Sambalpur travelogue", accent: true },
+];
+
+function NavLinks({ className }: { className: string }) {
+  return (
+    <div className={className}>
+      {NAV_LINKS.map(({ href, label, accent }) => (
+        <a
+          key={href}
+          href={href}
+          className="shrink-0 whitespace-nowrap rounded-lg px-2.5 py-1.5 font-medium
+                     text-slate-700 transition hover:bg-white hover:text-blue-700
+                     dark:text-slate-200 dark:hover:bg-slate-800"
+        >
+          {accent ? (
+            <span className="text-gradient text-attention font-semibold">
+              {label}
+            </span>
+          ) : (
+            label
+          )}
+        </a>
+      ))}
+    </div>
+  );
+}
+
 export function LandingPage() {
   const today = new Date();
 
@@ -447,8 +481,8 @@ export function LandingPage() {
 
       {/* Slim utility row: home on the left, the two portal actions on the
           right. Kept above the banner so the hero stays uninterrupted. */}
-      <nav className="max-w-6xl mx-auto px-4 pt-3 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-1">
+      <nav className="max-w-6xl mx-auto px-4 pt-3 flex flex-wrap items-center justify-between gap-y-2 gap-x-3">
+        <div className="flex items-center gap-1 order-1">
           <a
             href="#top"
             className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm
@@ -470,38 +504,15 @@ export function LandingPage() {
             Home
           </a>
 
-          {/* Jumps to the sections visitors arrive looking for. Hidden on
-            narrow screens, where the row would not fit beside the actions. */}
-          <div className="hidden lg:flex items-center gap-1 text-sm">
-            {[
-              { href: "#submission", label: "Conference tracks" },
-              { href: "#guidelines", label: "Submit abstract/full paper" },
-              { href: "#fees", label: "Register for conference" },
-              { href: "#dates", label: "Important dates" },
-              // The one link that leaves the page, so it carries the colour
-              // and pulse that mark it out from the section jumps.
-              { href: "/travelogue", label: "Sambalpur travelogue", accent: true },
-            ].map(({ href, label, accent }) => (
-              <a
-                key={href}
-                href={href}
-                className="rounded-lg px-2.5 py-1.5 font-medium text-slate-700 transition
-                         hover:bg-white hover:text-blue-700
-                         dark:text-slate-200 dark:hover:bg-slate-800"
-              >
-                {accent ? (
-                  <span className="text-gradient text-attention font-semibold">
-                    {label}
-                  </span>
-                ) : (
-                  label
-                )}
-              </a>
-            ))}
-          </div>
+          <NavLinks className="hidden lg:flex items-center gap-1 text-sm" />
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* On phones the same links get their own scrolling row beneath, so
+            they are reachable without crowding the actions. */}
+        <NavLinks className="order-3 w-full lg:hidden flex items-center gap-1
+                             overflow-x-auto text-sm pb-0.5" />
+
+        <div className="flex items-center gap-2 order-2 lg:order-3">
           <ThemeToggle />
           <Link href="/login" className="btn-secondary px-4 py-1.5 text-sm">
             Login

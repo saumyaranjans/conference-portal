@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Playfair_Display } from "next/font/google";
 import { createClient } from "@/lib/supabase/client";
+import { HomeLink } from "@/components/HomeLink";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 // Elegant display serif for the conference title.
@@ -95,6 +96,9 @@ export default function LoginPage() {
 
       {/* ============ Form panel ============ */}
       <section className="relative flex items-center justify-center px-5 py-10">
+        <div className="absolute top-4 left-4">
+          <HomeLink />
+        </div>
         <div className="absolute top-4 right-4">
           <ThemeToggle />
         </div>

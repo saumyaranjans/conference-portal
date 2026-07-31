@@ -933,22 +933,48 @@ export function LandingPage() {
                       </span>
                     </div>
                     <div className="grid grid-cols-9 gap-3">
-                      <span
-                        className={`col-span-4 h-1.5 rounded-full ${route.colour}`}
-                      />
-                      <span
-                        className={`col-span-2 h-1.5 rounded-full ${
-                          route.skips ? route.faint : route.colour
-                        }`}
-                        title={
-                          route.skips
-                            ? "Pathway A skips the full-paper stage"
-                            : undefined
-                        }
-                      />
-                      <span
-                        className={`col-span-3 h-1.5 rounded-full ${route.colour}`}
-                      />
+                      {[
+                        {
+                          anchor: "col-start-1",
+                          left: "50%",
+                          width: "calc(300% + 1.875rem)",
+                          faded: false,
+                        },
+                        {
+                          anchor: "col-start-4",
+                          left: "calc(50% + 0.375rem)",
+                          width: "calc(300% + 1.5rem)",
+                          faded: true,
+                        },
+                        {
+                          anchor: "col-start-7",
+                          left: "calc(50% + 0.375rem)",
+                          width: "calc(200% + 1.125rem)",
+                          faded: false,
+                        },
+                      ].map((segment) => (
+                        <span
+                          key={segment.anchor}
+                          className={`relative row-start-1 h-1.5 ${segment.anchor}`}
+                        >
+                          <span
+                            className={`absolute top-0 h-1.5 rounded-full ${
+                              segment.faded && route.skips
+                                ? route.faint
+                                : route.colour
+                            }`}
+                            style={{
+                              left: segment.left,
+                              width: segment.width,
+                            }}
+                            title={
+                              segment.faded && route.skips
+                                ? "Pathway A skips the full-paper stage"
+                                : undefined
+                            }
+                          />
+                        </span>
+                      ))}
                     </div>
                   </div>
                 ))}

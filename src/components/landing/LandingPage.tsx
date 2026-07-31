@@ -54,8 +54,8 @@ const OBJECTIVES: { icon: React.ReactNode; text: string; tint: string }[] = [
    through registration, pink for the conference itself. */
 const MILESTONES = [
   {
-    date: "2026-09-21",
-    label: "Registration opens",
+    date: "2026-08-07",
+    label: "Open for Abstract Submission",
     dot: "bg-sky-500",
     halo: "group-hover:shadow-sky-500/50",
   },

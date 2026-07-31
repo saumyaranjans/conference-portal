@@ -30,7 +30,8 @@ function contentSecurityPolicy(nonce: string, dev: boolean) {
     "base-uri 'self'",
     "object-src 'none'",
     "frame-ancestors 'none'",
-    "frame-src 'self' blob:",
+    // The campus map on /how-to-reach is a Google Maps embed.
+    "frame-src 'self' blob: https://www.google.com https://maps.google.com",
     "worker-src 'self' blob:",
     "upgrade-insecure-requests",
   ]

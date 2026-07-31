@@ -281,7 +281,7 @@ const byName = (a: string, b: string) =>
 
 const COMMITTEE = [
   {
-    group: "Conference Committee — Faculty (IIM Sambalpur)",
+    group: "Conference committee — Faculty (IIM Sambalpur)",
     panel:
       "bg-blue-50/80 border-blue-100 dark:bg-blue-500/10 dark:border-blue-500/25",
     label: "text-blue-700 dark:text-blue-300",
@@ -297,14 +297,14 @@ const COMMITTEE = [
     ],
   },
   {
-    group: "Conference Committee — Post Doctoral (IIM Sambalpur)",
+    group: "Conference committee — Post doctoral (IIM Sambalpur)",
     panel:
       "bg-emerald-50/80 border-emerald-100 dark:bg-emerald-500/10 dark:border-emerald-500/25",
     label: "text-emerald-700 dark:text-emerald-300",
     people: ["Dr Jogeshwar Mahato", "Dr Jayjit Chakraborty"],
   },
   {
-    group: "Conference Committee — Staff (IIM Sambalpur)",
+    group: "Conference committee — Staff (IIM Sambalpur)",
     panel:
       "bg-amber-50/80 border-amber-100 dark:bg-amber-500/10 dark:border-amber-500/25",
     label: "text-amber-700 dark:text-amber-300",
@@ -373,7 +373,7 @@ function CommitteePanel({
   return (
     <div className={`rounded-2xl border p-4 ${group.panel} ${className ?? ""}`}>
       <p
-        className={`text-xs font-semibold uppercase tracking-wide mb-3 ${group.label} ${
+        className={`text-[11px] font-semibold tracking-wide mb-3 ${group.label} ${
           hideLabel ? "hidden lg:block lg:invisible" : ""
         }`}
       >

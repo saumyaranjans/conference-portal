@@ -490,7 +490,7 @@ export function LandingPage() {
       <nav className="max-w-6xl mx-auto px-4 pt-3 flex flex-wrap items-center justify-between gap-y-2 gap-x-3">
         <div className="flex items-center gap-1 order-1">
           <a
-            href="/"
+            href="/Home"
             className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm
                      font-medium text-slate-700 transition hover:bg-white hover:text-blue-700
                      dark:text-slate-200 dark:hover:bg-slate-800"

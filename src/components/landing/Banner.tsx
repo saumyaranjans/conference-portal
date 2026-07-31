@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { TRACKS } from "@/components/landing/tracks";
 
@@ -332,7 +332,6 @@ export function Banner() {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const count = SLIDES.length;
-  const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const go = useCallback(
     (next: number) => setIndex(((next % count) + count) % count),
@@ -343,14 +342,12 @@ export function Banner() {
     if (count < 2 || paused) return;
     // Anyone who asks for reduced motion gets a static first slide.
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    timer.current = setInterval(
-      () => setIndex((i) => (i + 1) % count),
-      SLIDE_MS,
-    );
-    return () => {
-      if (timer.current) clearInterval(timer.current);
-    };
-  }, [count, paused, index]);
+    // Each tick steps to the next slide and wraps past the last one back to
+    // the first. `index` is deliberately not a dependency: the interval runs
+    // uninterrupted rather than being torn down and restarted every slide.
+    const id = setInterval(() => setIndex((i) => (i + 1) % count), SLIDE_MS);
+    return () => clearInterval(id);
+  }, [count, paused]);
 
   return (
     <div

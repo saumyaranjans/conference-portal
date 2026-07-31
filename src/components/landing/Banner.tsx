@@ -9,9 +9,9 @@ import { TRACKS } from "@/components/landing/tracks";
  * The hero banner: a slider of hand-drawn SVG panels at 2400×1000, so every
  * slide stays sharp at any width and can be edited in place. Add a slide by
  * appending a component to SLIDES below — the carousel takes at most five and
- * advances every 9 seconds.
+ * advances every 25 seconds.
  */
-const SLIDE_MS = 9_000;
+const SLIDE_MS = 25_000;
 const MAX_SLIDES = 5;
 
 /* Both logos live in /public. The IIM crest is cropped from the full lockup so

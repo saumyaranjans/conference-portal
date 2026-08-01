@@ -1104,26 +1104,80 @@ export function LandingPage() {
                 {address}
               </a>
             ))}
-            <a
-              href="/conference-flyer"
-              className="inline-flex items-center rounded-full border border-transparent bg-transparent px-4 py-2
-                         font-semibold text-slate-700 transition duration-300
-                         hover:border-blue-400/70 hover:text-blue-700
-                         hover:shadow-[0_0_24px_rgba(37,99,235,0.65)]
-                         dark:text-slate-200 dark:hover:text-blue-300"
-            >
-              Conference Flyer
-            </a>
-            <a
-              href="/conference-brochure"
-              className="inline-flex items-center rounded-full border border-transparent bg-transparent px-4 py-2
-                         font-semibold text-slate-700 transition duration-300
-                         hover:border-amber-400/80 hover:text-amber-700
-                         hover:shadow-[0_0_24px_rgba(245,158,11,0.7)]
-                         dark:text-slate-200 dark:hover:text-amber-300"
-            >
-              Conference Brochure
-            </a>
+          </div>
+
+          {/* Conference collateral — presented as document cards rather than
+              plain links so they read as things you open, not stray text. */}
+          <div className="mt-8">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+              Conference documents
+            </p>
+            <div className="grid gap-4 sm:max-w-2xl sm:grid-cols-2">
+              <Link
+                href="/conference-flyer"
+                className="group relative flex items-center gap-4 overflow-hidden rounded-2xl
+                           border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur
+                           transition duration-300 hover:-translate-y-0.5 hover:border-blue-300
+                           hover:shadow-[0_14px_34px_-14px_rgba(37,99,235,0.6)]
+                           dark:border-slate-700 dark:bg-slate-900/70 dark:hover:border-blue-500/60"
+              >
+                <span aria-hidden className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-blue-500 to-blue-700" />
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-50
+                                 text-blue-600 transition group-hover:scale-105
+                                 dark:bg-blue-500/15 dark:text-blue-300">
+                  <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
+                    <path d="M14 3v5h5" />
+                    <path d="M9 13h6M9 17h4" />
+                  </svg>
+                </span>
+                <span className="min-w-0">
+                  <span className="block font-semibold text-slate-800 dark:text-slate-100">
+                    Conference Flyer
+                  </span>
+                  <span className="block text-xs text-slate-500 dark:text-slate-400">
+                    Quick one-page overview
+                  </span>
+                </span>
+                <svg viewBox="0 0 24 24" className="ml-auto h-5 w-5 shrink-0 text-slate-300 transition
+                     group-hover:translate-x-1 group-hover:text-blue-500 dark:text-slate-600"
+                     fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </Link>
+
+              <Link
+                href="/conference-brochure"
+                className="group relative flex items-center gap-4 overflow-hidden rounded-2xl
+                           border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur
+                           transition duration-300 hover:-translate-y-0.5 hover:border-amber-300
+                           hover:shadow-[0_14px_34px_-14px_rgba(245,158,11,0.65)]
+                           dark:border-slate-700 dark:bg-slate-900/70 dark:hover:border-amber-500/60"
+              >
+                <span aria-hidden className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-amber-400 to-amber-600" />
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-50
+                                 text-amber-600 transition group-hover:scale-105
+                                 dark:bg-amber-500/15 dark:text-amber-300">
+                  <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    <path d="M12 7c0-1.1-.9-2-2-2H3v13h7a2 2 0 0 1 2 2z" />
+                    <path d="M12 7c0-1.1.9-2 2-2h7v13h-7a2 2 0 0 0-2 2z" />
+                  </svg>
+                </span>
+                <span className="min-w-0">
+                  <span className="block font-semibold text-slate-800 dark:text-slate-100">
+                    Conference Brochure
+                  </span>
+                  <span className="block text-xs text-slate-500 dark:text-slate-400">
+                    Full programme &amp; details
+                  </span>
+                </span>
+                <svg viewBox="0 0 24 24" className="ml-auto h-5 w-5 shrink-0 text-slate-300 transition
+                     group-hover:translate-x-1 group-hover:text-amber-500 dark:text-slate-600"
+                     fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </Link>
+            </div>
           </div>
         </section>
 

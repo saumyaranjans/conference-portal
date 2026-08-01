@@ -29,7 +29,8 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Apply the saved (or system) theme before first paint to avoid a
+        {/* Light is the default; dark applies only when the user has chosen
+            it (saved as theme=dark). Applied before first paint to avoid a
             flash of the wrong theme. */}
         {/* The browser blanks a nonce attribute once it has parsed the tag, so
             React sees "" on the client and reports a mismatch that is not one. */}
@@ -37,7 +38,7 @@ export default async function RootLayout({
           nonce={nonce}
           suppressHydrationWarning
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||(!t&&window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark');}}catch(e){}})();`,
+            __html: `(function(){try{if(localStorage.getItem('theme')==='dark'){document.documentElement.classList.add('dark');}}catch(e){}})();`,
           }}
         />
       </head>

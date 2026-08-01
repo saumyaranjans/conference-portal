@@ -771,18 +771,40 @@ export function LandingPage() {
               <thead>
                 <tr className="text-left">
                   <th className="th" rowSpan={2}>Category</th>
-                  <th className="th text-center" colSpan={2}>Indian participants (INR)</th>
-                  <th className="th text-center" colSpan={2}>Foreign delegates (USD)</th>
+                  <th
+                    className="th text-center bg-blue-100/70 text-blue-800
+                               dark:bg-blue-500/20! dark:text-blue-200!"
+                    colSpan={2}
+                  >
+                    Indian participants (INR)
+                  </th>
+                  <th
+                    className="th text-center border-l border-slate-200/70 bg-amber-100/70 text-amber-800
+                               dark:border-slate-700/60 dark:bg-amber-500/20! dark:text-amber-200!"
+                    colSpan={2}
+                  >
+                    Foreign delegates (USD)
+                  </th>
                 </tr>
                 <tr className="text-left">
-                  {["Early bird", "Regular", "Early bird", "Regular"].map((label, index) => (
-                    <th className="th" key={`${label}-${index}`}>
-                      {label}
-                      <span className="block whitespace-nowrap text-xs font-normal">
-                        On or before {index % 2 === 0 ? "20 Dec 2026" : "24 Jan 2027"}
-                      </span>
-                    </th>
-                  ))}
+                  {["Early bird", "Regular", "Early bird", "Regular"].map((label, index) => {
+                    const indian = index < 2;
+                    const tint = indian
+                      ? "bg-blue-50/70 dark:bg-blue-500/10!"
+                      : "bg-amber-50/70 dark:bg-amber-500/10!";
+                    const divider =
+                      index === 2
+                        ? " border-l border-slate-200/70 dark:border-slate-700/60"
+                        : "";
+                    return (
+                      <th className={`th ${tint}${divider}`} key={`${label}-${index}`}>
+                        {label}
+                        <span className="block whitespace-nowrap text-xs font-normal">
+                          On or before {index % 2 === 0 ? "20 Dec 2026" : "24 Jan 2027"}
+                        </span>
+                      </th>
+                    );
+                  })}
                 </tr>
               </thead>
               <tbody>
@@ -791,10 +813,12 @@ export function LandingPage() {
                     <td className="td font-medium text-slate-800 dark:text-slate-200">
                       {row[0]}
                     </td>
-                    <td className="td">₹{row[1]}</td>
-                    <td className="td">₹{row[2]}</td>
-                    <td className="td">${row[3]}</td>
-                    <td className="td">${row[4]}</td>
+                    <td className="td bg-blue-50/70 dark:bg-blue-500/[0.08]">₹{row[1]}</td>
+                    <td className="td bg-blue-50/70 dark:bg-blue-500/[0.08]">₹{row[2]}</td>
+                    <td className="td border-l border-slate-200/70 bg-amber-50/70 dark:border-slate-700/60 dark:bg-amber-500/[0.08]">
+                      ${row[3]}
+                    </td>
+                    <td className="td bg-amber-50/70 dark:bg-amber-500/[0.08]">${row[4]}</td>
                   </tr>
                 ))}
               </tbody>

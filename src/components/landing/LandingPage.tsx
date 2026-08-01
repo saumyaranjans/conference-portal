@@ -1135,16 +1135,14 @@ export function LandingPage() {
               </a>
             ))}
             <a
-              href="/downloads/glogift-2027-conference-flyer.pdf"
-              download
+              href="/conference-flyer"
               className="inline-flex items-center rounded-full bg-blue-600 px-4 py-2
                          font-semibold text-white transition hover:bg-blue-700"
             >
               Conference Flyer
             </a>
             <a
-              href="/downloads/glogift-2027-conference-brochure.pdf"
-              download
+              href="/conference-brochure"
               className="inline-flex items-center rounded-full bg-amber-500 px-4 py-2
                          font-semibold text-slate-950 transition hover:bg-amber-400"
             >

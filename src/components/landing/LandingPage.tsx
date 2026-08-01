@@ -245,17 +245,11 @@ const GUIDELINES = [
   ],
 ];
 
-const FEES_INR = [
-  ["Academicians (Faculty)", "9,000", "10,000", "11,500"],
-  ["Industry Professionals", "12,000", "14,000", "16,000"],
-  ["Research Scholars / PhD", "4,000", "5,000", "6,000"],
-  ["Students (UG/PG, full-time)", "2,500", "3,000", "3,500"],
-];
-const FEES_USD = [
-  ["Academicians (Faculty)", "300", "350", "375"],
-  ["Industry Professionals", "400", "425", "450"],
-  ["Research Scholars / PhD", "200", "250", "300"],
-  ["Students (UG/PG, full-time)", "80", "90", "100"],
+const REGISTRATION_FEES = [
+  ["Academicians (Faculty)", "10,000", "11,500", "350", "375"],
+  ["Industry Professionals", "14,000", "16,000", "425", "450"],
+  ["Research Scholars / PhD", "5,000", "6,000", "250", "300"],
+  ["Students (UG/PG, full-time)", "3,000", "3,500", "90", "100"],
 ];
 
 const LEADERSHIP = [
@@ -767,69 +761,45 @@ export function LandingPage() {
             attendance instead; the Book of Abstracts and the Conference
             Proceedings with ISBN reach every participant in digital format.
           </p>
-          {[
-            {
-              title: "Indian participants (INR, per delegate)",
-              rows: FEES_INR,
-              symbol: "₹",
-            },
-            {
-              title: "Foreign delegates (USD, per delegate)",
-              rows: FEES_USD,
-              symbol: "$",
-            },
-          ].map((table) => (
-            <div key={table.title} className="mb-4">
-              <p className="text-sm font-semibold text-slate-800 mb-2 dark:text-slate-200">
-                {table.title}
-              </p>
-              {/* Tighter rows than the portal's default table: this one is
-                  read at a glance, not worked through. */}
-              <div className="card overflow-x-auto">
-                <table className="w-full text-sm [&_td]:py-1.5 [&_th]:py-2">
-                  <thead>
-                    <tr className="text-left">
-                      <th className="th">Category</th>
-                      <th className="th">GLOGIFT members</th>
-                      <th className="th">
-                        Early bird
-                        <span className="block font-normal text-xs">
-                          On or before 20 Dec 2026
-                        </span>
-                      </th>
-                      <th className="th">
-                        Regular
-                        <span className="block font-normal text-xs">
-                          On or before 24 Jan 2027
-                        </span>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {table.rows.map((r) => (
-                      <tr key={r[0]}>
-                        <td className="td font-medium text-slate-800 dark:text-slate-200">
-                          {r[0]}
-                        </td>
-                        <td className="td">
-                          {table.symbol}
-                          {r[1]}
-                        </td>
-                        <td className="td">
-                          {table.symbol}
-                          {r[2]}
-                        </td>
-                        <td className="td">
-                          {table.symbol}
-                          {r[3]}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          ))}
+          <p className="mb-2 text-sm font-semibold text-slate-800 dark:text-slate-200">
+            Per delegate
+          </p>
+          {/* One comparison table keeps Indian and foreign rates aligned by
+              category. It scrolls horizontally on smaller screens. */}
+          <div className="card mb-4 overflow-x-auto">
+            <table className="w-full min-w-[52rem] text-sm [&_td]:py-2 [&_th]:py-2">
+              <thead>
+                <tr className="text-left">
+                  <th className="th" rowSpan={2}>Category</th>
+                  <th className="th text-center" colSpan={2}>Indian participants (INR)</th>
+                  <th className="th text-center" colSpan={2}>Foreign delegates (USD)</th>
+                </tr>
+                <tr className="text-left">
+                  {["Early bird", "Regular", "Early bird", "Regular"].map((label, index) => (
+                    <th className="th" key={`${label}-${index}`}>
+                      {label}
+                      <span className="block whitespace-nowrap text-xs font-normal">
+                        On or before {index % 2 === 0 ? "20 Dec 2026" : "24 Jan 2027"}
+                      </span>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {REGISTRATION_FEES.map((row) => (
+                  <tr key={row[0]}>
+                    <td className="td font-medium text-slate-800 dark:text-slate-200">
+                      {row[0]}
+                    </td>
+                    <td className="td">₹{row[1]}</td>
+                    <td className="td">₹{row[2]}</td>
+                    <td className="td">${row[3]}</td>
+                    <td className="td">${row[4]}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
           <p className="text-xs leading-relaxed text-slate-500">
             On-campus rooms include meals and Wi-Fi, at ₹1,800 / $19 per night
             twin-sharing and ₹3,600 / $38 per night for a single room, with 18%

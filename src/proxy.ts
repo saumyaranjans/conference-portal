@@ -55,8 +55,8 @@ export default async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
   response.headers.set("content-security-policy", csp);
   // Belt and braces with CSP for browsers that still rely on X-Frame-Options.
-  // Static conference PDFs are excluded from this proxy and receive the
-  // narrowly scoped SAMEORIGIN policy in next.config.ts.
+  // Static conference PDFs are excluded from this proxy so Chromium's
+  // internal PDF viewer can render them inside the first-party viewer page.
   response.headers.set("x-frame-options", "DENY");
 
   const supabase = createServerClient(

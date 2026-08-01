@@ -37,16 +37,16 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
-      // Conference PDFs are rendered inside the site's own document viewer.
-      // SAMEORIGIN keeps third-party framing blocked while allowing that one
-      // first-party use case. Application pages remain DENY in src/proxy.ts.
+      // Public conference PDFs are rendered by Chromium's internal PDF
+      // extension. It uses an extension origin even when the parent page is
+      // first-party, so the static resource must be readable across that
+      // boundary. Application pages remain DENY in src/proxy.ts.
       {
         source: "/downloads/:path*.pdf",
         headers: [
-          { key: "X-Frame-Options", value: "SAMEORIGIN" },
           {
-            key: "Content-Security-Policy",
-            value: "default-src 'none'; frame-ancestors 'self'",
+            key: "Cross-Origin-Resource-Policy",
+            value: "cross-origin",
           },
         ],
       },

@@ -761,6 +761,26 @@ export function LandingPage() {
             attendance instead; the Book of Abstracts and the Conference
             Proceedings with ISBN reach every participant in digital format.
           </p>
+          <div className="mb-5 rounded-2xl border border-blue-200 bg-blue-50/80 p-4 dark:border-blue-500/30 dark:bg-blue-500/10">
+            <h3 className="mb-1.5 text-sm font-semibold text-blue-800 dark:text-blue-200">
+              Certificate eligibility
+            </h3>
+            <p className="text-xs leading-relaxed text-slate-700 dark:text-slate-300">
+              Certificates are issued in the name of each registered,
+              fee-paid participant. A registered author who attends and
+              presents receives the attendance/participation certificate and
+              the presentation certificate. Registration is individual, not
+              per paper.
+            </p>
+            <p className="mt-2 text-xs leading-relaxed text-slate-700 dark:text-slate-300">
+              <strong>Example:</strong> If Author A is the corresponding author
+              and Author B is a co-author, both authors must register and pay
+              the applicable registration fee if both require certificates.
+              If only Author B registers, pays, attends and presents, the
+              certificates are issued only to Author B; unregistered Author A
+              receives no certificate.
+            </p>
+          </div>
           <p className="mb-2 text-sm font-semibold text-slate-800 dark:text-slate-200">
             Per delegate
           </p>

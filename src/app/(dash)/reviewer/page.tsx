@@ -11,10 +11,15 @@ import {
   StatCard,
   formatDate,
 } from "@/components/ui/Primitives";
+import { MyCertificates } from "@/components/MyCertificates";
+import { listMyCertificates, certificatesReleased } from "@/lib/certificateAccess";
 
 export default async function ReviewerDashboard() {
   const profile = await requireRole("reviewer");
   const supabase = await createClient();
+  const certificates = certificatesReleased()
+    ? await listMyCertificates(profile.id)
+    : [];
 
   const { data } = await supabase
     .from("assignments")
@@ -41,6 +46,8 @@ export default async function ReviewerDashboard() {
         title="My Reviews"
         subtitle="Invitations, papers awaiting your assessment, and your completed reviews."
       />
+
+      <MyCertificates certificates={certificates} types={["reviewer"]} />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard label="Invitations" value={invited.length} />

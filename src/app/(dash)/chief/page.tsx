@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { requireRole } from "@/lib/auth";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { removeTrackChair } from "@/lib/actions";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { ChairInviteComposer } from "@/components/ChairInviteComposer";
@@ -49,6 +49,28 @@ export default async function ChiefDashboard() {
     ]);
 
   const submissions = (subs ?? []) as (Submission & { tracks: any })[];
+
+  // Registration collections recorded by the Editorial Office. That evidence
+  // table is admin-only, so read it with the service client after the chief
+  // check. Defensive: if the certificate migration isn't applied yet the query
+  // returns nothing and the section simply doesn't show.
+  const { data: feeEvidence } = await createAdminClient()
+    .from("participant_certificate_evidence")
+    .select("amount_paid, currency, registration_fee_paid, glogift_member");
+  const collectionsByCurrency = new Map<string, number>();
+  let memberCount = 0;
+  for (const e of (feeEvidence ?? []) as any[]) {
+    if (e.glogift_member) memberCount += 1;
+    if (e.registration_fee_paid && e.amount_paid) {
+      const cur = e.currency ?? "INR";
+      collectionsByCurrency.set(cur, (collectionsByCurrency.get(cur) ?? 0) + Number(e.amount_paid));
+    }
+  }
+  const collections = [...collectionsByCurrency.entries()]
+    .map(([currency, amount]) => ({ currency, amount, tax: amount * 0.18, total: amount * 1.18 }))
+    .sort((a, b) => a.currency.localeCompare(b.currency));
+  const money = (cur: string, n: number) =>
+    `${cur === "INR" ? "₹" : cur === "USD" ? "$" : cur + " "}${n.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
 
   // Chairs are per track, so the Convener may only hand a paper to someone who
   // already chairs its track — and never to one of its own authors.
@@ -213,6 +235,42 @@ export default async function ChiefDashboard() {
         <StatCard label="Accepted" value={totals.accepted ?? 0} />
         <StatCard label="Rejected" value={totals.rejected ?? 0} />
       </div>
+
+      {/* ---- Registration collections (from Editorial Office amounts) ---- */}
+      {collections.length > 0 && (
+        <Section title="Registration collections">
+          <div className="card divide-y divide-slate-100 dark:divide-slate-800">
+            {collections.map((c) => (
+              <div
+                key={c.currency}
+                className="px-5 py-3 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm"
+              >
+                <div>
+                  <span className="block text-xs text-slate-500">Currency</span>
+                  {c.currency}
+                </div>
+                <div>
+                  <span className="block text-xs text-slate-500">Total tax (18%)</span>
+                  {money(c.currency, c.tax)}
+                </div>
+                <div>
+                  <span className="block text-xs text-slate-500">Total amount</span>
+                  {money(c.currency, c.amount)}
+                </div>
+                <div>
+                  <span className="block text-xs text-slate-500">Grand total (incl. tax)</span>
+                  <span className="font-medium">{money(c.currency, c.total)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-slate-500 mt-2">
+            Based on amounts recorded by the Editorial Office; tax is 18% of the
+            amount. {memberCount} GLOGIFT member
+            {memberCount === 1 ? "" : "s"} recorded.
+          </p>
+        </Section>
+      )}
 
       {/* Stage-wise analytics now lives on its own sidebar page: /chief/analytics */}
 

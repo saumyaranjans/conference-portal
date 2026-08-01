@@ -848,6 +848,12 @@ export function LandingPage() {
               </tbody>
             </table>
           </div>
+          <p className="text-sm leading-relaxed text-blue-900 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 dark:text-blue-100 dark:bg-blue-500/15 dark:border-blue-500/40">
+            <strong>GLOGIFT Society members</strong> can avail an additional{" "}
+            <strong>15% discount</strong> by applying the coupon code shared by
+            the conference organizers or the GLOGIFT Society at the time of
+            registration check-out.
+          </p>
           <p className="text-xs leading-relaxed text-slate-500">
             On-campus rooms include meals and Wi-Fi, at ₹1,800 / $19 per night
             twin-sharing and ₹3,600 / $38 per night for a single room, with 18%

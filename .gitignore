@@ -14,4 +14,14 @@ next-env.d.ts
 .DS_Store
 npm-debug.log*
 
+# Genuine certificate signatures are uploaded to private Supabase storage.
+private/certificate-signatures/
+
 verify-fixture.mjs
+.vercel
+.env*
+
+# Build/scratch artifacts (not part of the app)
+tmp/
+output/
+scripts/__pycache__/

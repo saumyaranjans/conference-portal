@@ -453,3 +453,43 @@ export function announcementEmail(o: {
   ]);
   return { subject, body };
 }
+
+/**
+ * System-generated note to a certificate recipient once the Editorial Office
+ * issues their certificate. Points them to their dashboard, where the PDF is
+ * available to download.
+ */
+export function certificateIssuedEmail(o: {
+  recipientName?: string | null;
+  certificateType: "participant" | "reviewer" | "track_editor";
+  certificateNumber: string;
+  conferenceName?: string;
+  brand?: string;
+  dashboardUrl: string;
+}): EmailContent {
+  const brand = o.brand || CONF_DEFAULT;
+  const conf = o.conferenceName || CONF_DEFAULT;
+  const kind =
+    o.certificateType === "participant"
+      ? "Participation & Presentation"
+      : o.certificateType === "reviewer"
+        ? "Appreciation (as a Reviewer)"
+        : "Appreciation (as a Track Editor)";
+
+  const subject = `${brand} — Your certificate of ${kind}`;
+  const body = compose([
+    greeting(o.recipientName ?? undefined),
+    "",
+    `Thank you very much for your valuable contribution to ${conf}. Your participation and support are deeply appreciated, and they were central to the success of the conference.`,
+    "",
+    `With gratitude, we are pleased to enclose your Certificate of ${kind} (Certificate No. ${o.certificateNumber}) — attached to this email as a PDF.`,
+    "",
+    `You can also view and download it any time from your dashboard: ${o.dashboardUrl}`,
+    "",
+    "This is a system-generated email — please do not reply. For any query, kindly write to the conference organisers.",
+    "",
+    "With warm regards,",
+    `Editorial Office, ${brand}`,
+  ]);
+  return { subject, body };
+}

@@ -11,6 +11,8 @@ import {
   formatDate,
 } from "@/components/ui/Primitives";
 import { versionTag, type ReviewStats, type Submission, type Track } from "@/lib/types";
+import { MyCertificates } from "@/components/MyCertificates";
+import { listMyCertificates, certificatesReleased } from "@/lib/certificateAccess";
 import {
   AcceptTrackButton,
   AcceptPaperButtons,
@@ -18,6 +20,9 @@ import {
 
 export default async function EditorDashboard() {
   const profile = await requireRole("editor");
+  const certificates = certificatesReleased()
+    ? await listMyCertificates(profile.id)
+    : [];
   const supabase = await createClient();
 
   // The tracks this person chairs define their whole queue.
@@ -90,6 +95,7 @@ export default async function EditorDashboard() {
     return (
       <>
         <PageHeader title="Track Queue" />
+        <MyCertificates certificates={certificates} types={["track_editor"]} />
         <EmptyState
           title="You are not assigned to a track yet"
           description="The Convener assigns track editors to tracks. Once assigned, submissions will appear here."
@@ -106,6 +112,8 @@ export default async function EditorDashboard() {
           .map((t) => t.name)
           .join(", ")}`}
       />
+
+      <MyCertificates certificates={certificates} types={["track_editor"]} />
 
       {/* ---- Summary (on top) ---- */}
       <Section title="Summary">

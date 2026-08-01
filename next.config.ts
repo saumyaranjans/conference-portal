@@ -27,11 +27,19 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  outputFileTracingIncludes: {
+    "/*": [
+      "./src/assets/fonts/**/*",
+      "./public/glogift-logo.png",
+      "./public/iim-sambalpur.png",
+    ],
+  },
   // Nothing gains from advertising the framework.
   poweredByHeader: false,
   experimental: {
     serverActions: {
-      bodySizeLimit: "256kb",
+      // Signature scans are validated at 2 MB by the protected server action.
+      bodySizeLimit: "3mb",
     },
   },
   async headers() {

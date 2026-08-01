@@ -9,6 +9,8 @@ import {
   formatDate,
 } from "@/components/ui/Primitives";
 import { MAX_SUBMISSIONS_PER_AUTHOR, versionTag, type Submission } from "@/lib/types";
+import { MyCertificates } from "@/components/MyCertificates";
+import { listMyCertificates, certificatesReleased } from "@/lib/certificateAccess";
 
 type Row = Submission & { tracks: { name: string } | null };
 
@@ -87,6 +89,9 @@ export default async function AuthorDashboard({
   const { folder } = await searchParams;
   const profile = await requireProfile();
   const supabase = await createClient();
+  const certificates = certificatesReleased()
+    ? await listMyCertificates(profile.id)
+    : [];
 
   // The author's own (corresponding) submissions — these drive the folders.
   const { data } = await supabase
@@ -174,6 +179,8 @@ export default async function AuthorDashboard({
           )
         }
       />
+
+      <MyCertificates certificates={certificates} types={["participant"]} />
 
       <div
         className={`card card-pad mb-8 ${

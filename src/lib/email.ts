@@ -61,6 +61,8 @@ export async function sendEmail(args: {
   kind?: string;
   /** Who sent it. */
   sentBy?: string;
+  /** Optional file attachments (content is base64-encoded). */
+  attachments?: { filename: string; content: string }[];
 }): Promise<{ sent: boolean; id?: string; error?: string }> {
   const key = process.env.RESEND_API_KEY;
   const from = process.env.RESEND_FROM;
@@ -100,6 +102,7 @@ export async function sendEmail(args: {
         ...(replyTo.length
           ? { reply_to: replyTo.length === 1 ? replyTo[0] : replyTo }
           : {}),
+        ...(args.attachments?.length ? { attachments: args.attachments } : {}),
       }),
     });
     if (!res.ok) {

@@ -8,6 +8,7 @@ type ConferenceDocumentPageProps = {
   description: string;
   pdf: string;
   pages: string[];
+  embedPdf?: boolean;
 };
 
 export function ConferenceDocumentPage({
@@ -15,6 +16,7 @@ export function ConferenceDocumentPage({
   description,
   pdf,
   pages,
+  embedPdf = false,
 }: ConferenceDocumentPageProps) {
   return (
     <main className="min-h-screen">
@@ -55,20 +57,28 @@ export function ConferenceDocumentPage({
         </section>
 
         <section className="space-y-5 rounded-3xl bg-slate-100 p-2 sm:p-5 dark:bg-slate-800/70">
-          {pages.map((page, index) => (
-            <figure key={page}>
-              <img
-                src={page}
-                alt={`${title}, page ${index + 1}`}
-                className="mx-auto h-auto w-full rounded-lg bg-white shadow-xl"
-              />
-              {pages.length > 1 && (
-                <figcaption className="mt-2 text-center text-xs text-slate-500 dark:text-slate-400">
-                  Page {index + 1} of {pages.length}
-                </figcaption>
-              )}
-            </figure>
-          ))}
+          {embedPdf ? (
+            <iframe
+              src={`${pdf}#view=FitH&toolbar=1&navpanes=0`}
+              title={`${title} PDF viewer`}
+              className="mx-auto aspect-[210/297] w-full rounded-lg bg-white shadow-xl"
+            />
+          ) : (
+            pages.map((page, index) => (
+              <figure key={page}>
+                <img
+                  src={page}
+                  alt={`${title}, page ${index + 1}`}
+                  className="mx-auto h-auto w-full rounded-lg bg-white shadow-xl"
+                />
+                {pages.length > 1 && (
+                  <figcaption className="mt-2 text-center text-xs text-slate-500 dark:text-slate-400">
+                    Page {index + 1} of {pages.length}
+                  </figcaption>
+                )}
+              </figure>
+            ))
+          )}
         </section>
 
         <section className="card card-pad text-center">

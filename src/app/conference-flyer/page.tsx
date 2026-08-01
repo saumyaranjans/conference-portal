@@ -14,6 +14,7 @@ export default function ConferenceFlyerPage() {
       description="View the GLOGIFT 2027 call-for-submissions flyer online, or download the original PDF below."
       pdf="/downloads/glogift-2027-conference-flyer.pdf"
       pages={["/document-previews/flyer/page-1.png"]}
+      embedPdf
     />
   );
 }

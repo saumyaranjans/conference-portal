@@ -4,7 +4,15 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: "*",
-      allow: ["/", "/conference-flyer", "/conference-brochure", "/how-to-reach", "/travelogue", "/security"],
+      allow: [
+        "/",
+        "/conference-flyer",
+        "/conference-brochure",
+        "/full-paper-submission-guidelines",
+        "/how-to-reach",
+        "/travelogue",
+        "/security",
+      ],
       disallow: [
         "/admin/",
         "/author/",

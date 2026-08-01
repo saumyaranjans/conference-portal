@@ -1156,7 +1156,7 @@ export function LandingPage() {
             <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
               Conference documents
             </p>
-            <div className="grid gap-4 sm:max-w-2xl sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <Link
                 href="/conference-flyer"
                 className="group relative flex items-center gap-4 overflow-hidden rounded-2xl
@@ -1217,6 +1217,40 @@ export function LandingPage() {
                 </span>
                 <svg viewBox="0 0 24 24" className="ml-auto h-5 w-5 shrink-0 text-slate-300 transition
                      group-hover:translate-x-1 group-hover:text-amber-500 dark:text-slate-600"
+                     fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </Link>
+
+              <Link
+                href="/full-paper-submission-guidelines"
+                className="group relative flex items-center gap-4 overflow-hidden rounded-2xl
+                           border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur
+                           transition duration-300 hover:-translate-y-0.5 hover:border-emerald-300
+                           hover:shadow-[0_14px_34px_-14px_rgba(16,185,129,0.65)]
+                           dark:border-slate-700 dark:bg-slate-900/70 dark:hover:border-emerald-500/60"
+              >
+                <span aria-hidden className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-emerald-400 to-emerald-700" />
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-50
+                                 text-emerald-600 transition group-hover:scale-105
+                                 dark:bg-emerald-500/15 dark:text-emerald-300">
+                  <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
+                    <path d="M14 3v5h5" />
+                    <path d="m9 14 1.5 1.5L15 11" />
+                    <path d="M9 18h6" />
+                  </svg>
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold leading-5 text-slate-800 dark:text-slate-100">
+                    Full Paper Submission Guidelines (Pathway B)
+                  </span>
+                  <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">
+                    Templates &amp; journal requirements
+                  </span>
+                </span>
+                <svg viewBox="0 0 24 24" className="ml-auto h-5 w-5 shrink-0 text-slate-300 transition
+                     group-hover:translate-x-1 group-hover:text-emerald-500 dark:text-slate-600"
                      fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                   <path d="M5 12h14M13 6l6 6-6 6" />
                 </svg>

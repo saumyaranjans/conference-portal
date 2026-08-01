@@ -7,9 +7,6 @@ import type { NextConfig } from "next";
  * device APIs the portal never asks for.
  */
 const securityHeaders = [
-  // Belt and braces with the CSP frame-ancestors directive in the proxy, for
-  // anything that still only understands this header.
-  { key: "X-Frame-Options", value: "DENY" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   // Send the origin to other sites, never the full path — portal URLs carry
   // paper ids we would rather not leak into someone else's logs.
@@ -40,6 +37,19 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
+      // Conference PDFs are rendered inside the site's own document viewer.
+      // SAMEORIGIN keeps third-party framing blocked while allowing that one
+      // first-party use case. Application pages remain DENY in src/proxy.ts.
+      {
+        source: "/downloads/:path*.pdf",
+        headers: [
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          {
+            key: "Content-Security-Policy",
+            value: "default-src 'none'; frame-ancestors 'self'",
+          },
+        ],
+      },
       {
         source:
           "/:section(admin|author|reviewer|editor|chief|profile|api|auth)/:path*",

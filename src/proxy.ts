@@ -54,6 +54,10 @@ export default async function proxy(request: NextRequest) {
 
   let response = NextResponse.next({ request });
   response.headers.set("content-security-policy", csp);
+  // Belt and braces with CSP for browsers that still rely on X-Frame-Options.
+  // Static conference PDFs are excluded from this proxy and receive the
+  // narrowly scoped SAMEORIGIN policy in next.config.ts.
+  response.headers.set("x-frame-options", "DENY");
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -69,6 +73,7 @@ export default async function proxy(request: NextRequest) {
           );
           response = NextResponse.next({ request });
           response.headers.set("content-security-policy", csp);
+          response.headers.set("x-frame-options", "DENY");
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, options)
           );
@@ -105,5 +110,5 @@ export default async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|pdf)$).*)"],
 };

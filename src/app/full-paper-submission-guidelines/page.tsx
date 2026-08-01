@@ -374,9 +374,14 @@ export default function FullPaperSubmissionGuidelinesPage() {
           <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
             For questions about GLOGIFT 2027 Pathway B, contact the conference editorial team.
           </p>
-          <a href="mailto:glogift27.chair@iimsambalpur.ac.in" className="mt-4 inline-flex text-sm font-semibold text-blue-700 hover:underline dark:text-blue-300">
-            glogift27.chair@iimsambalpur.ac.in
-          </a>
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+            <a href="mailto:glogift27.chair@iimsambalpur.ac.in" className="inline-flex text-sm font-semibold text-blue-700 hover:underline dark:text-blue-300">
+              glogift27.chair@iimsambalpur.ac.in
+            </a>
+            <a href="mailto:glogift27.coordinator@iimsambalpur.ac.in" className="inline-flex text-sm font-semibold text-blue-700 hover:underline dark:text-blue-300">
+              glogift27.coordinator@iimsambalpur.ac.in
+            </a>
+          </div>
         </section>
 
         <footer className="border-t border-slate-200 pb-6 pt-5 text-center text-xs text-slate-500 dark:border-slate-700">

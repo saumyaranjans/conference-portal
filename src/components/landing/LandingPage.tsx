@@ -225,7 +225,7 @@ const GUIDELINES = [
   ],
   [
     "Stage 2 — Choose your pathway",
-    "Pathway A: present without a full paper. Pathway B: after your abstract is accepted, prepare the full paper in accordance with the Paper Submission Guidelines sent with the acceptance email — maximum 10,000 words including references, tables, figures and appendices.",
+    "Pathway A: present an accepted abstract without a full paper. Pathway B: prepare a double-anonymous manuscript using the published Full Paper Submission Guidelines and templates, following any target-journal requirements.",
   ],
   [
     "Review",
@@ -683,19 +683,23 @@ export function LandingPage() {
           <div className="card card-pad mb-6 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
             <p>
               We invite original, unpublished research from academicians,
-              doctoral scholars and practitioners on any aspect of AI-driven
-              management. Every submission begins with a{" "}
-              <strong>500-word abstract</strong> naming one of the ten tracks
-              below. Interdisciplinary work, industry case studies and
-              policy-oriented research are all welcome.
+              doctoral scholars and practitioners across the ten conference
+              tracks. Begin by submitting a <strong>500-word abstract</strong>{" "}
+              under the most relevant track. Interdisciplinary, practice-based
+              and policy-oriented work is welcome.
             </p>
             <p className="mt-3">
-              Once your abstract is accepted, authors on the full-paper pathway
-              are asked to prepare the manuscript in accordance with the{" "}
-              <strong>Paper Submission Guidelines</strong>, which are shared
-              with the acceptance email. The paper must not exceed{" "}
-              <strong>10,000 words in total</strong> — including references,
-              tables, figures and any appendices.
+              Authors whose abstracts are accepted for Pathway B should prepare
+              a double-anonymous full paper using the{" "}
+              <Link
+                href="/full-paper-submission-guidelines"
+                className="font-semibold text-blue-700 hover:underline dark:text-blue-300"
+              >
+                Full Paper Submission Guidelines
+              </Link>
+              , Author Details Worksheet and Blinded Manuscript Template.
+              Requirements vary by target journal and must be checked before
+              submission.
             </p>
           </div>
 
@@ -1154,7 +1158,7 @@ export function LandingPage() {
               plain links so they read as things you open, not stray text. */}
           <div className="mt-8">
             <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-              Conference documents
+              Quick Appendices
             </p>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <Link

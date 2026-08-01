@@ -23,6 +23,7 @@ import {
   reviewOf,
   participationModeLabel,
   submissionTypeLabel,
+  versionLabel,
   type Submission,
 } from "@/lib/types";
 
@@ -129,7 +130,7 @@ export default async function EditorSubmissionPage({
 
       <PageHeader
         title={sub.title}
-        subtitle={`${sub.paper_id ? `Paper ${sub.paper_id} · ` : ""}${sub.tracks?.name ?? "No track"} · Version ${sub.version} · Submitted ${formatDate(sub.submitted_at)}`}
+        subtitle={`${sub.paper_id ? `Paper ${sub.paper_id} · ` : ""}${sub.tracks?.name ?? "No track"} · ${versionLabel(sub.version)} · Submitted ${formatDate(sub.submitted_at)}`}
         action={<StatusBadge status={sub.status} />}
       />
 
@@ -389,8 +390,8 @@ export default async function EditorSubmissionPage({
         {isFinal ? (
           <div className="card card-pad">
             <p className="text-sm text-slate-500">
-              This paper is {sub.status.replace("_", " ")}. Record another
-              decision below only to change it.
+              This paper is {sub.status.replace("_", " ")}. This decision is
+              final — only the Convener can change it.
             </p>
           </div>
         ) : (
@@ -473,6 +474,29 @@ export default async function EditorSubmissionPage({
               </div>
             </div>
 
+            {sub.submission_type === "full_paper_presentation" &&
+              sub.stage !== "full_paper" && (
+                <div>
+                  <label className="label" htmlFor="full_paper_deadline">
+                    Full-paper submission deadline{" "}
+                    <span className="text-slate-400 font-normal">
+                      (Pathway B — required if you Accept)
+                    </span>
+                  </label>
+                  <input
+                    type="date"
+                    id="full_paper_deadline"
+                    name="full_paper_deadline"
+                    className="input max-w-xs"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">
+                    On accepting the abstract, the author is invited to submit
+                    the full paper by this date. It must be on or before the
+                    conference full-paper deadline.
+                  </p>
+                </div>
+              )}
+
             <div>
               <label className="label" htmlFor="rationale">
                 Message to the author
@@ -508,7 +532,16 @@ export default async function EditorSubmissionPage({
       {hasDecision && (
       <Section title="Email the author">
         <NotifyAuthor
-          stage={sub.stage}
+          /* Accepting a Pathway B abstract flips the stage to full_paper before
+             the full paper is submitted — until it is, the letter is still the
+             abstract decision (accept → submit full paper by the deadline). */
+          stage={
+            sub.stage === "full_paper" && !(sub as any).full_paper_submitted_at
+              ? "abstract"
+              : sub.stage
+          }
+          submissionType={sub.submission_type}
+          fullPaperDeadline={(sub as any).full_paper_deadline}
           paperId={sub.paper_id}
           title={sub.title}
           track={sub.tracks?.name}
@@ -526,8 +559,11 @@ export default async function EditorSubmissionPage({
       </Section>
       )}
 
-      {/* ---- Highlight a publication outlet (accepted papers) ---- */}
-      {sub.status === "accepted" && (
+      {/* ---- Highlight a publication outlet (accepted papers) ----
+           Only Pathway B (full paper) produces a paper for a publication
+           outlet; Pathway A is abstract & presentation only. */}
+      {sub.status === "accepted" &&
+        sub.submission_type === "full_paper_presentation" && (
         <Section title="Publication outlet">
           <ActionForm action={setSuggestedOutlet} className="card card-pad space-y-3">
             <input type="hidden" name="submission_id" value={id} />

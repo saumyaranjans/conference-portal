@@ -26,6 +26,7 @@ export default async function ReviewerInvitePage({
   const invalid =
     !inv ||
     inv.status === "revoked" ||
+    inv.status === "declined" ||
     (inv.status === "pending" &&
       new Date(inv.expires_at).getTime() <= Date.now());
 

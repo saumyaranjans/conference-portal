@@ -10,7 +10,7 @@ import {
   StatCard,
   formatDate,
 } from "@/components/ui/Primitives";
-import type { ReviewStats, Submission, Track } from "@/lib/types";
+import { versionTag, type ReviewStats, type Submission, type Track } from "@/lib/types";
 import {
   AcceptTrackButton,
   AcceptPaperButtons,
@@ -210,7 +210,7 @@ export default async function EditorDashboard() {
                   <td className="td font-medium text-slate-900 max-w-sm">
                     {s.title}
                     <span className="block text-xs font-normal text-slate-400">
-                      v{s.version}
+                      {versionTag(s.version)}
                     </span>
                   </td>
                   <td className="td">

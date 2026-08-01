@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { requireProfile } from "@/lib/auth";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import {
   DataTable,
@@ -8,9 +8,12 @@ import {
   PageHeader,
   formatDate,
 } from "@/components/ui/Primitives";
-import { MAX_SUBMISSIONS_PER_AUTHOR, type Submission } from "@/lib/types";
+import { MAX_SUBMISSIONS_PER_AUTHOR, versionTag, type Submission } from "@/lib/types";
 
 type Row = Submission & { tracks: { name: string } | null };
+
+/** A submission row tagged with the viewer's role on it. */
+type TaggedRow = Row & { _role: "corresponding" | "coauthor" };
 
 /** A folder's inclusion rule over the author's submissions. */
 type Predicate = (s: Row) => boolean;
@@ -85,6 +88,7 @@ export default async function AuthorDashboard({
   const profile = await requireProfile();
   const supabase = await createClient();
 
+  // The author's own (corresponding) submissions — these drive the folders.
   const { data } = await supabase
     .from("submissions")
     .select("*, tracks(name)")
@@ -93,17 +97,62 @@ export default async function AuthorDashboard({
 
   const submissions = (data ?? []) as Row[];
 
-  const activeCount = submissions.filter((s) => s.status !== "withdrawn").length;
+  // Submissions where the signed-in user is a linked co-author (view only).
+  // The submission_authors read policy doesn't cover co-authors, so we look up
+  // the user's OWN co-author rows with the admin client, strictly scoped to
+  // their profile_id, then read the linked submissions.
+  const admin = createAdminClient();
+  const { data: coRows } = await admin
+    .from("submission_authors")
+    .select("submission_id")
+    .eq("profile_id", profile.id)
+    .eq("is_corresponding", false);
+  const coIds = Array.from(
+    new Set((coRows ?? []).map((r) => r.submission_id as string))
+  ).filter((sid) => !submissions.some((s) => s.id === sid));
+
+  let coAuthored: Row[] = [];
+  if (coIds.length) {
+    const { data: coSubs } = await admin
+      .from("submissions")
+      .select("*, tracks(name)")
+      .in("id", coIds)
+      .order("updated_at", { ascending: false });
+    coAuthored = (coSubs ?? []) as Row[];
+  }
+
+  // The 2-submission rule counts both roles: papers you submit and papers you
+  // co-author. Withdrawn submissions free a slot.
+  const ownedActive = submissions.filter((s) => s.status !== "withdrawn").length;
+  const coActive = coAuthored.filter((s) => s.status !== "withdrawn").length;
+  const activeCount = ownedActive + coActive;
   const atLimit = activeCount >= MAX_SUBMISSIONS_PER_AUTHOR;
 
   const countFor = (key: keyof typeof FOLDERS) =>
     submissions.filter(FOLDERS[key].match).length;
 
-  // Rows for the currently opened folder (if any).
+  // Every row carries the viewer's role on that submission, shown as a column.
+  const ownedTagged: TaggedRow[] = submissions.map((s) => ({
+    ...s,
+    _role: "corresponding",
+  }));
+  const coTagged: TaggedRow[] = coAuthored.map((s) => ({
+    ...s,
+    _role: "coauthor",
+  }));
+
+  // Rows for the currently opened folder (if any). Folders are about the
+  // author's own submissions; the full "All submissions" view also lists the
+  // papers they co-author.
   const activeFolder = folder && folder in FOLDERS ? folder : null;
-  const visible = activeFolder
-    ? submissions.filter(FOLDERS[activeFolder as keyof typeof FOLDERS].match)
-    : submissions;
+  const visible: TaggedRow[] = activeFolder
+    ? ownedTagged.filter((s) =>
+        FOLDERS[activeFolder as keyof typeof FOLDERS].match(s)
+      )
+    : [...ownedTagged, ...coTagged].sort(
+        (a, b) =>
+          new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+      );
 
   return (
     <>
@@ -116,11 +165,11 @@ export default async function AuthorDashboard({
               className="btn-secondary opacity-60 cursor-not-allowed"
               title={`Limit of ${MAX_SUBMISSIONS_PER_AUTHOR} submissions reached`}
             >
-              Submit New Manuscript
+              Submit New Abstract
             </span>
           ) : (
             <Link href="/author/submissions/new" className="btn-primary">
-              Submit New Manuscript
+              Submit New Abstract
             </Link>
           )
         }
@@ -135,7 +184,8 @@ export default async function AuthorDashboard({
           className={`text-sm ${atLimit ? "text-amber-900" : "text-blue-900"}`}
         >
           <strong>Submission rule:</strong> each author may hold a maximum of{" "}
-          {MAX_SUBMISSIONS_PER_AUTHOR} submissions.{" "}
+          {MAX_SUBMISSIONS_PER_AUTHOR} submissions, counting papers you submit
+          and papers you co-author.{" "}
           {atLimit
             ? "You have reached the limit — withdraw a submission to free a slot."
             : `You have ${MAX_SUBMISSIONS_PER_AUTHOR - activeCount} remaining.`}
@@ -154,14 +204,14 @@ export default async function AuthorDashboard({
                 <div className="px-4 py-2.5">
                   {atLimit ? (
                     <span className="text-slate-400 font-medium cursor-not-allowed">
-                      Submit New Manuscript
+                      Submit New Abstract
                     </span>
                   ) : (
                     <Link
                       href="/author/submissions/new"
                       className="text-blue-700 hover:underline font-medium"
                     >
-                      Submit New Manuscript
+                      Submit New Abstract
                     </Link>
                   )}
                 </div>
@@ -199,35 +249,46 @@ export default async function AuthorDashboard({
           action={
             atLimit ? undefined : (
               <Link href="/author/submissions/new" className="btn-primary">
-                Submit New Manuscript
+                Submit New Abstract
               </Link>
             )
           }
         />
       ) : (
         <DataTable
-          headers={["Paper ID", "Title", "Track", "Status", "Version", "Updated", ""]}
+          headers={["Paper ID", "Title", "Track", "Role", "Status", "Version", "Updated", ""]}
         >
           {visible.map((s) => (
-            <tr key={s.id} className="hover:bg-slate-50">
+            <tr key={s.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
               <td className="td font-mono text-xs text-slate-500 whitespace-nowrap">
                 {s.paper_id ?? "—"}
               </td>
-              <td className="td font-medium text-slate-900 max-w-sm">
+              <td className="td font-medium text-slate-900 dark:text-slate-100 max-w-sm">
                 {s.title || <span className="text-slate-400">Untitled</span>}
               </td>
               <td className="td text-slate-500">{s.tracks?.name ?? "—"}</td>
+              <td className="td whitespace-nowrap">
+                {s._role === "corresponding" ? (
+                  <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-500/15 dark:text-blue-300">
+                    Corresponding Author
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-700/50 dark:text-slate-300">
+                    Co-Author
+                  </span>
+                )}
+              </td>
               <td className="td">
                 <StatusBadge status={s.status} />
               </td>
-              <td className="td">v{s.version}</td>
+              <td className="td">{versionTag(s.version)}</td>
               <td className="td text-slate-500">{formatDate(s.updated_at)}</td>
               <td className="td text-right">
                 <Link
                   href={`/author/submissions/${s.id}`}
-                  className="text-blue-700 hover:underline text-sm font-medium"
+                  className="text-blue-700 hover:underline text-sm font-medium dark:text-blue-300"
                 >
-                  Open
+                  {s._role === "corresponding" ? "Open" : "View"}
                 </Link>
               </td>
             </tr>

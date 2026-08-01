@@ -6,6 +6,7 @@ import { ReviewForm } from "@/components/ReviewForm";
 import { CameraReadyPreview } from "@/components/CameraReadyPreview";
 import { DocumentViewer } from "@/components/DocumentViewer";
 import { PageHeader, Section } from "@/components/ui/Primitives";
+import { versionLabel } from "@/lib/types";
 
 export default async function ReviewPage({
   params,
@@ -46,7 +47,7 @@ export default async function ReviewPage({
 
       <PageHeader
         title={sub?.title ?? "Submission"}
-        subtitle={`${sub?.paper_id ? `Paper ${sub.paper_id} · ` : ""}${sub?.tracks?.name ?? "No track"} · Version ${sub?.version ?? 1}`}
+        subtitle={`${sub?.paper_id ? `Paper ${sub.paper_id} · ` : ""}${sub?.tracks?.name ?? "No track"} · ${versionLabel(sub?.version)}`}
         action={
           assignment.reviewer_number ? (
             <span className="badge bg-blue-100 text-blue-800">

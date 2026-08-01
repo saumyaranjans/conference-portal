@@ -5,6 +5,8 @@
  * single-blind; these go author-ward or chair-ward only.
  */
 
+import { GUIDELINES_URL } from "@/lib/types";
+
 export type EmailContent = { subject: string; body: string };
 
 const CONF_DEFAULT = "GLOGIFT 2027";
@@ -52,6 +54,10 @@ type DecisionOpts = {
   title: string;
   track?: string;
   decision: string;
+  /** Pathway A ("abstract_presentation") vs B ("full_paper_presentation"). */
+  submissionType?: string;
+  /** Pathway B: the full-paper submission deadline the Track Editor set (YYYY-MM-DD). */
+  fullPaperDeadline?: string | null;
   /** The track chair's own message to the author. */
   message?: string;
   conferenceName?: string;
@@ -71,6 +77,19 @@ function prettyRecommendation(r?: string | null): string {
   if (!r) return "";
   const s = r.replace(/_/g, " ");
   return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+/** "2026-10-15" → "15 October 2026". Falls back to the raw value. */
+function prettyDate(iso?: string | null): string {
+  if (!iso) return "";
+  const d = new Date(`${iso}T00:00:00`);
+  return isNaN(d.getTime())
+    ? iso
+    : d.toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
 }
 
 /**
@@ -107,8 +126,14 @@ function decisionEmail(
       headline = `we are pleased to inform you that your ${item} has been ACCEPTED`;
       nextStep =
         stage === "abstract"
-          ? "Where applicable you will be invited to submit your full paper — please watch your dashboard for the next step."
-          : "Please prepare your camera-ready version per the conference guidelines.";
+          ? o.submissionType === "full_paper_presentation"
+            ? `As a next step, please submit your full paper${
+                o.fullPaperDeadline
+                  ? ` by ${prettyDate(o.fullPaperDeadline)}`
+                  : ""
+              }, prepared per the author guidelines: ${GUIDELINES_URL}. Please ensure you submit well before the conference full-paper deadline. The full-paper upload is now available on your dashboard.`
+            : "As a next step, please proceed to complete your conference registration to confirm your presentation. Registration details are available on the conference website and your dashboard."
+          : "Please prepare your camera-ready version per the conference guidelines, and ensure your conference registration is complete.";
       break;
     case "minor_revision":
       headline = `your ${item} has been accepted subject to MINOR REVISIONS`;
@@ -184,6 +209,8 @@ export function chairInviteEmail(o: {
   siteUrl?: string;
   /** Acceptance or sign-up link — the invitation is only live once used. */
   link?: string;
+  /** Optional decline link; when present the email offers Agree / Decline. */
+  declineLink?: string;
   /** True when the invitee has no account and the link starts a sign-up. */
   needsSignup?: boolean;
   convenerName?: string | null;
@@ -209,12 +236,24 @@ export function chairInviteEmail(o: {
     o.siteUrl ? "" : null,
     o.siteUrl ? `Conference portal: ${o.siteUrl}` : null,
     "",
-    o.link
-      ? o.needsSignup
-        ? "To begin, please complete the sign-up process on the conference portal using the link below. Your details are already filled in — set a password to finish, and your Track Editor dashboard opens straight away:"
-        : "Please accept the invitation using the link below. Your Track Editor dashboard opens as soon as you do:"
-      : null,
-    o.link ?? null,
+    ...(o.link && o.declineLink
+      ? [
+          "Please let us know your decision using one of the links below.",
+          "",
+          "AGREE — register and open your Track Editor dashboard:",
+          o.link,
+          "",
+          "DECLINE — if you are unable to serve on the editorial team:",
+          o.declineLink,
+        ]
+      : o.link
+        ? [
+            o.needsSignup
+              ? "To begin, please complete the sign-up process on the conference portal using the link below. Your details are already filled in — set a password to finish, and your Track Editor dashboard opens straight away:"
+              : "Please accept the invitation using the link below. Your Track Editor dashboard opens as soon as you do:",
+            o.link,
+          ]
+        : []),
     "",
     "For further information, please feel free to contact:",
     CHAIR_HELP,
@@ -224,6 +263,176 @@ export function chairInviteEmail(o: {
     signOffLine({ role: "Convener", track: o.track, conf, brand }),
     o.convenerEmail || null,
   ]);
+  return { subject, body };
+}
+
+/** Full conference title, used in the editorial-office signature block. */
+const FULL_CONF_TITLE =
+  "International Conference on AI-Driven Solutions in Management: Flexibility, Digitalisation & Decarbonization";
+
+const PATHWAY_LABEL: Record<string, string> = {
+  abstract_presentation: "Pathway A — Abstract & Presentation Only",
+  full_paper_presentation: "Pathway B — Full Paper & Presentation",
+};
+const ATTENDANCE_LABEL: Record<string, string> = {
+  virtual: "Virtual Conference (Online)",
+  onsite: "On-Site Institution Visit (Offline)",
+};
+
+/**
+ * System-generated acknowledgement sent to the corresponding author and every
+ * co-author (who has an email) the moment an abstract is submitted. The
+ * corresponding author and co-authors get slightly different opening lines; the
+ * summary, next-steps and Editorial Office signature are identical.
+ */
+export function submissionAcknowledgementEmail(o: {
+  recipientName?: string | null;
+  isCorresponding: boolean;
+  correspondingName?: string | null;
+  paperId?: string | null;
+  title: string;
+  track?: string | null;
+  submissionType?: string | null;
+  participationMode?: string | null;
+  /** e.g. "Dummy Author 1 (corresponding), Dr Co B, Dr Co C". */
+  authorsLine?: string | null;
+  /** Co-authors only: their personalised, pre-filled sign-up link. */
+  signupUrl?: string | null;
+  conferenceName?: string | null;
+}): EmailContent {
+  const conf = (o.conferenceName ?? "").trim() || CONF_DEFAULT;
+  const pathway = PATHWAY_LABEL[o.submissionType ?? ""] ?? (o.submissionType || "—");
+  const attendance =
+    ATTENDANCE_LABEL[o.participationMode ?? ""] ?? (o.participationMode || "—");
+  const isFullPaper = o.submissionType === "full_paper_presentation";
+
+  const subject = `${conf} — Abstract received${o.paperId ? ` (${o.paperId})` : ""}`;
+
+  const intro = o.isCorresponding
+    ? `Thank you for your submission to ${conf} — the ${FULL_CONF_TITLE}, to be held on 25–27 February 2027 at IIM Sambalpur.\n\nWe are pleased to confirm that your abstract has been received. A summary of your submission is below.`
+    : `You have been listed as a co-author on the following abstract, submitted to ${conf} by ${(
+        o.correspondingName ?? "the corresponding author"
+      ).trim()} (corresponding author). This note is to keep you informed; a summary is below.`;
+
+  const summary = [
+    `  Paper ID      ${o.paperId ?? "—"}`,
+    `  Title         ${o.title}`,
+    `  Track         ${o.track ?? "—"}`,
+    `  Pathway       ${pathway}`,
+    `  Attendance    ${attendance}`,
+    o.authorsLine ? `  Authors       ${o.authorsLine}` : null,
+  ]
+    .filter((l): l is string => l !== null)
+    .join("\n");
+
+  // The corresponding author is done; a co-author is asked to register (with
+  // their personalised, pre-filled link) so they can sign in and track status.
+  const correspondingSteps: (string | null)[] = [
+    "What happens next",
+    "Your abstract will be reviewed by the track's editorial team, and you will be notified of the outcome by email. No action is required from you at this stage.",
+    isFullPaper
+      ? "If your abstract is accepted, you will be invited to upload the full paper by the full-paper deadline."
+      : null,
+  ];
+  const coAuthorSteps: (string | null)[] = [
+    "Complete your registration",
+    "Please register on the conference portal so you can sign in and follow the status of this submission. The details provided by the corresponding author are already pre-filled — simply set a password and complete the remaining fields.",
+    o.signupUrl ? "" : null,
+    o.signupUrl ? `Register here: ${o.signupUrl}` : null,
+    "",
+    "What happens next",
+    "The abstract will be reviewed by the track's editorial team. Once you have signed in, you can follow the outcome from your dashboard.",
+    isFullPaper
+      ? "If the abstract is accepted, the corresponding author will be invited to upload the full paper by the full-paper deadline."
+      : null,
+  ];
+
+  const body = compose([
+    greeting(o.recipientName ?? undefined),
+    "",
+    intro,
+    "",
+    summary,
+    "",
+    "Please note",
+    "• Your selected pathway and participation preference, once submitted, cannot be changed, owing to administrative constraints.",
+    "• You are expected to be available on all three days of the conference (25–27 February 2027).",
+    "• The detailed conference schedule will be shared at least two weeks in advance of the conference.",
+    "",
+    ...(o.isCorresponding ? correspondingSteps : coAuthorSteps),
+    "",
+    "This is a system-generated email — please do not reply to this message. If any detail above is incorrect, or you have any questions, write to us at the addresses below.",
+    "",
+    "Warm regards,",
+    "GLOGIFT 2027 Editorial Office",
+    FULL_CONF_TITLE,
+    "Indian Institute of Management Sambalpur",
+    "glogift27.chair@iimsambalpur.ac.in · glogift27.coordinator@iimsambalpur.ac.in",
+    "glogift2027.in",
+  ]);
+
+  return { subject, body };
+}
+
+/**
+ * Sent to a Track Editor the moment the Convener assigns them a paper. Carries
+ * the abstract and metadata, and two links: Agree (take on the paper) and
+ * Reject (hand it back, giving a reason). Token-backed, so it works without
+ * signing in.
+ */
+export function paperAssignmentEmail(o: {
+  editorName?: string | null;
+  paperId?: string | null;
+  title: string;
+  track?: string | null;
+  submissionType?: string | null;
+  abstract?: string | null;
+  agreeLink: string;
+  rejectLink: string;
+  convenerName?: string | null;
+  convenerEmail?: string | null;
+  conferenceName?: string | null;
+}): EmailContent {
+  const conf = (o.conferenceName ?? "").trim() || CONF_DEFAULT;
+  const pathway =
+    PATHWAY_LABEL[o.submissionType ?? ""] ?? (o.submissionType || "—");
+  const subject = `${conf} — Paper assigned to you${
+    o.paperId ? ` (${o.paperId})` : ""
+  }`;
+
+  const body = compose([
+    greeting(o.editorName ?? undefined, "Colleague"),
+    "",
+    `You have been assigned the following abstract to handle as Track Editor for the ${
+      o.track ?? "assigned"
+    } track of ${conf}.`,
+    "",
+    `  Paper ID   ${o.paperId ?? "—"}`,
+    `  Title      ${o.title}`,
+    `  Track      ${o.track ?? "—"}`,
+    `  Pathway    ${pathway}`,
+    "",
+    "Abstract",
+    (o.abstract ?? "").trim() || "(No abstract provided.)",
+    "",
+    "Please let us know whether you are able to handle this paper using one of the links below.",
+    "",
+    "AGREE — take on this paper (it will appear on your Track Editor dashboard):",
+    o.agreeLink,
+    "",
+    "REJECT — hand it back to the Convener (you will be asked for a brief reason):",
+    o.rejectLink,
+    "",
+    "This is a system-generated email — please do not reply to this message. For any questions, write to the addresses below.",
+    "",
+    "With regards,",
+    o.convenerName || null,
+    signOffLine({ role: "Convener", track: o.track, conf, brand: conf }),
+    o.convenerEmail || null,
+    "",
+    CHAIR_HELP,
+  ]);
+
   return { subject, body };
 }
 

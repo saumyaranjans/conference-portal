@@ -254,7 +254,7 @@ const REGISTRATION_FEES = [
 
 const LEADERSHIP = [
   {
-    name: "Prof (Dr) M. P. Jaiswal",
+    name: "Prof (Dr) Mahadeo Jaiswal",
     role: "Conference Patron",
     org: "Director, IIM Sambalpur",
   },
@@ -337,7 +337,7 @@ function initials(name: string) {
 /* Portraits, keyed by the exact name used in the lists above. Anyone absent
    falls back to their initials. Files live in public/people. */
 const PORTRAITS: Record<string, string> = {
-  "Prof (Dr) M. P. Jaiswal": "/people/mp-jaiswal.jpg",
+  "Prof (Dr) Mahadeo Jaiswal": "/people/mp-jaiswal.jpg",
   "Prof (Dr) Sushil": "/people/sushil.jpg",
   "Prof (Dr) Seema Gupta": "/people/seema-gupta.jpg",
   "Prof (Dr) Saumyaranjan Sahoo": "/people/saumyaranjan-sahoo.jpg",

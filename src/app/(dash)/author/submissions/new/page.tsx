@@ -63,7 +63,7 @@ export default async function NewSubmissionPage({
           </p>
           <p className="text-sm text-slate-600 mt-1.5">
             Each author may hold at most {MAX_SUBMISSIONS_PER_AUTHOR}{" "}
-            submissions. To submit a new manuscript, withdraw one of your
+            submissions. To submit a new abstract, withdraw one of your
             existing submissions first.
           </p>
           <Link href="/author" className="btn-primary mt-4">
@@ -88,7 +88,7 @@ export default async function NewSubmissionPage({
       <div className="card card-pad bg-blue-50 border-blue-200 mb-6 max-w-3xl">
         <p className="text-sm text-blue-900">
           Each author may submit a maximum of {MAX_SUBMISSIONS_PER_AUTHOR}{" "}
-          manuscripts. This will be submission {(activeCount ?? 0) + 1} of{" "}
+          abstracts. This will be submission {(activeCount ?? 0) + 1} of{" "}
           {MAX_SUBMISSIONS_PER_AUTHOR}.
         </p>
       </div>
@@ -96,7 +96,7 @@ export default async function NewSubmissionPage({
       {error === "limit" && (
         <div className="card card-pad bg-red-50 border-red-200 mb-6 max-w-3xl">
           <p className="text-sm text-red-700">
-            Submission limit reached — this manuscript was not created.
+            Submission limit reached — this abstract was not created.
           </p>
         </div>
       )}

@@ -6,7 +6,12 @@ import { redirect } from "next/navigation";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { requireProfile, requireRole } from "@/lib/auth";
 import { emailConfigured, sendEmail } from "@/lib/email";
-import { chairInviteEmail, signOffLine } from "@/lib/emailTemplates";
+import {
+  chairInviteEmail,
+  paperAssignmentEmail,
+  signOffLine,
+  submissionAcknowledgementEmail,
+} from "@/lib/emailTemplates";
 import {
   ABSTRACT_WORD_LIMIT,
   countWords,
@@ -14,8 +19,11 @@ import {
   FULL_PAPER_ACCEPTS_REQUIRED,
   MAX_SUBMISSIONS_PER_AUTHOR,
   MAX_TRACKS_PER_CHAIR,
+  MAX_REVIEWS_PER_REVIEWER,
   MIN_REVIEWS_PER_SUBMISSION,
   reviewOf,
+  FULL_PAPER_OPTIONS,
+  fullPaperSlotLabel,
 } from "@/lib/types";
 import type { AppRole, DecisionKind, Recommendation } from "@/lib/types";
 
@@ -33,6 +41,8 @@ export type PreparedInvite = {
   existing: boolean;
   /** Present only for an existing account. */
   reviewerId?: string;
+  /** One-time token behind the Agree/Reject links; stored on the assignment at send. */
+  inviteToken?: string;
   /** Non-blocking conflict-of-interest note for the chair to weigh. */
   warning?: string;
 };
@@ -265,15 +275,30 @@ export async function createSubmissionOnePage(payload: {
   const profile = await requireProfile();
   const supabase = await createClient();
 
-  const { count: activeCount } = await supabase
+  // The 2-submission rule counts both roles — papers you submit and papers you
+  // co-author (excluding withdrawn ones).
+  const { count: ownedActive } = await supabase
     .from("submissions")
     .select("*", { count: "exact", head: true })
     .eq("author_id", profile.id)
     .neq("status", "withdrawn");
-  if ((activeCount ?? 0) >= MAX_SUBMISSIONS_PER_AUTHOR) {
+  const { data: coRows } = await createAdminClient()
+    .from("submission_authors")
+    .select("submissions(status)")
+    .eq("profile_id", profile.id)
+    .eq("is_corresponding", false);
+  const coActive = (coRows ?? []).filter((r) => {
+    const s = r.submissions as
+      | { status?: string }
+      | { status?: string }[]
+      | null;
+    const status = Array.isArray(s) ? s[0]?.status : s?.status;
+    return status && status !== "withdrawn";
+  }).length;
+  if ((ownedActive ?? 0) + coActive >= MAX_SUBMISSIONS_PER_AUTHOR) {
     return {
       ok: false,
-      message: `You may hold at most ${MAX_SUBMISSIONS_PER_AUTHOR} submissions.`,
+      message: `You may hold at most ${MAX_SUBMISSIONS_PER_AUTHOR} submissions, counting papers you submit and papers you co-author.`,
     };
   }
 
@@ -413,13 +438,27 @@ export async function submitForReview(formData: FormData): Promise<ActionResult>
 
   const { data: sub } = await supabase
     .from("submissions")
-    .select("status, file_path, track_id, version")
+    .select(
+      "status, file_path, track_id, version, declared_original, declared_ai_assistance, declared_consent_publication"
+    )
     .eq("id", id)
     .single();
 
   if (!sub) return { ok: false, message: "Submission not found." };
   if (!sub.track_id)
     return { ok: false, message: "Choose a track before submitting." };
+
+  // All three author declarations must be accepted to submit (or resubmit a
+  // revision) — the same rule the submission form enforces on the client.
+  if (
+    !(sub as any).declared_original ||
+    !(sub as any).declared_ai_assistance ||
+    !(sub as any).declared_consent_publication
+  )
+    return {
+      ok: false,
+      message: "Please accept all three declarations before submitting.",
+    };
 
   // A resubmission after "revisions requested" bumps the version number.
   const isRevision = sub.status === "revisions_requested";
@@ -439,9 +478,238 @@ export async function submitForReview(formData: FormData): Promise<ActionResult>
   await audit(profile.id, "submission.submitted", "submission", id, {
     revision: isRevision,
   });
+
+  // Acknowledge the submission by email to the corresponding author and every
+  // co-author who has an address — best-effort, first submission only (not a
+  // revision resubmit). Each send is logged to email_log, so it appears in the
+  // Convener's email counter. A mail failure never breaks the submission.
+  if (!isRevision && emailConfigured()) {
+    try {
+      const { data: full } = await supabase
+        .from("submissions")
+        .select(
+          "paper_id, title, submission_type, participation_mode, tracks(name)"
+        )
+        .eq("id", id)
+        .single();
+      const { data: authors } = await supabase
+        .from("submission_authors")
+        .select("id, full_name, email, is_corresponding, author_order")
+        .eq("submission_id", id)
+        .order("author_order");
+
+      if (full && authors?.length) {
+        const corresponding = authors.find((a) => a.is_corresponding);
+        const authorsLine = authors
+          .map((a) =>
+            a.is_corresponding ? `${a.full_name} (corresponding)` : a.full_name
+          )
+          .filter(Boolean)
+          .join(", ");
+        const t = full.tracks as
+          | { name?: string }
+          | { name?: string }[]
+          | null;
+        const trackName = Array.isArray(t) ? t[0]?.name ?? null : t?.name ?? null;
+
+        for (const a of authors) {
+          const email = (a.email ?? "").trim();
+          if (!email) continue;
+          const { subject, body } = submissionAcknowledgementEmail({
+            recipientName: a.full_name,
+            isCorresponding: a.is_corresponding,
+            correspondingName: corresponding?.full_name,
+            paperId: full.paper_id,
+            title: full.title,
+            track: trackName,
+            submissionType: full.submission_type,
+            participationMode: full.participation_mode,
+            authorsLine,
+            // Co-authors get a personalised, pre-filled sign-up link keyed to
+            // their submission_authors row id.
+            signupUrl: a.is_corresponding
+              ? null
+              : `${siteUrl()}/co-author-invite/${a.id}`,
+            conferenceName: "GLOGIFT 2027",
+          });
+          await sendEmail({
+            to: email,
+            subject,
+            text: body,
+            kind: "submission_ack",
+            sentBy: profile.id,
+          });
+        }
+      }
+    } catch {
+      // A mail failure must never break submission.
+    }
+  }
+
   revalidatePath("/author");
   revalidatePath(`/author/submissions/${id}`);
   return { ok: true, message: isRevision ? "Revision submitted." : "Submitted." };
+}
+
+/**
+ * Pathway B: the corresponding author picks how they will package the full
+ * paper (Option A separated / Option B combined). Only after their abstract
+ * has been accepted, and only on their own submission.
+ */
+export async function setFullPaperOption(
+  formData: FormData
+): Promise<ActionResult> {
+  const profile = await requireProfile();
+  const admin = createAdminClient();
+  const id = String(formData.get("submission_id"));
+  const option = String(formData.get("option"));
+  if (option !== "A" && option !== "B")
+    return { ok: false, message: "Choose a valid option." };
+
+  const { data: sub } = await admin
+    .from("submissions")
+    .select("author_id, status, submission_type")
+    .eq("id", id)
+    .maybeSingle();
+  if (!sub) return { ok: false, message: "Submission not found." };
+  const s = sub as any;
+  if (s.author_id !== profile.id)
+    return { ok: false, message: "Only the corresponding author can do this." };
+  if (s.submission_type !== "full_paper_presentation")
+    return { ok: false, message: "This is not a full-paper (Pathway B) submission." };
+
+  await admin
+    .from("submissions")
+    .update({ full_paper_option: option, updated_at: new Date().toISOString() })
+    .eq("id", id);
+  revalidatePath(`/author/submissions/${id}`);
+  return { ok: true, message: `Option ${option} selected.` };
+}
+
+/**
+ * Pathway B: the author chooses which publishing outlet(s) their full paper
+ * should be considered for. They may pick several; at least one is required
+ * before they can submit.
+ */
+export async function setRequestedOutlets(
+  formData: FormData
+): Promise<ActionResult> {
+  const profile = await requireProfile();
+  const admin = createAdminClient();
+  const id = String(formData.get("submission_id"));
+  const ids = String(formData.get("outlet_ids") ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  const { data: sub } = await admin
+    .from("submissions")
+    .select("author_id, submission_type")
+    .eq("id", id)
+    .maybeSingle();
+  if (!sub) return { ok: false, message: "Submission not found." };
+  if ((sub as any).author_id !== profile.id)
+    return { ok: false, message: "Only the corresponding author can do this." };
+
+  await admin
+    .from("submissions")
+    .update({ requested_outlet_ids: ids, updated_at: new Date().toISOString() })
+    .eq("id", id);
+  revalidatePath(`/author/submissions/${id}`);
+  return { ok: true };
+}
+
+/**
+ * Pathway B: submit the packaged full paper for review. Enforces the chosen
+ * option's required slots, at least one publishing outlet, and that the
+ * deadline (the Track Editor's per-paper date, capped by the conference
+ * full-paper deadline) has not passed.
+ */
+export async function submitFullPaper(
+  formData: FormData
+): Promise<ActionResult> {
+  const profile = await requireProfile();
+  const admin = createAdminClient();
+  const id = String(formData.get("submission_id"));
+
+  const { data: sub } = await admin
+    .from("submissions")
+    .select(
+      "author_id, status, submission_type, full_paper_option, full_paper_deadline, conference_id, version, requested_outlet_ids"
+    )
+    .eq("id", id)
+    .maybeSingle();
+  if (!sub) return { ok: false, message: "Submission not found." };
+  const s = sub as any;
+  if (s.author_id !== profile.id)
+    return { ok: false, message: "Only the corresponding author can submit." };
+  if (s.submission_type !== "full_paper_presentation")
+    return { ok: false, message: "This is not a full-paper (Pathway B) submission." };
+  if (!((s.requested_outlet_ids ?? []).length))
+    return {
+      ok: false,
+      message: "Select at least one publishing outlet before submitting.",
+    };
+  if (String(formData.get("declared")) !== "true")
+    return {
+      ok: false,
+      message: "Please accept all declarations (on behalf of all authors) before submitting.",
+    };
+  if (!["abstract_accepted", "revisions_requested"].includes(s.status))
+    return { ok: false, message: "The full paper cannot be submitted at this stage." };
+  if (!s.full_paper_option)
+    return { ok: false, message: "Choose Option A or Option B first." };
+
+  // Deadline: the per-paper date if set, otherwise the conference ceiling.
+  const { data: conf } = await admin
+    .from("conferences")
+    .select("full_paper_deadline")
+    .eq("id", s.conference_id)
+    .maybeSingle();
+  const deadline = s.full_paper_deadline ?? (conf as any)?.full_paper_deadline ?? null;
+  if (deadline && new Date() > new Date(`${deadline}T23:59:59`))
+    return {
+      ok: false,
+      message: `The full-paper deadline (${prettyDate(deadline)}) has passed. Please contact your Track Editor.`,
+    };
+
+  const required = FULL_PAPER_OPTIONS[s.full_paper_option as "A" | "B"].slots
+    .filter((x) => x.required)
+    .map((x) => x.key);
+  const { data: files } = await admin
+    .from("submission_files")
+    .select("slot")
+    .eq("submission_id", id);
+  const have = new Set(((files as any[]) ?? []).map((f) => f.slot));
+  const missing = required.filter((k) => !have.has(k));
+  if (missing.length)
+    return {
+      ok: false,
+      message: `Please upload all required files first: ${missing
+        .map(fullPaperSlotLabel)
+        .join(", ")}.`,
+    };
+
+  const isRevision = s.status === "revisions_requested";
+  await admin
+    .from("submissions")
+    .update({
+      status: "submitted",
+      stage: "full_paper",
+      full_paper_submitted_at: new Date().toISOString(),
+      submitted_at: new Date().toISOString(),
+      version: isRevision ? (s.version ?? 1) + 1 : s.version ?? 1,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+
+  await audit(profile.id, "full_paper.submitted", "submission", id, {
+    option: s.full_paper_option,
+    revision: isRevision,
+  });
+  revalidatePath("/author");
+  revalidatePath(`/author/submissions/${id}`);
+  return { ok: true, message: "Full paper submitted for review." };
 }
 
 export async function withdrawSubmission(formData: FormData): Promise<ActionResult> {
@@ -609,7 +877,9 @@ export async function respondToAssignment(
 
   if (error) return { ok: false, message: error.message };
 
-  // Accepting creates the empty review shell the reviewer then fills in.
+  // Accepting creates the empty review shell the reviewer then fills in, and
+  // ensures they also hold the author role (two dashboards). Declining changes
+  // no roles.
   if (accept && assignment) {
     await supabase.from("reviews").upsert(
       {
@@ -619,6 +889,13 @@ export async function respondToAssignment(
       },
       { onConflict: "assignment_id" }
     );
+    const roles: string[] = (profile as any).roles ?? [];
+    if (!roles.includes("author")) {
+      await createAdminClient()
+        .from("profiles")
+        .update({ roles: [...roles, "author"], updated_at: new Date().toISOString() })
+        .eq("id", profile.id);
+    }
   }
 
   await audit(profile.id, accept ? "assignment.accepted" : "assignment.declined", "assignment", id);
@@ -765,6 +1042,22 @@ export async function prepareReviewerInvite(
         message: "That reviewer is already assigned to this submission.",
       };
 
+    // A reviewer may hold at most MAX_REVIEWS_PER_REVIEWER papers. Declined
+    // invitations don't count against the cap.
+    const { count: heldCount } = await admin
+      .from("assignments")
+      .select("id", { count: "exact", head: true })
+      .eq("reviewer_id", target.id)
+      .neq("status", "declined");
+    if ((heldCount ?? 0) >= MAX_REVIEWS_PER_REVIEWER)
+      return {
+        ok: false,
+        message: `A reviewer may be allocated at most ${MAX_REVIEWS_PER_REVIEWER} papers, and this reviewer already holds ${heldCount}.`,
+      };
+
+    // A one-time token backs the Agree/Reject links. It is minted here so the
+    // preview carries real links; it is stored on the assignment only at send.
+    const inviteToken = randomBytes(24).toString("hex");
     const { subject, body } = buildAssignmentEmail({
       paperId: s.paper_id,
       title: s.title,
@@ -776,6 +1069,8 @@ export async function prepareReviewerInvite(
       dueDate: dueDate || undefined,
       inviterName: profile.full_name,
       inviterEmail: profile.email,
+      agreeLink: `${siteUrl()}/review-invite/${inviteToken}/agree`,
+      rejectLink: `${siteUrl()}/review-invite/${inviteToken}/reject`,
     });
 
     return {
@@ -787,6 +1082,7 @@ export async function prepareReviewerInvite(
         reviewerId: target.id,
         reviewerName: target.full_name || target.email || email,
         existing: true,
+        inviteToken,
         warning: coi.warn,
       },
     };
@@ -812,7 +1108,6 @@ export async function prepareReviewerInvite(
   });
   if (iErr) return { ok: false, message: iErr.message };
 
-  const link = `${siteUrl()}/reviewer-invite/${token}`;
   const { subject, body } = buildInviteEmail({
     paperId: s.paper_id,
     title: s.title,
@@ -821,7 +1116,8 @@ export async function prepareReviewerInvite(
     conferenceName,
     shortName,
     fullName,
-    link,
+    agreeLink: `${siteUrl()}/reviewer-invite/${token}/agree`,
+    rejectLink: `${siteUrl()}/reviewer-invite/${token}/decline`,
     dueDate: dueDate || undefined,
     inviterName: profile.full_name || undefined,
     inviterEmail: profile.email || undefined,
@@ -855,6 +1151,7 @@ export async function sendReviewerInvite(
   const submissionId = String(formData.get("submission_id") ?? "");
   const reviewerId = String(formData.get("reviewer_id") ?? "").trim();
   const dueDate = String(formData.get("due_date") ?? "").trim();
+  const inviteToken = String(formData.get("invite_token") ?? "").trim();
   const to = String(formData.get("to") ?? "").trim();
   const subject = String(formData.get("subject") ?? "");
   const body = String(formData.get("body") ?? "");
@@ -870,27 +1167,43 @@ export async function sendReviewerInvite(
       .maybeSingle();
     if (!target) return { ok: false, message: "That reviewer no longer exists." };
 
-    const roles: string[] = (target as any).roles ?? [];
-    if (!roles.includes("reviewer")) {
-      await admin
-        .from("profiles")
-        .update({
-          roles: [...roles, "reviewer"],
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", reviewerId);
-    }
+    // No role is granted here: sending an invitation must not, by itself, make
+    // someone a reviewer. The reviewer (and author) role is granted only when
+    // they ACCEPT — see agreeReviewAssignment. A reject leaves their roles
+    // untouched, so someone invited but declining never gains the dashboard.
 
     const { error } = await admin.from("assignments").insert({
       submission_id: submissionId,
       reviewer_id: reviewerId,
       assigned_by: profile.id,
       due_date: dueDate || null,
+      invite_token: inviteToken || null,
     });
     if (error && error.code !== "23505")
       return { ok: false, message: error.message };
 
     assigned = true;
+
+    // The invitation also lands in their notification bell, so a signed-up
+    // reviewer can Accept / Decline from the dashboard as well as the email.
+    // The token-backed link works even before they hold the reviewer role.
+    if (error?.code !== "23505") {
+      const { data: sInfo } = await admin
+        .from("submissions")
+        .select("title, paper_id")
+        .eq("id", submissionId)
+        .maybeSingle();
+      const si = sInfo as { title?: string; paper_id?: string } | null;
+      await admin.from("notifications").insert({
+        profile_id: reviewerId,
+        title: "Invitation to review a paper",
+        body: `You have been invited to review "${si?.title ?? "a submission"}"${
+          si?.paper_id ? ` (${si.paper_id})` : ""
+        }. Open to accept or decline.`,
+        link: inviteToken ? `/review-invite/${inviteToken}` : "/reviewer",
+      });
+    }
+
     await audit(profile.id, "assignment.created", "submission", submissionId, {
       reviewer_id: reviewerId,
     });
@@ -1217,7 +1530,8 @@ function buildInviteEmail(opts: {
   conferenceName: string;
   shortName: string;
   fullName: string;
-  link: string;
+  agreeLink: string;
+  rejectLink: string;
   dueDate?: string;
   inviterName?: string;
   inviterEmail?: string;
@@ -1252,8 +1566,12 @@ function buildInviteEmail(opts: {
     );
   lines.push(
     "",
-    `To begin, please complete the reviewer sign-up on the conference website using the link below. Once registered, the ${item} will appear in your reviewer dashboard:`,
-    opts.link,
+    "Kindly let us know whether you are able to take up this review:",
+    "",
+    `• To ACCEPT, please click here: ${opts.agreeLink}`,
+    `• To DECLINE, please click here: ${opts.rejectLink}`,
+    "",
+    `If you accept, you will be guided through a short sign-up (your details are pre-filled). Once registered, the ${item} will appear in your reviewer dashboard.`,
     "",
     REVIEW_HELP,
     "",
@@ -1315,6 +1633,8 @@ function buildAssignmentEmail(opts: {
   dueDate?: string;
   inviterName?: string | null;
   inviterEmail?: string | null;
+  agreeLink?: string;
+  rejectLink?: string;
 }): { subject: string; body: string } {
   const conf = opts.conferenceName || "GLOGIFT 2027";
   const brand = opts.shortName || "GLOGIFT 2027";
@@ -1329,7 +1649,7 @@ function buildAssignmentEmail(opts: {
     "",
     "Greetings of the Day!",
     "",
-    `We are pleased to assign you to review the ${item} titled "${opts.title}" (Paper ID: ${
+    `We are pleased to invite you to review the ${item} titled "${opts.title}" (Paper ID: ${
       opts.paperId ?? "pending"
     })${opts.track ? `, in the ${opts.track} track` : ""} of ${conf}.`,
     "",
@@ -1340,9 +1660,23 @@ function buildAssignmentEmail(opts: {
       "",
       `We kindly request that you complete your review by ${prettyDate(opts.dueDate)}.`
     );
+  if (opts.agreeLink && opts.rejectLink) {
+    lines.push(
+      "",
+      "Kindly let us know whether you are able to take up this review:",
+      "",
+      `• To ACCEPT, please click here: ${opts.agreeLink}`,
+      `• To DECLINE, please click here: ${opts.rejectLink}`,
+      "",
+      "Once you accept, the paper will appear in your reviewer dashboard, where you can begin your assessment."
+    );
+  } else {
+    lines.push(
+      "",
+      `Please sign in to your reviewer dashboard to begin: ${siteUrl()}/reviewer`
+    );
+  }
   lines.push(
-    "",
-    `Please sign in to your reviewer dashboard to begin: ${siteUrl()}/reviewer`,
     "",
     REVIEW_HELP,
     "",
@@ -1479,21 +1813,28 @@ export async function acceptReviewerInvite(token: string): Promise<ActionResult>
       message: "You are the submitting author and cannot review this paper.",
     };
 
+  // Ensure both author and reviewer, so on sign-in they see two dashboards.
   const roles: string[] = profile.roles ?? [];
-  if (!roles.includes("reviewer")) {
+  const need = ["author", "reviewer"].filter((r) => !roles.includes(r));
+  if (need.length) {
     await admin
       .from("profiles")
       .update({
-        roles: [...roles, "reviewer"],
+        roles: [...roles, ...need],
         updated_at: new Date().toISOString(),
       })
       .eq("id", profile.id);
   }
 
+  // They agreed via the email link and have now signed up, so the paper is
+  // active straight away — it lands under "Awaiting your review", not as a
+  // fresh invitation to accept again.
   const { error: aErr } = await admin.from("assignments").insert({
     submission_id: inv.submission_id,
     reviewer_id: profile.id,
     assigned_by: inv.invited_by,
+    status: "accepted",
+    responded_at: new Date().toISOString(),
   });
   if (aErr && aErr.code !== "23505")
     return { ok: false, message: aErr.message };
@@ -1514,6 +1855,176 @@ export async function acceptReviewerInvite(token: string): Promise<ActionResult>
   });
   revalidatePath("/reviewer");
   return { ok: true, message: "You are now a reviewer for this paper." };
+}
+
+/**
+ * A co-author, invited by the corresponding author's submission, has just
+ * registered from their personalised /co-author-invite/[token] link (the token
+ * is their submission_authors row id). Link every co-author row that carries
+ * their email to the new profile: RLS grants a co-author read access by
+ * profile_id, so this is what lets them see the submission(s) on their author
+ * dashboard and makes their co-authorships count toward the 2-submission rule.
+ * They can view but never edit — editing stays owner-only.
+ */
+export async function acceptCoAuthorInvite(
+  token: string
+): Promise<ActionResult> {
+  const profile = await requireProfile();
+  const admin = createAdminClient();
+
+  const { data: row } = await admin
+    .from("submission_authors")
+    .select("id, submission_id, is_corresponding, profile_id")
+    .eq("id", token)
+    .maybeSingle();
+
+  if (!row) return { ok: false, message: "This co-author link is invalid." };
+  if (row.is_corresponding)
+    return { ok: false, message: "This link is not a co-author invitation." };
+  if (row.profile_id && row.profile_id !== profile.id)
+    return {
+      ok: false,
+      message: "This invitation has already been used by another account.",
+    };
+
+  const myEmail = (profile.email ?? "").trim();
+
+  // The link (its token) is the authorisation, so we link by row id rather than
+  // by matching email — the co-author may have corrected a wrong address during
+  // sign-up. Adopt the email they actually registered with.
+  await admin
+    .from("submission_authors")
+    .update({ profile_id: profile.id, email: myEmail })
+    .eq("id", row.id);
+
+  // Also link any other not-yet-linked co-author rows carrying this email, so
+  // all of the person's co-authored submissions become visible and countable.
+  await admin
+    .from("submission_authors")
+    .update({ profile_id: profile.id })
+    .eq("is_corresponding", false)
+    .is("profile_id", null)
+    .ilike("email", myEmail);
+
+  // Ensure the author role so they land on the author dashboard.
+  const roles: string[] = profile.roles ?? [];
+  if (!roles.includes("author")) {
+    await admin
+      .from("profiles")
+      .update({
+        roles: [...roles, "author"],
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", profile.id);
+  }
+
+  await audit(
+    profile.id,
+    "coauthor.invite_accepted",
+    "submission",
+    row.submission_id,
+    { submission_author_id: row.id }
+  );
+  revalidatePath("/author");
+  return { ok: true, message: "You are now linked to this submission." };
+}
+
+/**
+ * The corresponding author fixes a co-author's email when the original bounced
+ * or was wrong. Only the submitting author may do this, and only while that
+ * co-author is still unregistered (once they have an account, the email is
+ * their own to manage). Updating re-sends the acknowledgement / invitation to
+ * the corrected address.
+ */
+export async function updateCoAuthorEmail(
+  formData: FormData
+): Promise<ActionResult> {
+  const profile = await requireProfile();
+  const admin = createAdminClient();
+  const id = String(formData.get("id") ?? "");
+  const submissionId = String(formData.get("submission_id") ?? "");
+  const email = String(formData.get("email") ?? "").trim();
+
+  const EMAIL_RE = /^[^\s<>@,;]+@[^\s<>@,;]+\.[^\s<>@,;]+$/;
+  if (!EMAIL_RE.test(email))
+    return { ok: false, message: "Enter a valid email address." };
+
+  const { data: sub } = await admin
+    .from("submissions")
+    .select(
+      "id, author_id, paper_id, title, submission_type, participation_mode, tracks(name)"
+    )
+    .eq("id", submissionId)
+    .maybeSingle();
+  if (!sub || sub.author_id !== profile.id)
+    return { ok: false, message: "You can only edit your own submission." };
+
+  const { data: row } = await admin
+    .from("submission_authors")
+    .select("id, full_name, is_corresponding, profile_id, submission_id")
+    .eq("id", id)
+    .maybeSingle();
+  if (!row || row.submission_id !== submissionId || row.is_corresponding)
+    return { ok: false, message: "Co-author not found." };
+  if (row.profile_id)
+    return {
+      ok: false,
+      message:
+        "This co-author has already registered; their email can no longer be changed here.",
+    };
+
+  await admin.from("submission_authors").update({ email }).eq("id", id);
+
+  // Re-send the acknowledgement / invitation to the corrected address.
+  let sent = false;
+  if (emailConfigured()) {
+    const { data: authors } = await admin
+      .from("submission_authors")
+      .select("full_name, is_corresponding")
+      .eq("submission_id", submissionId)
+      .order("author_order");
+    const correspondingName = authors?.find((a) => a.is_corresponding)?.full_name;
+    const authorsLine = (authors ?? [])
+      .map((a) =>
+        a.is_corresponding ? `${a.full_name} (corresponding)` : a.full_name
+      )
+      .filter(Boolean)
+      .join(", ");
+    const t = sub.tracks as { name?: string } | { name?: string }[] | null;
+    const trackName = Array.isArray(t) ? t[0]?.name ?? null : t?.name ?? null;
+    const { subject, body } = submissionAcknowledgementEmail({
+      recipientName: row.full_name,
+      isCorresponding: false,
+      correspondingName,
+      paperId: sub.paper_id,
+      title: sub.title,
+      track: trackName,
+      submissionType: sub.submission_type,
+      participationMode: sub.participation_mode,
+      authorsLine,
+      signupUrl: `${siteUrl()}/co-author-invite/${row.id}`,
+      conferenceName: "GLOGIFT 2027",
+    });
+    const r = await sendEmail({
+      to: email,
+      subject,
+      text: body,
+      kind: "submission_ack",
+      sentBy: profile.id,
+    });
+    sent = r.sent;
+  }
+
+  await audit(profile.id, "coauthor.email_updated", "submission", submissionId, {
+    submission_author_id: id,
+  });
+  revalidatePath(`/author/submissions/${submissionId}`);
+  return {
+    ok: true,
+    message: sent
+      ? "Email updated and the invitation was re-sent."
+      : "Email updated.",
+  };
 }
 
 /**
@@ -1634,6 +2145,36 @@ export async function recordRecommendation(
       };
   }
 
+  // Pathway B: accepting the abstract opens the full-paper stage, so the Track
+  // Editor must set a full-paper deadline — required, in the future, and no
+  // later than the conference-wide full-paper ceiling.
+  let fullPaperDeadline: string | null = null;
+  if (
+    decision === "accept" &&
+    sub.stage === "abstract" &&
+    (sub as any).submission_type === "full_paper_presentation"
+  ) {
+    fullPaperDeadline = String(formData.get("full_paper_deadline") ?? "").trim();
+    if (!fullPaperDeadline)
+      return {
+        ok: false,
+        message: "Set a full-paper submission deadline for the author.",
+      };
+    const { data: conf } = await admin
+      .from("conferences")
+      .select("full_paper_deadline")
+      .eq("id", (sub as any).conference_id)
+      .maybeSingle();
+    const ceiling = (conf as any)?.full_paper_deadline ?? null;
+    if (ceiling && fullPaperDeadline > ceiling)
+      return {
+        ok: false,
+        message: `The deadline must be on or before the conference full-paper deadline (${prettyDate(ceiling)}).`,
+      };
+    if (new Date(`${fullPaperDeadline}T23:59:59`) < new Date())
+      return { ok: false, message: "The full-paper deadline must be in the future." };
+  }
+
   const { error } = await supabase.from("decisions").insert({
     submission_id: submissionId,
     decided_by: profile.id,
@@ -1643,6 +2184,15 @@ export async function recordRecommendation(
   });
 
   if (error) return { ok: false, message: error.message };
+
+  // The trigger has moved a Pathway B abstract to abstract_accepted; record the
+  // deadline the author must submit the full paper by.
+  if (fullPaperDeadline) {
+    await admin
+      .from("submissions")
+      .update({ full_paper_deadline: fullPaperDeadline })
+      .eq("id", submissionId);
+  }
 
   await audit(profile.id, "decision.recorded", "submission", submissionId, {
     decision,
@@ -1714,7 +2264,9 @@ export async function reassignTrackEditor(
 
   const { data: sub } = await admin
     .from("submissions")
-    .select("paper_id, title, author_id, track_id, tracks(name)")
+    .select(
+      "paper_id, title, abstract, submission_type, author_id, track_id, tracks(name)"
+    )
     .eq("id", submissionId)
     .maybeSingle();
   if (!sub) return { ok: false, message: "Submission not found." };
@@ -1773,14 +2325,11 @@ export async function reassignTrackEditor(
   );
   if (coi.block) return { ok: false, message: coi.block };
 
-  const roles: string[] = (target as any).roles ?? [];
-  if (!roles.includes("editor")) {
-    await admin
-      .from("profiles")
-      .update({ roles: [...roles, "editor"], updated_at: new Date().toISOString() })
-      .eq("id", editorId);
-  }
+  // No role granted here — only when they accept the paper (agreePaperAssignment).
+  // Declining the assignment must not leave a Track Editor dashboard behind.
 
+  // A fresh token backs the Agree / Reject links in the assignment email.
+  const assignmentToken = randomBytes(24).toString("hex");
   const { error } = await admin
     .from("submissions")
     .update({
@@ -1788,6 +2337,8 @@ export async function reassignTrackEditor(
       assigned_editor_at: new Date().toISOString(),
       assigned_editor_by: profile.id,
       editor_accepted_at: null,
+      editor_assignment_token: assignmentToken,
+      editor_reject_reason: null,
     })
     .eq("id", submissionId);
   if (error) return { ok: false, message: error.message };
@@ -1839,6 +2390,35 @@ export async function reassignTrackEditor(
     }`,
     link: `/editor/submissions/${submissionId}`,
   });
+
+  // System-generated assignment email carrying the abstract and token-backed
+  // Agree / Reject links — best-effort, never blocks the assignment.
+  if (emailConfigured() && target.email) {
+    try {
+      const { subject, body } = paperAssignmentEmail({
+        editorName: target.full_name,
+        paperId: s.paper_id,
+        title: s.title,
+        track: s.tracks?.name,
+        submissionType: s.submission_type,
+        abstract: s.abstract,
+        agreeLink: `${siteUrl()}/paper-assignment/${assignmentToken}/agree`,
+        rejectLink: `${siteUrl()}/paper-assignment/${assignmentToken}/reject`,
+        convenerName: profile.full_name,
+        convenerEmail: profile.email,
+        conferenceName: "GLOGIFT 2027",
+      });
+      await sendEmail({
+        to: target.email,
+        subject,
+        text: body,
+        kind: "paper_assignment",
+        sentBy: profile.id,
+      });
+    } catch {
+      // Mail failure must never break the assignment.
+    }
+  }
 
   await audit(profile.id, "submission.editor_reassigned", "submission", submissionId, {
     editor_id: editorId,
@@ -1950,14 +2530,10 @@ export async function addTrackChair(formData: FormData): Promise<ActionResult> {
     admin.from("profiles").select("roles, full_name, email").eq("id", editorId).single(),
   ]);
 
-  // They need the role to reach the acceptance page; it grants no papers.
-  const roles: string[] = (target as any)?.roles ?? [];
-  if (!roles.includes("editor")) {
-    await admin
-      .from("profiles")
-      .update({ roles: [...roles, "editor"], updated_at: new Date().toISOString() })
-      .eq("id", editorId);
-  }
+  // No role is granted at invite time. The acceptance page only needs them
+  // signed in (getProfile), not the editor role — and granting it here would
+  // wrongly leave a Track Editor dashboard behind if they later decline. The
+  // editor role is granted only on acceptance (see acceptTrackEditorInvite).
 
   const link = `${siteUrl()}/chair-invite/${token}`;
   await admin.from("notifications").insert({
@@ -2049,6 +2625,7 @@ export async function prepareChairInvite(
   }
 
   let link: string;
+  let declineLink: string | undefined;
   let needsSignup: boolean;
   let recipient: string;
   let recipientName: string;
@@ -2098,16 +2675,8 @@ export async function prepareChairInvite(
         .eq("profile_id", target.id);
     }
 
-    const roles: string[] = target.roles ?? [];
-    if (!roles.includes("editor")) {
-      await admin
-        .from("profiles")
-        .update({
-          roles: [...roles, "editor"],
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", target.id);
-    }
+    // No editor role at invite/email time — only on acceptance
+    // (acceptTrackEditorInvite). Until then they keep just the author dashboard.
 
     link = `${siteUrl()}/chair-invite/${token}`;
     needsSignup = false;
@@ -2127,6 +2696,7 @@ export async function prepareChairInvite(
     if (error) return { ok: false, message: error.message };
 
     link = `${siteUrl()}/track-editor-invite/${token}`;
+    declineLink = `${siteUrl()}/track-editor-invite/${token}/decline`;
     needsSignup = true;
     recipient = email;
     recipientName = fullName;
@@ -2140,6 +2710,7 @@ export async function prepareChairInvite(
     brand,
     siteUrl: siteUrl(),
     link,
+    declineLink,
     needsSignup,
     convenerName: profile.full_name,
     convenerEmail: profile.email,
@@ -2382,9 +2953,14 @@ export async function respondToPaperAssignment(
     return { ok: false, message: "That paper is not assigned to you." };
 
   if (accept) {
+    // Clear the one-time token too, so the emailed Agree/Reject link for this
+    // same assignment is nullified — acting on one channel settles both.
     const { error } = await admin
       .from("submissions")
-      .update({ editor_accepted_at: new Date().toISOString() })
+      .update({
+        editor_accepted_at: new Date().toISOString(),
+        editor_assignment_token: null,
+      })
       .eq("id", submissionId);
     if (error) return { ok: false, message: error.message };
 
@@ -2400,6 +2976,7 @@ export async function respondToPaperAssignment(
       assigned_editor_id: null,
       assigned_editor_at: null,
       editor_accepted_at: null,
+      editor_assignment_token: null,
     })
     .eq("id", submissionId);
   if (error) return { ok: false, message: error.message };
@@ -2423,6 +3000,315 @@ export async function respondToPaperAssignment(
     ok: true,
     message: "Handed back to the Convener, who will assign someone else.",
   };
+}
+
+/**
+ * Token-backed accept of a paper assignment, from the Agree link in the
+ * assignment email — no sign-in required (the token is the authorisation).
+ * Marks the paper accepted so it becomes active on the Track Editor's dashboard,
+ * and clears the one-use token.
+ */
+export async function agreePaperAssignment(
+  token: string
+): Promise<{ ok: boolean; message?: string; paperId?: string | null }> {
+  const admin = createAdminClient();
+  const { data: sub } = await admin
+    .from("submissions")
+    .select(
+      "id, title, paper_id, assigned_editor_id, assigned_editor_by, editor_accepted_at"
+    )
+    .eq("editor_assignment_token", token)
+    .maybeSingle();
+  if (!sub)
+    return {
+      ok: false,
+      message: "This link is invalid or has already been used.",
+    };
+  const s = sub as any;
+  if (!s.assigned_editor_id)
+    return { ok: false, message: "This paper is no longer assigned." };
+
+  await admin
+    .from("submissions")
+    .update({
+      editor_accepted_at: s.editor_accepted_at ?? new Date().toISOString(),
+      editor_assignment_token: null,
+    })
+    .eq("id", s.id);
+
+  // Accepting the paper is what grants the editor role (plus author), so they
+  // now have a Track Editor dashboard. Declining never reaches here.
+  {
+    const { data: prof } = await admin
+      .from("profiles")
+      .select("roles")
+      .eq("id", s.assigned_editor_id)
+      .maybeSingle();
+    const roles: string[] = (prof as any)?.roles ?? [];
+    const need = ["author", "editor"].filter((r) => !roles.includes(r));
+    if (need.length) {
+      await admin
+        .from("profiles")
+        .update({ roles: [...roles, ...need], updated_at: new Date().toISOString() })
+        .eq("id", s.assigned_editor_id);
+    }
+  }
+
+  if (s.assigned_editor_by) {
+    await admin.from("notifications").insert({
+      profile_id: s.assigned_editor_by,
+      title: "A Track Editor accepted an assigned paper",
+      body: `The assigned Track Editor accepted "${s.title}"${
+        s.paper_id ? ` (${s.paper_id})` : ""
+      }.`,
+      link: "/chief",
+    });
+  }
+
+  await audit(s.assigned_editor_id, "paper.editor_accepted", "submission", s.id);
+  revalidatePath("/editor");
+  return { ok: true, paperId: s.paper_id };
+}
+
+/**
+ * Token-backed reject of a paper assignment, from the Reject link — no sign-in.
+ * Records the reason, hands the paper back to the Convener (with a notification
+ * that carries the reason), and clears the one-use token.
+ */
+export async function rejectPaperAssignment(
+  token: string,
+  reason: string
+): Promise<{ ok: boolean; message?: string }> {
+  const admin = createAdminClient();
+  const trimmed = (reason ?? "").trim().slice(0, 2000);
+  if (!trimmed) return { ok: false, message: "Please give a brief reason." };
+
+  const { data: sub } = await admin
+    .from("submissions")
+    .select("id, title, paper_id, assigned_editor_id, assigned_editor_by")
+    .eq("editor_assignment_token", token)
+    .maybeSingle();
+  if (!sub)
+    return {
+      ok: false,
+      message: "This link is invalid or has already been used.",
+    };
+  const s = sub as any;
+
+  await admin
+    .from("submissions")
+    .update({
+      assigned_editor_id: null,
+      assigned_editor_at: null,
+      editor_accepted_at: null,
+      editor_assignment_token: null,
+      editor_reject_reason: trimmed,
+    })
+    .eq("id", s.id);
+
+  if (s.assigned_editor_by) {
+    await admin.from("notifications").insert({
+      profile_id: s.assigned_editor_by,
+      title: "A Track Editor declined an assigned paper",
+      body: `The paper "${s.title}"${
+        s.paper_id ? ` (${s.paper_id})` : ""
+      } was declined and returned to you. Reason: ${trimmed}`,
+      link: "/chief",
+    });
+  }
+
+  await audit(
+    s.assigned_editor_id ?? s.assigned_editor_by ?? "",
+    "paper.editor_declined",
+    "submission",
+    s.id,
+    { reason: trimmed }
+  );
+  revalidatePath("/chief");
+  return { ok: true };
+}
+
+/**
+ * Token-backed Agree for a review invitation to a reviewer who already has an
+ * account — from the Accept link in the email, no sign-in. Moves the assignment
+ * to 'accepted' so it surfaces under "Awaiting your review", clears the one-use
+ * token, and notifies the inviting Track Editor.
+ */
+export async function agreeReviewAssignment(
+  token: string
+): Promise<{ ok: boolean; message?: string; paperId?: string | null }> {
+  const admin = createAdminClient();
+  const { data: a } = await admin
+    .from("assignments")
+    .select(
+      "id, status, reviewer_id, assigned_by, submissions(id, title, paper_id)"
+    )
+    .eq("invite_token", token)
+    .maybeSingle();
+  if (!a)
+    return {
+      ok: false,
+      message: "This link is invalid or has already been used.",
+    };
+  const row = a as any;
+  const sub = row.submissions ?? {};
+
+  if (row.status === "declined")
+    return {
+      ok: false,
+      message: "You have already declined this review invitation.",
+    };
+
+  await admin
+    .from("assignments")
+    .update({
+      status: "accepted",
+      responded_at: new Date().toISOString(),
+      invite_token: null,
+    })
+    .eq("id", row.id);
+
+  // Acceptance is what grants the role: ensure author + reviewer so, once
+  // signed in, they see both dashboards. (A reject never reaches here, so a
+  // declined invitee keeps whatever roles they already held — nothing more.)
+  if (row.reviewer_id) {
+    const { data: prof } = await admin
+      .from("profiles")
+      .select("roles")
+      .eq("id", row.reviewer_id)
+      .maybeSingle();
+    const roles: string[] = (prof as any)?.roles ?? [];
+    const need = ["author", "reviewer"].filter((r) => !roles.includes(r));
+    if (need.length) {
+      await admin
+        .from("profiles")
+        .update({ roles: [...roles, ...need], updated_at: new Date().toISOString() })
+        .eq("id", row.reviewer_id);
+    }
+  }
+
+  if (row.assigned_by) {
+    await admin.from("notifications").insert({
+      profile_id: row.assigned_by,
+      title: "A reviewer accepted an invitation",
+      body: `A reviewer accepted the invitation to review "${sub.title}"${
+        sub.paper_id ? ` (${sub.paper_id})` : ""
+      }.`,
+      link: sub.id ? `/editor/submissions/${sub.id}` : "/editor",
+    });
+  }
+
+  await audit(row.reviewer_id ?? "", "assignment.accepted", "submission", sub.id ?? "");
+  revalidatePath("/reviewer");
+  if (sub.id) revalidatePath(`/editor/submissions/${sub.id}`);
+  return { ok: true, paperId: sub.paper_id ?? null };
+}
+
+/**
+ * Token-backed Reject for a review invitation (existing reviewer) — from the
+ * Decline link, no sign-in. Records the reason, marks the assignment 'declined',
+ * clears the token, and notifies the inviting Track Editor with the reason.
+ */
+export async function rejectReviewAssignment(
+  token: string,
+  reason: string
+): Promise<{ ok: boolean; message?: string }> {
+  const admin = createAdminClient();
+  const trimmed = (reason ?? "").trim().slice(0, 2000);
+  if (!trimmed) return { ok: false, message: "Please give a brief reason." };
+
+  const { data: a } = await admin
+    .from("assignments")
+    .select(
+      "id, status, reviewer_id, assigned_by, submissions(id, title, paper_id)"
+    )
+    .eq("invite_token", token)
+    .maybeSingle();
+  if (!a)
+    return {
+      ok: false,
+      message: "This link is invalid or has already been used.",
+    };
+  const row = a as any;
+  const sub = row.submissions ?? {};
+
+  await admin
+    .from("assignments")
+    .update({
+      status: "declined",
+      decline_reason: trimmed,
+      responded_at: new Date().toISOString(),
+      invite_token: null,
+    })
+    .eq("id", row.id);
+
+  if (row.assigned_by) {
+    await admin.from("notifications").insert({
+      profile_id: row.assigned_by,
+      title: "A reviewer declined an invitation",
+      body: `A reviewer declined the invitation to review "${sub.title}"${
+        sub.paper_id ? ` (${sub.paper_id})` : ""
+      }. Reason: ${trimmed}`,
+      link: sub.id ? `/editor/submissions/${sub.id}` : "/editor",
+    });
+  }
+
+  await audit(row.reviewer_id ?? "", "assignment.declined", "submission", sub.id ?? "", {
+    reason: trimmed,
+  });
+  if (sub.id) revalidatePath(`/editor/submissions/${sub.id}`);
+  return { ok: true };
+}
+
+/**
+ * Token-backed Reject for a NEW-person reviewer invitation (no account yet) —
+ * from the Decline link, no sign-in. Marks the reviewer_invitations row
+ * 'declined' with the reason and notifies the inviting Track Editor.
+ */
+export async function declineReviewerInvite(
+  token: string,
+  reason: string
+): Promise<{ ok: boolean; message?: string }> {
+  const admin = createAdminClient();
+  const trimmed = (reason ?? "").trim().slice(0, 2000);
+  if (!trimmed) return { ok: false, message: "Please give a brief reason." };
+
+  const { data: inv } = await admin
+    .from("reviewer_invitations")
+    .select("id, status, invited_by, submission_id, submissions(id, title, paper_id)")
+    .eq("token", token)
+    .maybeSingle();
+  if (!inv)
+    return { ok: false, message: "This invitation link is invalid." };
+  const row = inv as any;
+  if (row.status === "accepted")
+    return {
+      ok: false,
+      message: "This invitation has already been accepted.",
+    };
+  const sub = row.submissions ?? {};
+
+  await admin
+    .from("reviewer_invitations")
+    .update({ status: "declined", decline_reason: trimmed })
+    .eq("id", row.id);
+
+  if (row.invited_by) {
+    await admin.from("notifications").insert({
+      profile_id: row.invited_by,
+      title: "A reviewer declined an invitation",
+      body: `An invited reviewer declined to review "${sub.title}"${
+        sub.paper_id ? ` (${sub.paper_id})` : ""
+      }. Reason: ${trimmed}`,
+      link: sub.id ? `/editor/submissions/${sub.id}` : "/editor",
+    });
+  }
+
+  await audit(row.invited_by ?? "", "reviewer.invite_declined", "submission", row.submission_id ?? "", {
+    reason: trimmed,
+  });
+  if (sub.id) revalidatePath(`/editor/submissions/${sub.id}`);
+  return { ok: true };
 }
 
 /** Send the previewed Track Editor invitation through the portal. */
@@ -2498,12 +3384,14 @@ export async function acceptTrackEditorInvite(
       message: `You already chair ${other.length} tracks, which is the maximum.`,
     };
 
+  // A track editor keeps their author role too, so they get both dashboards.
   const roles: string[] = profile.roles ?? [];
-  if (!roles.includes("editor")) {
+  const missing = ["author", "editor"].filter((r) => !roles.includes(r));
+  if (missing.length) {
     await admin
       .from("profiles")
       .update({
-        roles: [...roles, "editor"],
+        roles: [...roles, ...missing],
         updated_at: new Date().toISOString(),
       })
       .eq("id", profile.id);
@@ -2540,6 +3428,36 @@ export async function acceptTrackEditorInvite(
     ok: true,
     message: `You are now the Track Editor for ${row.tracks?.name ?? "your track"}.`,
   };
+}
+
+/**
+ * A track-editor invitee declines from the email's Decline link. No sign-in is
+ * required — possession of the token is the authorisation. The invitation is
+ * marked used so it can no longer be accepted. (The table's status check does
+ * not yet allow a distinct 'declined' value, so we reuse 'revoked'.)
+ */
+export async function declineTrackEditorInvite(
+  token: string
+): Promise<ActionResult> {
+  const admin = createAdminClient();
+  const { data: inv } = await admin
+    .from("track_editor_invitations")
+    .select("id, status")
+    .eq("token", token)
+    .maybeSingle();
+  if (!inv) return { ok: false, message: "This invitation link is invalid." };
+  if (inv.status === "accepted")
+    return {
+      ok: false,
+      message: "This invitation has already been accepted.",
+    };
+  if (inv.status !== "revoked") {
+    await admin
+      .from("track_editor_invitations")
+      .update({ status: "revoked" })
+      .eq("id", inv.id);
+  }
+  return { ok: true, message: "Your response has been recorded." };
 }
 
 /**
@@ -2586,6 +3504,18 @@ export async function acceptTrackChairInvite(token: string): Promise<ActionResul
     .update({ status: "accepted", accepted_at: new Date().toISOString() })
     .eq("id", (inv as any).id);
   if (error) return { ok: false, message: error.message };
+
+  // Acceptance is what grants the role: ensure author + editor so they now have
+  // both dashboards. (A reject/decline never reaches here, so declining leaves
+  // them with only the author dashboard.)
+  const roles: string[] = profile.roles ?? [];
+  const need = ["author", "editor"].filter((r) => !roles.includes(r));
+  if (need.length) {
+    await admin
+      .from("profiles")
+      .update({ roles: [...roles, ...need], updated_at: new Date().toISOString() })
+      .eq("id", profile.id);
+  }
 
   await audit(profile.id, "track.chair_accepted", "track", (inv as any).track_id);
   revalidatePath("/chief");

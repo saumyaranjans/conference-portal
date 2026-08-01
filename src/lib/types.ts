@@ -31,6 +31,71 @@ export function reviewOf(assignment: any): any | null {
 /** A Track Editor may chair at most this many tracks. */
 export const MAX_TRACKS_PER_CHAIR = 2;
 
+/** A reviewer may be allocated at most this many papers (declined don't count). */
+export const MAX_REVIEWS_PER_REVIEWER = 10;
+
+/** Author guidelines page, linked from the Pathway B acceptance email. */
+export const GUIDELINES_URL = "https://glogift2027.in/#guidelines";
+
+export type FullPaperSlot = {
+  key: string;
+  label: string;
+  required?: boolean;
+  multiple?: boolean;
+  hint?: string;
+  /** file input `accept` list */
+  accept: string;
+};
+
+const DOC = ".doc,.docx";
+const EXTRA = ".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.png,.jpg,.jpeg";
+
+/**
+ * The two ways an author may package a Pathway B full paper. Option A keeps the
+ * manuscript blind (no author names, no tables/figures) with everything split
+ * out; Option B is a single combined manuscript. title_page + the manuscript
+ * slot are required; the rest may each hold several files.
+ */
+export const FULL_PAPER_OPTIONS: Record<
+  "A" | "B",
+  { title: string; detail: string; slots: FullPaperSlot[] }
+> = {
+  A: {
+    title: "Option A — Separated files (blind-ready)",
+    detail:
+      "Upload each part as its own file. The manuscript must be anonymised — no author names, tables or figures in it.",
+    slots: [
+      { key: "title_page", label: "Title Page", required: true, accept: `${DOC},.pdf`, hint: "Authors, affiliations and contact details." },
+      { key: "manuscript_anon", label: "Manuscript — no author names, no tables/figures", required: true, accept: DOC, hint: "Anonymised for single-blind review." },
+      { key: "figures", label: "Figures", multiple: true, accept: ".pdf,.doc,.docx,.png,.jpg,.jpeg,.tif,.tiff" },
+      { key: "tables", label: "Tables", multiple: true, accept: ".pdf,.doc,.docx,.xls,.xlsx,.csv" },
+      { key: "appendices", label: "Appendices", multiple: true, accept: ".pdf,.doc,.docx" },
+      { key: "supplementary", label: "Supplementary files", multiple: true, accept: EXTRA },
+      { key: "others", label: "Others", multiple: true, accept: EXTRA },
+    ],
+  },
+  B: {
+    title: "Option B — Combined manuscript",
+    detail:
+      "Upload one manuscript with figures, tables and appendices included, plus any extra files.",
+    slots: [
+      { key: "title_page", label: "Title Page", required: true, accept: `${DOC},.pdf`, hint: "Authors, affiliations and contact details." },
+      { key: "manuscript_full", label: "Manuscript — figures, tables & appendices included", required: true, accept: DOC },
+      { key: "supplementary", label: "Supplementary files", multiple: true, accept: EXTRA },
+      { key: "others", label: "Others", multiple: true, accept: EXTRA },
+    ],
+  },
+};
+
+/** Human label for a stored slot key, across both options. */
+export function fullPaperSlotLabel(slot: string): string {
+  for (const opt of Object.values(FULL_PAPER_OPTIONS)) {
+    const s = opt.slots.find((x) => x.key === slot);
+    if (s) return s.label;
+  }
+  return slot;
+}
+
 /** Word count used for the abstract limit (whitespace separated). */
 export function countWords(text: string): number {
   const t = text.trim();
@@ -147,6 +212,22 @@ export function submissionTypeLabel(value: string): string {
 
 export function participationModeLabel(value: string): string {
   return PARTICIPATION_MODES.find((m) => m.value === value)?.label ?? "—";
+}
+
+/**
+ * A resubmission after "revisions requested" bumps the version, so v2 is the
+ * author's first revision, v3 the second, and so on until it is accepted.
+ * "Version 1" · "Version 2 (Revision 1)" · "Version 3 (Revision 2)" …
+ */
+export function versionLabel(version?: number | null): string {
+  const v = version ?? 1;
+  return v <= 1 ? `Version ${v}` : `Version ${v} (Revision ${v - 1})`;
+}
+
+/** Compact form for table cells: "v1" · "v2 · Rev 1" · "v3 · Rev 2". */
+export function versionTag(version?: number | null): string {
+  const v = version ?? 1;
+  return v <= 1 ? `v${v}` : `v${v} · Rev ${v - 1}`;
 }
 
 export interface PublicationOpportunity {

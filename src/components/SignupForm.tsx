@@ -4,7 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { acceptReviewerInvite, acceptTrackEditorInvite } from "@/lib/actions";
+import {
+  acceptReviewerInvite,
+  acceptTrackEditorInvite,
+  acceptCoAuthorInvite,
+} from "@/lib/actions";
 import {
   COUNTRIES,
   COUNTRY_DIAL_CODES,
@@ -44,6 +48,7 @@ export function SignupForm({
   prefill,
   inviteToken,
   trackEditorInviteToken,
+  coAuthorInviteToken,
   emailLocked = false,
 }: {
   prefill?: SignupPrefill;
@@ -51,6 +56,8 @@ export function SignupForm({
   inviteToken?: string;
   /** Track Editor invitation — lands them in the Track Queue. */
   trackEditorInviteToken?: string;
+  /** Co-author invitation — links them to the submission, lands on /author. */
+  coAuthorInviteToken?: string;
   emailLocked?: boolean;
 }) {
   const router = useRouter();
@@ -104,7 +111,11 @@ export function SignupForm({
 
     if (error) {
       // Someone who already registered can't sign up again — guide them.
-      if ((inviteToken || trackEditorInviteToken) && /already registered|already exists/i.test(error.message)) {
+      if (coAuthorInviteToken && /already registered|already exists/i.test(error.message)) {
+        setError(
+          "This email already has an account. Please sign in — the submission will appear on your author dashboard."
+        );
+      } else if ((inviteToken || trackEditorInviteToken) && /already registered|already exists/i.test(error.message)) {
         setError(
           "This email already has an account. Please sign in — the paper will appear in your reviewer dashboard."
         );
@@ -116,7 +127,15 @@ export function SignupForm({
     }
 
     if (data.session) {
-      if (trackEditorInviteToken) {
+      if (coAuthorInviteToken) {
+        const res = await acceptCoAuthorInvite(coAuthorInviteToken);
+        if (!res.ok) {
+          setError(res.message ?? "Could not complete registration.");
+          setBusy(false);
+          return;
+        }
+        router.push("/author");
+      } else if (trackEditorInviteToken) {
         const res = await acceptTrackEditorInvite(trackEditorInviteToken);
         if (!res.ok) {
           setError(res.message ?? "Could not complete the invitation.");

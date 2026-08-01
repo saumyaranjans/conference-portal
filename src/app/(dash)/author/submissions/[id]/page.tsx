@@ -1,17 +1,19 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireProfile } from "@/lib/auth";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import {
   addCoAuthor,
   moveAuthor,
   removeCoAuthor,
   submitForReview,
+  updateCoAuthorEmail,
   updateSubmission,
   withdrawSubmission,
 } from "@/lib/actions";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { PaperUpload } from "@/components/PaperUpload";
+import { FullPaperUpload } from "@/components/FullPaperUpload";
 import { InstitutionInput } from "@/components/InstitutionInput";
 import { StatusBadge, RecommendationBadge } from "@/components/ui/StatusBadge";
 import { PageHeader, Section, formatDate } from "@/components/ui/Primitives";
@@ -22,6 +24,7 @@ import {
   PARTICIPANT_CATEGORIES,
   participationModeLabel,
   submissionTypeLabel,
+  versionLabel,
   type Decision,
   type Review,
   type Submission,
@@ -61,7 +64,10 @@ export default async function AuthorSubmissionPage({
         .select("*")
         .eq("conference_id", sub.conference_id)
         .order("name"),
-      supabase
+      // Read the author list with the admin client: the submission_authors
+      // read policy doesn't cover co-authors, but a co-author who can load this
+      // submission (RLS-checked above) is entitled to see its author list.
+      createAdminClient()
         .from("submission_authors")
         .select("*")
         .eq("submission_id", id)
@@ -82,12 +88,40 @@ export default async function AuthorSubmissionPage({
         .order("created_at", { ascending: false }),
     ]);
 
-  // Authors may edit while the paper is a draft or awaiting revisions.
-  const editable = ["draft", "revisions_requested"].includes(sub.status);
+  // Pathway B full-paper packaging: the uploaded files + the effective deadline
+  // (the Track Editor's per-paper date, else the conference ceiling).
+  const [{ data: paperFiles }, { data: conf }, { data: outlets }] =
+    await Promise.all([
+      sub.submission_type === "full_paper_presentation"
+        ? supabase
+            .from("submission_files")
+            .select("id, slot, file_name, file_path")
+            .eq("submission_id", id)
+            .order("created_at")
+        : Promise.resolve({ data: [] as any[] }),
+      supabase
+        .from("conferences")
+        .select("full_paper_deadline")
+        .eq("id", sub.conference_id)
+        .maybeSingle(),
+      sub.submission_type === "full_paper_presentation"
+        ? supabase
+            .from("publication_opportunities")
+            .select("id, title, category")
+            .order("title")
+        : Promise.resolve({ data: [] as any[] }),
+    ]);
+  const fullPaperDeadline =
+    (sub as any).full_paper_deadline ?? (conf as any)?.full_paper_deadline ?? null;
+
+  // Only the corresponding (submitting) author may edit; a co-author is
+  // view-only. Editing is further limited to a draft or a revision.
+  const isOwner = sub.author_id === profile.id;
+  const editable = isOwner && ["draft", "revisions_requested"].includes(sub.status);
   const canSubmit = editable;
   // Authors may withdraw only an abstract they have not submitted yet;
   // once submitted, withdrawal is the Convener's call.
-  const canWithdraw = sub.status === "draft";
+  const canWithdraw = isOwner && sub.status === "draft";
 
   return (
     <>
@@ -99,7 +133,7 @@ export default async function AuthorSubmissionPage({
 
       <PageHeader
         title={sub.title || "Untitled submission"}
-        subtitle={`${sub.paper_id ? `Paper ${sub.paper_id} · ` : ""}Version ${sub.version} · Created ${formatDate(sub.created_at)}`}
+        subtitle={`${sub.paper_id ? `Paper ${sub.paper_id} · ` : ""}${versionLabel(sub.version)} · Created ${formatDate(sub.created_at)}`}
         action={<StatusBadge status={sub.status} />}
       />
 
@@ -126,34 +160,32 @@ export default async function AuthorSubmissionPage({
                     Your abstract has been accepted 🎉
                   </p>
                   <p className="text-sm text-teal-800 mt-1">
-                    Upload your full paper (PDF) and submit it for the next
+                    Package your full paper below and submit it for the next
                     review round.
                   </p>
                 </div>
-                <PaperUpload
+                <FullPaperUpload
                   submissionId={sub.id}
-                  currentName={sub.file_name}
-                  editable={true}
+                  option={(sub as any).full_paper_option ?? null}
+                  files={(paperFiles as any[]) ?? []}
+                  deadline={fullPaperDeadline}
+                  editable={isOwner}
+                  outlets={(outlets as any[]) ?? []}
+                  selectedOutlets={(sub as any).requested_outlet_ids ?? []}
                 />
-                <ActionForm action={submitForReview} className="mt-4">
-                  <input type="hidden" name="id" value={sub.id} />
-                  <SubmitButton>Submit full paper</SubmitButton>
-                </ActionForm>
               </>
-            ) : sub.stage === "full_paper" || sub.file_name ? (
-              <>
-                <PaperUpload
-                  submissionId={sub.id}
-                  currentName={sub.file_name}
-                  editable={editable}
-                />
-                {editable && sub.status === "revisions_requested" && (
-                  <ActionForm action={submitForReview} className="mt-4">
-                    <input type="hidden" name="id" value={sub.id} />
-                    <SubmitButton>Resubmit full paper</SubmitButton>
-                  </ActionForm>
-                )}
-              </>
+            ) : (sub.stage === "full_paper" &&
+                (sub as any).full_paper_option) ||
+              ((paperFiles as any[]) ?? []).length > 0 ? (
+              <FullPaperUpload
+                submissionId={sub.id}
+                option={(sub as any).full_paper_option ?? null}
+                files={(paperFiles as any[]) ?? []}
+                deadline={fullPaperDeadline}
+                editable={isOwner && sub.status === "revisions_requested"}
+                outlets={(outlets as any[]) ?? []}
+                selectedOutlets={(sub as any).requested_outlet_ids ?? []}
+              />
             ) : (
               <p className="text-sm text-slate-500">
                 The full paper upload becomes available once your abstract has
@@ -201,7 +233,10 @@ export default async function AuthorSubmissionPage({
         </Section>
       )}
 
-      {/* ---------------- Metadata ---------------- */}
+      {/* ---------------- Metadata ----------------
+           The abstract details are fixed once the paper moves to the full-paper
+           (manuscript) stage — no re-entry is required there. */}
+      {sub.stage !== "full_paper" && (
       <Section title="Details">
         <ActionForm action={updateSubmission} className="card card-pad space-y-4">
           <input type="hidden" name="id" value={sub.id} />
@@ -269,6 +304,7 @@ export default async function AuthorSubmissionPage({
           {editable && <SubmitButton>Save changes</SubmitButton>}
         </ActionForm>
       </Section>
+      )}
 
       {/* ---------------- Participation ---------------- */}
       {(sub.submission_type || sub.participation_mode) && (
@@ -294,10 +330,13 @@ export default async function AuthorSubmissionPage({
         </Section>
       )}
 
-      {/* ---------------- Declaration ---------------- */}
-      {(sub.declared_original ||
-        sub.declared_ai_assistance ||
-        sub.declared_consent_publication) && (
+      {/* ---------------- Declaration (abstract stage) ----------------
+           At the full-paper stage the author re-affirms the declaration, on
+           behalf of all authors, in the manuscript upload panel above. */}
+      {sub.stage !== "full_paper" &&
+        (sub.declared_original ||
+          sub.declared_ai_assistance ||
+          sub.declared_consent_publication) && (
         <Section title="Declaration">
           <div className="card card-pad space-y-1.5">
             {[
@@ -311,7 +350,7 @@ export default async function AuthorSubmissionPage({
               ],
               [
                 sub.declared_consent_publication,
-                "Consented to publication in the book of abstracts of GLOGIFT 2027 if accepted.",
+                "Consented to sharing the submission, if accepted, with the Editorial Offices of associated journals, edited books, and the GLOGIFT 2027 conference proceedings.",
               ],
             ].map(([ok, label]) => (
               <p key={label as string} className="text-sm text-slate-700">
@@ -390,6 +429,40 @@ export default async function AuthorSubmissionPage({
                       {attendanceLabel(a.attendance)}
                     </p>
                   )}
+                  {/* The corresponding author can fix a co-author's email while
+                      that co-author is still unregistered (e.g. it bounced). */}
+                  {isOwner &&
+                    !a.is_corresponding &&
+                    (a.profile_id ? (
+                      <p className="text-[11px] text-emerald-700 mt-1">
+                        ✓ Registered — email is managed by the co-author.
+                      </p>
+                    ) : (
+                      <ActionForm
+                        action={updateCoAuthorEmail}
+                        className="mt-2 flex flex-wrap items-center gap-2"
+                      >
+                        <input type="hidden" name="id" value={a.id} />
+                        <input
+                          type="hidden"
+                          name="submission_id"
+                          value={sub.id}
+                        />
+                        <input
+                          name="email"
+                          type="email"
+                          defaultValue={a.email}
+                          placeholder="co-author email"
+                          className="input text-xs py-1 max-w-[16rem]"
+                        />
+                        <SubmitButton
+                          variant="secondary"
+                          className="text-xs py-1 px-2"
+                        >
+                          Save &amp; resend invitation
+                        </SubmitButton>
+                      </ActionForm>
+                    ))}
                 </div>
               </div>
               {editable && !a.is_corresponding && (

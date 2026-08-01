@@ -148,6 +148,21 @@ export function NewSubmissionForm({
       return `The abstract is ${abstractWords} words — please reduce it to ${ABSTRACT_WORD_LIMIT} words or fewer.`;
     if (!submissionType) return "Select your level of participation.";
     if (!participationMode) return "Select your attendance format.";
+    // Every co-author must have a name AND a valid email — the email is
+    // required so they receive their submission acknowledgement and can
+    // register. A completely blank row is ignored.
+    const EMAIL_RE = /^[^\s<>@,;]+@[^\s<>@,;]+\.[^\s<>@,;]+$/;
+    for (const a of authors) {
+      if (a.is_corresponding) continue;
+      const hasName = a.full_name.trim();
+      const hasEmail = a.email.trim();
+      if (!hasName && !hasEmail) continue;
+      if (!hasName) return "Enter a name for every co-author.";
+      if (!hasEmail)
+        return "Enter an email address for every co-author — it is required so they receive the submission and can register.";
+      if (!EMAIL_RE.test(hasEmail))
+        return `"${hasEmail}" is not a valid email address.`;
+    }
     const listed = authors.filter(
       (a) => a.is_corresponding || (a.full_name.trim() && a.email.trim())
     );
@@ -299,9 +314,9 @@ export function NewSubmissionForm({
 
   return (
     <form onSubmit={onReview} className="space-y-6 max-w-4xl">
-      {/* ---------------- Manuscript ---------------- */}
+      {/* ---------------- Abstract ---------------- */}
       <div className="card card-pad space-y-5">
-        <h2 className="font-semibold text-slate-900">Manuscript</h2>
+        <h2 className="font-semibold text-slate-900">Abstract</h2>
 
         {conferences.length > 1 && (
           <div>
@@ -538,7 +553,7 @@ export function NewSubmissionForm({
                       <input
                         className="input"
                         type="email"
-                        placeholder="Email"
+                        placeholder="Email (required)"
                         value={a.email}
                         onChange={(e) => setAuthor(i, { email: e.target.value })}
                       />
@@ -710,7 +725,7 @@ export function NewSubmissionForm({
             [
               declConsent,
               setDeclConsent,
-              "I consent to publication of this abstract in the book of abstracts of GLOGIFT 2027 if accepted.",
+              "I consent to my submission, if accepted, being shared with the Editorial Offices of associated journals, edited books, and the GLOGIFT 2027 conference proceedings.",
             ],
           ] as [boolean, (v: boolean) => void, string][]
         ).map(([checked, setter, label]) => (

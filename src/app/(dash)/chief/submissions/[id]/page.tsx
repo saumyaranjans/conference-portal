@@ -15,6 +15,7 @@ import {
   reviewOf,
   participationModeLabel,
   submissionTypeLabel,
+  versionLabel,
   type Submission,
 } from "@/lib/types";
 
@@ -93,7 +94,7 @@ export default async function ChiefSubmissionPage({
         title={sub.title}
         subtitle={`${sub.paper_id ? `Paper ${sub.paper_id} · ` : ""}${sub.tracks?.name ?? "No track"} · Editor: ${
           sub.tracks?.profiles?.full_name ?? "unassigned"
-        } · Version ${sub.version}`}
+        } · ${versionLabel(sub.version)}`}
         action={<StatusBadge status={sub.status} />}
       />
 

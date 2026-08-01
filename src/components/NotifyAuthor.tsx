@@ -23,6 +23,8 @@ const DECISIONS: [string, string][] = [
  */
 export function NotifyAuthor({
   stage,
+  submissionType,
+  fullPaperDeadline,
   paperId,
   title,
   track,
@@ -38,6 +40,8 @@ export function NotifyAuthor({
   brand,
 }: {
   stage: string;
+  submissionType?: string;
+  fullPaperDeadline?: string | null;
   paperId: string | null;
   title: string;
   track?: string;
@@ -75,6 +79,8 @@ export function NotifyAuthor({
     title,
     track,
     decision,
+    submissionType,
+    fullPaperDeadline,
     message: defaultMessage,
     name: authorName,
     reviews,

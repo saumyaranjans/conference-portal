@@ -122,6 +122,7 @@ export function AddReviewer({
     fd.set("subject", subject);
     fd.set("body", body);
     if (prepared.reviewerId) fd.set("reviewer_id", prepared.reviewerId);
+    if (prepared.inviteToken) fd.set("invite_token", prepared.inviteToken);
 
     const res = await sendReviewerInvite(fd);
     if (res.ok) {

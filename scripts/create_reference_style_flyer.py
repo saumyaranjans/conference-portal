@@ -140,38 +140,38 @@ def build(source):
     draw.rounded_rectangle((76, 1026, 458, 1074), radius=8,
                            fill=(255, 255, 255), outline=GOLD, width=1)
     centre(draw, (76, 1028, 458, 1070), "www.glogift2027.in/login",
-           font(FONT_BOLD, 21), NAVY)
+           font(FONT_BOLD, 23), NAVY)
 
     # Replace abbreviated keywords with the ten complete conference-track names.
-    draw.rectangle((72, 1098, 463, 1331), fill=PAPER)
-    centre(draw, (72, 1099, 463, 1123), "10 CONFERENCE TRACKS",
-           font(FONT_BOLD, 15), NAVY)
+    draw.rectangle((72, 1094, 463, 1346), fill=PAPER)
+    centre(draw, (72, 1095, 463, 1125), "10 CONFERENCE TRACKS",
+           font(FONT_BOLD, 18), NAVY)
     tracks = [
         "AI in Finance, Accounting, FinTech & Digital Assets",
         "AI for Operations, Supply Chain & Industry 5.0",
         "Digital Transformation & Intelligent Business",
         "Sustainable Finance & Decarbonization",
-        "AI in Marketing: Consumer Insights, Branding & Customer Engagement",
+        "AI in Marketing",
         "Governance, Ethics & Responsible AI",
         "Analytics, Big Data & Intelligent Systems",
         "Human Capital & Leadership",
         "Strategy, Innovation & Emerging Business Models",
         "Inclusive Growth & Global Transformation",
     ]
-    cell_w, cell_h = 194, 41
+    cell_w, cell_h = 194, 43
     for index, track in enumerate(tracks):
         col, row = index % 2, index // 2
         x = 74 + col * cell_w
-        y = 1124 + row * cell_h
+        y = 1127 + row * cell_h
         if row % 2 == 0:
             draw.rectangle((x, y, x + cell_w - 3, y + cell_h - 2),
                            fill=(249, 251, 254))
-        draw.text((x + 5, y + 3), f"{index + 1:02d}",
-                  font=font(FONT_BOLD, 12), fill=ORANGE)
-        face = font(FONT_NARROW, 13)
+        draw.text((x + 5, y + 4), f"{index + 1:02d}",
+                  font=font(FONT_BOLD, 13), fill=ORANGE)
+        face = font(FONT_NARROW, 15)
         lines = wrap_lines(draw, track, face, cell_w - 34)
         for line_index, line in enumerate(lines[:3]):
-            draw.text((x + 29, y + line_index * 13), line,
+            draw.text((x + 29, y + 1 + line_index * 15), line,
                       font=face, fill=INK)
         if col == 0:
             draw.line((x + cell_w - 2, y + 3, x + cell_w - 2, y + cell_h - 5),
@@ -194,8 +194,9 @@ def build(source):
     for index, (date, label) in enumerate(dates):
         y = row_top + index * 41
         calendar_icon(draw, 554, y + 1)
-        draw.text((596, y), label, font=font(FONT_REG, 15), fill=INK)
-        draw.text((596, y + 18), date, font=font(FONT_BOLD, 15), fill=NAVY)
+        label_face = fit_font(draw, label, FONT_REG, 17, 329, 15)
+        draw.text((596, y), label, font=label_face, fill=INK)
+        draw.text((596, y + 19), date, font=font(FONT_BOLD, 17), fill=NAVY)
         if index < len(dates) - 1:
             draw.line((596, y + 38, 928, y + 38), fill=GOLD, width=1)
 
@@ -209,8 +210,8 @@ def build(source):
     for index, (label, kind) in enumerate(publications):
         y = 1217 + index * 39
         publication_icon(draw, 548, y - 2, kind)
-        face = fit_font(draw, label, FONT_REG, 16, 330)
-        draw.text((603, y + 9), label, font=face, fill=INK)
+        face = fit_font(draw, label, FONT_REG, 18, 330, 15)
+        draw.text((603, y + 8), label, font=face, fill=INK)
     # Clear remnants from the older, lower publication row and restore a
     # crisp lower rule inside the card.
     draw.rectangle((540, 1337, 948, 1365), fill=PAPER)
@@ -220,7 +221,7 @@ def build(source):
     footer_colour = image.getpixel((380 * SCALE, 1432 * SCALE))
     draw.rectangle((255, 1425, 481, 1471), fill=footer_colour)
     centre(draw, (255, 1426, 481, 1469), "www.glogift2027.in",
-           font(FONT_REG, 18), "white")
+           font(FONT_REG, 20), "white")
 
     OUT_PNG.parent.mkdir(parents=True, exist_ok=True)
     OUT_PDF.parent.mkdir(parents=True, exist_ok=True)

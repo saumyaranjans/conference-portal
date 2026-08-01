@@ -1136,15 +1136,21 @@ export function LandingPage() {
             ))}
             <a
               href="/conference-flyer"
-              className="inline-flex items-center rounded-full bg-blue-600 px-4 py-2
-                         font-semibold text-white transition hover:bg-blue-700"
+              className="inline-flex items-center rounded-full border border-transparent bg-transparent px-4 py-2
+                         font-semibold text-slate-700 transition duration-300
+                         hover:border-blue-400/70 hover:text-blue-700
+                         hover:shadow-[0_0_24px_rgba(37,99,235,0.65)]
+                         dark:text-slate-200 dark:hover:text-blue-300"
             >
               Conference Flyer
             </a>
             <a
               href="/conference-brochure"
-              className="inline-flex items-center rounded-full bg-amber-500 px-4 py-2
-                         font-semibold text-slate-950 transition hover:bg-amber-400"
+              className="inline-flex items-center rounded-full border border-transparent bg-transparent px-4 py-2
+                         font-semibold text-slate-700 transition duration-300
+                         hover:border-amber-400/80 hover:text-amber-700
+                         hover:shadow-[0_0_24px_rgba(245,158,11,0.7)]
+                         dark:text-slate-200 dark:hover:text-amber-300"
             >
               Conference Brochure
             </a>

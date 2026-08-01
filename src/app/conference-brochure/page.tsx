@@ -18,6 +18,7 @@ export default function ConferenceBrochurePage() {
         "/document-previews/brochure/page-2.png",
         "/document-previews/brochure/page-3.png",
       ]}
+      embedPdf
     />
   );
 }

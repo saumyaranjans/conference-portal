@@ -19,9 +19,12 @@ function contentSecurityPolicy(nonce: string, dev: boolean) {
     "default-src 'self'",
     // `unsafe-eval` is only tolerable for the dev server's refresh runtime.
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' ${dev ? "'unsafe-eval'" : ""}`,
+    "script-src-attr 'none'",
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https:",
     "font-src 'self' data:",
+    "media-src 'none'",
+    "manifest-src 'self'",
     // Supabase for auth, database, storage and realtime; ROR for the
     // institution lookup on the signup form.
     `connect-src 'self' ${supabase} ${supabase.replace("https://", "wss://")} https://api.ror.org${dev ? " ws: http://localhost:*" : ""}`,
@@ -31,7 +34,7 @@ function contentSecurityPolicy(nonce: string, dev: boolean) {
     "object-src 'none'",
     "frame-ancestors 'none'",
     // The campus map on /how-to-reach is a Google Maps embed.
-    "frame-src 'self' blob: https://www.google.com https://maps.google.com",
+    `frame-src 'self' blob: ${supabase} https://www.google.com https://maps.google.com`,
     "worker-src 'self' blob:",
     "upgrade-insecure-requests",
   ]

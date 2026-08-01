@@ -1460,6 +1460,13 @@ export async function acceptReviewerInvite(token: string): Promise<ActionResult>
   if (!inv) return { ok: false, message: "This invitation link is invalid." };
   if (inv.status === "revoked")
     return { ok: false, message: "This invitation has been revoked." };
+  if (new Date(inv.expires_at).getTime() <= Date.now())
+    return { ok: false, message: "This invitation has expired. Ask the Track Editor for a new link." };
+  if ((inv.email ?? "").trim().toLowerCase() !== (profile.email ?? "").trim().toLowerCase())
+    return {
+      ok: false,
+      message: "This invitation belongs to a different email address.",
+    };
 
   const { data: sub } = await admin
     .from("submissions")
@@ -1925,6 +1932,7 @@ export async function addTrackChair(formData: FormData): Promise<ActionResult> {
     token,
     invited_by: profile.id,
     invited_at: new Date().toISOString(),
+    invite_expires_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
   });
 
   if (error) {
@@ -2048,7 +2056,7 @@ export async function prepareChairInvite(
   if (target) {
     const { data: held } = await admin
       .from("track_editors")
-      .select("track_id, status, token")
+      .select("track_id, status, token, invite_expires_at")
       .eq("profile_id", target.id);
     const rows = ((held as any[]) ?? []);
     const already = rows.find((h) => h.track_id === trackId);
@@ -2061,7 +2069,16 @@ export async function prepareChairInvite(
         message: `A Track Editor may chair at most ${MAX_TRACKS_PER_CHAIR} tracks, and they already chair ${otherAccepted.length}.`,
       };
 
-    let token: string = already?.token ?? randomBytes(24).toString("hex");
+    const tokenExpired =
+      already?.invite_expires_at &&
+      new Date(already.invite_expires_at).getTime() <= Date.now();
+    let token: string =
+      !already?.token || tokenExpired
+        ? randomBytes(24).toString("hex")
+        : already.token;
+    const inviteExpiresAt = new Date(
+      Date.now() + 14 * 24 * 60 * 60 * 1000
+    ).toISOString();
     if (!already) {
       const { error } = await admin.from("track_editors").insert({
         track_id: trackId,
@@ -2070,12 +2087,13 @@ export async function prepareChairInvite(
         token,
         invited_by: profile.id,
         invited_at: new Date().toISOString(),
+        invite_expires_at: inviteExpiresAt,
       });
       if (error) return { ok: false, message: error.message };
-    } else if (!already.token) {
+    } else if (!already.token || tokenExpired) {
       await admin
         .from("track_editors")
-        .update({ token })
+        .update({ token, invite_expires_at: inviteExpiresAt })
         .eq("track_id", trackId)
         .eq("profile_id", target.id);
     }
@@ -2452,7 +2470,7 @@ export async function acceptTrackEditorInvite(
 
   const { data: inv } = await admin
     .from("track_editor_invitations")
-    .select("id, track_id, status, invited_by, tracks(name)")
+    .select("id, track_id, status, invited_by, email, expires_at, tracks(name)")
     .eq("token", token)
     .maybeSingle();
 
@@ -2460,6 +2478,13 @@ export async function acceptTrackEditorInvite(
   const row = inv as any;
   if (row.status === "revoked")
     return { ok: false, message: "This invitation has been withdrawn." };
+  if (new Date(row.expires_at).getTime() <= Date.now())
+    return { ok: false, message: "This invitation has expired. Ask the Convener for a new link." };
+  if ((row.email ?? "").trim().toLowerCase() !== (profile.email ?? "").trim().toLowerCase())
+    return {
+      ok: false,
+      message: "This invitation belongs to a different email address.",
+    };
 
   const { data: held } = await admin
     .from("track_editors")
@@ -2527,7 +2552,7 @@ export async function acceptTrackChairInvite(token: string): Promise<ActionResul
 
   const { data: inv } = await admin
     .from("track_editors")
-    .select("id, track_id, profile_id, status, tracks(name)")
+    .select("id, track_id, profile_id, status, invite_expires_at, tracks(name)")
     .eq("token", token)
     .maybeSingle();
 
@@ -2536,6 +2561,11 @@ export async function acceptTrackChairInvite(token: string): Promise<ActionResul
     return { ok: false, message: "This invitation belongs to a different account." };
   if ((inv as any).status === "accepted")
     return { ok: true, message: "You already chair this track." };
+  if (
+    !(inv as any).invite_expires_at ||
+    new Date((inv as any).invite_expires_at).getTime() <= Date.now()
+  )
+    return { ok: false, message: "This invitation has expired. Ask the Convener for a new link." };
 
   const { data: held } = await admin
     .from("track_editors")

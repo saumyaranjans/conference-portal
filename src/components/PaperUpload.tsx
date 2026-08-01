@@ -4,6 +4,18 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
+const ALLOWED_TYPES: Record<string, string[]> = {
+  doc: ["application/msword"],
+  docx: [
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  ],
+  pdf: ["application/pdf"],
+};
+
+function extensionOf(name: string): string {
+  return name.toLowerCase().match(/\.([a-z0-9]+)$/)?.[1] ?? "";
+}
+
 /**
  * Uploads straight to Supabase Storage from the browser, then records the
  * object path on the submission row. Keeps large PDFs off the server.
@@ -39,21 +51,43 @@ export function PaperUpload({
       return;
     }
 
-    if (kind === "paper" && !/\.(doc|docx)$/i.test(file.name)) {
+    if (file.name.length > 180 || /[\u0000-\u001f\u007f]/.test(file.name)) {
+      setError("The file name is invalid or too long.");
+      return;
+    }
+
+    const ext = extensionOf(file.name);
+    const allowedExtensions =
+      kind === "paper" ? ["doc", "docx"] : ["pdf", "doc", "docx"];
+    if (!allowedExtensions.includes(ext)) {
       setError(
-        "The full paper must be a Word file (.doc or .docx)."
+        kind === "paper"
+          ? "The full paper must be a Word file (.doc or .docx)."
+          : "Only PDF or Word files (.pdf, .doc, .docx) are allowed."
       );
+      return;
+    }
+
+    const acceptedMimes = ALLOWED_TYPES[ext] ?? [];
+    if (file.type && !acceptedMimes.includes(file.type)) {
+      setError("The file contents do not match the selected file type.");
       return;
     }
 
     setBusy(true);
     setError(null);
     const supabase = createClient();
-    const path = `${submissionId}/${folder}${Date.now()}-${file.name}`;
+    // Never use an attacker-controlled filename as an object key. The original
+    // name is retained only as display metadata on the submission row.
+    const path = `${submissionId}/${folder}${crypto.randomUUID()}.${ext}`;
 
     const { error: upErr } = await supabase.storage
       .from("papers")
-      .upload(path, file, { upsert: false });
+      .upload(path, file, {
+        upsert: false,
+        contentType: acceptedMimes[0],
+        cacheControl: "0",
+      });
 
     if (upErr) {
       setError(upErr.message);
@@ -72,7 +106,12 @@ export function PaperUpload({
       .update(patch)
       .eq("id", submissionId);
 
-    if (dbErr) setError(dbErr.message);
+    if (dbErr) {
+      // Avoid leaving an orphaned object if the RLS-protected database update
+      // fails after the storage upload succeeds.
+      await supabase.storage.from("papers").remove([path]);
+      setError(dbErr.message);
+    }
 
     setBusy(false);
     router.refresh();
@@ -93,7 +132,8 @@ export function PaperUpload({
       .from("papers")
       .createSignedUrl(filePath, 60);
 
-    if (data?.signedUrl) window.open(data.signedUrl, "_blank");
+    if (data?.signedUrl)
+      window.open(data.signedUrl, "_blank", "noopener,noreferrer");
   }
 
   return (
@@ -147,7 +187,8 @@ export function PaperDownload({
     const { data } = await createClient()
       .storage.from("papers")
       .createSignedUrl(filePath, 60);
-    if (data?.signedUrl) window.open(data.signedUrl, "_blank");
+    if (data?.signedUrl)
+      window.open(data.signedUrl, "_blank", "noopener,noreferrer");
     setBusy(false);
   }
 

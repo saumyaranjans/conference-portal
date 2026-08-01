@@ -71,6 +71,10 @@ export function SignupForm({
       setError("Passwords do not match.");
       return;
     }
+    if (form.password.length < 12 || form.password.length > 128) {
+      setError("Password must be between 12 and 128 characters.");
+      return;
+    }
 
     setBusy(true);
     const { data, error } = await createClient().auth.signUp({
@@ -378,6 +382,8 @@ export function SignupForm({
               id="email"
               type="email"
               required
+              maxLength={254}
+              autoComplete="email"
               readOnly={emailLocked}
               className={`input ${emailLocked ? "bg-slate-100 text-slate-500" : ""}`}
               value={form.email}
@@ -397,12 +403,14 @@ export function SignupForm({
               id="password"
               type="password"
               required
-              minLength={8}
+              minLength={12}
+              maxLength={128}
+              autoComplete="new-password"
               className="input"
               value={form.password}
               onChange={(e) => set("password", e.target.value)}
             />
-            <p className="text-xs text-slate-400 mt-1">At least 8 characters.</p>
+            <p className="text-xs text-slate-400 mt-1">Use 12 or more characters.</p>
           </div>
           <div>
             <label className="label" htmlFor="confirm">
@@ -412,7 +420,9 @@ export function SignupForm({
               id="confirm"
               type="password"
               required
-              minLength={8}
+              minLength={12}
+              maxLength={128}
+              autoComplete="new-password"
               className="input"
               value={form.confirm}
               onChange={(e) => set("confirm", e.target.value)}

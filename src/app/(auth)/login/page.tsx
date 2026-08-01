@@ -3,13 +3,9 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Playfair_Display } from "next/font/google";
 import { createClient } from "@/lib/supabase/client";
 import { HomeLink } from "@/components/HomeLink";
 import { ThemeToggle } from "@/components/ThemeToggle";
-
-// Elegant display serif for the conference title.
-const display = Playfair_Display({ subsets: ["latin"], weight: ["600", "700"] });
 
 const CONFERENCE =
   "International Conference on AI-Driven Solutions in Management: Flexibility, Digitalisation and Decarbonization";
@@ -77,7 +73,7 @@ export default function LoginPage() {
             GLOGIFT 2027
           </p>
           <h1
-            className={`${display.className} mt-4 text-2xl xl:text-3xl font-semibold leading-snug max-w-xl`}
+            className="mt-4 max-w-xl font-serif text-2xl font-semibold leading-snug xl:text-3xl"
           >
             {CONFERENCE}
           </h1>
@@ -118,7 +114,7 @@ export default function LoginPage() {
               GLOGIFT 2027
             </p>
             <h1
-              className={`${display.className} mt-2 text-base font-semibold text-slate-900 leading-snug`}
+              className="mt-2 font-serif text-base font-semibold leading-snug text-slate-900"
             >
               {CONFERENCE}
             </h1>

@@ -57,7 +57,10 @@ export async function GET() {
   ];
 
   const esc = (v: unknown) => {
-    const s = v == null ? "" : String(v);
+    let s = v == null ? "" : String(v);
+    // Excel, Numbers and some CSV viewers execute cells beginning with these
+    // characters as formulas. Treat all user-supplied cells as literal text.
+    if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
     return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
 
@@ -91,6 +94,7 @@ export async function GET() {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
       "Content-Disposition": `attachment; filename="submissions-${stamp}.csv"`,
+      "Cache-Control": "private, no-store, max-age=0",
     },
   });
 }

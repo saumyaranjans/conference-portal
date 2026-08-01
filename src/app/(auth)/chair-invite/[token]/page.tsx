@@ -20,7 +20,7 @@ export default async function ChairInvitePage({
     .from("track_editors")
     // Named FK: track_editors reaches profiles via profile_id and invited_by.
     .select(
-      "id, status, profile_id, track_id, tracks(name), profiles!track_editors_profile_id_fkey(full_name, email)"
+      "id, status, profile_id, track_id, invite_expires_at, tracks(name), profiles!track_editors_profile_id_fkey(full_name, email)"
     )
     .eq("token", token)
     .maybeSingle();
@@ -64,6 +64,20 @@ export default async function ChairInvitePage({
         <Link href="/editor" className="btn-primary inline-block mt-4">
           Open Track Queue
         </Link>
+      </Shell>
+    );
+  }
+
+  if (
+    !row.invite_expires_at ||
+    new Date(row.invite_expires_at).getTime() <= Date.now()
+  ) {
+    return (
+      <Shell title="Invitation expired">
+        <p className="text-sm text-slate-600">
+          This Track Editor invitation has expired. Ask the Convener to issue
+          a new invitation link.
+        </p>
       </Shell>
     );
   }

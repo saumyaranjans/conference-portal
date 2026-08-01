@@ -22,14 +22,47 @@ const securityHeaders = [
   { key: "X-DNS-Prefetch-Control", value: "on" },
   // Keep this browsing context isolated from anything it opens.
   { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+  { key: "Cross-Origin-Resource-Policy", value: "same-site" },
+  { key: "Origin-Agent-Cluster", value: "?1" },
+  { key: "X-Permitted-Cross-Domain-Policies", value: "none" },
+  { key: "Strict-Transport-Security", value: "max-age=63072000" },
 ];
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   // Nothing gains from advertising the framework.
   poweredByHeader: false,
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "256kb",
+    },
+  },
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      {
+        source:
+          "/:section(admin|author|reviewer|editor|chief|profile|api|auth)/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "private, no-store, max-age=0, must-revalidate",
+          },
+          { key: "Pragma", value: "no-cache" },
+        ],
+      },
+      {
+        source:
+          "/:route(login|signup|forgot-password|reset-password|reviewer-invite|track-editor-invite|chair-invite)/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "private, no-store, max-age=0, must-revalidate",
+          },
+          { key: "Pragma", value: "no-cache" },
+        ],
+      },
+    ];
   },
 };
 

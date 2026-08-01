@@ -29,8 +29,8 @@ export default function ResetPasswordPage() {
       setError("Passwords do not match.");
       return;
     }
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
+    if (password.length < 12 || password.length > 128) {
+      setError("Password must be between 12 and 128 characters.");
       return;
     }
 
@@ -73,7 +73,9 @@ export default function ResetPasswordPage() {
                 id="password"
                 type="password"
                 required
-                minLength={8}
+                minLength={12}
+                maxLength={128}
+                autoComplete="new-password"
                 className="input"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -87,7 +89,9 @@ export default function ResetPasswordPage() {
                 id="confirm"
                 type="password"
                 required
-                minLength={8}
+                minLength={12}
+                maxLength={128}
+                autoComplete="new-password"
                 className="input"
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}

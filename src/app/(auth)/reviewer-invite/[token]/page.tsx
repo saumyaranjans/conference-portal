@@ -19,11 +19,15 @@ export default async function ReviewerInvitePage({
 
   const { data: inv } = await admin
     .from("reviewer_invitations")
-    .select("full_name, designation, affiliation, email, status")
+    .select("full_name, designation, affiliation, email, status, expires_at")
     .eq("token", token)
     .maybeSingle();
 
-  const invalid = !inv || inv.status === "revoked";
+  const invalid =
+    !inv ||
+    inv.status === "revoked" ||
+    (inv.status === "pending" &&
+      new Date(inv.expires_at).getTime() <= Date.now());
 
   if (invalid) {
     return (
@@ -31,7 +35,7 @@ export default async function ReviewerInvitePage({
         <div className="w-full max-w-md text-center card card-pad space-y-3">
           <h1 className="text-xl font-semibold">Invitation not found</h1>
           <p className="text-sm text-slate-600">
-            This reviewer invitation link is invalid or has been withdrawn.
+            This reviewer invitation link is invalid, expired, or has been withdrawn.
             Please check with the Track Editor who invited you.
           </p>
           <Link href="/login" className="text-blue-700 hover:underline text-sm">

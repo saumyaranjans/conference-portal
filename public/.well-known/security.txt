@@ -1,0 +1,6 @@
+Contact: mailto:glogift27.chair@iimsambalpur.ac.in
+Contact: mailto:glogift27.coordinator@iimsambalpur.ac.in
+Canonical: https://glogift2027.in/.well-known/security.txt
+Expires: 2027-08-01T00:00:00.000Z
+Preferred-Languages: en
+Policy: https://glogift2027.in/security

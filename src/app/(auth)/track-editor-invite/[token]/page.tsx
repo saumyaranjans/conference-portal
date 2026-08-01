@@ -20,17 +20,22 @@ export default async function TrackEditorInvitePage({
 
   const { data: inv } = await admin
     .from("track_editor_invitations")
-    .select("full_name, designation, affiliation, email, status, tracks(name)")
+    .select("full_name, designation, affiliation, email, status, expires_at, tracks(name)")
     .eq("token", token)
     .maybeSingle();
 
   const row = inv as any;
 
-  if (!row || row.status === "revoked") {
+  if (
+    !row ||
+    row.status === "revoked" ||
+    (row.status === "pending" &&
+      new Date(row.expires_at).getTime() <= Date.now())
+  ) {
     return (
       <Shell title="Invitation not found">
         <p className="text-sm text-slate-600">
-          This Track Editor invitation link is invalid or has been withdrawn.
+          This Track Editor invitation link is invalid, expired, or has been withdrawn.
           Please check with the Convener who invited you.
         </p>
         <Link href="/login" className="text-blue-700 hover:underline text-sm">

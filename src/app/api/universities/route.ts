@@ -28,7 +28,12 @@ async function searchRor(q: string): Promise<string[]> {
   try {
     const res = await fetch(
       `https://api.ror.org/v2/organizations?query=${encodeURIComponent(q)}`,
-      { signal: controller.signal, headers: { Accept: "application/json" } }
+      {
+        signal: controller.signal,
+        headers: { Accept: "application/json" },
+        redirect: "error",
+        cache: "no-store",
+      }
     );
     if (!res.ok) return [];
     const data = await res.json();
@@ -40,7 +45,8 @@ async function searchRor(q: string): Promise<string[]> {
         "";
       const country =
         it.locations?.[0]?.geonames_details?.country_name ?? "";
-      return country ? `${display}, ${country}` : display;
+      const label = country ? `${display}, ${country}` : display;
+      return label.slice(0, 240);
     }).filter(Boolean);
   } catch {
     return [];
@@ -54,6 +60,12 @@ export async function GET(request: Request) {
     .trim()
     .toLowerCase();
   if (q.length < 2) return NextResponse.json([]);
+  if (q.length > 100 || /[\u0000-\u001f\u007f]/.test(q)) {
+    return NextResponse.json(
+      { error: "Invalid search query." },
+      { status: 400, headers: { "Cache-Control": "no-store" } }
+    );
+  }
 
   // ROR first (comprehensive), local as fallback / top-up.
   const [ror, local] = await Promise.all([
@@ -71,5 +83,7 @@ export async function GET(request: Request) {
     if (merged.length >= 10) break;
   }
 
-  return NextResponse.json(merged);
+  return NextResponse.json(merged, {
+    headers: { "Cache-Control": "private, no-store, max-age=0" },
+  });
 }

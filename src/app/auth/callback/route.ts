@@ -8,7 +8,17 @@ import { createClient } from "@/lib/supabase/server";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/";
+  const requestedNext = searchParams.get("next") ?? "/";
+  // Only permit an internal, root-relative destination. This prevents an auth
+  // email from being turned into an open redirect to a phishing site.
+  const next =
+    requestedNext.startsWith("/") &&
+    !requestedNext.startsWith("//") &&
+    !requestedNext.includes("\\") &&
+    requestedNext.length <= 512 &&
+    !/[\u0000-\u001f\u007f]/.test(requestedNext)
+      ? requestedNext
+      : "/";
 
   if (code) {
     const supabase = await createClient();

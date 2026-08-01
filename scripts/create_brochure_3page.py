@@ -74,8 +74,8 @@ def theme_box(title_text, body):
         ("LINEBEFORE", (0, 0), (0, -1), 2.5, GOLD),
         ("LEFTPADDING", (0, 0), (-1, -1), 3 * mm),
         ("RIGHTPADDING", (0, 0), (-1, -1), 2.5 * mm),
-        ("TOPPADDING", (0, 0), (-1, -1), 1.5 * mm),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 1.5 * mm),
+        ("TOPPADDING", (0, 0), (-1, -1), 1 * mm),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 1 * mm),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
     ]))
     return table
@@ -353,35 +353,64 @@ def submission_page():
     story.append(para(
         "<b>Early bird:</b> on or before 20 Dec 2026 &nbsp; | &nbsp; "
         "<b>Regular:</b> on or before 24 Jan 2027 &nbsp; | &nbsp; GST extra.",
-        8.8, 10.4, 1.1 * mm, MUTED, TA_CENTER))
-    story.append(para(
-        "Fees include conference kit, certificates, working lunches, refreshments and "
-        "conference dinner. Travel and accommodation are excluded.",
-        9.1, 10.8, 1.1 * mm, MUTED, TA_CENTER))
+        8.8, 10.4, .8 * mm, MUTED, TA_CENTER))
+    attendance_style = ParagraphStyle(
+        "attendance-note", fontName=BODY, fontSize=8.5, leading=10,
+        textColor=INK)
+    declaration_style = ParagraphStyle(
+        "attendance-declaration", fontName=BODY, fontSize=8.6, leading=10.2,
+        textColor=NAVY, alignment=TA_CENTER)
+    attendance_note = Table([
+        [Paragraph(
+            "<b>ATTENDANCE DECLARATION:</b> During registration, every delegate must "
+            "declare <b>In-Person</b> or <b>Virtual</b> attendance. Benefits are provided "
+            "according to the declared mode.", declaration_style), ""],
+        [Paragraph(
+            "<b>IN-PERSON:</b> Fees include the conference kit, printed certificate, "
+            "working lunches, refreshments and conference dinner. Travel and "
+            "accommodation are not included.", attendance_style),
+         Paragraph(
+            "<b>VIRTUAL:</b> Delegates receive e-certificates of attendance; physical "
+            "kits, printed certificates and meals are available only on site. The Book "
+            "of Abstracts and Conference Proceedings with ISBN are supplied digitally.",
+            attendance_style)],
+    ], colWidths=[81 * mm, 81 * mm])
+    attendance_note.setStyle(TableStyle([
+        ("SPAN", (0, 0), (1, 0)),
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#FFF7E5")),
+        ("BACKGROUND", (0, 1), (-1, 1), PALE),
+        ("BOX", (0, 0), (-1, -1), .6, colors.HexColor("#C7D2E1")),
+        ("INNERGRID", (0, 1), (-1, 1), .5, colors.HexColor("#C7D2E1")),
+        ("LEFTPADDING", (0, 0), (-1, -1), 2.5 * mm),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 2.5 * mm),
+        ("TOPPADDING", (0, 0), (-1, -1), 1.5 * mm),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 1.5 * mm),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+    ]))
+    story.append(attendance_note)
     story.append(para(
         "<b>On-campus stay:</b> Twin-sharing Rs 1,800 / $19 per night &nbsp; | &nbsp; "
         "Single room Rs 3,600 / $38 per night &nbsp; | &nbsp; Meals and Wi-Fi included; GST extra.",
-        8.8, 10.4, 0, INK, TA_CENTER))
-    story += [Spacer(1, 1.2 * mm), section("CONFERENCE HIGHLIGHTS")]
-    highlights = [
-        "AI and Sustainability Leadership Forum",
-        "Industry-Academia Conclave on Digital Finance",
-        "Policy Roundtable on Decarbonization",
-        "Startup Showcase on FinTech and Smart Operations",
-        "Doctoral Colloquium for Emerging Researchers",
-        "Directors' Panel on AI-Driven Leadership",
-    ]
-    cells = [Paragraph(f"<font color='#E96745'>&#9679;</font>&nbsp; {item}",
-                       ParagraphStyle("highlight", fontName=BODY, fontSize=8.9,
-                                      leading=10.5, textColor=INK))
-             for item in highlights]
-    story.append(Table([[cells[0], cells[1]], [cells[2], cells[3]], [cells[4], cells[5]]],
-                       colWidths=[81 * mm] * 2,
-                       style=[("VALIGN", (0, 0), (-1, -1), "TOP"),
-                              ("BOTTOMPADDING", (0, 0), (-1, -1), 1.3 * mm),
-                              ("LEFTPADDING", (0, 0), (-1, -1), 1 * mm),
-                              ("RIGHTPADDING", (0, 0), (-1, -1), 2 * mm)]))
-    story += [Spacer(1, 1.2 * mm)]
+        8.6, 10, 0, INK, TA_CENTER))
+    story += [Spacer(1, .8 * mm)]
+    highlights = Paragraph(
+        "<b>CONFERENCE HIGHLIGHTS:</b> AI and Sustainability Leadership Forum &nbsp; | &nbsp; "
+        "Industry-Academia Conclave on Digital Finance &nbsp; | &nbsp; Policy Roundtable on "
+        "Decarbonization &nbsp; | &nbsp; Startup Showcase on FinTech and Smart Operations &nbsp; | &nbsp; "
+        "Doctoral Colloquium for Emerging Researchers &nbsp; | &nbsp; Directors' Panel on "
+        "AI-Driven Leadership",
+        ParagraphStyle("highlights-band", fontName=BODY, fontSize=8.4,
+                       leading=10, textColor=INK, alignment=TA_CENTER))
+    highlights_band = Table([[highlights]], colWidths=[162 * mm])
+    highlights_band.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#FFF7E5")),
+        ("BOX", (0, 0), (-1, -1), .6, GOLD),
+        ("LEFTPADDING", (0, 0), (-1, -1), 2.5 * mm),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 2.5 * mm),
+        ("TOPPADDING", (0, 0), (-1, -1), 1 * mm),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 1 * mm),
+    ]))
+    story += [highlights_band, Spacer(1, .8 * mm)]
     contact = Table([
         [Paragraph("SUBMIT AND REGISTER", ParagraphStyle(
             "contact-title", fontName=DISPLAY, fontSize=16.5, leading=19,
@@ -391,13 +420,10 @@ def submission_page():
             textColor=GOLD, alignment=TA_CENTER))],
         [Paragraph(
             "glogift27.chair@iimsambalpur.ac.in &nbsp; | &nbsp; "
-            "glogift27.coordinator@iimsambalpur.ac.in",
-            ParagraphStyle("contact-mail", fontName=BODY, fontSize=9,
-                           leading=11, textColor=colors.white, alignment=TA_CENTER))],
-        [Paragraph("Jointly organised by IIM Sambalpur and the GLOGIFT Society",
-                   ParagraphStyle("contact-org", fontName=BODY, fontSize=8.8,
-                                  leading=10.5, textColor=colors.white,
-                                  alignment=TA_CENTER))],
+            "glogift27.coordinator@iimsambalpur.ac.in<br/>"
+            "Jointly organised by IIM Sambalpur and the GLOGIFT Society",
+            ParagraphStyle("contact-mail", fontName=BODY, fontSize=8.5,
+                           leading=10, textColor=colors.white, alignment=TA_CENTER))],
     ], colWidths=[162 * mm])
     contact.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, -1), NAVY),

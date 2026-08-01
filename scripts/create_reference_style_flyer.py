@@ -130,6 +130,56 @@ def publication_icon(draw, x, y, kind):
                        x + 33, y + 10 + offset), fill="white", width=3)
 
 
+def add_searchable_text_layer(pdf, page_h):
+    """Embed complete, invisible, extractable flyer text in reading order."""
+    lines = [
+        "Indian Institute of Management Sambalpur",
+        "GLOGIFT Society",
+        "GLOGIFT 2027",
+        "International Conference on AI-Driven Solutions in Management",
+        "Flexibility, Digitalisation & Decarbonization",
+        "25-27 February 2027",
+        "IIM Sambalpur, Odisha, India",
+        "In-Person | Hybrid",
+        "Call for Submissions",
+        "Original research from academicians, doctoral scholars and practitioners",
+        "Submission portal: www.glogift2027.in/login",
+        "10 Conference Tracks",
+        "01 AI in Finance, Accounting, FinTech & Digital Assets",
+        "02 AI for Operations, Supply Chain & Industry 5.0",
+        "03 Digital Transformation & Intelligent Business",
+        "04 Sustainable Finance & Decarbonization",
+        "05 AI in Marketing",
+        "06 Governance, Ethics & Responsible AI",
+        "07 Analytics, Big Data & Intelligent Systems",
+        "08 Human Capital & Leadership",
+        "09 Strategy, Innovation & Emerging Business Models",
+        "10 Inclusive Growth & Global Transformation",
+        "Key Dates",
+        "7 August 2026 - Open for abstract submission",
+        "21 September 2026 - Registration opens",
+        "23 November 2026 - Abstract submission closes",
+        "30 November 2026 - Abstract decisions announced",
+        "8 December 2026 - Full paper submission closes",
+        "20 December 2026 - Early bird registration closes",
+        "Publication Opportunities",
+        "Conference Proceedings with ISBN",
+        "Springer Journals (ABDC Listed)",
+        "Springer Scopus-Indexed Book Series",
+        "Submit & Register",
+        "Website: www.glogift2027.in",
+        "Email: glogift27.chair@iimsambalpur.ac.in",
+        "Jointly organised by IIM Sambalpur and the GLOGIFT Society",
+    ]
+    text_object = pdf.beginText(18, page_h - 18)
+    text_object.setFont("Helvetica", 7)
+    text_object.setLeading(8)
+    text_object.setTextRenderMode(3)
+    for line in lines:
+        text_object.textLine(line)
+    pdf.drawText(text_object)
+
+
 def build(source):
     image = Image.open(source).convert("RGB")
     if image.size != (1024 * SCALE, 1536 * SCALE):
@@ -143,8 +193,10 @@ def build(source):
            font(FONT_BOLD, 23), NAVY)
 
     # Replace abbreviated keywords with the ten complete conference-track names.
-    draw.rectangle((72, 1094, 463, 1346), fill=PAPER)
-    centre(draw, (72, 1095, 463, 1125), "10 CONFERENCE TRACKS",
+    # Keep the replacement grid inside the original submission-panel frame.
+    # The untouched lower strip preserves the gold border and centre ornament.
+    draw.rectangle((72, 1094, 463, 1312), fill=PAPER)
+    centre(draw, (72, 1095, 463, 1123), "10 CONFERENCE TRACKS",
            font(FONT_BOLD, 18), NAVY)
     tracks = [
         "AI in Finance, Accounting, FinTech & Digital Assets",
@@ -158,20 +210,20 @@ def build(source):
         "Strategy, Innovation & Emerging Business Models",
         "Inclusive Growth & Global Transformation",
     ]
-    cell_w, cell_h = 194, 43
+    cell_w, cell_h = 194, 37
     for index, track in enumerate(tracks):
         col, row = index % 2, index // 2
         x = 74 + col * cell_w
-        y = 1127 + row * cell_h
+        y = 1123 + row * cell_h
         if row % 2 == 0:
             draw.rectangle((x, y, x + cell_w - 3, y + cell_h - 2),
                            fill=(249, 251, 254))
-        draw.text((x + 5, y + 4), f"{index + 1:02d}",
+        draw.text((x + 5, y + 3), f"{index + 1:02d}",
                   font=font(FONT_BOLD, 13), fill=ORANGE)
         face = font(FONT_NARROW, 15)
         lines = wrap_lines(draw, track, face, cell_w - 34)
         for line_index, line in enumerate(lines[:3]):
-            draw.text((x + 29, y + 1 + line_index * 15), line,
+            draw.text((x + 29, y + line_index * 14), line,
                       font=face, fill=INK)
         if col == 0:
             draw.line((x + cell_w - 2, y + 3, x + cell_w - 2, y + cell_h - 5),
@@ -201,7 +253,8 @@ def build(source):
             draw.line((596, y + 38, 928, y + 38), fill=GOLD, width=1)
 
     # Expand publication opportunities to include the Scopus-indexed book series.
-    draw.rectangle((540, 1211, 948, 1346), fill=PAPER)
+    # Repaint only the publication-panel interior, never its lower frame.
+    draw.rectangle((540, 1211, 948, 1364), fill=PAPER)
     publications = [
         ("Conference Proceedings with ISBN", "book"),
         ("Springer Journals (ABDC Listed)", "stack"),
@@ -212,10 +265,6 @@ def build(source):
         publication_icon(draw, 548, y - 2, kind)
         face = fit_font(draw, label, FONT_REG, 18, 330, 15)
         draw.text((603, y + 8), label, font=face, fill=INK)
-    # Clear remnants from the older, lower publication row and restore a
-    # crisp lower rule inside the card.
-    draw.rectangle((540, 1337, 948, 1365), fill=PAPER)
-    draw.line((555, 1352, 933, 1352), fill=GOLD, width=1)
 
     # Update the general website address in the footer.
     footer_colour = image.getpixel((380 * SCALE, 1432 * SCALE))
@@ -230,7 +279,11 @@ def build(source):
 
     pdf = canvas.Canvas(str(OUT_PDF), pagesize=A4)
     page_w, page_h = A4
+    pdf.setTitle("GLOGIFT 2027 Conference Flyer")
+    pdf.setAuthor("Indian Institute of Management Sambalpur and GLOGIFT Society")
+    pdf.setSubject("Call for submissions for GLOGIFT 2027")
     pdf.drawImage(ImageReader(image), 0, 0, width=page_w, height=page_h)
+    add_searchable_text_layer(pdf, page_h)
     pdf.showPage()
     pdf.save()
     return OUT_PNG, OUT_PDF

@@ -663,8 +663,19 @@ export function NewSubmissionForm({
                 className="mt-1"
               />
               <span>
-                <span className="block text-sm font-medium text-slate-900">
-                  {t.label}
+                <span className="flex items-center gap-2 flex-wrap">
+                  <span className="text-sm font-medium text-slate-900">
+                    {t.label}
+                  </span>
+                  <span
+                    className={`inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-semibold ${
+                      t.pathway === "Pathway A"
+                        ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300"
+                        : "bg-purple-100 text-purple-800 dark:bg-purple-500/15 dark:text-purple-300"
+                    }`}
+                  >
+                    {t.pathway}
+                  </span>
                 </span>
                 <span className="block text-xs text-slate-500 mt-0.5">
                   {t.description}

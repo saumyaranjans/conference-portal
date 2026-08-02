@@ -221,12 +221,14 @@ export function attendanceLabel(value: string): string {
 export const SUBMISSION_TYPES = [
   {
     value: "abstract_presentation",
-    label: "Abstract & Presentation Only (Pathway A)",
+    label: "Abstract & Presentation Only",
+    pathway: "Pathway A" as const,
     description: "Submission of abstract and delivery of presentation.",
   },
   {
     value: "full_paper_presentation",
-    label: "Full Paper & Presentation (Pathway B)",
+    label: "Full Paper & Presentation",
+    pathway: "Pathway B" as const,
     description:
       "Submission of abstract, full paper, and delivery of presentation.",
   },

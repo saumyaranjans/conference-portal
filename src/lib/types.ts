@@ -461,10 +461,10 @@ export const STATUS_LABELS: Record<SubmissionStatus, string> = {
  * currently under decision — the "Abstract" for Pathway A and for a Pathway B
  * paper still at the abstract stage, the "Manuscript" once a Pathway B paper has
  * entered the full-paper stage. Both the review states (under_review /
- * revisions_requested) collapse to "… Under Revision", matching the three-state
- * lifecycle: Submitted → Under Revision → Accepted (with Rejected as the
- * terminal negative). `abstract_accepted` always reads "Abstract Accepted"
- * because it marks the moment the abstract cleared, before any manuscript.
+ * revisions_requested) collapse to "… Under Review", matching the three-state
+ * lifecycle: Submitted → Under Review → Accepted (with Rejected as the terminal
+ * negative). `abstract_accepted` always reads "Abstract Accepted" because it
+ * marks the moment the abstract cleared, before any manuscript.
  */
 export function statusLabel(
   status: SubmissionStatus,
@@ -485,7 +485,7 @@ export function statusLabel(
       return `${noun} Submitted`;
     case "under_review":
     case "revisions_requested":
-      return `${noun} Under Revision`;
+      return `${noun} Under Review`;
     case "accepted":
       return `${noun} Accepted`;
     case "rejected":

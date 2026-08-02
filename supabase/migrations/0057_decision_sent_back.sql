@@ -6,9 +6,12 @@
 -- author re-packages and re-submits. (The action also clears the submitted /
 -- built state and removes reviewer assignments — a fresh round.)
 --
--- The `decisions.decision` column is free text, so no enum change is needed;
--- this only teaches the status-mapping trigger the new value.
+-- `decisions.decision` is the `decision_kind` enum, so the value must be added
+-- to it, then the status-mapping trigger taught to handle it. (ADD VALUE is not
+-- used within this migration's own statements, so it is transaction-safe here.)
 -- =====================================================================
+
+alter type decision_kind add value if not exists 'sent_back';
 
 create or replace function public.on_decision_created()
 returns trigger language plpgsql security definer set search_path to 'public' as $fn$

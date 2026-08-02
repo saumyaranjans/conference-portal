@@ -7,9 +7,11 @@ import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { requireProfile, requireRole } from "@/lib/auth";
 import { emailConfigured, sendEmail } from "@/lib/email";
 import {
+  abstractDecisionEmail,
   chairInviteEmail,
   convenerDecisionOverrideEmail,
   fullPaperCancelledEmail,
+  fullPaperDecisionEmail,
   fullPaperReviewFacilitationEmail,
   fullPaperSubmittedAuthorEmail,
   manuscriptNeedsEditorEmail,
@@ -2948,6 +2950,77 @@ export async function recordRecommendation(
         stage1_keywords: (sub as any).keywords,
       })
       .eq("id", submissionId);
+  }
+
+  // Always email the author the decision letter (CC the Convener) so a recorded
+  // decision is never left un-communicated. The Track Editor can still send a
+  // customised or repeat letter from the submission page. Pre-trigger sub.stage
+  // picks the template: a Pathway B abstract accept is an abstract letter ("now
+  // submit your full paper"); a manuscript decision is a full-paper letter.
+  if (emailConfigured()) {
+    const { data: dmeta } = await admin
+      .from("submissions")
+      .select("tracks(name, conferences(name, acronym, year))")
+      .eq("id", submissionId)
+      .maybeSingle();
+    const dTrack = (dmeta as any)?.tracks?.name ?? null;
+    const dConf = (dmeta as any)?.tracks?.conferences;
+    const dBrand =
+      dConf?.acronym && dConf?.year ? `${dConf.acronym} ${dConf.year}` : "GLOGIFT 2027";
+    const dSignerRole =
+      (sub as any).assigned_editor_id === profile.id ? "Track Editor" : "Convener";
+
+    const { data: asg } = await admin
+      .from("assignments")
+      .select("reviewer_number, reviews(is_submitted, recommendation, comments_to_author)")
+      .eq("submission_id", submissionId);
+    const reviews = ((asg as any[]) ?? [])
+      .filter((a) => reviewOf(a)?.is_submitted)
+      .map((a, i) => ({
+        label: `Reviewer ${a.reviewer_number ?? i + 1}`,
+        recommendation: reviewOf(a)?.recommendation,
+        comments: reviewOf(a)?.comments_to_author,
+      }));
+
+    const build =
+      sub.stage === "full_paper" ? fullPaperDecisionEmail : abstractDecisionEmail;
+    const dcc = await convenerEmails(admin);
+    const authorRows = await submissionAuthors(admin, submissionId, sub.author_id);
+    const seenD = new Set<string>();
+    for (const a of authorRows) {
+      const raw = (a.email ?? "").trim();
+      const key = raw.toLowerCase();
+      if (!key || seenD.has(key)) continue;
+      seenD.add(key);
+      const letter = build({
+        paperId: (sub as any).paper_id,
+        title: sub.title ?? "",
+        track: dTrack,
+        decision,
+        submissionType: (sub as any).submission_type,
+        fullPaperDeadline,
+        message: String(formData.get("rationale") ?? ""),
+        name: a.full_name ?? undefined,
+        reviews,
+        chairName: profile.full_name,
+        chairEmail: profile.email,
+        signerRole: dSignerRole,
+        conferenceName: dConf?.name ?? null,
+        brand: dBrand,
+      });
+      try {
+        await sendEmail({
+          to: raw,
+          subject: letter.subject,
+          text: letter.body,
+          cc: dcc,
+          kind: "decision",
+          sentBy: profile.id,
+        });
+      } catch {
+        // Mail failure must never break the decision.
+      }
+    }
   }
 
   await audit(profile.id, "decision.recorded", "submission", submissionId, {

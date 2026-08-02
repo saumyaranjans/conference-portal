@@ -140,9 +140,10 @@ export function NotifyAuthor({
       </div>
 
       <p className="text-sm text-slate-600 bg-slate-50 rounded-lg px-3 py-2 dark:bg-slate-800 dark:text-slate-300">
-        Recording a decision does not email the author. The letter carries every
-        submitted reviewer&rsquo;s comments to the author (unnamed) and your own
-        message. Review it below, then send it.
+        The decision letter was emailed to the author automatically (with the
+        Convener CC&rsquo;d) when you recorded the decision — it carries every
+        submitted reviewer&rsquo;s comments (unnamed) and your message. Use this
+        only to resend it or send a customised version.
       </p>
 
       <ComposeEmail
@@ -152,7 +153,7 @@ export function NotifyAuthor({
         body={body}
         showSend
         ccConvener
-        sendLabel="Send decision email"
+        sendLabel="Resend decision email"
       />
     </div>
   );

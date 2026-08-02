@@ -172,6 +172,8 @@ function decisionEmail(
       ? `\nCOMMENTS FROM THE TRACK EDITOR\n\n${o.message.trim()}`
       : null,
     "",
+    `For any additional information, please contact the Chair and Coordinator: ${ORG_CONTACTS}.`,
+    "",
     "With regards,",
     o.chairName || null,
     signOffLine({

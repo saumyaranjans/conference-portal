@@ -78,7 +78,7 @@ function wrap(text: string, font: PDFFont, size: number, maxWidth: number): stri
 export async function buildCameraReadyPdf(
   meta: CameraReadyMeta,
   parts: CameraReadyPart[]
-): Promise<{ bytes: Uint8Array; merged: string[]; skipped: string[] }> {
+): Promise<{ bytes: Uint8Array; merged: string[]; skipped: string[]; contentPages: number }> {
   const out = await PDFDocument.create();
   const reg = await out.embedFont(StandardFonts.Helvetica);
   const bold = await out.embedFont(StandardFonts.HelveticaBold);
@@ -211,6 +211,8 @@ export async function buildCameraReadyPdf(
 
   out.setTitle(`${meta.paperId ?? "Manuscript"} — Camera-ready`);
   out.setAuthor("GLOGIFT 2027 Conference Portal");
+  // Compiled content pages, excluding the generated cover.
+  const contentPages = Math.max(0, out.getPageCount() - 1);
   const bytes = await out.save();
-  return { bytes, merged, skipped };
+  return { bytes, merged, skipped, contentPages };
 }

@@ -14,6 +14,8 @@ import {
 import {
   FULL_PAPER_OPTIONS,
   GUIDELINES_URL,
+  MAX_UPLOAD_MB,
+  MANUSCRIPT_MAX_PAGES,
   type FullPaperSlot,
 } from "@/lib/types";
 
@@ -129,8 +131,8 @@ export function FullPaperUpload({
 
   async function upload(slot: FullPaperSlot, file: File) {
     setError(null);
-    if (file.size > 25 * 1024 * 1024) {
-      setError("Each file must be under 25 MB.");
+    if (file.size > MAX_UPLOAD_MB * 1024 * 1024) {
+      setError(`Each file must be under ${MAX_UPLOAD_MB} MB.`);
       return;
     }
     const ext = file.name.toLowerCase().match(/\.([a-z0-9]+)$/)?.[1] ?? "";
@@ -598,7 +600,8 @@ export function FullPaperUpload({
             behind a generated cover page — with the Manuscript ID, title, track,
             conference details and the full author list — into one PDF. The
             manuscript itself is read with no author names. Preview it and, if it
-            looks right, submit.
+            looks right, submit. Limit: {MAX_UPLOAD_MB} MB per file and{" "}
+            {MANUSCRIPT_MAX_PAGES} compiled pages.
           </p>
 
           <div className="mt-3 flex items-center gap-3 flex-wrap">

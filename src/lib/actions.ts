@@ -22,6 +22,7 @@ import {
   countWords,
   DELETABLE_SUBMISSION_STATUSES,
   FULL_PAPER_ACCEPTS_REQUIRED,
+  MANUSCRIPT_MAX_PAGES,
   MAX_SUBMISSIONS_PER_AUTHOR,
   MAX_TRACKS_PER_CHAIR,
   MAX_REVIEWS_PER_REVIEWER,
@@ -837,6 +838,13 @@ export async function buildCameraReady(
       ok: false,
       message:
         "The manuscript must be a PDF so it can be compiled. Please upload a PDF manuscript and try again.",
+    };
+
+  // Page ceiling (excludes the generated cover).
+  if (built.contentPages > MANUSCRIPT_MAX_PAGES)
+    return {
+      ok: false,
+      message: `Your manuscript is ${built.contentPages} pages. The limit is ${MANUSCRIPT_MAX_PAGES} pages — please shorten it and rebuild.`,
     };
 
   const path = `${id}/camera-ready/${(s.paper_id ?? "manuscript").replace(/[^\w.-]/g, "_")}-camera-ready.pdf`;

@@ -102,6 +102,41 @@ export default async function AuthorDashboard({
 
   const submissions = (data ?? []) as Row[];
 
+  // Pathway B: the manuscripts this corresponding author must submit. Every
+  // accepted Pathway B abstract enters the manuscript phase; the author uploads
+  // one full paper per accepted abstract (dynamic 1–N across scenarios). Because
+  // `submissions` is scoped to author_id = profile.id, this list only ever holds
+  // papers where the viewer is the corresponding author — co-authors, whose
+  // papers live in `coAuthored`, never see this section (they see All
+  // Submissions only). Each entry is "completed" once its full paper is
+  // submitted, so the author can proceed to the next.
+  const manuscripts = submissions
+    .filter(
+      (s) =>
+        (s as unknown as { submission_type: string }).submission_type ===
+          "full_paper_presentation" &&
+        (s.status === "abstract_accepted" ||
+          (s as unknown as { stage: string }).stage === "full_paper")
+    )
+    .sort(
+      (a, b) =>
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    )
+    .map((s) => {
+      const submittedAt = (s as unknown as { full_paper_submitted_at: string | null })
+        .full_paper_submitted_at;
+      const stage = (s as unknown as { stage: string }).stage;
+      const revision = stage === "full_paper" && s.status === "revisions_requested";
+      return {
+        id: s.id,
+        paper_id: s.paper_id,
+        title: s.title,
+        done: !!submittedAt && !revision,
+        revision,
+      };
+    });
+  const manuscriptsDone = manuscripts.filter((m) => m.done).length;
+
   // Submissions where the signed-in user is a linked co-author (view only).
   // The submission_authors read policy doesn't cover co-authors, so we look up
   // the user's OWN co-author rows with the admin client, strictly scoped to
@@ -179,6 +214,57 @@ export default async function AuthorDashboard({
           )
         }
       />
+
+      {/* -------- Submit New Manuscript (Pathway B, corresponding author) ----
+          Appears first, only when accepted Pathway B abstracts exist. Co-authors
+          never reach this branch (their papers are in `coAuthored`). ---------- */}
+      {manuscripts.length > 0 && (
+        <div className="card mb-8 border-teal-200">
+          <div className="px-5 py-3 border-b border-teal-100 bg-teal-50/70 flex items-center justify-between gap-4">
+            <h2 className="font-semibold text-teal-900">Submit New Manuscript</h2>
+            <span className="text-sm font-medium text-teal-700">
+              {manuscriptsDone} of {manuscripts.length} completed
+            </span>
+          </div>
+          <div className="divide-y divide-slate-100">
+            {manuscripts.map((m, i) => (
+              <div
+                key={m.id}
+                className="px-5 py-3.5 flex items-center justify-between gap-4"
+              >
+                <div className="min-w-0">
+                  <p className="font-medium text-slate-900 truncate">
+                    Manuscript {i + 1}
+                    {m.paper_id ? ` · Paper ${m.paper_id}` : ""}
+                  </p>
+                  <p className="text-sm text-slate-500 truncate">
+                    {m.title || "Untitled submission"}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
+                  {m.done ? (
+                    <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800">
+                      Completed
+                    </span>
+                  ) : (
+                    <>
+                      <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">
+                        {m.revision ? "Revision requested" : "To submit"}
+                      </span>
+                      <Link
+                        href={`/author/submissions/${m.id}`}
+                        className="btn-primary"
+                      >
+                        {m.revision ? "Submit revision" : "Submit manuscript"}
+                      </Link>
+                    </>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <MyCertificates certificates={certificates} types={["participant"]} />
 

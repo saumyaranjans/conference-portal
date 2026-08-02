@@ -453,7 +453,7 @@ export default async function AuthorDashboard({
                   {s.title || <span className="text-slate-400">Untitled</span>}
                 </div>
                 <span
-                  className={`mt-1 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${pathwayOf(s).cls}`}
+                  className={`mt-1 inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${pathwayOf(s).cls}`}
                 >
                   {pathwayOf(s).label}
                 </span>
@@ -461,11 +461,11 @@ export default async function AuthorDashboard({
               <td className="td text-slate-500">{s.tracks?.name ?? "—"}</td>
               <td className="td whitespace-nowrap">
                 {s._role === "corresponding" ? (
-                  <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-500/15 dark:text-blue-300">
+                  <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-500/15 dark:text-blue-300">
                     Corresponding Author
                   </span>
                 ) : (
-                  <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-700/50 dark:text-slate-300">
+                  <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-700/50 dark:text-slate-300">
                     Co-Author
                   </span>
                 )}

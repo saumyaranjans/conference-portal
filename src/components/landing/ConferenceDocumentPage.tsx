@@ -59,7 +59,7 @@ export function ConferenceDocumentPage({
         <section className="space-y-5 rounded-3xl bg-slate-100 p-2 sm:p-5 dark:bg-slate-800/70">
           {embedPdf ? (
             <iframe
-              src={`${pdf}?v=20260803#view=FitH&toolbar=1&navpanes=0`}
+              src={`${pdf}?v=20260804#view=FitH&toolbar=1&navpanes=0`}
               title={`${title} PDF viewer`}
               className="mx-auto aspect-[210/297] w-full rounded-lg bg-white shadow-xl"
             />

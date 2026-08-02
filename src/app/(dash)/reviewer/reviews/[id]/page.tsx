@@ -21,7 +21,7 @@ export default async function ReviewPage({
   const { data: assignment } = await supabase
     .from("assignments")
     .select(
-      "*, submissions(id, title, abstract, keywords, file_path, file_name, version, paper_id, stage, tracks(name, conferences(name)))"
+      "*, submissions(id, title, abstract, keywords, file_path, file_name, version, paper_id, stage, full_paper_pdf_built_at, tracks(name, conferences(name)))"
     )
     .eq("id", id)
     .eq("reviewer_id", profile.id)
@@ -96,6 +96,7 @@ export default async function ReviewPage({
             role="reviewer"
             submissionId={sub.id}
             files={(manuscriptFiles as any[]) ?? []}
+            reviewCopyBuiltAt={(sub as any).full_paper_pdf_built_at}
           />
         </Section>
       ) : (

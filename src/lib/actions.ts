@@ -859,16 +859,28 @@ export async function buildCameraReady(
       message: `Your compiled manuscript is ${built.contentPages} pages (excluding the cover). The limit is ${MANUSCRIPT_MAX_PAGES} compiled pages — please shorten it and rebuild.`,
     };
 
-  const path = `${id}/camera-ready/${(s.paper_id ?? "manuscript").replace(/[^\w.-]/g, "_")}-camera-ready.pdf`;
+  const safeId = (s.paper_id ?? "manuscript").replace(/[^\w.-]/g, "_");
+  const path = `${id}/camera-ready/${safeId}-camera-ready.pdf`;
+  const reviewPath = `${id}/camera-ready/${safeId}-review-copy.pdf`;
   const { error: upErr } = await admin.storage
     .from("papers")
     .upload(path, built.bytes, { upsert: true, contentType: "application/pdf", cacheControl: "0" });
   if (upErr) return { ok: false, message: `Could not store the camera-ready: ${upErr.message}` };
+  // Blinded review copy (cover without authors) for single-blind reviewers.
+  const { error: rvErr } = await admin.storage
+    .from("papers")
+    .upload(reviewPath, built.blindedBytes, {
+      upsert: true,
+      contentType: "application/pdf",
+      cacheControl: "0",
+    });
+  if (rvErr) return { ok: false, message: `Could not store the review copy: ${rvErr.message}` };
 
   await admin
     .from("submissions")
     .update({
       full_paper_pdf_path: path,
+      full_paper_review_pdf_path: reviewPath,
       full_paper_pdf_built_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     })

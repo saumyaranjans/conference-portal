@@ -37,13 +37,22 @@ export function ManuscriptFilesView({
   submissionId,
   files,
   cameraReadyBuiltAt,
+  reviewCopyBuiltAt,
 }: {
   role: "reviewer" | "editor" | "chief";
   submissionId: string;
   files: StoredFile[];
   cameraReadyBuiltAt?: string | null;
+  /** When the blinded review copy was built (shown to reviewers with a cover). */
+  reviewCopyBuiltAt?: string | null;
 }) {
   const isReviewer = role === "reviewer";
+
+  // Blinded review copy = the compiled manuscript behind an author-less cover.
+  const reviewCopySrc =
+    isReviewer && reviewCopyBuiltAt
+      ? `/api/review-copy/${submissionId}?v=${encodeURIComponent(reviewCopyBuiltAt)}`
+      : null;
 
   // Reviewers never see identity-bearing files.
   const visible = files
@@ -107,14 +116,25 @@ export function ManuscriptFilesView({
         </p>
       )}
 
-      {/* Inline preview of the blinded manuscript (reviewers and everyone). */}
-      {manuscript && (
+      {/* Reviewer: the blinded review copy (author-less cover + manuscript). */}
+      {reviewCopySrc ? (
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
-            Manuscript preview {isReviewer ? "(blinded)" : ""}
+            Manuscript preview (blinded, with cover)
           </p>
-          <PdfFrame src={`/api/paper-file/${manuscript.id}`} title="Manuscript" />
+          <PdfFrame src={reviewCopySrc} title="Manuscript for review" />
         </div>
+      ) : (
+        // Fallback (no built review copy, or editor/convener): the raw blinded
+        // manuscript file.
+        manuscript && (
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
+              Manuscript preview {isReviewer ? "(blinded)" : ""}
+            </p>
+            <PdfFrame src={`/api/paper-file/${manuscript.id}`} title="Manuscript" />
+          </div>
+        )
       )}
 
       {/* Full file list. */}

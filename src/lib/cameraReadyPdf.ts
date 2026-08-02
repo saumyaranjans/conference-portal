@@ -78,6 +78,31 @@ function wrap(text: string, font: PDFFont, size: number, maxWidth: number): stri
 export async function buildCameraReadyPdf(
   meta: CameraReadyMeta,
   parts: CameraReadyPart[]
+): Promise<{
+  bytes: Uint8Array;
+  blindedBytes: Uint8Array;
+  merged: string[];
+  skipped: string[];
+  contentPages: number;
+}> {
+  // Two PDFs from the same files: the full camera-ready (cover WITH authors) and
+  // a blinded review copy (identical cover WITHOUT the author list) for
+  // single-blind reviewers.
+  const full = await buildOne(meta, parts, true);
+  const blinded = await buildOne(meta, parts, false);
+  return {
+    bytes: full.bytes,
+    blindedBytes: blinded.bytes,
+    merged: full.merged,
+    skipped: full.skipped,
+    contentPages: full.contentPages,
+  };
+}
+
+async function buildOne(
+  meta: CameraReadyMeta,
+  parts: CameraReadyPart[],
+  includeAuthors: boolean
 ): Promise<{ bytes: Uint8Array; merged: string[]; skipped: string[]; contentPages: number }> {
   const out = await PDFDocument.create();
   const reg = await out.embedFont(StandardFonts.Helvetica);
@@ -124,8 +149,14 @@ export async function buildCameraReadyPdf(
   page.drawRectangle({ x: MARGIN, y, width: contentW, height: 2, color: GOLD });
   y -= 30;
 
-  // ---- Camera-ready label ----
-  center("CAMERA-READY MANUSCRIPT", y, 11, bold, BLUE);
+  // ---- Label ----
+  center(
+    includeAuthors ? "CAMERA-READY MANUSCRIPT" : "MANUSCRIPT FOR REVIEW",
+    y,
+    11,
+    bold,
+    BLUE
+  );
   y -= 28;
 
   // ---- Title ----
@@ -165,26 +196,41 @@ export async function buildCameraReadyPdf(
     })
   );
 
-  // ---- Authors ----
-  y -= 4;
-  page.drawText("AUTHORS", { x: MARGIN, y, size: 8, font: bold, color: MUTED });
-  y -= 18;
-  meta.authors.forEach((a, i) => {
-    const name = `${i + 1}.  ${a.full_name}${a.is_corresponding ? "  (Corresponding author)" : ""}`;
-    page.drawText(name, { x: MARGIN + 6, y, size: 11, font: bold, color: INK });
-    y -= 14;
-    if (a.affiliation) {
-      for (const l of wrap(a.affiliation, obl, 9.5, contentW - 30)) {
-        page.drawText(l, { x: MARGIN + 20, y, size: 9.5, font: obl, color: MUTED });
-        y -= 12;
+  // ---- Authors (full copy only; withheld on the blinded review copy) ----
+  if (includeAuthors) {
+    y -= 4;
+    page.drawText("AUTHORS", { x: MARGIN, y, size: 8, font: bold, color: MUTED });
+    y -= 18;
+    meta.authors.forEach((a, i) => {
+      const name = `${i + 1}.  ${a.full_name}${a.is_corresponding ? "  (Corresponding author)" : ""}`;
+      page.drawText(name, { x: MARGIN + 6, y, size: 11, font: bold, color: INK });
+      y -= 14;
+      if (a.affiliation) {
+        for (const l of wrap(a.affiliation, obl, 9.5, contentW - 30)) {
+          page.drawText(l, { x: MARGIN + 20, y, size: 9.5, font: obl, color: MUTED });
+          y -= 12;
+        }
       }
-    }
-    y -= 5;
-  });
+      y -= 5;
+    });
+  } else {
+    y -= 4;
+    page.drawText("AUTHORS", { x: MARGIN, y, size: 8, font: bold, color: MUTED });
+    y -= 16;
+    page.drawText("Withheld for single-blind review.", {
+      x: MARGIN + 6,
+      y,
+      size: 10.5,
+      font: obl,
+      color: MUTED,
+    });
+    y -= 16;
+  }
 
   // ---- Footer note ----
-  const note =
-    "The manuscript that follows is anonymised for single-blind review and carries no author names. Author identities appear on this cover page only.";
+  const note = includeAuthors
+    ? "The manuscript that follows is anonymised for single-blind review and carries no author names. Author identities appear on this cover page only."
+    : "This is the single-blind review copy. Author identities are withheld throughout, including on this cover page.";
   let fy = MARGIN + 24;
   for (const l of wrap(note, obl, 8.5, contentW)) {
     page.drawText(l, { x: MARGIN, y: fy, size: 8.5, font: obl, color: MUTED });
@@ -209,7 +255,9 @@ export async function buildCameraReadyPdf(
     }
   }
 
-  out.setTitle(`${meta.paperId ?? "Manuscript"} — Camera-ready`);
+  out.setTitle(
+    `${meta.paperId ?? "Manuscript"} — ${includeAuthors ? "Camera-ready" : "Review copy"}`
+  );
   out.setAuthor("GLOGIFT 2027 Conference Portal");
   // Compiled content pages, excluding the generated cover.
   const contentPages = Math.max(0, out.getPageCount() - 1);

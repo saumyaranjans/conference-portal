@@ -116,6 +116,6 @@ export const config = {
   // same-origin framing headers. Static .pdf assets are excluded for the same
   // reason.
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|api/camera-ready|api/paper-file|.*\\.(?:svg|png|jpg|jpeg|gif|webp|pdf)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|api/camera-ready|api/paper-file|api/review-copy|.*\\.(?:svg|png|jpg|jpeg|gif|webp|pdf)$).*)",
   ],
 };

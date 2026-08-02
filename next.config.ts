@@ -80,6 +80,16 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      // …and the blinded review copy.
+      {
+        source: "/api/review-copy/:path*",
+        headers: [
+          {
+            key: "Cross-Origin-Resource-Policy",
+            value: "cross-origin",
+          },
+        ],
+      },
       {
         source:
           "/:section(admin|author|reviewer|editor|chief|profile|api|auth)/:path*",

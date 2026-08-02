@@ -400,20 +400,18 @@ export default async function AuthorDashboard({
         </p>
       </div>
 
-      {/* Pathway B — Manuscript Submissions sits directly below the submission
-          rule (with its top "Submit New Manuscript" window), above All
-          Submissions. Pathway A lives below the table. */}
-      {showPathwayB && (
-        <div className="mb-10">
-          <PathwayDashboard
-            submissions={submissions}
-            pathway="B"
-            atLimit={atLimit}
-            activeFolder={activeFolder}
-            activePw={activePw}
-          />
-        </div>
-      )}
+      {/* Above All Submissions sits the dashboard for the author's current
+          stage: Pathway B once they've reached the manuscript phase (an accepted
+          abstract), otherwise the Pathway A abstract dashboard. */}
+      <div className="mb-10">
+        <PathwayDashboard
+          submissions={submissions}
+          pathway={showPathwayB ? "B" : "A"}
+          atLimit={atLimit}
+          activeFolder={activeFolder}
+          activePw={activePw}
+        />
+      </div>
 
       {/* -------- Table for the opened folder (or everything) -------- */}
       <div className="flex items-center justify-between mb-3">
@@ -495,18 +493,20 @@ export default async function AuthorDashboard({
         </DataTable>
       )}
 
-      {/* -------- Pathway A dashboard (below All Submissions) -------------
-          Pathway A manages abstracts. Pathway B — Manuscript Submissions is
-          rendered above the table, next to its Submit New Manuscript window. */}
-      <div className="mt-10">
-        <PathwayDashboard
-          submissions={submissions}
-          pathway="A"
-          atLimit={atLimit}
-          activeFolder={activeFolder}
-          activePw={activePw}
-        />
-      </div>
+      {/* Once the author has reached Pathway B, the earlier Pathway A abstract
+          dashboard drops below All Submissions (Pathway B is shown above). Before
+          that, Pathway A is the above-table dashboard, so nothing goes here. */}
+      {showPathwayB && (
+        <div className="mt-10">
+          <PathwayDashboard
+            submissions={submissions}
+            pathway="A"
+            atLimit={atLimit}
+            activeFolder={activeFolder}
+            activePw={activePw}
+          />
+        </div>
+      )}
     </>
   );
 }

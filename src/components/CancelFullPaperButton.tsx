@@ -44,7 +44,7 @@ export function CancelFullPaperButton({
         onClick={() => setStep(1)}
         className="text-xs font-medium text-slate-500 hover:text-red-600 hover:underline"
       >
-        Cancel full paper
+        Cancel full paper submission
       </button>
     );
   }
@@ -89,7 +89,7 @@ export function CancelFullPaperButton({
               disabled={busy}
               className="rounded-md bg-red-600 px-3 py-1 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-60"
             >
-              {busy ? "Cancelling…" : "Yes, cancel full paper"}
+              {busy ? "Cancelling…" : "Yes, cancel full paper submission"}
             </button>
             <button
               type="button"

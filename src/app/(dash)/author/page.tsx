@@ -348,6 +348,21 @@ export default async function AuthorDashboard({
         </p>
       </div>
 
+      {/* Pathway B — Manuscript Submissions sits directly below the submission
+          rule (with its top "Submit New Manuscript" window), above All
+          Submissions. Pathway A lives below the table. */}
+      {pathwayBSubs.length > 0 && (
+        <div className="mb-10">
+          <PathwayDashboard
+            subs={pathwayBSubs}
+            pathway="B"
+            atLimit={atLimit}
+            activeFolder={activeFolder}
+            activePw={activePw}
+          />
+        </div>
+      )}
+
       {/* -------- Table for the opened folder (or everything) -------- */}
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
@@ -421,10 +436,9 @@ export default async function AuthorDashboard({
         </DataTable>
       )}
 
-      {/* -------- Pathway dashboards (below All Submissions) --------------
-          Pathway A manages abstracts; Pathway B manages manuscripts (same
-          folders, "Manuscript" wording). Pathway B only shows once the author
-          has a full-paper submission. ------------------------------------- */}
+      {/* -------- Pathway A dashboard (below All Submissions) -------------
+          Pathway A manages abstracts. Pathway B — Manuscript Submissions is
+          rendered above the table, next to its Submit New Manuscript window. */}
       <div className="mt-10">
         <PathwayDashboard
           subs={pathwayASubs}
@@ -433,15 +447,6 @@ export default async function AuthorDashboard({
           activeFolder={activeFolder}
           activePw={activePw}
         />
-        {pathwayBSubs.length > 0 && (
-          <PathwayDashboard
-            subs={pathwayBSubs}
-            pathway="B"
-            atLimit={atLimit}
-            activeFolder={activeFolder}
-            activePw={activePw}
-          />
-        )}
       </div>
     </>
   );

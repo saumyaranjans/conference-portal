@@ -1,6 +1,7 @@
 "use client";
 
 import { fullPaperSlotLabel } from "@/lib/types";
+import { PdfImageViewer } from "@/components/PdfImageViewer";
 
 type StoredFile = { id: string; slot: string; file_name: string; file_path: string };
 
@@ -143,24 +144,20 @@ export function ManuscriptFilesView({
   );
 }
 
-/**
- * Inline PDF from our own origin. A plain same-origin iframe is allowed by the
- * app CSP (frame-src 'self'); an <object> is not (object-src 'none').
- */
-function PdfFrame({ src, title }: { src: string; title: string }) {
+/** Inline PDF rendered as page images (pdf.js), with a download link. */
+function PdfFrame({ src, title: _title }: { src: string; title: string }) {
   return (
-    <div className="rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
-      <iframe src={src} title={title} className="w-full block" style={{ height: "72vh" }} />
-      <div className="border-t border-slate-200 dark:border-slate-700 px-3 py-2 text-xs">
+    <div>
+      <PdfImageViewer src={src} />
+      <p className="mt-1 text-xs">
         <a
           href={src}
-          target="_blank"
-          rel="noopener noreferrer"
+          download
           className="text-blue-700 hover:underline dark:text-blue-300"
         >
-          Open in a new tab ↗
+          Download PDF
         </a>
-      </div>
+      </p>
     </div>
   );
 }

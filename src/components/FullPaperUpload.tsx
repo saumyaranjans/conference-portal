@@ -18,6 +18,7 @@ import {
   MANUSCRIPT_MAX_PAGES,
   type FullPaperSlot,
 } from "@/lib/types";
+import { PdfImageViewer } from "@/components/PdfImageViewer";
 
 type StoredFile = { id: string; slot: string; file_name: string; file_path: string };
 type Outlet = { id: string; title: string; category: string | null };
@@ -650,23 +651,8 @@ export function FullPaperUpload({
           )}
 
           {isBuilt && showPreview && previewSrc && (
-            <div className="mt-3 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
-              <iframe
-                src={previewSrc}
-                title="Camera-ready preview"
-                className="w-full block"
-                style={{ height: "78vh" }}
-              />
-              <div className="border-t border-slate-200 dark:border-slate-700 px-3 py-2 text-xs">
-                <a
-                  href={previewSrc}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-700 hover:underline dark:text-blue-300"
-                >
-                  Open in a new tab ↗
-                </a>
-              </div>
+            <div className="mt-3">
+              <PdfImageViewer src={previewSrc} />
             </div>
           )}
         </div>

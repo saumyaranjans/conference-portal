@@ -188,32 +188,49 @@ export default async function AuthorDashboard({
   // papers live in `coAuthored`, never see this section (they see All
   // Submissions only). Each entry is "completed" once its full paper is
   // submitted, so the author can proceed to the next.
-  const manuscripts = submissions
-    .filter(
-      (s) =>
-        (s as unknown as { submission_type: string }).submission_type ===
-          "full_paper_presentation" &&
-        (s.status === "abstract_accepted" ||
-          (s as unknown as { stage: string }).stage === "full_paper")
-    )
+  // Each accepted abstract and its post-acceptance next step. A Pathway B
+  // abstract (full_paper_presentation) still owes a full paper → it gets a
+  // Submit button. A Pathway A abstract (present on the abstract only) has
+  // nothing to submit → it is view-only, but the author can still open and read
+  // its info here.
+  const acceptedAbstracts = submissions
+    .filter((s) => {
+      const type = (s as unknown as { submission_type: string }).submission_type;
+      const stage = (s as unknown as { stage: string }).stage;
+      if (
+        type === "full_paper_presentation" &&
+        (s.status === "abstract_accepted" || stage === "full_paper")
+      )
+        return true; // Pathway B — at the manuscript stage
+      if (type !== "full_paper_presentation" && s.status === "accepted")
+        return true; // Pathway A — accepted abstract, present only
+      return false;
+    })
     .sort(
       (a, b) =>
         new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
     )
     .map((s) => {
+      const type = (s as unknown as { submission_type: string }).submission_type;
+      const stage = (s as unknown as { stage: string }).stage;
       const submittedAt = (s as unknown as { full_paper_submitted_at: string | null })
         .full_paper_submitted_at;
-      const stage = (s as unknown as { stage: string }).stage;
+      const isB = type === "full_paper_presentation";
       const revision = stage === "full_paper" && s.status === "revisions_requested";
       return {
         id: s.id,
         paper_id: s.paper_id,
         title: s.title,
-        done: !!submittedAt && !revision,
-        revision,
+        pathway: (isB ? "B" : "A") as "A" | "B",
+        done: isB ? !!submittedAt && !revision : false,
+        revision: isB ? revision : false,
       };
     });
-  const manuscriptsDone = manuscripts.filter((m) => m.done).length;
+  const bAbstracts = acceptedAbstracts.filter((m) => m.pathway === "B");
+  const manuscriptsDone = bAbstracts.filter((m) => m.done).length;
+  // The window is the manuscript-decision hub, shown once the author holds at
+  // least one accepted Pathway B abstract.
+  const showAcceptedWindow = bAbstracts.length > 0;
 
   // Submissions where the signed-in user is a linked co-author (view only).
   // The submission_authors read policy doesn't cover co-authors, so we look up
@@ -249,7 +266,7 @@ export default async function AuthorDashboard({
   // Pathway A tracks every paper's abstract journey; Pathway B tracks the
   // manuscript journey of full-paper papers past abstract acceptance. A paper
   // can appear in both — see phaseFor().
-  const showPathwayB = hasManuscriptFolders(submissions) || manuscripts.length > 0;
+  const showPathwayB = hasManuscriptFolders(submissions) || bAbstracts.length > 0;
 
   // Every row carries the viewer's role on that submission, shown as a column.
   const ownedTagged: TaggedRow[] = submissions.map((s) => ({
@@ -312,10 +329,12 @@ export default async function AuthorDashboard({
         }
       />
 
-      {/* -------- Submit New Manuscript (Pathway B, corresponding author) ----
-          Appears first, only when accepted Pathway B abstracts exist. Co-authors
-          never reach this branch (their papers are in `coAuthored`). ---------- */}
-      {manuscripts.length > 0 && (
+      {/* -------- Accepted abstracts — next step (corresponding author) ------
+          Shown once the author holds an accepted Pathway B abstract. Pathway B
+          abstracts get a Submit button; Pathway A abstracts are view-only.
+          Co-authors never reach this branch (their papers are in `coAuthored`).
+          ------------------------------------------------------------------- */}
+      {showAcceptedWindow && (
         <div
           id="submit-manuscript"
           className="card mb-8 border-teal-200 scroll-mt-6"
@@ -323,57 +342,83 @@ export default async function AuthorDashboard({
           <div className="px-5 py-3 border-b border-teal-100 bg-teal-50/70 flex items-center justify-between gap-4">
             <div>
               <h2 className="font-semibold text-teal-900">
-                Submit Manuscript
+                Your accepted abstracts
               </h2>
               <p className="text-xs text-teal-700/80">
-                One full paper for each accepted abstract — up to{" "}
-                {MAX_SUBMISSIONS_PER_AUTHOR} in all.
+                Submit a full paper for each Pathway B abstract; a Pathway A
+                abstract is presented on its own — nothing to submit.
               </p>
             </div>
             <span className="text-sm font-medium text-teal-700 whitespace-nowrap">
-              {manuscriptsDone} of {Math.min(manuscripts.length, MAX_SUBMISSIONS_PER_AUTHOR)}{" "}
-              completed
+              {manuscriptsDone} of {bAbstracts.length} manuscript
+              {bAbstracts.length === 1 ? "" : "s"} submitted
             </span>
           </div>
           <div className="divide-y divide-slate-100">
-            {manuscripts.map((m, i) => (
+            {acceptedAbstracts.map((m, i) => (
               <div
                 key={m.id}
                 className="px-5 py-3.5 flex items-center justify-between gap-4"
               >
                 <div className="min-w-0">
                   <p className="font-medium text-slate-900 truncate">
-                    Manuscript {i + 1}
-                    {m.paper_id ? ` · Paper ${m.paper_id}` : ""}
+                    Paper {i + 1}
+                    {m.paper_id ? ` · ${m.paper_id}` : ""}
+                    <span
+                      className={`ml-2 inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium ${
+                        m.pathway === "B"
+                          ? "bg-violet-50 text-violet-700"
+                          : "bg-emerald-50 text-emerald-700"
+                      }`}
+                    >
+                      Pathway {m.pathway}
+                    </span>
                   </p>
                   <p className="text-sm text-slate-500 truncate">
                     {m.title || "Untitled submission"}
                   </p>
                 </div>
                 <div className="flex flex-col items-end gap-2 shrink-0">
-                  <div className="flex items-center gap-3">
-                    {m.done ? (
+                  {m.pathway === "A" ? (
+                    // Pathway A: present on the accepted abstract — no submit.
+                    <>
                       <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800">
-                        Completed
+                        Abstract &amp; Presentation
                       </span>
-                    ) : (
-                      <>
-                        <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">
-                          {m.revision ? "Revision requested" : "To submit"}
-                        </span>
-                        <Link
-                          href={`/author/submissions/${m.id}`}
-                          className="btn-primary"
-                        >
-                          {m.revision ? "Submit revision" : "Submit manuscript"}
-                        </Link>
-                      </>
-                    )}
-                  </div>
-                  {/* Back out of Pathway B → revert to an accepted Pathway A
-                      abstract. Double-confirmed; notifies all authors + CCs the
-                      Track Editor and Convener. */}
-                  <CancelFullPaperButton submissionId={m.id} />
+                      <Link
+                        href={`/author/submissions/${m.id}`}
+                        className="text-sm font-medium text-blue-700 hover:underline"
+                      >
+                        View abstract
+                      </Link>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-3">
+                        {m.done ? (
+                          <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800">
+                            Completed
+                          </span>
+                        ) : (
+                          <>
+                            <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">
+                              {m.revision ? "Revision requested" : "To submit"}
+                            </span>
+                            <Link
+                              href={`/author/submissions/${m.id}`}
+                              className="btn-primary"
+                            >
+                              {m.revision ? "Submit revision" : "Submit manuscript"}
+                            </Link>
+                          </>
+                        )}
+                      </div>
+                      {/* Switch to Pathway A → revert to an accepted abstract.
+                          Double-confirmed; notifies all authors + CCs the Track
+                          Editor and Convener. */}
+                      <CancelFullPaperButton submissionId={m.id} />
+                    </>
+                  )}
                 </div>
               </div>
             ))}

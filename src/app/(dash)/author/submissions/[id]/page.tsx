@@ -786,9 +786,11 @@ export default async function AuthorSubmissionPage({
             <p className="text-sm text-slate-500">
               {sub.status === "accepted"
                 ? "This paper has been accepted and can no longer be withdrawn."
-                : `Your ${
-                    sub.stage === "full_paper" ? "manuscript" : "abstract"
-                  } has been submitted. Only the Convener can withdraw it — please contact the Convener if you need it withdrawn.`}
+                : sub.status === "abstract_accepted"
+                  ? "Your abstract has been accepted — package and submit your manuscript above. To withdraw, please contact the Convener."
+                  : `Your ${
+                      sub.stage === "full_paper" ? "manuscript" : "abstract"
+                    } has been submitted. Only the Convener can withdraw it — please contact the Convener if you need it withdrawn.`}
             </p>
           )}
         </div>

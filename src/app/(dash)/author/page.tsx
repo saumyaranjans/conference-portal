@@ -419,7 +419,13 @@ export default async function AuthorDashboard({
                 )}
               </td>
               <td className="td">
-                <StatusBadge status={s.status} />
+                <StatusBadge
+                  status={s.status}
+                  submissionType={
+                    (s as unknown as { submission_type: string }).submission_type
+                  }
+                  stage={(s as unknown as { stage: string }).stage}
+                />
               </td>
               <td className="td">{versionTag(s.version)}</td>
               <td className="td text-slate-500">{formatDate(s.updated_at)}</td>

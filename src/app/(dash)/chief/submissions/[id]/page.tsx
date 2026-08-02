@@ -95,7 +95,13 @@ export default async function ChiefSubmissionPage({
         subtitle={`${sub.paper_id ? `Paper ${sub.paper_id} · ` : ""}${sub.tracks?.name ?? "No track"} · Editor: ${
           sub.tracks?.profiles?.full_name ?? "unassigned"
         } · ${versionLabel(sub.version)}`}
-        action={<StatusBadge status={sub.status} />}
+        action={
+          <StatusBadge
+            status={sub.status}
+            submissionType={(sub as any).submission_type}
+            stage={(sub as any).stage}
+          />
+        }
       />
 
       {/* ---- Roll-up ---- */}

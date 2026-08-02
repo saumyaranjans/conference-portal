@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/auth";
-import { STATUS_LABELS, type SubmissionStatus } from "@/lib/types";
+import { statusLabel, type SubmissionStatus } from "@/lib/types";
 
 /** CSV export of every submission — organisers (chief/admin) only. */
 export async function GET() {
@@ -18,7 +18,7 @@ export async function GET() {
   const { data: subs } = await supabase
     .from("submissions")
     .select(
-      "paper_id, title, status, version, submitted_at, tracks(name, code), profiles!submissions_author_id_fkey(full_name, email, institution)"
+      "paper_id, title, status, submission_type, stage, version, submitted_at, tracks(name, code), profiles!submissions_author_id_fkey(full_name, email, institution)"
     )
     .neq("status", "draft")
     .order("paper_id", { ascending: true });
@@ -75,7 +75,7 @@ export async function GET() {
         r.tracks?.code ?? "",
         r.profiles?.full_name ?? "",
         r.profiles?.institution ?? "",
-        STATUS_LABELS[r.status as SubmissionStatus] ?? r.status,
+        statusLabel(r.status as SubmissionStatus, r.submission_type, r.stage),
         r.version,
         st?.completed_count ?? 0,
         st?.assigned_count ?? 0,

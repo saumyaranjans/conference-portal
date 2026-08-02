@@ -134,7 +134,13 @@ export default async function AuthorSubmissionPage({
       <PageHeader
         title={sub.title || "Untitled submission"}
         subtitle={`${sub.paper_id ? `Paper ${sub.paper_id} · ` : ""}${versionLabel(sub.version)} · Created ${formatDate(sub.created_at)}`}
-        action={<StatusBadge status={sub.status} />}
+        action={
+          <StatusBadge
+            status={sub.status}
+            submissionType={(sub as any).submission_type}
+            stage={(sub as any).stage}
+          />
+        }
       />
 
       {sub.status === "revisions_requested" && (

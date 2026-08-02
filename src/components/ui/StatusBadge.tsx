@@ -1,5 +1,5 @@
 import {
-  STATUS_LABELS,
+  statusLabel,
   RECOMMENDATION_LABELS,
   type Recommendation,
   type SubmissionStatus,
@@ -16,10 +16,19 @@ const STATUS_STYLES: Record<SubmissionStatus, string> = {
   withdrawn: "bg-slate-200 text-slate-600",
 };
 
-export function StatusBadge({ status }: { status: SubmissionStatus }) {
+export function StatusBadge({
+  status,
+  submissionType,
+  stage,
+}: {
+  status: SubmissionStatus;
+  /** Pass the submission's type + stage so the label reads Abstract vs Manuscript. */
+  submissionType?: string | null;
+  stage?: string | null;
+}) {
   return (
     <span className={`badge ${STATUS_STYLES[status]}`}>
-      {STATUS_LABELS[status]}
+      {statusLabel(status, submissionType, stage)}
     </span>
   );
 }

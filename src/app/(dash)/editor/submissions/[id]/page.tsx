@@ -131,7 +131,13 @@ export default async function EditorSubmissionPage({
       <PageHeader
         title={sub.title}
         subtitle={`${sub.paper_id ? `Paper ${sub.paper_id} · ` : ""}${sub.tracks?.name ?? "No track"} · ${versionLabel(sub.version)} · Submitted ${formatDate(sub.submitted_at)}`}
-        action={<StatusBadge status={sub.status} />}
+        action={
+          <StatusBadge
+            status={sub.status}
+            submissionType={(sub as any).submission_type}
+            stage={(sub as any).stage}
+          />
+        }
       />
 
       {/* ---- Paper ---- */}

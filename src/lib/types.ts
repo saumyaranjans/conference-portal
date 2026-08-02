@@ -456,6 +456,45 @@ export const STATUS_LABELS: Record<SubmissionStatus, string> = {
   withdrawn: "Withdrawn",
 };
 
+/**
+ * Pathway- and stage-aware status label. Every status reads against the thing
+ * currently under decision — the "Abstract" for Pathway A and for a Pathway B
+ * paper still at the abstract stage, the "Manuscript" once a Pathway B paper has
+ * entered the full-paper stage. Both the review states (under_review /
+ * revisions_requested) collapse to "… Under Revision", matching the three-state
+ * lifecycle: Submitted → Under Revision → Accepted (with Rejected as the
+ * terminal negative). `abstract_accepted` always reads "Abstract Accepted"
+ * because it marks the moment the abstract cleared, before any manuscript.
+ */
+export function statusLabel(
+  status: SubmissionStatus,
+  submissionType?: string | null,
+  stage?: string | null
+): string {
+  if (status === "draft") return "Draft";
+  if (status === "withdrawn") return "Withdrawn";
+  if (status === "abstract_accepted") return "Abstract Accepted";
+
+  const noun =
+    submissionType === "full_paper_presentation" && stage === "full_paper"
+      ? "Manuscript"
+      : "Abstract";
+
+  switch (status) {
+    case "submitted":
+      return `${noun} Submitted`;
+    case "under_review":
+    case "revisions_requested":
+      return `${noun} Under Revision`;
+    case "accepted":
+      return `${noun} Accepted`;
+    case "rejected":
+      return `${noun} Rejected`;
+    default:
+      return STATUS_LABELS[status];
+  }
+}
+
 export const RECOMMENDATION_LABELS: Record<Recommendation, string> = {
   accept: "Accept",
   minor_revision: "Minor Revision",

@@ -449,7 +449,11 @@ export default async function ChiefDashboard() {
                   </td>
                   <td className="td text-slate-500">{s.tracks?.name ?? "—"}</td>
                   <td className="td">
-                    <StatusBadge status={s.status} />
+                    <StatusBadge
+                      status={s.status}
+                      submissionType={(s as any).submission_type}
+                      stage={(s as any).stage}
+                    />
                   </td>
                   <td className="td">
                     <AssignPaperEditor

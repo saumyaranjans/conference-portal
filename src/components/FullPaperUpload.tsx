@@ -8,6 +8,8 @@ import {
   submitFullPaper,
   setRequestedOutlets,
   reviseManuscriptDetails,
+  buildCameraReady,
+  clearCameraReadyBuild,
 } from "@/lib/actions";
 import {
   FULL_PAPER_OPTIONS,
@@ -48,6 +50,8 @@ export function FullPaperUpload({
   title,
   abstract,
   keywords,
+  cameraReadyBuiltAt = null,
+  cameraReadyPath = null,
 }: {
   submissionId: string;
   option: "A" | "B" | null;
@@ -61,6 +65,10 @@ export function FullPaperUpload({
   title: string;
   abstract: string;
   keywords: string[];
+  /** When the camera-ready PDF was last built (null = not built / invalidated). */
+  cameraReadyBuiltAt?: string | null;
+  /** Storage path of the built camera-ready PDF, for re-preview. */
+  cameraReadyPath?: string | null;
 }) {
   const router = useRouter();
   const [busySlot, setBusySlot] = useState<string | null>(null);
@@ -68,6 +76,7 @@ export function FullPaperUpload({
   const [notice, setNotice] = useState<string | null>(null);
   const [picked, setPicked] = useState<string[]>(selectedOutlets ?? []);
   const [declared, setDeclared] = useState<boolean[]>([false, false, false]);
+  const [building, setBuilding] = useState(false);
 
   // Editable Title / Abstract / Keywords (auto-filled from the accepted abstract).
   const [detTitle, setDetTitle] = useState(title);
@@ -149,6 +158,8 @@ export function FullPaperUpload({
     if (dbErr) {
       await supabase.storage.from("papers").remove([path]);
       setError(dbErr.message);
+    } else {
+      await invalidateBuild();
     }
     setBusySlot(null);
     router.refresh();
@@ -159,7 +170,59 @@ export function FullPaperUpload({
     const supabase = createClient();
     await supabase.storage.from("papers").remove([f.file_path]);
     await supabase.from("submission_files").delete().eq("id", f.id);
+    await invalidateBuild();
     router.refresh();
+  }
+
+  // A changed file set invalidates any prior camera-ready build.
+  async function invalidateBuild() {
+    if (!cameraReadyBuiltAt) return;
+    const fd = new FormData();
+    fd.set("submission_id", submissionId);
+    await clearCameraReadyBuild(fd);
+  }
+
+  async function build() {
+    setError(null);
+    setNotice(null);
+    setBuilding(true);
+    const fd = new FormData();
+    fd.set("submission_id", submissionId);
+    const res = await buildCameraReady(fd);
+    setBuilding(false);
+    if (!res.ok) {
+      setError(res.message ?? "Could not build the camera-ready PDF.");
+      return;
+    }
+    // Open the freshly built PDF for the author to review.
+    if (res.previewPdf) openBase64Pdf(res.previewPdf);
+    setNotice(
+      res.warning
+        ? `${res.message} ${res.warning}`
+        : res.message ?? "Camera-ready built."
+    );
+    router.refresh();
+  }
+
+  function openBase64Pdf(b64: string) {
+    try {
+      const bin = atob(b64);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      const url = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
+      window.open(url, "_blank", "noopener,noreferrer");
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch {
+      /* ignore — the stored copy is still previewable below */
+    }
+  }
+
+  async function previewBuilt() {
+    if (!cameraReadyPath) return;
+    const { data } = await createClient()
+      .storage.from("papers")
+      .createSignedUrl(cameraReadyPath, 120);
+    if (data?.signedUrl) window.open(data.signedUrl, "_blank", "noopener,noreferrer");
   }
 
   async function download(f: StoredFile) {
@@ -187,11 +250,11 @@ export function FullPaperUpload({
   const required = cfg ? cfg.slots.filter((s) => s.required) : [];
   const haveSlots = new Set(files.map((f) => f.slot));
   const requiredDone = required.filter((s) => haveSlots.has(s.key)).length;
+  const filesReady = !!cfg && requiredDone === required.length;
+  const isBuilt = !!cameraReadyBuiltAt;
+  const canBuild = filesReady && !building;
   const canSubmit =
-    !!cfg &&
-    requiredDone === required.length &&
-    picked.length > 0 &&
-    declared.every(Boolean);
+    filesReady && isBuilt && picked.length > 0 && declared.every(Boolean);
 
   const DECLARATIONS = [
     "On behalf of all authors, I confirm this full paper is original, not plagiarised, and not submitted or published elsewhere.",
@@ -530,6 +593,61 @@ export function FullPaperUpload({
         </div>
       )}
 
+      {/* ---- Camera-ready: build → preview → approve, before submit ---- */}
+      {cfg && editable && (
+        <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-3">
+          <p className="text-sm font-medium text-slate-800 dark:text-slate-100">
+            Camera-ready PDF{" "}
+            <span className="ml-1 text-[10px] uppercase tracking-wide text-rose-600 font-semibold">
+              required before submit
+            </span>
+          </p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            This compiles your uploaded files (everything except the Title Page)
+            behind a generated cover page — with the Manuscript ID, title, track,
+            conference details and the full author list — into one PDF. The
+            manuscript itself is read with no author names. Preview it and, if it
+            looks right, submit.
+          </p>
+
+          <div className="mt-3 flex items-center gap-3 flex-wrap">
+            <button
+              type="button"
+              onClick={build}
+              disabled={!canBuild}
+              className="btn-secondary disabled:opacity-50"
+              title={filesReady ? undefined : "Upload the required files first"}
+            >
+              {building
+                ? "Building…"
+                : isBuilt
+                  ? "Rebuild Camera-Ready PDF"
+                  : "Build Camera-Ready PDF for Approval"}
+            </button>
+            {isBuilt && (
+              <button
+                type="button"
+                onClick={previewBuilt}
+                className="text-sm text-blue-700 hover:underline dark:text-blue-300"
+              >
+                Preview camera-ready
+              </button>
+            )}
+          </div>
+
+          {isBuilt ? (
+            <p className="mt-2 text-xs text-emerald-700 dark:text-emerald-300">
+              ✓ Camera-ready built. Review it above — if you change any file you
+              will need to rebuild before submitting.
+            </p>
+          ) : (
+            <p className="mt-2 text-xs text-slate-500">
+              Not built yet. Build it to unlock “Submit Manuscript”.
+            </p>
+          )}
+        </div>
+      )}
+
       {error && <p className="text-sm text-rose-600">{error}</p>}
       {notice && <p className="text-sm text-emerald-700">{notice}</p>}
 
@@ -540,13 +658,17 @@ export function FullPaperUpload({
             onClick={submit}
             disabled={!canSubmit}
             className="btn-primary disabled:opacity-50"
-            title={canSubmit ? undefined : "Upload the required files, pick an outlet, and accept the declaration"}
+            title={
+              canSubmit
+                ? undefined
+                : "Build the camera-ready PDF, pick an outlet, and accept the declaration"
+            }
           >
-            Submit full paper
+            Submit Manuscript
           </button>
           <span className="text-xs text-slate-500">
-            Required files: {requiredDone}/{required.length} · Outlets:{" "}
-            {picked.length} · Declaration:{" "}
+            Files: {requiredDone}/{required.length} · Camera-ready:{" "}
+            {isBuilt ? "✓" : "pending"} · Outlets: {picked.length} · Declaration:{" "}
             {declared.every(Boolean) ? "✓" : "pending"}
           </span>
         </div>

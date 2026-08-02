@@ -33,6 +33,7 @@ import {
   MANUSCRIPT_MIN_SIMILARITY,
 } from "@/lib/types";
 import type { AppRole, DecisionKind, Recommendation } from "@/lib/types";
+import { buildCameraReadyPdf } from "@/lib/cameraReadyPdf";
 
 export type ActionResult = { ok: boolean; message?: string };
 
@@ -712,6 +713,194 @@ export async function setRequestedOutlets(
 }
 
 /**
+ * Order the uploaded files as they should appear inside the camera-ready:
+ * manuscript first, then figures / tables / appendices, then everything else.
+ * The Title Page is dropped (its author details would break the blind), and so
+ * is the reviewer response letter (private correspondence, not part of the
+ * published paper).
+ */
+const CAMERA_READY_SLOT_ORDER = [
+  "manuscript_full",
+  "manuscript_anon",
+  "figures",
+  "tables",
+  "appendices",
+  "supplementary",
+  "others",
+];
+const CAMERA_READY_EXCLUDE = new Set(["title_page", "response_letter"]);
+
+/**
+ * Pathway B camera-ready. Compiles every uploaded file except the Title Page
+ * (and the reviewer response letter) behind a generated cover page carrying the
+ * conference identity, the manuscript metadata and the full author list, then
+ * stores it and records the build. The corresponding author previews and
+ * approves this before "Submit Manuscript" becomes available. Returns the fresh
+ * PDF (base64) so the browser can open the preview immediately.
+ */
+export async function buildCameraReady(
+  formData: FormData
+): Promise<ActionResult & { previewPdf?: string; fileName?: string; warning?: string }> {
+  const profile = await requireProfile();
+  const admin = createAdminClient();
+  const id = String(formData.get("submission_id"));
+
+  const { data: sub } = await admin
+    .from("submissions")
+    .select(
+      "author_id, submission_type, full_paper_option, paper_id, title, tracks(name)"
+    )
+    .eq("id", id)
+    .maybeSingle();
+  if (!sub) return { ok: false, message: "Submission not found." };
+  const s = sub as any;
+  if (s.author_id !== profile.id)
+    return { ok: false, message: "Only the corresponding author can do this." };
+  if (s.submission_type !== "full_paper_presentation")
+    return { ok: false, message: "This is not a full-paper (Pathway B) submission." };
+  if (!s.full_paper_option)
+    return { ok: false, message: "Choose Option A or Option B first." };
+
+  // Required slots must be present before we compile anything.
+  const required = FULL_PAPER_OPTIONS[s.full_paper_option as "A" | "B"].slots
+    .filter((x) => x.required)
+    .map((x) => x.key);
+  const { data: fileRows } = await admin
+    .from("submission_files")
+    .select("slot, file_path, file_name, created_at")
+    .eq("submission_id", id)
+    .order("created_at");
+  const rows = ((fileRows as any[]) ?? []);
+  const have = new Set(rows.map((f) => f.slot));
+  const missing = required.filter((k) => !have.has(k));
+  if (missing.length)
+    return {
+      ok: false,
+      message: `Upload all required files first: ${missing.map(fullPaperSlotLabel).join(", ")}.`,
+    };
+
+  // Parts to compile, ordered; title page + response letter excluded.
+  const parts = rows
+    .filter((f) => !CAMERA_READY_EXCLUDE.has(f.slot))
+    .sort((a, b) => {
+      const ai = CAMERA_READY_SLOT_ORDER.indexOf(a.slot);
+      const bi = CAMERA_READY_SLOT_ORDER.indexOf(b.slot);
+      return (ai < 0 ? 99 : ai) - (bi < 0 ? 99 : bi);
+    });
+  if (!parts.length)
+    return { ok: false, message: "There is nothing to compile yet." };
+
+  // Pull each file's bytes from storage.
+  const downloaded: { bytes: Uint8Array; fileName: string }[] = [];
+  for (const p of parts) {
+    const { data: blob, error } = await admin.storage.from("papers").download(p.file_path);
+    if (error || !blob) continue;
+    downloaded.push({ bytes: new Uint8Array(await blob.arrayBuffer()), fileName: p.file_name });
+  }
+  if (!downloaded.length)
+    return { ok: false, message: "Could not read the uploaded files. Please re-upload and try again." };
+
+  const { data: authors } = await admin
+    .from("submission_authors")
+    .select("full_name, affiliation, is_corresponding, author_order")
+    .eq("submission_id", id)
+    .order("author_order");
+
+  let built;
+  try {
+    built = await buildCameraReadyPdf(
+      {
+        paperId: s.paper_id ?? null,
+        title: s.title ?? "",
+        track: s.tracks?.name ?? null,
+        option: s.full_paper_option,
+        compiledOn: new Date().toISOString(),
+        authors: ((authors as any[]) ?? []).map((a) => ({
+          full_name: a.full_name,
+          affiliation: a.affiliation,
+          is_corresponding: a.is_corresponding,
+        })),
+      },
+      downloaded
+    );
+  } catch (e) {
+    return {
+      ok: false,
+      message: `Could not build the camera-ready PDF: ${(e as Error)?.message ?? "unknown error"}.`,
+    };
+  }
+
+  // Every required manuscript slot is PDF, so at least the manuscript should
+  // have merged. If nothing merged, the files aren't PDFs — stop.
+  if (!built.merged.length)
+    return {
+      ok: false,
+      message:
+        "The manuscript must be a PDF so it can be compiled. Please upload a PDF manuscript and try again.",
+    };
+
+  const path = `${id}/camera-ready/${(s.paper_id ?? "manuscript").replace(/[^\w.-]/g, "_")}-camera-ready.pdf`;
+  const { error: upErr } = await admin.storage
+    .from("papers")
+    .upload(path, built.bytes, { upsert: true, contentType: "application/pdf", cacheControl: "0" });
+  if (upErr) return { ok: false, message: `Could not store the camera-ready: ${upErr.message}` };
+
+  await admin
+    .from("submissions")
+    .update({
+      full_paper_pdf_path: path,
+      full_paper_pdf_built_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+
+  await audit(profile.id, "full_paper.camera_ready_built", "submission", id, {
+    merged: built.merged.length,
+    skipped: built.skipped.length,
+  });
+
+  revalidatePath(`/author/submissions/${id}`);
+  const warning = built.skipped.length
+    ? `Not compiled (not a PDF): ${built.skipped.join(", ")}. These files stay attached and are submitted separately.`
+    : undefined;
+  return {
+    ok: true,
+    message: "Camera-ready PDF built. Please preview and approve it.",
+    previewPdf: Buffer.from(built.bytes).toString("base64"),
+    fileName: `${s.paper_id ?? "manuscript"}-camera-ready.pdf`,
+    warning,
+  };
+}
+
+/**
+ * Any change to the uploaded files invalidates a previously built camera-ready,
+ * so the author must rebuild (and re-preview) before submitting. Called by the
+ * upload window after a file is added or removed.
+ */
+export async function clearCameraReadyBuild(
+  formData: FormData
+): Promise<ActionResult> {
+  const profile = await requireProfile();
+  const admin = createAdminClient();
+  const id = String(formData.get("submission_id"));
+  const { data: sub } = await admin
+    .from("submissions")
+    .select("author_id, full_paper_pdf_built_at")
+    .eq("id", id)
+    .maybeSingle();
+  if (!sub) return { ok: false, message: "Submission not found." };
+  if ((sub as any).author_id !== profile.id)
+    return { ok: false, message: "Only the corresponding author can do this." };
+  if (!(sub as any).full_paper_pdf_built_at) return { ok: true };
+  await admin
+    .from("submissions")
+    .update({ full_paper_pdf_built_at: null, updated_at: new Date().toISOString() })
+    .eq("id", id);
+  revalidatePath(`/author/submissions/${id}`);
+  return { ok: true };
+}
+
+/**
  * Pathway B: submit the packaged full paper for review. Enforces the chosen
  * option's required slots, at least one publishing outlet, and that the
  * deadline (the Track Editor's per-paper date, capped by the conference
@@ -727,7 +916,7 @@ export async function submitFullPaper(
   const { data: sub } = await admin
     .from("submissions")
     .select(
-      "author_id, status, submission_type, full_paper_option, full_paper_deadline, conference_id, version, requested_outlet_ids"
+      "author_id, status, submission_type, full_paper_option, full_paper_deadline, conference_id, version, requested_outlet_ids, full_paper_pdf_built_at"
     )
     .eq("id", id)
     .maybeSingle();
@@ -751,6 +940,11 @@ export async function submitFullPaper(
     return { ok: false, message: "The full paper cannot be submitted at this stage." };
   if (!s.full_paper_option)
     return { ok: false, message: "Choose Option A or Option B first." };
+  if (!s.full_paper_pdf_built_at)
+    return {
+      ok: false,
+      message: "Build and preview the camera-ready PDF before submitting.",
+    };
 
   // Deadline: the per-paper date if set, otherwise the conference ceiling.
   const { data: conf } = await admin

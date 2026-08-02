@@ -213,6 +213,8 @@ export default async function AuthorSubmissionPage({
                   title={sub.title ?? ""}
                   abstract={sub.abstract ?? ""}
                   keywords={sub.keywords ?? []}
+                  cameraReadyBuiltAt={(sub as any).full_paper_pdf_built_at ?? null}
+                  cameraReadyPath={(sub as any).full_paper_pdf_path ?? null}
                 />
               </>
             ) : (sub.stage === "full_paper" &&
@@ -230,6 +232,8 @@ export default async function AuthorSubmissionPage({
                 title={sub.title ?? ""}
                 abstract={sub.abstract ?? ""}
                 keywords={sub.keywords ?? []}
+                cameraReadyBuiltAt={(sub as any).full_paper_pdf_built_at ?? null}
+                cameraReadyPath={(sub as any).full_paper_pdf_path ?? null}
               />
             ) : (
               <p className="text-sm text-slate-500">

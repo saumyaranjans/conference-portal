@@ -93,7 +93,7 @@ export const FULL_PAPER_OPTIONS: Record<
       "Upload each part as its own file. The manuscript must be anonymised — no author names, tables or figures in it.",
     slots: [
       { key: "title_page", label: "Title Page", required: true, accept: `${DOC},.pdf`, hint: "Authors, affiliations and contact details." },
-      { key: "manuscript_anon", label: "Manuscript — no author names, no tables/figures", required: true, accept: DOC, hint: "Anonymised for single-blind review." },
+      { key: "manuscript_anon", label: "Manuscript — no author names, no tables/figures", required: true, accept: ".pdf", hint: "PDF, read with no author names. Compiled into the camera-ready for single-blind review." },
       { key: "figures", label: "Figures", multiple: true, accept: ".pdf,.doc,.docx,.png,.jpg,.jpeg,.tif,.tiff" },
       { key: "tables", label: "Tables", multiple: true, accept: ".pdf,.doc,.docx,.xls,.xlsx,.csv" },
       { key: "appendices", label: "Appendices", multiple: true, accept: ".pdf,.doc,.docx" },
@@ -107,7 +107,7 @@ export const FULL_PAPER_OPTIONS: Record<
       "Upload one manuscript with figures, tables and appendices included, plus any extra files.",
     slots: [
       { key: "title_page", label: "Title Page", required: true, accept: `${DOC},.pdf`, hint: "Authors, affiliations and contact details." },
-      { key: "manuscript_full", label: "Manuscript — figures, tables & appendices included, with no author names", required: true, accept: DOC, hint: "Anonymised for single-blind review." },
+      { key: "manuscript_full", label: "Manuscript — figures, tables & appendices included, with no author names", required: true, accept: ".pdf", hint: "PDF, read with no author names. Compiled into the camera-ready for single-blind review." },
       { key: "supplementary", label: "Supplementary files", multiple: true, accept: EXTRA },
       { key: "others", label: "Others", multiple: true, accept: EXTRA },
     ],

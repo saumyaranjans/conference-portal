@@ -31,26 +31,27 @@ export function CameraReadyPreview({
       style={{ backgroundColor: "#ffffff", color: "#0f172a" }}
     >
       {/* -------- Header -------- */}
-      <header className="flex items-center gap-4 border-b-2 border-slate-800 pb-4">
-        <img
-          src="/glogift-logo.png"
-          alt="GLOGIFT"
-          className="h-16 w-auto object-contain shrink-0"
-        />
-
-        <div className="flex-1 text-center px-2">
-          <p className="text-xl font-bold tracking-wide">GLOGIFT 2027</p>
-          <p className="text-[13px] leading-snug mt-1">{conferenceName}</p>
-          <p className="text-[13px] font-semibold mt-1">
-            Track: {trackName || "—"}
-          </p>
+      <header className="border-b-2 border-slate-800 pb-4 text-center">
+        <div className="flex items-center justify-center gap-6 flex-wrap">
+          <img
+            src="/glogift-logo.png"
+            alt="GLOGIFT"
+            className="h-16 w-auto object-contain"
+          />
+          <img
+            src="/iim-sambalpur.png"
+            alt="Indian Institute of Management Sambalpur"
+            className="h-12 w-auto object-contain"
+          />
         </div>
 
-        <img
-          src="/iim-sambalpur.png"
-          alt="Indian Institute of Management Sambalpur"
-          className="h-12 w-auto object-contain shrink-0"
-        />
+        <p className="text-xl font-bold tracking-wide mt-4">GLOGIFT 2027</p>
+        <p className="text-[13px] leading-snug mt-1 max-w-2xl mx-auto">
+          {conferenceName}
+        </p>
+        <p className="text-[13px] font-semibold mt-1">
+          Track: {trackName || "—"}
+        </p>
       </header>
 
       {/* -------- Title -------- */}

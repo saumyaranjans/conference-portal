@@ -226,7 +226,7 @@ const GUIDELINES = [
   ],
   [
     "Stage 2 — Choose your pathway",
-    "Pathway A: present an accepted abstract without a full paper. Pathway B: prepare a double-anonymous manuscript using the published Full Paper Submission Guidelines and templates, following any target-journal requirements.",
+    "Pathway A: present an accepted abstract without a full paper. Pathway B: prepare a double-anonymous manuscript using the published Full Paper Submission Guidelines and templates, following any target-journal requirements. Note: choosing Pathway B keeps you in the Pathway A (abstract) phase until your abstract is accepted. Even after acceptance, the corresponding author may still return to Pathway A and present on the accepted abstract, or continue to submit the full manuscript under Pathway B.",
   ],
   [
     "Review",

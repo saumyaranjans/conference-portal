@@ -219,14 +219,17 @@ const SESSIONS: {
   },
 ];
 
-const GUIDELINES = [
+// [title, detail, hashFootnote?] — the third flag marks the step with a "#"
+// that points at the pathway footnote below the grid.
+const GUIDELINES: [string, string, boolean?][] = [
   [
     "Stage 1 — Abstract (mandatory)",
     "Submit a 500-word abstract through the portal, naming the track it belongs to. State your intended Stage 2 pathway at this point.",
   ],
   [
     "Stage 2 — Choose your pathway",
-    "Pathway A: present an accepted abstract without a full paper. Pathway B: prepare a double-anonymous manuscript using the published Full Paper Submission Guidelines and templates, following any target-journal requirements. Note: choosing Pathway B keeps you in the Pathway A (abstract) phase until your abstract is accepted. Even after acceptance, the corresponding author may still return to Pathway A and present on the accepted abstract, or continue to submit the full manuscript under Pathway B.",
+    "Pathway A: present an accepted abstract without a full paper. Pathway B: prepare a double-anonymous manuscript using the published Full Paper Submission Guidelines and templates, following any target-journal requirements.",
+    true,
   ],
   [
     "Review",
@@ -733,13 +736,14 @@ export function LandingPage() {
         <section>
           <Heading id="guidelines">Submission guidelines</Heading>
           <div className="grid gap-4 sm:grid-cols-2">
-            {GUIDELINES.map(([title, detail], i) => (
+            {GUIDELINES.map(([title, detail, hash], i) => (
               <div key={title} className="card card-pad">
                 <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">
                   Step {i + 1}
                 </p>
                 <p className="text-sm font-semibold text-slate-900 mt-1 dark:text-slate-100">
                   {title}
+                  {hash && <span className="text-blue-600">#</span>}
                 </p>
                 <p className="text-xs text-slate-600 mt-1.5 dark:text-slate-400">
                   {detail}
@@ -747,6 +751,13 @@ export function LandingPage() {
               </div>
             ))}
           </div>
+          <p className="mt-4 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
+            <span className="text-blue-600">#</span> Choosing Pathway B keeps you
+            in the Pathway A (abstract) phase until your abstract is accepted.
+            Even after acceptance, the corresponding author may still return to
+            Pathway A and present on the accepted abstract, or continue to submit
+            the full manuscript under Pathway B.
+          </p>
           <div className="mt-4 flex justify-center">
             <Link href="/login" className="btn-primary px-6 py-3">
               Go to the submission portal

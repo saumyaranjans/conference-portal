@@ -582,6 +582,79 @@ export function fullPaperReviewFacilitationEmail(o: {
 }
 
 /**
+ * System-generated note to all authors when the Convener overrides / sets the
+ * final decision on a submission (abstract or manuscript). Stage-aware wording;
+ * makes clear the decision is the Convener's and supersedes any earlier one.
+ */
+export function convenerDecisionOverrideEmail(o: {
+  decision: "accept" | "revisions_requested" | "reject";
+  stage?: string | null;
+  submissionType?: string | null;
+  paperId?: string | null;
+  title: string;
+  track?: string | null;
+  message?: string | null;
+  conferenceName?: string;
+}): EmailContent {
+  const conf = o.conferenceName || CONF_DEFAULT;
+  const isManuscript = o.stage === "full_paper";
+  const noun = isManuscript ? "manuscript" : "abstract";
+  const Noun = isManuscript ? "Manuscript" : "Abstract";
+  const ref = [o.paperId ? `Paper ${o.paperId}` : null, `"${o.title}"`]
+    .filter(Boolean)
+    .join(" — ");
+  const verb =
+    o.decision === "accept"
+      ? "ACCEPTED"
+      : o.decision === "reject"
+        ? "NOT ACCEPTED"
+        : "returned for REVISION";
+
+  const next: string[] = [];
+  if (o.decision === "accept") {
+    if (!isManuscript && o.submissionType === "full_paper_presentation")
+      next.push(
+        "You may now submit your full paper (Pathway B) or present on the accepted abstract (Pathway A). Please also proceed to register for the conference."
+      );
+    else
+      next.push(
+        "Please proceed to register for the conference to confirm your participation and presentation."
+      );
+  } else if (o.decision === "revisions_requested") {
+    next.push(`Please revise your ${noun} and resubmit through the portal.`);
+  } else if (isManuscript && o.submissionType === "full_paper_presentation") {
+    next.push(
+      "If your abstract stands accepted, you may still register, attend and present on the strength of the accepted abstract."
+    );
+  }
+
+  const subject = `${conf} — ${Noun} decision by the Convener${
+    o.paperId ? ` (${o.paperId})` : ""
+  }`;
+  const body = compose([
+    "Dear Author,",
+    "",
+    `The Convener has reviewed your ${noun} for ${ref}${
+      o.track ? ` in the ${o.track} track` : ""
+    } and recorded a final decision.`,
+    "",
+    `Decision: your ${noun} has been ${verb}.`,
+    o.message ? "" : null,
+    o.message ? o.message.trim() : null,
+    "",
+    ...next,
+    next.length ? "" : null,
+    "This decision was taken by the Convener and supersedes any earlier decision on this submission.",
+    "",
+    "This is a system-generated email — please do not reply.",
+    "",
+    "With regards,",
+    `Convener, ${conf}`,
+  ]);
+  return { subject, body };
+}
+
+/**
  * System-generated note to the Convener when a full paper is submitted but the
  * paper has NO Track Editor carried over from Pathway A — the Convener assigns
  * one so the manuscript review can be facilitated. Same assignment flow as the

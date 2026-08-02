@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { withdrawSubmission } from "@/lib/actions";
+import { withdrawSubmission, overrideDecision } from "@/lib/actions";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { PaperDownload } from "@/components/PaperUpload";
 import { DocumentViewer } from "@/components/DocumentViewer";
@@ -206,9 +206,8 @@ export default async function ChiefSubmissionPage({
                 </p>
               )}
               <p className="text-xs text-slate-500">
-                The Track Editor holds the final authority on this paper. If
-                the decision is inappropriate, reassign the paper to a different
-                Track Editor above.
+                The Track Editor handles this paper. As Convener you may reassign
+                it, or override the decision directly below.
               </p>
             </>
           ) : (
@@ -216,6 +215,55 @@ export default async function ChiefSubmissionPage({
               The Track Editor has not recorded a decision yet.
             </p>
           )}
+        </div>
+      </Section>
+
+      {/* ---- Convener override — final authority, both stages ---- */}
+      <Section title="Convener override">
+        <div className="card card-pad">
+          <p className="text-sm text-slate-700 dark:text-slate-300">
+            As Convener you may set or overturn the final decision on this{" "}
+            {(sub as any).stage === "full_paper" ? "manuscript" : "abstract"},
+            regardless of the Track Editor. This supersedes any earlier decision
+            and emails all authors that the Convener has decided.
+          </p>
+          <ActionForm
+            action={overrideDecision}
+            confirm="Override the decision and notify all authors? This supersedes the current decision."
+            className="mt-4 space-y-3"
+          >
+            <input type="hidden" name="submission_id" value={sub.id} />
+            <div>
+              <label className="label" htmlFor="ov_decision">
+                Decision
+              </label>
+              <select
+                id="ov_decision"
+                name="decision"
+                defaultValue="accept"
+                className="input max-w-xs"
+              >
+                <option value="accept">Accept</option>
+                <option value="revisions_requested">Request revision</option>
+                <option value="reject">Reject</option>
+              </select>
+            </div>
+            <div>
+              <label className="label" htmlFor="ov_message">
+                Message to authors (optional)
+              </label>
+              <textarea
+                id="ov_message"
+                name="message"
+                rows={3}
+                className="input"
+                placeholder="Any note the authors should see with this decision…"
+              />
+            </div>
+            <SubmitButton variant="danger">
+              Record Convener decision
+            </SubmitButton>
+          </ActionForm>
         </div>
       </Section>
 

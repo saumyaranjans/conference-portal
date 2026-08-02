@@ -8,6 +8,7 @@ import { requireProfile, requireRole } from "@/lib/auth";
 import { emailConfigured, sendEmail } from "@/lib/email";
 import {
   chairInviteEmail,
+  convenerDecisionOverrideEmail,
   fullPaperCancelledEmail,
   fullPaperReviewFacilitationEmail,
   fullPaperSubmittedAuthorEmail,
@@ -2635,6 +2636,112 @@ export async function setSuggestedOutlet(
 // =====================================================================
 // EDITOR-IN-CHIEF
 // =====================================================================
+
+/**
+ * Convener override — the Convener is the final authority and may set/overturn
+ * the decision on any submission (abstract OR manuscript), regardless of the
+ * Track Editor. Supersedes the current decision, lets the DB trigger move the
+ * status, and emails every author that the Convener has decided. Bypasses the
+ * Track-Editor-only guards (e.g. the 2-accepts rule) by design.
+ */
+export async function overrideDecision(
+  formData: FormData
+): Promise<ActionResult> {
+  const profile = await requireRole("chief", "admin");
+  const admin = createAdminClient();
+  const submissionId = String(formData.get("submission_id"));
+  const decision = String(formData.get("decision")) as DecisionKind;
+  const message = String(formData.get("message") ?? "").trim();
+  if (!["accept", "revisions_requested", "reject"].includes(decision))
+    return { ok: false, message: "Choose Accept, Revise or Reject." };
+
+  const { data: sub } = await admin
+    .from("submissions")
+    .select("id, stage, status, submission_type, paper_id, title, tracks(name)")
+    .eq("id", submissionId)
+    .maybeSingle();
+  if (!sub) return { ok: false, message: "Submission not found." };
+  const s = sub as any;
+
+  // Void the current decision, then record the Convener's — the on_decision
+  // trigger maps the new decision to the paper's status, stage-aware.
+  await admin
+    .from("decisions")
+    .update({ superseded_at: new Date().toISOString(), superseded_by: profile.id })
+    .eq("submission_id", submissionId)
+    .is("superseded_at", null);
+  const { error } = await admin.from("decisions").insert({
+    submission_id: submissionId,
+    decided_by: profile.id,
+    decision,
+    rationale: message,
+    is_final: true,
+  });
+  if (error) return { ok: false, message: error.message };
+
+  // Notify every author (in-app + system email).
+  const noun = s.stage === "full_paper" ? "manuscript" : "abstract";
+  const { data: authors } = await admin
+    .from("submission_authors")
+    .select("email, profile_id")
+    .eq("submission_id", submissionId);
+  const authorList = (authors as any[]) ?? [];
+  const verb =
+    decision === "accept"
+      ? "accepted"
+      : decision === "reject"
+        ? "not accepted"
+        : "returned for revision";
+  for (const a of authorList) {
+    if (!a.profile_id) continue;
+    await admin.from("notifications").insert({
+      profile_id: a.profile_id,
+      title: `Decision by the Convener — ${noun} ${verb}`,
+      body: `The Convener has recorded a final decision on "${s.title}"${
+        s.paper_id ? ` (${s.paper_id})` : ""
+      }: your ${noun} has been ${verb}.`,
+      link: `/author/submissions/${submissionId}`,
+    });
+  }
+  if (emailConfigured()) {
+    const { subject, body } = convenerDecisionOverrideEmail({
+      decision,
+      stage: s.stage,
+      submissionType: s.submission_type,
+      paperId: s.paper_id,
+      title: s.title,
+      track: s.tracks?.name,
+      message,
+      conferenceName: "GLOGIFT 2027",
+    });
+    for (const a of authorList) {
+      if (!a.email) continue;
+      try {
+        await sendEmail({
+          to: a.email,
+          subject,
+          text: body,
+          kind: "decision_override",
+          sentBy: profile.id,
+        });
+      } catch {
+        // Mail failure must never leave the override half-done.
+      }
+    }
+  }
+
+  await audit(profile.id, "decision.overridden", "submission", submissionId, {
+    decision,
+    stage: s.stage,
+  });
+  revalidatePath(`/chief/submissions/${submissionId}`);
+  revalidatePath(`/author/submissions/${submissionId}`);
+  revalidatePath("/chief");
+  return {
+    ok: true,
+    message: `Decision overridden — your ${noun} decision is recorded and the authors have been notified.`,
+  };
+}
 
 /**
  * The Convener hands one paper to a different Track Editor — used when

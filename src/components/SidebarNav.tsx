@@ -46,15 +46,31 @@ const ROLE_ORDER: AppRole[] = ["author", "reviewer", "editor", "chief", "admin"]
 /** Roles that see the publication-opportunities panel. */
 const SHOW_OPPORTUNITIES: AppRole[] = ["author"];
 
+/** Format a money amount; falls back gracefully for unknown currency codes. */
+function money(currency: string, amount: number) {
+  try {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  } catch {
+    return `${currency} ${Math.round(amount).toLocaleString("en-IN")}`;
+  }
+}
+
 export function SidebarNav({
   roles,
   opportunities = [],
   emailStats,
+  revenueStats,
 }: {
   roles: AppRole[];
   opportunities?: PublicationOpportunity[];
   /** Convener only: how much mail the portal has sent. */
   emailStats?: { today: number; total: number };
+  /** Convener only: registration revenue per currency (base / tax / total). */
+  revenueStats?: { currency: string; fees: number; tax: number; total: number }[];
 }) {
   const pathname = usePathname();
 
@@ -160,6 +176,44 @@ export function SidebarNav({
           </div>
         </section>
       )}
+
+      {current === "chief" &&
+        (() => {
+          const rows =
+            revenueStats && revenueStats.length
+              ? revenueStats
+              : [{ currency: "INR", fees: 0, tax: 0, total: 0 }];
+          const boxes: [
+            string,
+            (r: { fees: number; tax: number; total: number }) => number,
+          ][] = [
+            ["Registration Fees Collected", (r) => r.fees],
+            ["Tax Amount Collected", (r) => r.tax],
+            ["Total Fees Collected", (r) => r.total],
+          ];
+          return (
+            <section className="mt-6">
+              <p className="px-3 text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2">
+                Revenue Summary
+              </p>
+              <div className="space-y-2">
+                {boxes.map(([label, pick]) => (
+                  <div key={label} className="card px-3 py-2">
+                    <p className="text-xs text-slate-500">{label}</p>
+                    {rows.map((r) => (
+                      <p
+                        key={r.currency}
+                        className="text-lg font-semibold text-slate-900 dark:text-slate-100 leading-tight"
+                      >
+                        {money(r.currency, pick(r))}
+                      </p>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </section>
+          );
+        })()}
 
       {SHOW_OPPORTUNITIES.includes(current) && opportunities.length > 0 && (
         <section className="mt-8">

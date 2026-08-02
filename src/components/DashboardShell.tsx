@@ -35,9 +35,12 @@ export async function DashboardShell({
     .order("sort_order")
     .limit(6);
 
-  // Email volume, shown in the Convener's sidebar. Counts only.
+  // Email volume + revenue, shown in the Convener's sidebar.
   const isChief = profile.roles.includes("chief") || profile.roles.includes("admin");
   let emailStats: { today: number; total: number } | undefined;
+  let revenueStats:
+    | { currency: string; fees: number; tax: number; total: number }[]
+    | undefined;
   if (isChief) {
     const startOfToday = new Date();
     startOfToday.setHours(0, 0, 0, 0);
@@ -49,6 +52,25 @@ export async function DashboardShell({
       supabase.from("email_log").select("id", { count: "exact", head: true }),
     ]);
     emailStats = { today: today ?? 0, total: total ?? 0 };
+
+    // Registration revenue recorded by the Editorial Office: base fees per
+    // currency; tax is 18% on top, total is base + tax. Read defensively.
+    const { data: evidence } = await supabase
+      .from("participant_certificate_evidence")
+      .select("amount_paid, currency, registration_fee_paid");
+    const byCurrency = new Map<string, number>();
+    for (const e of (evidence ?? []) as any[]) {
+      if (e.registration_fee_paid && e.amount_paid) {
+        const cur = (e.currency as string) || "INR";
+        byCurrency.set(cur, (byCurrency.get(cur) ?? 0) + Number(e.amount_paid));
+      }
+    }
+    revenueStats = [...byCurrency.entries()].map(([currency, fees]) => ({
+      currency,
+      fees,
+      tax: fees * 0.18,
+      total: fees * 1.18,
+    }));
   }
 
   // Admins get every nav group so they can inspect any part of the portal.
@@ -98,6 +120,7 @@ export async function DashboardShell({
             roles={visibleRoles}
             opportunities={(opportunities ?? []) as PublicationOpportunity[]}
             emailStats={emailStats}
+            revenueStats={revenueStats}
           />
         </aside>
 

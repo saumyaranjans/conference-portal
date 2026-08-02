@@ -323,7 +323,7 @@ export default async function AuthorDashboard({
           <div className="px-5 py-3 border-b border-teal-100 bg-teal-50/70 flex items-center justify-between gap-4">
             <div>
               <h2 className="font-semibold text-teal-900">
-                Submit New Manuscript
+                Submit Manuscript
               </h2>
               <p className="text-xs text-teal-700/80">
                 One full paper for each accepted abstract — up to{" "}
@@ -582,7 +582,7 @@ function PathwayDashboard({
                       href="/author#submit-manuscript"
                       className="text-blue-700 hover:underline font-medium"
                     >
-                      Submit New Manuscript
+                      Submit Manuscript
                     </Link>
                   )}
                 </div>

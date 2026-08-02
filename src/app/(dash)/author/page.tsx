@@ -8,15 +8,15 @@ import {
   PageHeader,
   formatDate,
 } from "@/components/ui/Primitives";
-import { MAX_SUBMISSIONS_PER_AUTHOR, versionTag, type Submission } from "@/lib/types";
+import {
+  MAX_SUBMISSIONS_PER_AUTHOR,
+  versionTag,
+  type Submission,
+  type SubmissionStatus,
+} from "@/lib/types";
 import { MyCertificates } from "@/components/MyCertificates";
 import { CancelFullPaperButton } from "@/components/CancelFullPaperButton";
 import { listMyCertificates, certificatesReleased } from "@/lib/certificateAccess";
-
-/** A submission's fixed pathway, from its submission_type. */
-const isPathwayB = (s: Row) =>
-  (s as unknown as { submission_type: string }).submission_type ===
-  "full_paper_presentation";
 
 type Row = Submission & { tracks: { name: string } | null };
 
@@ -85,6 +85,49 @@ const FOLDER_LABELS_B: Record<keyof typeof FOLDERS, string> = {
   not_accepted: "Not Accepted",
   withdrawn: "Withdrawn",
 };
+
+/**
+ * The status a submission presents inside each dashboard's folders.
+ *
+ * Pathway A tracks every paper's ABSTRACT journey. A full-paper (Pathway B)
+ * paper whose abstract has cleared review reads "accepted" here — that Accepted
+ * count is exactly what gates the manuscript window. A paper still in its
+ * abstract phase (or an abstract-only paper) uses its live status.
+ *
+ * Pathway B tracks the MANUSCRIPT journey — only full-paper papers past abstract
+ * acceptance. The abstract_accepted "to submit" state lives in the Submit New
+ * Manuscript window, not a folder, so it returns null here.
+ *
+ * Returns null when the paper does not belong in that dashboard's folders.
+ */
+function phaseFor(
+  s: Row,
+  pw: "A" | "B"
+): { status: SubmissionStatus; version: number } | null {
+  const type = (s as unknown as { submission_type: string }).submission_type;
+  const stage = (s as unknown as { stage: string }).stage;
+  const status = s.status;
+  const abstractCleared =
+    type === "full_paper_presentation" &&
+    (status === "abstract_accepted" || stage === "full_paper");
+
+  if (pw === "A") {
+    // Abstract journey. Once the abstract clears, it stays "Accepted" here —
+    // whatever later happens to the manuscript is Pathway B's story.
+    if (abstractCleared) return { status: "accepted", version: 1 };
+    return { status, version: s.version };
+  }
+
+  // Manuscript journey.
+  if (type !== "full_paper_presentation") return null;
+  if (status === "abstract_accepted") return null; // to-submit → in the window
+  if (stage === "full_paper") return { status, version: s.version };
+  return null;
+}
+
+/** True if any submission has reached the manuscript (Pathway B) phase. */
+const hasManuscriptFolders = (subs: Row[]) =>
+  subs.some((s) => phaseFor(s, "B") !== null);
 
 function FolderRow({
   label,
@@ -203,10 +246,10 @@ export default async function AuthorDashboard({
   const activeCount = ownedActive + coActive;
   const atLimit = activeCount >= MAX_SUBMISSIONS_PER_AUTHOR;
 
-  // Folders are split by pathway: Pathway A holds the abstract submissions,
-  // Pathway B holds the full-paper (manuscript) submissions.
-  const pathwayASubs = submissions.filter((s) => !isPathwayB(s));
-  const pathwayBSubs = submissions.filter((s) => isPathwayB(s));
+  // Pathway A tracks every paper's abstract journey; Pathway B tracks the
+  // manuscript journey of full-paper papers past abstract acceptance. A paper
+  // can appear in both — see phaseFor().
+  const showPathwayB = hasManuscriptFolders(submissions) || manuscripts.length > 0;
 
   // Every row carries the viewer's role on that submission, shown as a column.
   const ownedTagged: TaggedRow[] = submissions.map((s) => ({
@@ -223,16 +266,25 @@ export default async function AuthorDashboard({
   // papers they co-author.
   const activeFolder = folder && folder in FOLDERS ? folder : null;
   const activePw = pw === "A" || pw === "B" ? pw : null;
-  const visible: TaggedRow[] = activeFolder
-    ? ownedTagged.filter(
-        (s) =>
-          FOLDERS[activeFolder as keyof typeof FOLDERS].match(s) &&
-          (!activePw || (activePw === "B") === isPathwayB(s))
-      )
-    : [...ownedTagged, ...coTagged].sort(
-        (a, b) =>
-          new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-      );
+  // A folder is opened within a pathway; match on that pathway's phase status so
+  // e.g. a Pathway B paper whose abstract cleared appears under Pathway A →
+  // Accepted, and its manuscript under Pathway B.
+  const visible: TaggedRow[] =
+    activeFolder && activePw
+      ? ownedTagged.filter((s) => {
+          const p = phaseFor(s, activePw);
+          return (
+            p !== null &&
+            FOLDERS[activeFolder as keyof typeof FOLDERS].match({
+              status: p.status,
+              version: p.version,
+            } as Row)
+          );
+        })
+      : [...ownedTagged, ...coTagged].sort(
+          (a, b) =>
+            new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+        );
   const activeFolderLabel = activeFolder
     ? activePw === "B"
       ? FOLDER_LABELS_B[activeFolder as keyof typeof FOLDERS]
@@ -351,10 +403,10 @@ export default async function AuthorDashboard({
       {/* Pathway B — Manuscript Submissions sits directly below the submission
           rule (with its top "Submit New Manuscript" window), above All
           Submissions. Pathway A lives below the table. */}
-      {pathwayBSubs.length > 0 && (
+      {showPathwayB && (
         <div className="mb-10">
           <PathwayDashboard
-            subs={pathwayBSubs}
+            submissions={submissions}
             pathway="B"
             atLimit={atLimit}
             activeFolder={activeFolder}
@@ -448,7 +500,7 @@ export default async function AuthorDashboard({
           rendered above the table, next to its Submit New Manuscript window. */}
       <div className="mt-10">
         <PathwayDashboard
-          subs={pathwayASubs}
+          submissions={submissions}
           pathway="A"
           atLimit={atLimit}
           activeFolder={activeFolder}
@@ -466,13 +518,13 @@ export default async function AuthorDashboard({
  * `&pw=` so the All-Submissions table filters to the same pathway.
  */
 function PathwayDashboard({
-  subs,
+  submissions,
   pathway,
   atLimit,
   activeFolder,
   activePw,
 }: {
-  subs: Row[];
+  submissions: Row[];
   pathway: "A" | "B";
   atLimit: boolean;
   activeFolder: string | null;
@@ -485,6 +537,16 @@ function PathwayDashboard({
   const headCls = pathway === "B" ? "text-violet-700" : "text-emerald-700";
   const labelFor = (key: keyof typeof FOLDERS) =>
     pathway === "B" ? FOLDER_LABELS_B[key] : FOLDERS[key].label;
+  // Count against this pathway's phase status, so a full-paper paper is counted
+  // by its abstract in Pathway A and by its manuscript in Pathway B.
+  const countFor = (key: keyof typeof FOLDERS) =>
+    submissions.filter((s) => {
+      const p = phaseFor(s, pathway);
+      return (
+        p !== null &&
+        FOLDERS[key].match({ status: p.status, version: p.version } as Row)
+      );
+    }).length;
 
   return (
     <section className="mb-10">
@@ -529,7 +591,7 @@ function PathwayDashboard({
                 <FolderRow
                   key={key}
                   label={labelFor(key)}
-                  count={subs.filter(FOLDERS[key].match).length}
+                  count={countFor(key)}
                   href={`/author?folder=${key}&pw=${pathway}`}
                   active={activeFolder === key && activePw === pathway}
                 />

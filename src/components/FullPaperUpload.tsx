@@ -24,12 +24,25 @@ type Outlet = { id: string; title: string; category: string | null };
  * then picks Option A (separated, blind-ready) or Option B (combined) and
  * uploads the files. Required slots + one outlet + the declaration gate submit.
  */
+/**
+ * Response letter to Reviewer & Track Editor — a revision-stage-only upload,
+ * offered under both Option A and Option B. Not one of the packaging slots, so
+ * it never gates submit.
+ */
+const RESPONSE_LETTER_SLOT: FullPaperSlot = {
+  key: "response_letter",
+  label: "Response letter to Reviewer & Track Editor",
+  accept: ".pdf,.doc,.docx",
+  hint: "Your point-by-point response to the review comments (PDF or Word).",
+};
+
 export function FullPaperUpload({
   submissionId,
   option,
   files,
   deadline,
   editable,
+  isRevision = false,
   outlets,
   selectedOutlets,
   title,
@@ -41,6 +54,8 @@ export function FullPaperUpload({
   files: StoredFile[];
   deadline: string | null;
   editable: boolean;
+  /** True only when re-uploading a revised manuscript (revision stage). */
+  isRevision?: boolean;
   outlets: Outlet[];
   selectedOutlets: string[];
   title: string;
@@ -371,6 +386,72 @@ export function FullPaperUpload({
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* ---- Response letter (revision stage only, both options) ---- */}
+      {isRevision && cfg && (
+        <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-3">
+          <p className="text-sm font-medium text-slate-800 dark:text-slate-100">
+            {RESPONSE_LETTER_SLOT.label}
+          </p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            {RESPONSE_LETTER_SLOT.hint}
+          </p>
+          {(() => {
+            const rl = files.filter((f) => f.slot === RESPONSE_LETTER_SLOT.key);
+            return (
+              <>
+                {rl.length > 0 && (
+                  <ul className="mt-2 space-y-1">
+                    {rl.map((f) => (
+                      <li key={f.id} className="flex items-center gap-3 text-sm">
+                        <button
+                          type="button"
+                          onClick={() => download(f)}
+                          className="text-blue-700 hover:underline dark:text-blue-300 truncate max-w-[16rem]"
+                        >
+                          {f.file_name}
+                        </button>
+                        {editable && (
+                          <button
+                            type="button"
+                            onClick={() => remove(f)}
+                            className="text-xs text-rose-600 hover:underline"
+                          >
+                            remove
+                          </button>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {editable && rl.length === 0 && (
+                  <label className="block mt-2">
+                    <span className="sr-only">
+                      Upload {RESPONSE_LETTER_SLOT.label}
+                    </span>
+                    <input
+                      type="file"
+                      accept={RESPONSE_LETTER_SLOT.accept}
+                      disabled={busySlot === RESPONSE_LETTER_SLOT.key}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) upload(RESPONSE_LETTER_SLOT, file);
+                        e.target.value = "";
+                      }}
+                      className="block w-full text-xs text-slate-600 file:mr-3 file:py-1.5 file:px-3
+                                 file:rounded-lg file:border-0 file:text-xs file:font-medium
+                                 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 disabled:opacity-50"
+                    />
+                  </label>
+                )}
+                {busySlot === RESPONSE_LETTER_SLOT.key && (
+                  <p className="text-xs text-slate-500 mt-1">Uploading…</p>
+                )}
+              </>
+            );
+          })()}
         </div>
       )}
 

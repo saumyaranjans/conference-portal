@@ -466,12 +466,29 @@ export async function submitForReview(formData: FormData): Promise<ActionResult>
   // A resubmission after "revisions requested" bumps the version number.
   const isRevision = sub.status === "revisions_requested";
 
+  // Abstract revision only: the author's short "Response to Track Editor &
+  // Reviewer" (<= 300 words). Ignored on a first submission.
+  let revisionResponse: string | null = null;
+  if (isRevision) {
+    const raw = String(formData.get("revision_response") ?? "").trim();
+    if (raw) {
+      const words = raw.split(/\s+/).length;
+      if (words > 300)
+        return {
+          ok: false,
+          message: `Your response is ${words} words — please keep it within 300.`,
+        };
+      revisionResponse = raw;
+    }
+  }
+
   const { error } = await supabase
     .from("submissions")
     .update({
       status: "submitted",
       submitted_at: new Date().toISOString(),
       version: isRevision ? sub.version + 1 : sub.version,
+      ...(isRevision ? { revision_response: revisionResponse } : {}),
       updated_at: new Date().toISOString(),
     })
     .eq("id", id);
@@ -2148,6 +2165,56 @@ export async function acceptCoAuthorInvite(
  * their own to manage). Updating re-sends the acknowledgement / invitation to
  * the corrected address.
  */
+/**
+ * Manuscript stage: correct a co-author's designation / affiliation (and, if
+ * they are still unregistered, email). The name is never changed here, and no
+ * author can be added or removed — the set is carried from the abstract.
+ */
+export async function updateCoAuthorDetails(
+  formData: FormData
+): Promise<ActionResult> {
+  const profile = await requireProfile();
+  const admin = createAdminClient();
+  const id = String(formData.get("id") ?? "");
+  const submissionId = String(formData.get("submission_id") ?? "");
+  const designation = String(formData.get("designation") ?? "").trim();
+  const affiliation = String(formData.get("affiliation") ?? "").trim();
+  const email = String(formData.get("email") ?? "").trim();
+
+  const { data: sub } = await admin
+    .from("submissions")
+    .select("author_id")
+    .eq("id", submissionId)
+    .maybeSingle();
+  if (!sub || (sub as any).author_id !== profile.id)
+    return { ok: false, message: "You can only edit your own submission." };
+
+  const { data: row } = await admin
+    .from("submission_authors")
+    .select("id, submission_id, is_corresponding, profile_id")
+    .eq("id", id)
+    .maybeSingle();
+  if (!row || (row as any).submission_id !== submissionId || (row as any).is_corresponding)
+    return { ok: false, message: "Co-author not found." };
+
+  const patch: Record<string, string | null> = {
+    designation: designation || null,
+    affiliation: affiliation || null,
+  };
+  // Email is editable only while the co-author is still unregistered; once they
+  // sign in they own their address.
+  if (!(row as any).profile_id && email) {
+    const EMAIL_RE = /^[^\s<>@,;]+@[^\s<>@,;]+\.[^\s<>@,;]+$/;
+    if (!EMAIL_RE.test(email))
+      return { ok: false, message: "Enter a valid email address." };
+    patch.email = email;
+  }
+
+  await admin.from("submission_authors").update(patch).eq("id", id);
+  revalidatePath(`/author/submissions/${submissionId}`);
+  return { ok: true, message: "Author details updated." };
+}
+
 export async function updateCoAuthorEmail(
   formData: FormData
 ): Promise<ActionResult> {

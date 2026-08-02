@@ -7,6 +7,7 @@ import {
   moveAuthor,
   removeCoAuthor,
   submitForReview,
+  updateCoAuthorDetails,
   updateCoAuthorEmail,
   updateSubmission,
   withdrawSubmission,
@@ -14,6 +15,7 @@ import {
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { PaperUpload } from "@/components/PaperUpload";
 import { FullPaperUpload } from "@/components/FullPaperUpload";
+import { RevisionResponse } from "@/components/RevisionResponse";
 import { InstitutionInput } from "@/components/InstitutionInput";
 import { StatusBadge, RecommendationBadge } from "@/components/ui/StatusBadge";
 import { PageHeader, Section, formatDate } from "@/components/ui/Primitives";
@@ -119,6 +121,23 @@ export default async function AuthorSubmissionPage({
   const isOwner = sub.author_id === profile.id;
   const editable = isOwner && ["draft", "revisions_requested"].includes(sub.status);
   const canSubmit = editable;
+  // Revision-stage-only response controls. Abstract revision → 300-word text box
+  // (here); manuscript revision → response-letter upload (in FullPaperUpload).
+  const isAbstractRevision =
+    sub.status === "revisions_requested" && sub.stage !== "full_paper";
+  const isManuscriptRevision =
+    sub.status === "revisions_requested" && sub.stage === "full_paper";
+
+  // Authors editing has two modes. Abstract stage (draft / abstract revision):
+  // add, remove, reorder, fix a co-author's email. Manuscript stage: the author
+  // set is auto-carried from the abstract — no adding or removing, names locked,
+  // but the order can change and each co-author's designation / affiliation /
+  // email may be edited.
+  const abstractEdit = editable && sub.stage !== "full_paper";
+  const manuscriptEdit =
+    isOwner &&
+    sub.stage === "full_paper" &&
+    ["abstract_accepted", "revisions_requested"].includes(sub.status);
   // Authors may withdraw only an abstract they have not submitted yet;
   // once submitted, withdrawal is the Convener's call.
   const canWithdraw = isOwner && sub.status === "draft";
@@ -177,6 +196,7 @@ export default async function AuthorSubmissionPage({
                   files={(paperFiles as any[]) ?? []}
                   deadline={fullPaperDeadline}
                   editable={isOwner}
+                  isRevision={isManuscriptRevision}
                   outlets={(outlets as any[]) ?? []}
                   selectedOutlets={(sub as any).requested_outlet_ids ?? []}
                   title={sub.title ?? ""}
@@ -193,6 +213,7 @@ export default async function AuthorSubmissionPage({
                 files={(paperFiles as any[]) ?? []}
                 deadline={fullPaperDeadline}
                 editable={isOwner && sub.status === "revisions_requested"}
+                isRevision={isManuscriptRevision}
                 outlets={(outlets as any[]) ?? []}
                 selectedOutlets={(sub as any).requested_outlet_ids ?? []}
                 title={sub.title ?? ""}
@@ -386,7 +407,7 @@ export default async function AuthorSubmissionPage({
               className="px-5 py-3 flex items-center justify-between gap-4"
             >
               <div className="flex items-center gap-3 min-w-0">
-                {editable && (
+                {(abstractEdit || manuscriptEdit) && (
                   <div className="flex flex-col text-slate-400">
                     <ActionForm action={moveAuthor}>
                       <input type="hidden" name="id" value={a.id} />
@@ -442,9 +463,9 @@ export default async function AuthorSubmissionPage({
                       {attendanceLabel(a.attendance)}
                     </p>
                   )}
-                  {/* The corresponding author can fix a co-author's email while
-                      that co-author is still unregistered (e.g. it bounced). */}
-                  {isOwner &&
+                  {/* Abstract stage: the corresponding author can fix a
+                      co-author's email while they are still unregistered. */}
+                  {abstractEdit &&
                     !a.is_corresponding &&
                     (a.profile_id ? (
                       <p className="text-[11px] text-emerald-700 mt-1">
@@ -476,9 +497,57 @@ export default async function AuthorSubmissionPage({
                         </SubmitButton>
                       </ActionForm>
                     ))}
+
+                  {/* Manuscript stage: name is locked, but designation /
+                      affiliation (and, if still unregistered, email) can be
+                      corrected. */}
+                  {manuscriptEdit && !a.is_corresponding && (
+                    <ActionForm
+                      action={updateCoAuthorDetails}
+                      className="mt-2 grid sm:grid-cols-2 gap-2"
+                    >
+                      <input type="hidden" name="id" value={a.id} />
+                      <input type="hidden" name="submission_id" value={sub.id} />
+                      <input
+                        name="designation"
+                        defaultValue={a.designation ?? ""}
+                        placeholder="Designation"
+                        className="input text-xs py-1"
+                      />
+                      <input
+                        name="affiliation"
+                        defaultValue={a.affiliation ?? ""}
+                        placeholder="Affiliation"
+                        className="input text-xs py-1"
+                      />
+                      {a.profile_id ? (
+                        <input
+                          type="hidden"
+                          name="email"
+                          value={a.email ?? ""}
+                        />
+                      ) : (
+                        <input
+                          name="email"
+                          type="email"
+                          defaultValue={a.email ?? ""}
+                          placeholder="Email"
+                          className="input text-xs py-1"
+                        />
+                      )}
+                      <div className="sm:col-span-2">
+                        <SubmitButton
+                          variant="secondary"
+                          className="text-xs py-1 px-2"
+                        >
+                          Save author details
+                        </SubmitButton>
+                      </div>
+                    </ActionForm>
+                  )}
                 </div>
               </div>
-              {editable && !a.is_corresponding && (
+              {abstractEdit && !a.is_corresponding && (
                 <ActionForm action={removeCoAuthor}>
                   <input type="hidden" name="id" value={a.id} />
                   <input type="hidden" name="submission_id" value={sub.id} />
@@ -493,7 +562,16 @@ export default async function AuthorSubmissionPage({
             </div>
           ))}
 
-          {editable && (
+          {manuscriptEdit && (
+            <p className="px-5 py-3 text-xs text-slate-500">
+              Authors are carried over from your abstract — no new author can be
+              added at the manuscript stage. Names are fixed; you may still edit a
+              co-author&apos;s designation, affiliation or email and reorder the
+              authors.
+            </p>
+          )}
+
+          {abstractEdit && (
             <ActionForm action={addCoAuthor} className="px-5 py-4">
               <input type="hidden" name="submission_id" value={sub.id} />
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -659,8 +737,18 @@ export default async function AuthorSubmissionPage({
       <Section title="Actions">
         <div className="card card-pad flex flex-wrap gap-3">
           {canSubmit && (
-            <ActionForm action={submitForReview}>
+            <ActionForm
+              action={submitForReview}
+              className={isAbstractRevision ? "w-full space-y-3" : ""}
+            >
               <input type="hidden" name="id" value={sub.id} />
+              {/* Revision stage, abstract only: the 300-word response to the
+                  Track Editor & Reviewer, submitted with the revision. */}
+              {isAbstractRevision && (
+                <RevisionResponse
+                  defaultValue={(sub as any).revision_response}
+                />
+              )}
               <SubmitButton>
                 {sub.status === "revisions_requested"
                   ? "Submit revision"
@@ -683,7 +771,9 @@ export default async function AuthorSubmissionPage({
             <p className="text-sm text-slate-500">
               {sub.status === "accepted"
                 ? "This paper has been accepted and can no longer be withdrawn."
-                : "Your abstract has been submitted. Only the Convener can withdraw it — please contact the Convener if you need it withdrawn."}
+                : `Your ${
+                    sub.stage === "full_paper" ? "manuscript" : "abstract"
+                  } has been submitted. Only the Convener can withdraw it — please contact the Convener if you need it withdrawn.`}
             </p>
           )}
         </div>

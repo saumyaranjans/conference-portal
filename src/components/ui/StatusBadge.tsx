@@ -20,15 +20,18 @@ export function StatusBadge({
   status,
   submissionType,
   stage,
+  version,
 }: {
   status: SubmissionStatus;
   /** Pass the submission's type + stage so the label reads Abstract vs Manuscript. */
   submissionType?: string | null;
   stage?: string | null;
+  /** Pass the version so a revised paper under review reads "Revised …". */
+  version?: number | null;
 }) {
   return (
     <span className={`badge ${STATUS_STYLES[status]}`}>
-      {statusLabel(status, submissionType, stage)}
+      {statusLabel(status, submissionType, stage, version)}
     </span>
   );
 }

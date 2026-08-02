@@ -226,6 +226,7 @@ export default async function EditorDashboard() {
                       status={s.status}
                       submissionType={(s as any).submission_type}
                       stage={(s as any).stage}
+                      version={s.version}
                     />
                   </td>
                   <td className="td">

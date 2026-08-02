@@ -425,6 +425,7 @@ export default async function AuthorDashboard({
                     (s as unknown as { submission_type: string }).submission_type
                   }
                   stage={(s as unknown as { stage: string }).stage}
+                  version={s.version}
                 />
               </td>
               <td className="td">{versionTag(s.version)}</td>

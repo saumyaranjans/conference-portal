@@ -139,6 +139,7 @@ export default async function AuthorSubmissionPage({
             status={sub.status}
             submissionType={(sub as any).submission_type}
             stage={(sub as any).stage}
+            version={sub.version}
           />
         }
       />

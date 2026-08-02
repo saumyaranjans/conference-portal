@@ -75,7 +75,12 @@ export async function GET() {
         r.tracks?.code ?? "",
         r.profiles?.full_name ?? "",
         r.profiles?.institution ?? "",
-        statusLabel(r.status as SubmissionStatus, r.submission_type, r.stage),
+        statusLabel(
+          r.status as SubmissionStatus,
+          r.submission_type,
+          r.stage,
+          r.version
+        ),
         r.version,
         st?.completed_count ?? 0,
         st?.assigned_count ?? 0,

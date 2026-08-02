@@ -110,5 +110,12 @@ export default async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|pdf)$).*)"],
+  // The camera-ready / paper-file routes stream PDFs meant to render inside a
+  // first-party iframe; exclude them so the proxy's X-Frame-Options: DENY (and
+  // frame-ancestors 'none') don't block framing. Each route sets its own
+  // same-origin framing headers. Static .pdf assets are excluded for the same
+  // reason.
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|api/camera-ready|api/paper-file|.*\\.(?:svg|png|jpg|jpeg|gif|webp|pdf)$).*)",
+  ],
 };

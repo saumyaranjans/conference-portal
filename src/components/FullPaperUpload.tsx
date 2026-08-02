@@ -627,6 +627,15 @@ export function FullPaperUpload({
                 {showPreview ? "Hide preview" : "Preview camera-ready"}
               </button>
             )}
+            {isBuilt && previewSrc && (
+              <a
+                href={previewSrc}
+                download={`camera-ready.pdf`}
+                className="text-sm text-blue-700 hover:underline dark:text-blue-300"
+              >
+                Download PDF
+              </a>
+            )}
           </div>
 
           {isBuilt ? (

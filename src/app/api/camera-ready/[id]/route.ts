@@ -45,6 +45,10 @@ export async function GET(
     headers: {
       "Content-Type": "application/pdf",
       "Cache-Control": "private, no-store, max-age=0, must-revalidate",
+      // Framable inside our own pages only.
+      "X-Frame-Options": "SAMEORIGIN",
+      "Content-Security-Policy": "frame-ancestors 'self'",
+      "Cross-Origin-Resource-Policy": "same-origin",
     },
   });
 }

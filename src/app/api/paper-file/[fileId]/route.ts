@@ -68,6 +68,9 @@ export async function GET(
       "Content-Type": isPdf ? "application/pdf" : "application/octet-stream",
       ...(isPdf ? {} : { "Content-Disposition": `attachment; filename="${f.file_name}"` }),
       "Cache-Control": "private, no-store, max-age=0, must-revalidate",
+      "X-Frame-Options": "SAMEORIGIN",
+      "Content-Security-Policy": "frame-ancestors 'self'",
+      "Cross-Origin-Resource-Policy": "same-origin",
     },
   });
 }

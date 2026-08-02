@@ -584,19 +584,20 @@ export default async function EditorSubmissionPage({
       {hasDecision && (
       <Section title="Email the author">
         <NotifyAuthor
-          /* The letter follows the decision being conveyed. Accepting a Pathway
-             B abstract flips the stage to full_paper before the manuscript is
-             submitted — that acceptance letter is still the ABSTRACT one (accept
-             → submit full paper by the deadline). But a manuscript decision
-             (e.g. "sent back to author", which clears the submitted flag) is a
-             FULL-PAPER letter, so it must not be forced back to "abstract". */
+          /* The letter follows the decision being conveyed. The ONLY time a
+             full_paper-stage paper uses the ABSTRACT letter is the Pathway B
+             abstract-acceptance window: accepting the abstract flips the stage
+             to full_paper, and that acceptance letter (accept → submit the full
+             paper by the deadline) is the abstract one. Every OTHER manuscript
+             decision — sent back, reject, minor/major revision — is a FULL-PAPER
+             letter, even if the submitted flag is momentarily clear (e.g. right
+             after a send-back). Keyed on the latest decision being "accept". */
           stage={
-            latestDecision === "sent_back"
-              ? "full_paper"
-              : sub.stage === "full_paper" &&
-                  !(sub as any).full_paper_submitted_at
-                ? "abstract"
-                : sub.stage
+            sub.stage === "full_paper" &&
+            !(sub as any).full_paper_submitted_at &&
+            latestDecision === "accept"
+              ? "abstract"
+              : sub.stage
           }
           submissionType={sub.submission_type}
           fullPaperDeadline={(sub as any).full_paper_deadline}

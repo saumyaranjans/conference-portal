@@ -1053,12 +1053,12 @@ export function LandingPage() {
           <p className="mt-6 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
             <span className="text-orange-500">*</span> Full-paper decisions are{" "}
             <strong>targeted for 15 December 2026</strong>, and may take up to
-            around <strong>30 days beyond</strong> this depending on how early the
-            author submits the full paper, reviewer acceptance, and the time the
-            Track Editor takes to reach a decision. The organisers make every
-            effort to decide by 15 December 2026. Pathway B authors are therefore
-            advised to submit at the earliest and to begin preparing their full
-            paper as soon as they choose Pathway B.
+            around <strong>30 days beyond (or even more)</strong> this depending
+            on how early the author submits the full paper, reviewer acceptance,
+            and the time the Track Editor takes to reach a decision. The
+            organisers make every effort to decide by 15 December 2026. Pathway B
+            authors are therefore advised to submit at the earliest and to begin
+            preparing their full paper as soon as they choose Pathway B.
           </p>
         </section>
 

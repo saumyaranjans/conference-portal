@@ -210,8 +210,8 @@ export default async function EditorSubmissionPage({
               </p>
               <ManuscriptFilesView
                 role="editor"
+                submissionId={id}
                 files={(manuscriptFiles as any[]) ?? []}
-                cameraReadyPath={(sub as any).full_paper_pdf_path}
                 cameraReadyBuiltAt={(sub as any).full_paper_pdf_built_at}
               />
             </div>

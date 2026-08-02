@@ -70,6 +70,16 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      // Same reasoning for individual manuscript files rendered inline.
+      {
+        source: "/api/paper-file/:path*",
+        headers: [
+          {
+            key: "Cross-Origin-Resource-Policy",
+            value: "cross-origin",
+          },
+        ],
+      },
       {
         source:
           "/:section(admin|author|reviewer|editor|chief|profile|api|auth)/:path*",

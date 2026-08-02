@@ -87,6 +87,7 @@ export default async function ReviewPage({
         <Section title="Full paper (blinded)">
           <ManuscriptFilesView
             role="reviewer"
+            submissionId={sub.id}
             files={(manuscriptFiles as any[]) ?? []}
           />
         </Section>

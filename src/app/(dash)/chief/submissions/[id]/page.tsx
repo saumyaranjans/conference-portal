@@ -183,8 +183,8 @@ export default async function ChiefSubmissionPage({
               </p>
               <ManuscriptFilesView
                 role="chief"
+                submissionId={sub.id}
                 files={(manuscriptFiles as any[]) ?? []}
-                cameraReadyPath={(sub as any).full_paper_pdf_path}
                 cameraReadyBuiltAt={(sub as any).full_paper_pdf_built_at}
               />
             </div>

@@ -642,19 +642,12 @@ export function FullPaperUpload({
 
           {isBuilt && showPreview && previewSrc && (
             <div className="mt-3 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
-              <object
-                data={previewSrc}
-                type="application/pdf"
+              <iframe
+                src={previewSrc}
+                title="Camera-ready preview"
                 className="w-full block"
                 style={{ height: "78vh" }}
-              >
-                <iframe
-                  src={previewSrc}
-                  title="Camera-ready preview"
-                  className="w-full"
-                  style={{ height: "78vh" }}
-                />
-              </object>
+              />
               <div className="border-t border-slate-200 dark:border-slate-700 px-3 py-2 text-xs">
                 <a
                   href={previewSrc}

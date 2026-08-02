@@ -1,8 +1,5 @@
 "use client";
 
-import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { DocumentViewer } from "@/components/DocumentViewer";
 import { fullPaperSlotLabel } from "@/lib/types";
 
 type StoredFile = { id: string; slot: string; file_name: string; file_path: string };
@@ -36,13 +33,13 @@ function slotLabel(slot: string): string {
 
 export function ManuscriptFilesView({
   role,
+  submissionId,
   files,
-  cameraReadyPath,
   cameraReadyBuiltAt,
 }: {
   role: "reviewer" | "editor" | "chief";
+  submissionId: string;
   files: StoredFile[];
-  cameraReadyPath?: string | null;
   cameraReadyBuiltAt?: string | null;
 }) {
   const isReviewer = role === "reviewer";
@@ -61,14 +58,12 @@ export function ManuscriptFilesView({
     (f) => (f.slot === "manuscript_full" || f.slot === "manuscript_anon") && /\.pdf$/i.test(f.file_name)
   );
 
-  async function download(path: string) {
-    const { data } = await createClient()
-      .storage.from("papers")
-      .createSignedUrl(path, 120);
-    if (data?.signedUrl) window.open(data.signedUrl, "_blank", "noopener,noreferrer");
-  }
+  const cameraReadySrc =
+    !isReviewer && cameraReadyBuiltAt
+      ? `/api/camera-ready/${submissionId}?v=${encodeURIComponent(cameraReadyBuiltAt)}`
+      : null;
 
-  if (!visible.length && !(cameraReadyPath && !isReviewer)) {
+  if (!visible.length && !cameraReadySrc) {
     return (
       <p className="text-sm text-slate-500">
         No manuscript files have been uploaded yet.
@@ -79,26 +74,27 @@ export function ManuscriptFilesView({
   return (
     <div className="space-y-4">
       {/* Editor / convener: the compiled camera-ready proof (author names on cover). */}
-      {!isReviewer && cameraReadyPath && cameraReadyBuiltAt && (
+      {cameraReadySrc && (
         <div className="rounded-lg border border-emerald-200 bg-emerald-50/60 dark:bg-emerald-500/10 dark:border-emerald-500/30 p-3">
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <p className="text-sm font-medium text-emerald-900 dark:text-emerald-200">
               Camera-ready PDF (compiled) — cover carries author identities
             </p>
-            <button
-              type="button"
-              onClick={() => download(cameraReadyPath)}
+            <a
+              href={cameraReadySrc}
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-sm text-emerald-800 dark:text-emerald-200 hover:underline"
             >
-              Open camera-ready
-            </button>
+              Open in a new tab ↗
+            </a>
           </div>
           <p className="text-xs text-emerald-800/80 dark:text-emerald-300/80 mt-1">
             Approved by the corresponding author. This full PDF is for the Track
             Editor and Convener only — it is never shown to reviewers.
           </p>
           <div className="mt-3">
-            <DocumentViewer filePath={cameraReadyPath} fileName="Camera-ready.pdf" />
+            <PdfFrame src={cameraReadySrc} title="Camera-ready PDF" />
           </div>
         </div>
       )}
@@ -116,7 +112,7 @@ export function ManuscriptFilesView({
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
             Manuscript preview {isReviewer ? "(blinded)" : ""}
           </p>
-          <DocumentViewer filePath={manuscript.file_path} fileName={manuscript.file_name} />
+          <PdfFrame src={`/api/paper-file/${manuscript.id}`} title="Manuscript" />
         </div>
       )}
 
@@ -131,16 +127,39 @@ export function ManuscriptFilesView({
               <span className="text-[11px] uppercase tracking-wide text-slate-400 w-40 shrink-0">
                 {slotLabel(f.slot)}
               </span>
-              <button
-                type="button"
-                onClick={() => download(f.file_path)}
+              <a
+                href={`/api/paper-file/${f.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-blue-700 hover:underline dark:text-blue-300 truncate"
               >
                 {f.file_name}
-              </button>
+              </a>
             </li>
           ))}
         </ul>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Inline PDF from our own origin. A plain same-origin iframe is allowed by the
+ * app CSP (frame-src 'self'); an <object> is not (object-src 'none').
+ */
+function PdfFrame({ src, title }: { src: string; title: string }) {
+  return (
+    <div className="rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+      <iframe src={src} title={title} className="w-full block" style={{ height: "72vh" }} />
+      <div className="border-t border-slate-200 dark:border-slate-700 px-3 py-2 text-xs">
+        <a
+          href={src}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-700 hover:underline dark:text-blue-300"
+        >
+          Open in a new tab ↗
+        </a>
       </div>
     </div>
   );

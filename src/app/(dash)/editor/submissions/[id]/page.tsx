@@ -121,6 +121,9 @@ export default async function EditorSubmissionPage({
   // Accepting a full paper is gated on two Accept recommendations.
   const acceptsShort =
     sub.stage === "full_paper" && acceptCount < FULL_PAPER_ACCEPTS_REQUIRED;
+  // Manuscript revisions need a completed review round — at least
+  // FULL_PAPER_ACCEPTS_REQUIRED reviewers must have submitted a review.
+  const reviewRoundDone = completed.length >= FULL_PAPER_ACCEPTS_REQUIRED;
 
   // What the author may see: numbered, never named, and only the comments the
   // reviewer wrote for them — comments_to_editor stays confidential.
@@ -434,11 +437,15 @@ export default async function EditorSubmissionPage({
             {sub.stage === "full_paper" ? (
               acceptsShort ? (
                 <p className="text-sm text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-                  <strong>Accept is locked.</strong> A full paper needs{" "}
-                  {FULL_PAPER_ACCEPTS_REQUIRED} reviewers recommending Accept
-                  before it can move to the publication stage — {acceptCount} so
-                  far. Invite as many reviewers as you need; a revision or reject
-                  decision can still be recorded now.
+                  <strong>Accept</strong> needs {FULL_PAPER_ACCEPTS_REQUIRED}{" "}
+                  reviewers recommending Accept ({acceptCount} so far).{" "}
+                  <strong>Minor / Major Revision</strong> unlock only after a
+                  completed review round — {FULL_PAPER_ACCEPTS_REQUIRED} reviewers
+                  must have submitted a review ({completed.length} so far).{" "}
+                  Right now you can <strong>Send back to author</strong> (they
+                  did not follow the submission guidelines — restarts their
+                  manuscript) or <strong>Reject</strong> (manuscript
+                  inappropriate).
                 </p>
               ) : (
                 <p className="text-sm text-emerald-800 bg-emerald-50 rounded-lg px-3 py-2">
@@ -470,40 +477,49 @@ export default async function EditorSubmissionPage({
 
             <div>
               <label className="label">Your decision</label>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2">
-                {[
-                  ["accept", "Accept"],
-                  ["minor_revision", "Minor Revision"],
-                  ["major_revision", "Major Revision"],
-                  ["reject", "Reject"],
-                ].map(([value, label]) => {
-                  const locked = value === "accept" && acceptsShort;
-                  return (
-                    <label
-                      key={value}
-                      title={
-                        locked
-                          ? `Needs ${FULL_PAPER_ACCEPTS_REQUIRED} Accept recommendations`
-                          : undefined
-                      }
-                      className={`flex items-center gap-2 border border-slate-300 rounded-lg
-                                 px-3 py-2 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 ${
-                                   locked
-                                     ? "opacity-50 cursor-not-allowed"
-                                     : "cursor-pointer hover:bg-slate-50"
-                                 }`}
-                    >
-                      <input
-                        type="radio"
-                        name="decision"
-                        value={value}
-                        required
-                        disabled={locked}
-                      />
-                      <span className="text-sm">{label}</span>
-                    </label>
-                  );
-                })}
+              <div className="grid sm:grid-cols-2 gap-2">
+                {(sub.stage === "full_paper"
+                  ? [
+                      { value: "accept", label: "Accept", locked: acceptsShort, hint: `Needs ${FULL_PAPER_ACCEPTS_REQUIRED} Accept recommendations` },
+                      { value: "minor_revision", label: "Minor Revision", locked: !reviewRoundDone, hint: `Needs a completed review round (${FULL_PAPER_ACCEPTS_REQUIRED} reviews)` },
+                      { value: "major_revision", label: "Major Revision", locked: !reviewRoundDone, hint: `Needs a completed review round (${FULL_PAPER_ACCEPTS_REQUIRED} reviews)` },
+                      { value: "sent_back", label: "Send back to author", locked: false, hint: "Guidelines not followed — author restarts the manuscript" },
+                      { value: "reject", label: "Reject", locked: false, hint: "Manuscript inappropriate" },
+                    ]
+                  : [
+                      { value: "accept", label: "Accept", locked: false, hint: undefined },
+                      { value: "minor_revision", label: "Minor Revision", locked: false, hint: undefined },
+                      { value: "major_revision", label: "Major Revision", locked: false, hint: undefined },
+                      { value: "reject", label: "Reject", locked: false, hint: undefined },
+                    ]
+                ).map(({ value, label, locked, hint }) => (
+                  <label
+                    key={value}
+                    title={hint}
+                    className={`flex items-center gap-2 border border-slate-300 rounded-lg
+                               px-3 py-2 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 ${
+                                 locked
+                                   ? "opacity-50 cursor-not-allowed"
+                                   : "cursor-pointer hover:bg-slate-50"
+                               }`}
+                  >
+                    <input
+                      type="radio"
+                      name="decision"
+                      value={value}
+                      required
+                      disabled={locked}
+                    />
+                    <span className="text-sm">
+                      {label}
+                      {hint && (
+                        <span className="block text-[11px] text-slate-400">
+                          {hint}
+                        </span>
+                      )}
+                    </span>
+                  </label>
+                ))}
               </div>
             </div>
 

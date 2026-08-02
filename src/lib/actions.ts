@@ -13,6 +13,7 @@ import {
   fullPaperReviewFacilitationEmail,
   fullPaperSubmittedAuthorEmail,
   manuscriptNeedsEditorEmail,
+  manuscriptReturnedEmail,
   paperAssignmentEmail,
   signOffLine,
   submissionAcknowledgementEmail,
@@ -2712,7 +2713,9 @@ export async function recordRecommendation(
   const admin = createAdminClient();
 
   const submissionId = String(formData.get("submission_id"));
-  const decision = String(formData.get("decision")) as DecisionKind;
+  // Free-text decision value: accept | minor_revision | major_revision | reject
+  // | sent_back. The status-mapping trigger interprets it.
+  const decision = String(formData.get("decision"));
 
   const { data: sub } = await admin
     .from("submissions")
@@ -2768,6 +2771,32 @@ export async function recordRecommendation(
       };
   }
 
+  // Manuscript revisions (minor/major) require a completed review round — at
+  // least FULL_PAPER_ACCEPTS_REQUIRED reviewers must have submitted a review.
+  // Before that, only "send back" (guidelines) and reject are available.
+  if (
+    sub.stage === "full_paper" &&
+    (decision === "minor_revision" || decision === "major_revision")
+  ) {
+    const { data: rows } = await admin
+      .from("assignments")
+      .select("reviews(is_submitted)")
+      .eq("submission_id", submissionId);
+    const done = ((rows as any[]) ?? []).filter((a) => reviewOf(a)?.is_submitted).length;
+    if (done < FULL_PAPER_ACCEPTS_REQUIRED)
+      return {
+        ok: false,
+        message: `A revision can be requested only after a review round — at least ${FULL_PAPER_ACCEPTS_REQUIRED} reviewers must have completed their review (${done} so far). Use "Send back to author" for guideline issues, or Reject.`,
+      };
+  }
+
+  // "Send back to author" applies only to a submitted manuscript.
+  if (decision === "sent_back" && sub.stage !== "full_paper")
+    return {
+      ok: false,
+      message: "Send back applies only to a submitted manuscript.",
+    };
+
   // Pathway B: accepting the abstract opens the full-paper stage, so the Track
   // Editor must set a full-paper deadline — required, in the future, and no
   // later than the conference-wide full-paper ceiling.
@@ -2807,6 +2836,58 @@ export async function recordRecommendation(
   });
 
   if (error) return { ok: false, message: error.message };
+
+  // "Send back to author" — the trigger has moved the paper to abstract_accepted
+  // / full_paper. Restart it from scratch: clear the submitted + built state and
+  // remove reviewer assignments so the author re-packages and re-submits, and
+  // email them why.
+  if (decision === "sent_back") {
+    await admin
+      .from("submissions")
+      .update({
+        full_paper_submitted_at: null,
+        full_paper_pdf_built_at: null,
+        full_paper_pdf_path: null,
+        full_paper_review_pdf_path: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", submissionId);
+    await admin.from("assignments").delete().eq("submission_id", submissionId);
+
+    if (emailConfigured()) {
+      const authorRows = await submissionAuthors(admin, submissionId, sub.author_id);
+      const letter = manuscriptReturnedEmail({
+        paperId: (sub as any).paper_id,
+        title: sub.title ?? "",
+        message: String(formData.get("rationale") ?? ""),
+        conferenceName: "GLOGIFT 2027",
+      });
+      for (const a of authorRows) {
+        if (!a.email) continue;
+        try {
+          await sendEmail({
+            to: a.email,
+            subject: letter.subject,
+            text: letter.body,
+            kind: "manuscript_returned",
+            sentBy: profile.id,
+          });
+        } catch {
+          // Mail failure must never break the decision.
+        }
+      }
+    }
+
+    await audit(profile.id, "manuscript.sent_back", "submission", submissionId, {});
+    revalidatePath(`/editor/submissions/${submissionId}`);
+    revalidatePath(`/author/submissions/${submissionId}`);
+    revalidatePath("/chief");
+    return {
+      ok: true,
+      message:
+        "Manuscript sent back to the author to restart. They must re-package and re-submit.",
+    };
+  }
 
   // The trigger has moved a Pathway B abstract to abstract_accepted; record the
   // deadline, and snapshot the accepted Title/Abstract/Keywords as the Stage 1

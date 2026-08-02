@@ -5,13 +5,22 @@ import { ComposeEmail } from "@/components/ComposeEmail";
 import {
   abstractDecisionEmail,
   fullPaperDecisionEmail,
+  manuscriptReturnedEmail,
   type ReviewComment,
 } from "@/lib/emailTemplates";
 
-const DECISIONS: [string, string][] = [
+const ABSTRACT_DECISIONS: [string, string][] = [
   ["accept", "Accept"],
   ["minor_revision", "Minor revision"],
   ["major_revision", "Major revision"],
+  ["reject", "Reject"],
+];
+// The manuscript stage adds "Send back to author" (restart) and keeps the rest.
+const FULL_PAPER_DECISIONS: [string, string][] = [
+  ["accept", "Accept"],
+  ["minor_revision", "Minor revision"],
+  ["major_revision", "Major revision"],
+  ["sent_back", "Send back to author"],
   ["reject", "Reject"],
 ];
 
@@ -72,24 +81,34 @@ export function NotifyAuthor({
     );
   }
 
-  const build =
-    stage === "full_paper" ? fullPaperDecisionEmail : abstractDecisionEmail;
-  const { subject, body } = build({
-    paperId,
-    title,
-    track,
-    decision,
-    submissionType,
-    fullPaperDeadline,
-    message: defaultMessage,
-    name: authorName,
-    reviews,
-    chairName,
-    chairEmail,
-    signerRole,
-    conferenceName,
-    brand,
-  });
+  const decisionList =
+    stage === "full_paper" ? FULL_PAPER_DECISIONS : ABSTRACT_DECISIONS;
+
+  const { subject, body } =
+    decision === "sent_back"
+      ? // Returned to restart — its own letter (the action also auto-emails this).
+        manuscriptReturnedEmail({
+          paperId,
+          title,
+          message: defaultMessage,
+          conferenceName: brand,
+        })
+      : (stage === "full_paper" ? fullPaperDecisionEmail : abstractDecisionEmail)({
+          paperId,
+          title,
+          track,
+          decision,
+          submissionType,
+          fullPaperDeadline,
+          message: defaultMessage,
+          name: authorName,
+          reviews,
+          chairName,
+          chairEmail,
+          signerRole,
+          conferenceName,
+          brand,
+        });
 
   return (
     <div className="card card-pad space-y-4">
@@ -103,7 +122,7 @@ export function NotifyAuthor({
           value={decision}
           onChange={(e) => setDecision(e.target.value)}
         >
-          {DECISIONS.map(([v, l]) => (
+          {decisionList.map(([v, l]) => (
             <option key={v} value={v}>
               {l}
             </option>

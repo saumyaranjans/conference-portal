@@ -455,6 +455,37 @@ export function announcementEmail(o: {
 }
 
 /**
+ * System-generated note when the Track Editor returns a full paper to the
+ * author to RESTART the manuscript submission — used when the corresponding
+ * author has not followed the submission guidelines. The abstract acceptance
+ * stands; the manuscript is reset and must be re-packaged and re-submitted.
+ */
+export function manuscriptReturnedEmail(o: {
+  paperId?: string | null;
+  title?: string;
+  message?: string;
+  conferenceName?: string;
+}): EmailContent {
+  const conf = o.conferenceName || CONF_DEFAULT;
+  const idPart = o.paperId ? ` (${o.paperId})` : "";
+  const subject = `${conf} — Manuscript returned to restart${idPart}`;
+  const body = compose([
+    "Dear Author,",
+    "",
+    `Your full paper${idPart}${o.title ? ` — "${o.title}"` : ""} has been returned by the Track Editor because the submission does not yet follow the manuscript submission guidelines.`,
+    "",
+    "Your abstract acceptance stands. The manuscript submission has been reset — please re-package your full paper (Title Page, blinded manuscript and any supporting files), rebuild the camera-ready, and submit it again from your dashboard.",
+    ...(o.message?.trim() ? ["", `Track Editor's note: ${o.message.trim()}`] : []),
+    "",
+    "This is a system-generated email — please do not reply.",
+    "",
+    "With regards,",
+    `Editorial Office, ${conf}`,
+  ]);
+  return { subject, body };
+}
+
+/**
  * System-generated note to a certificate recipient once the Editorial Office
  * issues their certificate. Points them to their dashboard, where the PDF is
  * available to download.

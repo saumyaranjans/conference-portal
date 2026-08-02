@@ -14,6 +14,10 @@ export const MIN_REVIEWS_PER_SUBMISSION = 2;
  */
 export const FULL_PAPER_ACCEPTS_REQUIRED = 2;
 
+/** Manuscript limits: at most 25 MB per file and 50 compiled pages. */
+export const MAX_UPLOAD_MB = 25;
+export const MANUSCRIPT_MAX_PAGES = 50;
+
 /**
  * The review attached to an assignment.
  *

@@ -58,6 +58,18 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      // The camera-ready PDF is streamed from our origin and rendered inline by
+      // Chromium's internal PDF extension, which loads it from an extension
+      // origin — so the response must be readable across that boundary.
+      {
+        source: "/api/camera-ready/:path*",
+        headers: [
+          {
+            key: "Cross-Origin-Resource-Policy",
+            value: "cross-origin",
+          },
+        ],
+      },
       {
         source:
           "/:section(admin|author|reviewer|editor|chief|profile|api|auth)/:path*",

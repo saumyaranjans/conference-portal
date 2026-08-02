@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
   setFullPaperOption,
@@ -77,7 +77,6 @@ export function FullPaperUpload({
   const [picked, setPicked] = useState<string[]>(selectedOutlets ?? []);
   const [declared, setDeclared] = useState<boolean[]>([false, false, false]);
   const [building, setBuilding] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
 
   // Editable Title / Abstract / Keywords (auto-filled from the accepted abstract).
@@ -196,8 +195,6 @@ export function FullPaperUpload({
       setError(res.message ?? "Could not build the camera-ready PDF.");
       return;
     }
-    // Force a fresh signed URL for the rebuilt PDF, then reveal the preview.
-    setPreviewUrl(null);
     setShowPreview(true);
     setNotice(
       res.warning
@@ -211,22 +208,13 @@ export function FullPaperUpload({
     setShowPreview((v) => !v);
   }
 
-  // Sign the stored camera-ready when the preview is shown. A signed HTTPS URL
-  // in a plain (unsandboxed) iframe gives the browser's native PDF viewer with
-  // page navigation — a blob URL in a sandboxed frame renders blank.
-  useEffect(() => {
-    if (!showPreview || previewUrl || !cameraReadyPath) return;
-    let cancelled = false;
-    createClient()
-      .storage.from("papers")
-      .createSignedUrl(cameraReadyPath, 600)
-      .then(({ data }) => {
-        if (!cancelled && data?.signedUrl) setPreviewUrl(data.signedUrl);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [showPreview, previewUrl, cameraReadyPath]);
+  // Served from our own origin so the browser's native PDF viewer renders it
+  // inline (a cross-origin Supabase URL is blocked from the embedded viewer by
+  // our Cross-Origin-Resource-Policy). The build timestamp busts the cache
+  // after a rebuild.
+  const previewSrc = cameraReadyBuiltAt
+    ? `/api/camera-ready/${submissionId}?v=${encodeURIComponent(cameraReadyBuiltAt)}`
+    : null;
 
   async function download(f: StoredFile) {
     const { data } = await createClient()
@@ -649,25 +637,31 @@ export function FullPaperUpload({
             </p>
           )}
 
-          {isBuilt && showPreview && (
+          {isBuilt && showPreview && previewSrc && (
             <div className="mt-3 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
-              {previewUrl ? (
-                <object
-                  data={previewUrl}
-                  type="application/pdf"
-                  className="w-full block"
+              <object
+                data={previewSrc}
+                type="application/pdf"
+                className="w-full block"
+                style={{ height: "78vh" }}
+              >
+                <iframe
+                  src={previewSrc}
+                  title="Camera-ready preview"
+                  className="w-full"
                   style={{ height: "78vh" }}
+                />
+              </object>
+              <div className="border-t border-slate-200 dark:border-slate-700 px-3 py-2 text-xs">
+                <a
+                  href={previewSrc}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-700 hover:underline dark:text-blue-300"
                 >
-                  <iframe
-                    src={previewUrl}
-                    title="Camera-ready preview"
-                    className="w-full"
-                    style={{ height: "78vh" }}
-                  />
-                </object>
-              ) : (
-                <p className="p-4 text-sm text-slate-500">Loading preview…</p>
-              )}
+                  Open in a new tab ↗
+                </a>
+              </div>
             </div>
           )}
         </div>

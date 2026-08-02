@@ -163,6 +163,17 @@ export default async function AuthorSubmissionPage({
         }
       />
 
+      {(sub as any).pathway_reverted_at && (
+        <div className="card card-pad bg-emerald-50 border-emerald-200 mb-6">
+          <p className="text-sm text-emerald-900">
+            <span className="font-medium">Pathway history:</span> this paper was
+            submitted for <strong>Pathway B</strong> (full paper) and switched to{" "}
+            <strong>Pathway A</strong> — present on the accepted abstract — on{" "}
+            {formatDate((sub as any).pathway_reverted_at)}.
+          </p>
+        </div>
+      )}
+
       {sub.status === "revisions_requested" && (
         <div className="card card-pad bg-orange-50 border-orange-200 mb-6">
           <p className="text-sm text-orange-900 font-medium">

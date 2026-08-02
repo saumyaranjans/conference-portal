@@ -856,6 +856,7 @@ export async function cancelFullPaper(
       full_paper_deadline: null,
       full_paper_submitted_at: null,
       requested_outlet_ids: [],
+      pathway_reverted_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     })
     .eq("id", id);

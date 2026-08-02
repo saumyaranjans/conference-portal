@@ -500,6 +500,16 @@ export default async function AuthorDashboard({
                 >
                   {pathwayOf(s).label}
                 </span>
+                {(s as unknown as { pathway_reverted_at: string | null })
+                  .pathway_reverted_at && (
+                  <span className="mt-1 block text-[11px] text-slate-400">
+                    ↩ Switched from Pathway B on{" "}
+                    {formatDate(
+                      (s as unknown as { pathway_reverted_at: string })
+                        .pathway_reverted_at
+                    )}
+                  </span>
+                )}
               </td>
               <td className="td text-slate-500">{s.tracks?.name ?? "—"}</td>
               <td className="td whitespace-nowrap">

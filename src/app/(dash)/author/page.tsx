@@ -414,9 +414,13 @@ export default async function AuthorDashboard({
                         )}
                       </div>
                       {/* Switch to Pathway A → revert to an accepted abstract.
-                          Double-confirmed; notifies all authors + CCs the Track
-                          Editor and Convener. */}
-                      <CancelFullPaperButton submissionId={m.id} />
+                          Only before the manuscript is ever submitted — once it
+                          is under review (or in revision) it can no longer be
+                          self-cancelled. Double-confirmed; notifies all authors
+                          + CCs the Track Editor and Convener. */}
+                      {!m.done && !m.revision && (
+                        <CancelFullPaperButton submissionId={m.id} />
+                      )}
                     </>
                   )}
                 </div>

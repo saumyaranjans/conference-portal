@@ -1113,9 +1113,9 @@ export async function submitFullPaper(
  * Pathway B → Pathway A. The corresponding author cancels the full-paper track
  * and reverts the paper to an accepted Pathway A abstract — the state the
  * authors were in when first told to register. This is deliberate and covered
- * by the double confirmation in the UI. Allowed only while the paper is still at
- * the manuscript stage (accepted abstract, or a manuscript in review / needing
- * revision) — never once a full-paper decision has been rendered.
+ * by the double confirmation in the UI. Allowed only while the paper is an
+ * accepted abstract that has NOT yet had its manuscript submitted — once the
+ * manuscript is under review it can only be withdrawn by the Convener.
  *
  * All authors are notified (in-app + email); the handling Track Editor and the
  * Convener are CC'd on the email for their records.
@@ -1143,15 +1143,14 @@ export async function cancelFullPaper(
     };
   if (s.submission_type !== "full_paper_presentation")
     return { ok: false, message: "This is not a full-paper (Pathway B) submission." };
-  if (
-    !["abstract_accepted", "submitted", "under_review", "revisions_requested"].includes(
-      s.status
-    )
-  )
+  // Only before the manuscript has ever been submitted. Once it is under review
+  // (submitted / under_review / revisions_requested / decided) it can no longer
+  // be self-cancelled — the author must ask the Convener to withdraw it.
+  if (s.status !== "abstract_accepted")
     return {
       ok: false,
       message:
-        "The full paper can be cancelled only while it is at the manuscript stage.",
+        "The full paper can only be cancelled before the manuscript is submitted. Please contact the Convener to withdraw a manuscript that is under review.",
     };
 
   // Revert to an accepted Pathway A abstract and strip everything full-paper.

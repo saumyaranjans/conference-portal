@@ -77,9 +77,9 @@ export async function DashboardShell({
                 public conference website with the submission-portal home. */}
             <span aria-hidden className="h-6 w-px bg-slate-200 dark:bg-slate-700 shrink-0" />
             <a
-              href="/Home"
+              href="https://www.glogift2027.in/Home"
               className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-1.5 text-sm font-medium text-amber-800 transition hover:bg-amber-100 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200 shrink-0"
-              title="Go to the public conference website (glogift2027.in)"
+              title="Go to the conference website (www.glogift2027.in)"
             >
               <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                 <circle cx="12" cy="12" r="9" />

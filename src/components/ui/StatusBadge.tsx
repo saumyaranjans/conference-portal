@@ -29,8 +29,12 @@ export function StatusBadge({
   /** Pass the version so a revised paper under review reads "Revised …". */
   version?: number | null;
 }) {
+  // A rounded-rectangle box (not a pill) so multi-line labels like "Revised
+  // Abstract Under Review" sit in a neat card instead of a circle.
   return (
-    <span className={`badge ${STATUS_STYLES[status]}`}>
+    <span
+      className={`inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium ring-1 ring-inset ring-black/5 ${STATUS_STYLES[status]}`}
+    >
       {statusLabel(status, submissionType, stage, version)}
     </span>
   );

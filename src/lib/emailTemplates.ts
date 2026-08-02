@@ -582,6 +582,52 @@ export function fullPaperReviewFacilitationEmail(o: {
 }
 
 /**
+ * System-generated note to the Convener when a full paper is submitted but the
+ * paper has NO Track Editor carried over from Pathway A — the Convener assigns
+ * one so the manuscript review can be facilitated. Same assignment flow as the
+ * abstract stage, worded for the manuscript.
+ */
+export function manuscriptNeedsEditorEmail(o: {
+  convenerName?: string | null;
+  paperId?: string | null;
+  title: string;
+  track?: string | null;
+  assignLink?: string;
+  minAccepts?: number;
+  conferenceName?: string;
+}): EmailContent {
+  const conf = o.conferenceName || CONF_DEFAULT;
+  const ref = [o.paperId ? `Paper ${o.paperId}` : null, `"${o.title}"`]
+    .filter(Boolean)
+    .join(" — ");
+  const min = o.minAccepts ?? 2;
+  const subject = `${conf} — Manuscript submitted, Track Editor assignment needed${
+    o.paperId ? ` (${o.paperId})` : ""
+  }`;
+  const body = compose([
+    greeting(o.convenerName ?? undefined, "Convener"),
+    "",
+    `A full paper (manuscript) has been submitted${
+      o.track ? ` under the ${o.track} track` : ""
+    } but does not yet have a Track Editor assigned:`,
+    "",
+    ref,
+    "",
+    "Please assign a Track Editor to facilitate the manuscript review. At this stage, expert reviewers are required to ensure the credibility of the submitted manuscript.",
+    "",
+    `A minimum of ${min} reviewer acceptances (Accept recommendations) are required to endorse the submission for publication.`,
+    "",
+    o.assignLink ? `Assign a Track Editor here: ${o.assignLink}` : null,
+    "",
+    "This is a system-generated email — please do not reply.",
+    "",
+    "With regards,",
+    `Editorial Office, ${conf}`,
+  ]);
+  return { subject, body };
+}
+
+/**
  * System-generated note when the corresponding author cancels a Pathway B full
  * paper, reverting the paper to an accepted Pathway A abstract. Sent to every
  * author, with the handling Track Editor and the Convener CC'd. Reminds them the

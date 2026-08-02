@@ -11,6 +11,7 @@ import {
   fullPaperCancelledEmail,
   fullPaperReviewFacilitationEmail,
   fullPaperSubmittedAuthorEmail,
+  manuscriptNeedsEditorEmail,
   paperAssignmentEmail,
   signOffLine,
   submissionAcknowledgementEmail,
@@ -837,7 +838,9 @@ export async function submitFullPaper(
       }
     }
 
-    // (2) handling Track Editor
+    // (2) The Track Editor normally carries over from Pathway A. If one is
+    // assigned, ask them to facilitate the review; if not, ask the Convener to
+    // assign a Track Editor for the manuscript (same flow, manuscript wording).
     if (f?.assigned_editor_id) {
       const { data: te } = await admin
         .from("profiles")
@@ -861,6 +864,34 @@ export async function submitFullPaper(
             subject: teEmail.subject,
             text: teEmail.body,
             kind: "full_paper_facilitate",
+            sentBy: profile.id,
+          });
+        } catch {
+          // Mail failure must never break the submission.
+        }
+      }
+    } else {
+      const { data: conveners } = await admin
+        .from("profiles")
+        .select("full_name, email")
+        .contains("roles", ["chief"]);
+      for (const c of (conveners as any[]) ?? []) {
+        if (!c.email) continue;
+        const cEmail = manuscriptNeedsEditorEmail({
+          convenerName: c.full_name,
+          paperId: f?.paper_id,
+          title: f?.title ?? "",
+          track,
+          assignLink: `${siteUrl()}/chief`,
+          minAccepts: FULL_PAPER_ACCEPTS_REQUIRED,
+          conferenceName: "GLOGIFT 2027",
+        });
+        try {
+          await sendEmail({
+            to: c.email,
+            subject: cEmail.subject,
+            text: cEmail.body,
+            kind: "manuscript_needs_editor",
             sentBy: profile.id,
           });
         } catch {

@@ -495,6 +495,93 @@ export function certificateIssuedEmail(o: {
 }
 
 /**
+ * System-generated acknowledgement to every author (corresponding + co-authors)
+ * once the full paper is submitted for review — carries the Manuscript ID. Fires
+ * for both packaging options (A and B).
+ */
+export function fullPaperSubmittedAuthorEmail(o: {
+  paperId?: string | null;
+  title: string;
+  track?: string | null;
+  option?: string | null;
+  conferenceName?: string;
+}): EmailContent {
+  const conf = o.conferenceName || CONF_DEFAULT;
+  const ref = [o.paperId ? `Paper ${o.paperId}` : null, `"${o.title}"`]
+    .filter(Boolean)
+    .join(" — ");
+  const subject = `${conf} — Full paper received${o.paperId ? ` (${o.paperId})` : ""}`;
+  const body = compose([
+    "Dear Author,",
+    "",
+    `Thank you — the full paper for ${ref}${
+      o.track ? ` in the ${o.track} track` : ""
+    } has been received and is now entered for review.`,
+    "",
+    `Manuscript ID: ${o.paperId ?? "—"}`,
+    o.option ? `Packaging: Option ${o.option}.` : null,
+    "",
+    "Your manuscript will undergo double-blind peer review. You will be notified of the decision — accept, revise or reject — with the reviewers' feedback.",
+    "",
+    "This acknowledgement is sent to the corresponding author and all co-authors on the paper.",
+    "",
+    "This is a system-generated email — please do not reply. For any query, kindly write to the conference organisers.",
+    "",
+    "With regards,",
+    `Editorial Office, ${conf}`,
+  ]);
+  return { subject, body };
+}
+
+/**
+ * System-generated note to the handling Track Editor when a full paper is
+ * submitted, asking them to facilitate the review — invite expert reviewers and
+ * note the minimum acceptances needed to endorse the paper. Fires for both
+ * packaging options.
+ */
+export function fullPaperReviewFacilitationEmail(o: {
+  editorName?: string | null;
+  paperId?: string | null;
+  title: string;
+  track?: string | null;
+  reviewLink?: string;
+  minAccepts?: number;
+  conferenceName?: string;
+}): EmailContent {
+  const conf = o.conferenceName || CONF_DEFAULT;
+  const ref = [o.paperId ? `Paper ${o.paperId}` : null, `"${o.title}"`]
+    .filter(Boolean)
+    .join(" — ");
+  const min = o.minAccepts ?? 2;
+  const subject = `${conf} — Full paper submitted for review${
+    o.paperId ? ` (${o.paperId})` : ""
+  } — please facilitate`;
+  const body = compose([
+    greeting(o.editorName ?? undefined, "Track Editor"),
+    "",
+    `A full paper has been submitted under your track${
+      o.track ? ` (${o.track})` : ""
+    } and now requires you to facilitate the review process:`,
+    "",
+    ref,
+    "",
+    "At this stage, expert reviewers are required to ensure the credibility of the submitted manuscript. Please invite suitable, conflict-free reviewers to carry out a double-blind review.",
+    "",
+    `A minimum of ${min} reviewer acceptances (Accept recommendations) are required to endorse the submission for publication.`,
+    "",
+    o.reviewLink
+      ? `Open the paper to invite reviewers and record your decision: ${o.reviewLink}`
+      : null,
+    "",
+    "This is a system-generated email — please do not reply.",
+    "",
+    "With regards,",
+    `Editorial Office, ${conf}`,
+  ]);
+  return { subject, body };
+}
+
+/**
  * System-generated note when the corresponding author cancels a Pathway B full
  * paper, reverting the paper to an accepted Pathway A abstract. Sent to every
  * author, with the handling Track Editor and the Convener CC'd. Reminds them the

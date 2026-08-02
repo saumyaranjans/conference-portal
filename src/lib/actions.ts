@@ -9,6 +9,8 @@ import { emailConfigured, sendEmail } from "@/lib/email";
 import {
   chairInviteEmail,
   fullPaperCancelledEmail,
+  fullPaperReviewFacilitationEmail,
+  fullPaperSubmittedAuthorEmail,
   paperAssignmentEmail,
   signOffLine,
   submissionAcknowledgementEmail,
@@ -795,6 +797,79 @@ export async function submitFullPaper(
     option: s.full_paper_option,
     revision: isRevision,
   });
+
+  // Two system-generated emails on submit (both Option A and B):
+  //   1) every author (corresponding + co-authors) — acknowledgement + Manuscript ID;
+  //   2) the handling Track Editor — please facilitate the review.
+  if (emailConfigured()) {
+    const { data: full } = await admin
+      .from("submissions")
+      .select("paper_id, title, assigned_editor_id, tracks(name)")
+      .eq("id", id)
+      .maybeSingle();
+    const f = full as any;
+    const track = f?.tracks?.name ?? null;
+
+    // (1) authors
+    const { data: authors } = await admin
+      .from("submission_authors")
+      .select("email")
+      .eq("submission_id", id);
+    const authEmail = fullPaperSubmittedAuthorEmail({
+      paperId: f?.paper_id,
+      title: f?.title ?? "",
+      track,
+      option: s.full_paper_option,
+      conferenceName: "GLOGIFT 2027",
+    });
+    for (const a of (authors as any[]) ?? []) {
+      if (!a.email) continue;
+      try {
+        await sendEmail({
+          to: a.email,
+          subject: authEmail.subject,
+          text: authEmail.body,
+          kind: "full_paper_submitted",
+          sentBy: profile.id,
+        });
+      } catch {
+        // Mail failure must never break the submission.
+      }
+    }
+
+    // (2) handling Track Editor
+    if (f?.assigned_editor_id) {
+      const { data: te } = await admin
+        .from("profiles")
+        .select("full_name, email")
+        .eq("id", f.assigned_editor_id)
+        .maybeSingle();
+      const editor = te as any;
+      if (editor?.email) {
+        const teEmail = fullPaperReviewFacilitationEmail({
+          editorName: editor.full_name,
+          paperId: f?.paper_id,
+          title: f?.title ?? "",
+          track,
+          reviewLink: `${siteUrl()}/editor/submissions/${id}`,
+          minAccepts: FULL_PAPER_ACCEPTS_REQUIRED,
+          conferenceName: "GLOGIFT 2027",
+        });
+        try {
+          await sendEmail({
+            to: editor.email,
+            subject: teEmail.subject,
+            text: teEmail.body,
+            kind: "full_paper_facilitate",
+            sentBy: profile.id,
+          });
+        } catch {
+          // Mail failure must never break the submission.
+        }
+      }
+    }
+  }
+
   revalidatePath("/author");
   revalidatePath(`/author/submissions/${id}`);
   return { ok: true, message: "Full paper submitted for review." };

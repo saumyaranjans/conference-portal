@@ -41,6 +41,7 @@ export function ComposeEmail({
   body: initialBody,
   showSend = false,
   sendLabel = "Send now",
+  ccConvener = false,
   onSend,
 }: {
   to?: string;
@@ -51,6 +52,8 @@ export function ComposeEmail({
   showSend?: boolean;
   /** Label for that button — e.g. "Send invitation" on the reviewer flow. */
   sendLabel?: string;
+  /** CC the Convener (used for decision letters). */
+  ccConvener?: boolean;
   /** Custom sender, for flows that do more than email (e.g. also assign). */
   onSend?: (
     subject: string,
@@ -87,6 +90,7 @@ export function ComposeEmail({
             fd.set("to", to);
             fd.set("subject", subject);
             fd.set("body", body);
+            if (ccConvener) fd.set("cc_convener", "1");
             return sendComposedEmail(fd);
           })();
       setResult({ ok: res.ok, message: res.message ?? "" });

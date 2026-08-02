@@ -198,6 +198,10 @@ export function fullPaperDecisionEmail(o: DecisionOpts): EmailContent {
 /** Where to write for help with a Track Editor invitation. */
 const CHAIR_HELP = "glogift27.chair@iimsambalpur.ac.in";
 
+/** The two organiser help contacts (chair + coordinator), for letter footers. */
+const ORG_CONTACTS =
+  "glogift27.chair@iimsambalpur.ac.in · glogift27.coordinator@iimsambalpur.ac.in";
+
 export function chairInviteEmail(o: {
   name?: string;
   track: string;
@@ -463,24 +467,41 @@ export function announcementEmail(o: {
 export function manuscriptReturnedEmail(o: {
   paperId?: string | null;
   title?: string;
+  track?: string | null;
   message?: string;
-  conferenceName?: string;
+  name?: string | null;
+  /** The deciding editor, for the signature. */
+  chairName?: string | null;
+  chairEmail?: string | null;
+  signerRole?: "Track Editor" | "Convener";
+  /** Full conference title for the signature. */
+  conferenceName?: string | null;
+  /** Short brand for the subject line. */
+  brand?: string | null;
 }): EmailContent {
-  const conf = o.conferenceName || CONF_DEFAULT;
+  const brand = (o.brand ?? "").trim() || CONF_DEFAULT;
+  const conf = (o.conferenceName ?? "").trim();
+  const role = o.signerRole || "Track Editor";
   const idPart = o.paperId ? ` (${o.paperId})` : "";
-  const subject = `${conf} — Manuscript returned to restart${idPart}`;
+  const subject = `${brand} — Manuscript returned to restart${idPart}`;
   const body = compose([
-    "Dear Author,",
+    greeting(o.name ?? undefined),
     "",
-    `Your full paper${idPart}${o.title ? ` — "${o.title}"` : ""} has been returned by the Track Editor because the submission does not yet follow the manuscript submission guidelines.`,
+    `Your full paper${idPart}${o.title ? ` — "${o.title}"` : ""} has been returned because the submission does not yet follow the manuscript submission guidelines.`,
     "",
     "Your abstract acceptance stands. The manuscript submission has been reset — please re-package your full paper (Title Page, blinded manuscript and any supporting files), rebuild the camera-ready, and submit it again from your dashboard.",
-    ...(o.message?.trim() ? ["", `Track Editor's note: ${o.message.trim()}`] : []),
+    o.message && o.message.trim()
+      ? `\nNOTE FROM THE ${role.toUpperCase()}\n\n${o.message.trim()}`
+      : null,
+    "",
+    `For any additional information, please contact the Chair and Coordinator: ${ORG_CONTACTS}.`,
     "",
     "This is a system-generated email — please do not reply.",
     "",
     "With regards,",
-    `Editorial Office, ${conf}`,
+    o.chairName || null,
+    signOffLine({ role, track: role === "Convener" ? null : o.track, conf, brand }),
+    o.chairEmail || null,
   ]);
   return { subject, body };
 }

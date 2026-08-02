@@ -94,6 +94,8 @@ export async function sendComposedEmail(
   const to = String(formData.get("to") ?? "").trim();
   const subject = String(formData.get("subject") ?? "");
   const body = String(formData.get("body") ?? "");
+  // Decision letters CC the Convener (chief) so they always have a copy.
+  const ccConvener = String(formData.get("cc_convener") ?? "") === "1";
 
   if (!to) return { ok: false, message: "No recipient address." };
   if (!emailConfigured())
@@ -103,11 +105,18 @@ export async function sendComposedEmail(
         "Email sending isn't set up yet — copy the message and send it from your own email.",
     };
 
+  const cc = ccConvener
+    ? (await convenerEmails(createAdminClient())).filter(
+        (e) => e.toLowerCase() !== to.toLowerCase()
+      )
+    : undefined;
+
   // Replies go to the staff member who sent it, not the no-reply sender.
   const r = await sendEmail({
     to,
     subject,
     text: body,
+    cc,
     replyTo: profile.email || undefined,
     kind: "composed",
     sentBy: profile.id,
@@ -2705,6 +2714,19 @@ export async function setAbstractReviewRoute(
  * Nothing is emailed here; the chair sends the decision letter from the
  * "Email the author" card after previewing it.
  */
+/** Convener (chief-role) email addresses — CC'd on decision letters. */
+async function convenerEmails(
+  admin: ReturnType<typeof createAdminClient>
+): Promise<string[]> {
+  const { data } = await admin
+    .from("profiles")
+    .select("email")
+    .contains("roles", ["chief"]);
+  return ((data as any[]) ?? [])
+    .map((p) => (p.email ?? "").trim())
+    .filter(Boolean);
+}
+
 export async function recordRecommendation(
   formData: FormData
 ): Promise<ActionResult> {
@@ -2855,20 +2877,44 @@ export async function recordRecommendation(
     await admin.from("assignments").delete().eq("submission_id", submissionId);
 
     if (emailConfigured()) {
+      const { data: meta } = await admin
+        .from("submissions")
+        .select("tracks(name, conferences(name, acronym, year))")
+        .eq("id", submissionId)
+        .maybeSingle();
+      const trackName = (meta as any)?.tracks?.name ?? null;
+      const conf = (meta as any)?.tracks?.conferences;
+      const brand =
+        conf?.acronym && conf?.year ? `${conf.acronym} ${conf.year}` : "GLOGIFT 2027";
+      const signerRole =
+        (sub as any).assigned_editor_id === profile.id ? "Track Editor" : "Convener";
+      const cc = await convenerEmails(admin);
+
       const authorRows = await submissionAuthors(admin, submissionId, sub.author_id);
-      const letter = manuscriptReturnedEmail({
-        paperId: (sub as any).paper_id,
-        title: sub.title ?? "",
-        message: String(formData.get("rationale") ?? ""),
-        conferenceName: "GLOGIFT 2027",
-      });
+      const seen = new Set<string>();
       for (const a of authorRows) {
-        if (!a.email) continue;
+        const rawEmail = (a.email ?? "").trim();
+        const email = rawEmail.toLowerCase();
+        if (!email || seen.has(email)) continue;
+        seen.add(email);
+        const letter = manuscriptReturnedEmail({
+          paperId: (sub as any).paper_id,
+          title: sub.title ?? "",
+          track: trackName,
+          message: String(formData.get("rationale") ?? ""),
+          name: a.full_name,
+          chairName: profile.full_name,
+          chairEmail: profile.email,
+          signerRole,
+          conferenceName: conf?.name ?? null,
+          brand,
+        });
         try {
           await sendEmail({
-            to: a.email,
+            to: rawEmail,
             subject: letter.subject,
             text: letter.body,
+            cc,
             kind: "manuscript_returned",
             sentBy: profile.id,
           });

@@ -90,8 +90,14 @@ export function NotifyAuthor({
         manuscriptReturnedEmail({
           paperId,
           title,
+          track,
           message: defaultMessage,
-          conferenceName: brand,
+          name: authorName,
+          chairName,
+          chairEmail,
+          signerRole,
+          conferenceName,
+          brand,
         })
       : (stage === "full_paper" ? fullPaperDecisionEmail : abstractDecisionEmail)({
           paperId,
@@ -145,6 +151,7 @@ export function NotifyAuthor({
         subject={subject}
         body={body}
         showSend
+        ccConvener
         sendLabel="Send decision email"
       />
     </div>

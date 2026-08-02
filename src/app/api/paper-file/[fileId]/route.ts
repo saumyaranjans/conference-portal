@@ -64,8 +64,9 @@ export async function GET(
   const isPdf = /\.pdf$/i.test(f.file_name);
   return new Response(bytes, {
     headers: {
+      // PDFs render inline (no disposition); other types download.
       "Content-Type": isPdf ? "application/pdf" : "application/octet-stream",
-      "Content-Disposition": `inline; filename="${f.file_name}"`,
+      ...(isPdf ? {} : { "Content-Disposition": `attachment; filename="${f.file_name}"` }),
       "Cache-Control": "private, no-store, max-age=0, must-revalidate",
     },
   });

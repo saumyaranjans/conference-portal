@@ -44,7 +44,6 @@ export async function GET(
   return new Response(bytes, {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `inline; filename="${s.paper_id ?? "manuscript"}-camera-ready.pdf"`,
       "Cache-Control": "private, no-store, max-age=0, must-revalidate",
     },
   });

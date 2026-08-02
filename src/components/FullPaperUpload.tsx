@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
   setFullPaperOption,
@@ -196,14 +196,9 @@ export function FullPaperUpload({
       setError(res.message ?? "Could not build the camera-ready PDF.");
       return;
     }
-    // Show the freshly built PDF inline for the author to review.
-    if (res.previewPdf) {
-      const url = base64ToBlobUrl(res.previewPdf);
-      if (url) {
-        setPreviewUrl(url);
-        setShowPreview(true);
-      }
-    }
+    // Force a fresh signed URL for the rebuilt PDF, then reveal the preview.
+    setPreviewUrl(null);
+    setShowPreview(true);
     setNotice(
       res.warning
         ? `${res.message} ${res.warning}`
@@ -212,32 +207,26 @@ export function FullPaperUpload({
     router.refresh();
   }
 
-  function base64ToBlobUrl(b64: string): string | null {
-    try {
-      const bin = atob(b64);
-      const bytes = new Uint8Array(bin.length);
-      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-      return URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
-    } catch {
-      return null;
-    }
+  function togglePreview() {
+    setShowPreview((v) => !v);
   }
 
-  // Toggle the in-page preview. Uses the just-built blob if we have it,
-  // otherwise signs the stored camera-ready.
-  async function togglePreview() {
-    if (showPreview) {
-      setShowPreview(false);
-      return;
-    }
-    if (!previewUrl && cameraReadyPath) {
-      const { data } = await createClient()
-        .storage.from("papers")
-        .createSignedUrl(cameraReadyPath, 300);
-      if (data?.signedUrl) setPreviewUrl(data.signedUrl);
-    }
-    setShowPreview(true);
-  }
+  // Sign the stored camera-ready when the preview is shown. A signed HTTPS URL
+  // in a plain (unsandboxed) iframe gives the browser's native PDF viewer with
+  // page navigation — a blob URL in a sandboxed frame renders blank.
+  useEffect(() => {
+    if (!showPreview || previewUrl || !cameraReadyPath) return;
+    let cancelled = false;
+    createClient()
+      .storage.from("papers")
+      .createSignedUrl(cameraReadyPath, 600)
+      .then(({ data }) => {
+        if (!cancelled && data?.signedUrl) setPreviewUrl(data.signedUrl);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [showPreview, previewUrl, cameraReadyPath]);
 
   async function download(f: StoredFile) {
     const { data } = await createClient()
@@ -660,15 +649,25 @@ export function FullPaperUpload({
             </p>
           )}
 
-          {isBuilt && showPreview && previewUrl && (
+          {isBuilt && showPreview && (
             <div className="mt-3 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
-              <iframe
-                src={previewUrl}
-                title="Camera-ready preview"
-                className="w-full"
-                style={{ height: "70vh" }}
-                sandbox="allow-same-origin"
-              />
+              {previewUrl ? (
+                <object
+                  data={previewUrl}
+                  type="application/pdf"
+                  className="w-full block"
+                  style={{ height: "78vh" }}
+                >
+                  <iframe
+                    src={previewUrl}
+                    title="Camera-ready preview"
+                    className="w-full"
+                    style={{ height: "78vh" }}
+                  />
+                </object>
+              ) : (
+                <p className="p-4 text-sm text-slate-500">Loading preview…</p>
+              )}
             </div>
           )}
         </div>

@@ -274,8 +274,8 @@ export default async function AuthorDashboard({
                 Submit New Manuscript
               </h2>
               <p className="text-xs text-teal-700/80">
-                One full paper per accepted Pathway B abstract (up to{" "}
-                {MAX_SUBMISSIONS_PER_AUTHOR}).
+                One full paper for each accepted abstract — up to{" "}
+                {MAX_SUBMISSIONS_PER_AUTHOR} in all.
               </p>
             </div>
             <span className="text-sm font-medium text-teal-700 whitespace-nowrap">

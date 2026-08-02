@@ -61,43 +61,16 @@ export async function DashboardShell({
       <header className="app-header backdrop-blur-md backdrop-saturate-150 border-b border-slate-200 sticky top-0 z-20">
         <div className="brand-rule" />
         <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-            <Link href="/" className="flex items-center gap-2.5 shrink-0">
-              <img
-                src="/glogift-logo.png"
-                alt="GLOGIFT"
-                className="h-9 w-auto object-contain"
-              />
-              <span className="hidden lg:inline text-lg font-bold tracking-tight text-gradient w-fit">
-                GLOGIFT 2027
-              </span>
-            </Link>
-
-            {/* Two clearly-distinct destinations so users never confuse the
-                public conference website with the submission-portal home. */}
-            <span aria-hidden className="h-6 w-px bg-slate-200 dark:bg-slate-700 shrink-0" />
-            <a
-              href="https://www.glogift2027.in/Home"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-1.5 text-sm font-medium text-amber-800 transition hover:bg-amber-100 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200 shrink-0"
-              title="Go to the conference website (www.glogift2027.in)"
-            >
-              <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                <circle cx="12" cy="12" r="9" />
-                <path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18" />
-              </svg>
-              <span className="hidden sm:inline">Conference Website</span>
-            </a>
-            <Link
-              href="/"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-sm font-medium text-blue-700 transition hover:bg-blue-100 dark:border-blue-500/40 dark:bg-blue-500/10 dark:text-blue-300 shrink-0"
-              title="Go to your submission-portal home"
-            >
-              <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                <path d="M3 11l9-8 9 8M6 10v10h12V10" />
-              </svg>
-              <span className="hidden sm:inline">Portal Home</span>
-            </Link>
-          </div>
+          <Link href="/" className="flex items-center gap-2.5 shrink-0">
+            <img
+              src="/glogift-logo.png"
+              alt="GLOGIFT"
+              className="h-9 w-auto object-contain"
+            />
+            <span className="text-lg font-bold tracking-tight text-gradient w-fit">
+              GLOGIFT 2027
+            </span>
+          </Link>
           <div className="flex items-center gap-4">
             <RoleSwitcher roles={visibleRoles} />
             <ThemeToggle />

@@ -67,26 +67,29 @@ export function SidebarNav({
 
   return (
     <nav className="sticky top-20">
+      {/* Two clearly-distinct destinations (moved here from the header): the
+          public conference website vs. the submission-portal home. */}
+      <a
+        href="https://www.glogift2027.in/Home"
+        className="flex items-center gap-2 px-3 py-2 mb-2 rounded-lg border border-amber-300 bg-amber-50 text-sm font-medium text-amber-800 transition hover:bg-amber-100 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200"
+        title="Go to the conference website (www.glogift2027.in)"
+      >
+        <svg viewBox="0 0 24 24" className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <circle cx="12" cy="12" r="9" />
+          <path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18" />
+        </svg>
+        Conference Website
+      </a>
+
       <Link
         href="/"
-        className="flex items-center gap-2 px-3 py-2 mb-4 rounded-lg text-sm
-                   text-slate-700 hover:bg-white hover:text-blue-700 transition-colors"
+        className="flex items-center gap-2 px-3 py-2 mb-4 rounded-lg border border-blue-200 bg-blue-50 text-sm font-medium text-blue-700 transition hover:bg-blue-100 dark:border-blue-500/40 dark:bg-blue-500/10 dark:text-blue-300"
+        title="Go to your submission-portal home"
       >
-        <svg
-          className="w-4 h-4"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={1.8}
-          viewBox="0 0 24 24"
-          aria-hidden
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="m2.25 12 8.954-8.955a1.126 1.126 0 0 1 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75"
-          />
+        <svg viewBox="0 0 24 24" className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <path d="M3 11l9-8 9 8M6 10v10h12V10" />
         </svg>
-        Home
+        Portal Home
       </Link>
 
       <Link

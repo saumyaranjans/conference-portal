@@ -1017,9 +1017,14 @@ export function LandingPage() {
                     </div>
                   </div>
                 ))}
-                <p className="text-[11px] text-slate-500">
-                  The faded stretch is the full-paper stage, which Pathway A
-                  skips — both pathways rejoin to register and present.
+                <p className="text-[11px] leading-relaxed text-slate-500">
+                  Both pathways run identically through the abstract stage — a
+                  Pathway B author is on Pathway A until the abstract is accepted
+                  (30 Nov 2026). Only then does the faded full-paper stretch begin,
+                  which Pathway A skips; at that point a Pathway B author may
+                  either continue with the full manuscript or return to Pathway A
+                  and present on the accepted abstract. Both pathways rejoin to
+                  register and present.
                 </p>
               </div>
             </div>
@@ -1060,6 +1065,13 @@ export function LandingPage() {
               );
             })}
           </ol>
+
+          <p className="md:hidden mt-4 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
+            A Pathway B author is on Pathway A until the abstract is accepted
+            (30 Nov 2026); only then does the full-paper stage begin. After
+            acceptance, a Pathway B author may continue with the full manuscript
+            or return to Pathway A and present on the accepted abstract.
+          </p>
 
           <p className="mt-6 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
             <span className="text-orange-500">*</span> Full-paper decisions are{" "}

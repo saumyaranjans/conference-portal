@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { fullPaperSlotLabel } from "@/lib/types";
 import { PdfImageViewer } from "@/components/PdfImageViewer";
 
@@ -8,11 +9,14 @@ type StoredFile = { id: string; slot: string; file_name: string; file_path: stri
 /**
  * Role-aware view of a Pathway B manuscript package.
  *
- *  - reviewer: single-blind. Sees the blinded manuscript and neutral extras
- *    only — never the Title Page and never the author-named camera-ready cover.
- *  - editor / chief: identity-aware. Sees the compiled camera-ready PDF (cover
- *    with author names + the full manuscript) plus every raw uploaded file,
- *    including the Title Page.
+ *  - reviewer: single-blind. Sees the blinded review copy (author-less cover +
+ *    manuscript) and neutral extras only — never the Title Page and never the
+ *    author-named camera-ready cover.
+ *  - editor / chief: identity-aware. Sees the full camera-ready PDF (cover with
+ *    author names), the blinded review copy (exactly what reviewers see) and
+ *    every raw uploaded file, including the Title Page.
+ *
+ * The two compiled PDFs render inside collapsible boxes — expand to view.
  */
 const IDENTITY_SLOTS = new Set(["title_page"]);
 const SLOT_ORDER = [
@@ -49,9 +53,6 @@ export function ManuscriptFilesView({
   const isReviewer = role === "reviewer";
 
   // Blinded review copy = the compiled manuscript behind an author-less cover.
-  // Shown as the "Manuscript preview" for everyone (reviewers see only this;
-  // the Track Editor / Convener see it too, exactly as the reviewer does, in
-  // addition to the full camera-ready above).
   const reviewCopySrc = reviewCopyBuiltAt
     ? `/api/review-copy/${submissionId}?v=${encodeURIComponent(reviewCopyBuiltAt)}`
     : null;
@@ -65,7 +66,7 @@ export function ManuscriptFilesView({
       return (ai < 0 ? 99 : ai) - (bi < 0 ? 99 : bi);
     });
 
-  // The slot to preview inline (the blinded manuscript, if it is a PDF).
+  // Fallback preview when no review copy is built: the raw blinded manuscript.
   const manuscript = visible.find(
     (f) => (f.slot === "manuscript_full" || f.slot === "manuscript_anon") && /\.pdf$/i.test(f.file_name)
   );
@@ -75,7 +76,7 @@ export function ManuscriptFilesView({
       ? `/api/camera-ready/${submissionId}?v=${encodeURIComponent(cameraReadyBuiltAt)}`
       : null;
 
-  if (!visible.length && !cameraReadySrc) {
+  if (!visible.length && !cameraReadySrc && !reviewCopySrc) {
     return (
       <p className="text-sm text-slate-500">
         No manuscript files have been uploaded yet.
@@ -84,33 +85,7 @@ export function ManuscriptFilesView({
   }
 
   return (
-    <div className="space-y-4">
-      {/* Editor / convener: the compiled camera-ready proof (author names on cover). */}
-      {cameraReadySrc && (
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50/60 dark:bg-emerald-500/10 dark:border-emerald-500/30 p-3">
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            <p className="text-sm font-medium text-emerald-900 dark:text-emerald-200">
-              Camera-ready PDF (compiled) — cover carries author identities
-            </p>
-            <a
-              href={cameraReadySrc}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-emerald-800 dark:text-emerald-200 hover:underline"
-            >
-              Open in a new tab ↗
-            </a>
-          </div>
-          <p className="text-xs text-emerald-800/80 dark:text-emerald-300/80 mt-1">
-            Approved by the corresponding author. This full PDF is for the Track
-            Editor and Convener only — it is never shown to reviewers.
-          </p>
-          <div className="mt-3">
-            <PdfFrame src={cameraReadySrc} title="Camera-ready PDF" />
-          </div>
-        </div>
-      )}
-
+    <div className="space-y-3">
       {isReviewer && (
         <p className="text-xs text-slate-400">
           Author identities are withheld — reviews are single-blind. The Title
@@ -118,36 +93,38 @@ export function ManuscriptFilesView({
         </p>
       )}
 
-      {/* The blinded review copy (author-less cover + manuscript). Reviewers see
-          only this; editor/convener see it too — exactly as the reviewer does. */}
+      {/* Full paper (camera-ready, with author names) — editor / convener only. */}
+      {cameraReadySrc && (
+        <PdfBox
+          src={cameraReadySrc}
+          label="Full paper — camera-ready (cover carries author identities)"
+          note="Approved by the corresponding author. For the Track Editor and Convener only — never shown to reviewers."
+          accent="emerald"
+        />
+      )}
+
+      {/* Manuscript preview — the blinded review copy (author-less cover). */}
       {reviewCopySrc ? (
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1">
-            Manuscript preview (blinded, with cover)
-          </p>
-          {!isReviewer && (
-            <p className="text-xs text-slate-500 mb-2">
-              This is exactly what your reviewers see — the compiled manuscript
-              behind an author-less cover (single-blind).
-            </p>
-          )}
-          <PdfFrame src={reviewCopySrc} title="Manuscript for review" />
-        </div>
+        <PdfBox
+          src={reviewCopySrc}
+          label="Manuscript preview — blinded, with cover"
+          note={
+            isReviewer
+              ? undefined
+              : "Exactly what your reviewers see — the compiled manuscript behind an author-less cover (single-blind)."
+          }
+        />
       ) : (
-        // Fallback (no built review copy, or editor/convener): the raw blinded
-        // manuscript file.
         manuscript && (
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
-              Manuscript preview {isReviewer ? "(blinded)" : ""}
-            </p>
-            <PdfFrame src={`/api/paper-file/${manuscript.id}`} title="Manuscript" />
-          </div>
+          <PdfBox
+            src={`/api/paper-file/${manuscript.id}`}
+            label={`Manuscript preview${isReviewer ? " — blinded" : ""}`}
+          />
         )
       )}
 
       {/* Full file list. */}
-      <div>
+      <div className="pt-1">
         <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
           Files
         </p>
@@ -173,20 +150,68 @@ export function ManuscriptFilesView({
   );
 }
 
-/** Inline PDF rendered as page images (pdf.js), with a download link. */
-function PdfFrame({ src, title: _title }: { src: string; title: string }) {
+/**
+ * A collapsed box for a compiled PDF: header with label + actions (View /
+ * Download / Open), and the pdf.js image viewer rendered only once expanded
+ * (so the heavy render happens on demand).
+ */
+function PdfBox({
+  src,
+  label,
+  note,
+  accent,
+}: {
+  src: string;
+  label: string;
+  note?: string;
+  accent?: "emerald";
+}) {
+  const [open, setOpen] = useState(false);
+  const box =
+    accent === "emerald"
+      ? "border-emerald-200 bg-emerald-50/60 dark:bg-emerald-500/10 dark:border-emerald-500/30"
+      : "border-slate-200 dark:border-slate-700";
+  const labelColor =
+    accent === "emerald"
+      ? "text-emerald-900 dark:text-emerald-200"
+      : "text-slate-800 dark:text-slate-100";
+
   return (
-    <div>
-      <PdfImageViewer src={src} />
-      <p className="mt-1 text-xs">
-        <a
-          href={src}
-          download
-          className="text-blue-700 hover:underline dark:text-blue-300"
-        >
-          Download PDF
-        </a>
-      </p>
+    <div className={`rounded-lg border ${box} p-3`}>
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <p className={`text-sm font-medium ${labelColor}`}>{label}</p>
+        <div className="flex items-center gap-3 text-sm">
+          <button
+            type="button"
+            onClick={() => setOpen((o) => !o)}
+            className="inline-flex items-center gap-1 rounded-md border border-slate-300 dark:border-slate-600 px-2 py-0.5 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
+            aria-expanded={open}
+          >
+            {open ? "Hide" : "View"} {open ? "▲" : "▼"}
+          </button>
+          <a
+            href={src}
+            download
+            className="text-blue-700 hover:underline dark:text-blue-300 text-xs"
+          >
+            Download
+          </a>
+          <a
+            href={src}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-700 hover:underline dark:text-blue-300 text-xs"
+          >
+            Open ↗
+          </a>
+        </div>
+      </div>
+      {note && <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{note}</p>}
+      {open && (
+        <div className="mt-3">
+          <PdfImageViewer src={src} />
+        </div>
+      )}
     </div>
   );
 }

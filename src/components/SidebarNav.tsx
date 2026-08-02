@@ -160,16 +160,16 @@ export function SidebarNav({
           <p className="px-3 text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2">
             Emails sent
           </p>
-          <div className="space-y-2">
-            <div className="card px-3 py-2">
-              <p className="text-xs text-slate-500">Today</p>
-              <p className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+          <div className="space-y-1.5">
+            <div className="card px-2.5 py-1">
+              <p className="text-[10px] text-slate-500 leading-tight">Today</p>
+              <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 leading-tight">
                 {emailStats.today}
               </p>
             </div>
-            <div className="card px-3 py-2">
-              <p className="text-xs text-slate-500">Total to date</p>
-              <p className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+            <div className="card px-2.5 py-1">
+              <p className="text-[10px] text-slate-500 leading-tight">Total to date</p>
+              <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 leading-tight">
                 {emailStats.total}
               </p>
             </div>
@@ -196,14 +196,14 @@ export function SidebarNav({
               <p className="px-3 text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2">
                 Revenue Summary
               </p>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {boxes.map(([label, pick]) => (
-                  <div key={label} className="card px-3 py-2">
-                    <p className="text-xs text-slate-500">{label}</p>
+                  <div key={label} className="card px-2.5 py-1">
+                    <p className="text-[10px] text-slate-500 leading-tight">{label}</p>
                     {rows.map((r) => (
                       <p
                         key={r.currency}
-                        className="text-lg font-semibold text-slate-900 dark:text-slate-100 leading-tight"
+                        className="text-sm font-semibold text-slate-900 dark:text-slate-100 leading-tight"
                       >
                         {money(r.currency, pick(r))}
                       </p>

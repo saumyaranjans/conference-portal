@@ -6,6 +6,7 @@ import { withdrawSubmission, overrideDecision } from "@/lib/actions";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { PaperDownload } from "@/components/PaperUpload";
 import { DocumentViewer } from "@/components/DocumentViewer";
+import { ManuscriptFilesView } from "@/components/ManuscriptFilesView";
 import { DeleteSubmissionButton } from "@/components/DeleteSubmissionButton";
 import { ReviewPanel } from "@/components/ReviewPanel";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -63,6 +64,15 @@ export default async function ChiefSubmissionPage({
         .eq("submission_id", id)
         .maybeSingle(),
     ]);
+
+  // Pathway B manuscript package (convener sees everything incl. camera-ready).
+  const { data: manuscriptFiles } =
+    (sub as any).stage === "full_paper"
+      ? await supabase
+          .from("submission_files")
+          .select("id, slot, file_name, file_path")
+          .eq("submission_id", id)
+      : { data: [] as any[] };
 
   const rows = (assignments ?? []) as any[];
   const decisionRows = (decisions ?? []) as any[];
@@ -166,15 +176,33 @@ export default async function ChiefSubmissionPage({
             </div>
           </div>
 
-          <PaperDownload filePath={sub.file_path} fileName={sub.file_name} />
-
-          {sub.file_path && (
+          {(sub as any).stage === "full_paper" ? (
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
-                Manuscript preview
+                Full paper (manuscript package)
               </p>
-              <DocumentViewer filePath={sub.file_path} fileName={sub.file_name} />
+              <ManuscriptFilesView
+                role="chief"
+                files={(manuscriptFiles as any[]) ?? []}
+                cameraReadyPath={(sub as any).full_paper_pdf_path}
+                cameraReadyBuiltAt={(sub as any).full_paper_pdf_built_at}
+              />
             </div>
+          ) : (
+            <>
+              <PaperDownload filePath={sub.file_path} fileName={sub.file_name} />
+              {sub.file_path && (
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
+                    Manuscript preview
+                  </p>
+                  <DocumentViewer
+                    filePath={sub.file_path}
+                    fileName={sub.file_name}
+                  />
+                </div>
+              )}
+            </>
           )}
         </div>
       </Section>

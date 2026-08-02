@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { ReviewForm } from "@/components/ReviewForm";
 import { CameraReadyPreview } from "@/components/CameraReadyPreview";
 import { DocumentViewer } from "@/components/DocumentViewer";
+import { ManuscriptFilesView } from "@/components/ManuscriptFilesView";
 import { PageHeader, Section } from "@/components/ui/Primitives";
 import { versionLabel } from "@/lib/types";
 
@@ -36,6 +37,15 @@ export default async function ReviewPage({
 
   const sub = (assignment as any).submissions;
   const locked = assignment.status === "submitted";
+
+  // For a Pathway B manuscript under review, pull the blinded file package.
+  const { data: manuscriptFiles } =
+    sub?.stage === "full_paper"
+      ? await supabase
+          .from("submission_files")
+          .select("id, slot, file_name, file_path")
+          .eq("submission_id", sub.id)
+      : { data: [] as any[] };
 
   return (
     <>
@@ -73,12 +83,19 @@ export default async function ReviewPage({
         </p>
       </Section>
 
-      {sub?.file_path && (
-        <Section
-          title={sub?.stage === "full_paper" ? "Full paper" : "Manuscript"}
-        >
-          <DocumentViewer filePath={sub.file_path} fileName={sub.file_name} />
+      {sub?.stage === "full_paper" ? (
+        <Section title="Full paper (blinded)">
+          <ManuscriptFilesView
+            role="reviewer"
+            files={(manuscriptFiles as any[]) ?? []}
+          />
         </Section>
+      ) : (
+        sub?.file_path && (
+          <Section title="Manuscript">
+            <DocumentViewer filePath={sub.file_path} fileName={sub.file_name} />
+          </Section>
+        )
       )}
 
       <Section title={locked ? "Your submitted review" : "Your review"}>

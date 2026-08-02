@@ -13,6 +13,7 @@ import { AddReviewer } from "@/components/AddReviewer";
 import { RemindReviewer } from "@/components/RemindReviewer";
 import { NotifyAuthor } from "@/components/NotifyAuthor";
 import { DocumentViewer } from "@/components/DocumentViewer";
+import { ManuscriptFilesView } from "@/components/ManuscriptFilesView";
 import { PaperDownload } from "@/components/PaperUpload";
 import { StatusBadge, RecommendationBadge } from "@/components/ui/StatusBadge";
 import { PageHeader, Section, formatDate } from "@/components/ui/Primitives";
@@ -80,6 +81,15 @@ export default async function EditorSubmissionPage({
           .eq("is_active", true)
           .order("sort_order")
       : { data: [] };
+
+  // Pathway B manuscript package (editor sees everything incl. camera-ready).
+  const { data: manuscriptFiles } =
+    sub.stage === "full_paper"
+      ? await supabase
+          .from("submission_files")
+          .select("id, slot, file_name, file_path")
+          .eq("submission_id", id)
+      : { data: [] as any[] };
 
   const rows = (assignments ?? []) as any[];
   const assignedIds = new Set(rows.map((a) => a.reviewer_id));
@@ -193,18 +203,33 @@ export default async function EditorSubmissionPage({
             </div>
           </div>
 
-          <PaperDownload filePath={sub.file_path} fileName={sub.file_name} />
-
-          {sub.file_path && (
+          {sub.stage === "full_paper" ? (
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
-                Manuscript preview
+                Full paper (manuscript package)
               </p>
-              <DocumentViewer
-                filePath={sub.file_path}
-                fileName={sub.file_name}
+              <ManuscriptFilesView
+                role="editor"
+                files={(manuscriptFiles as any[]) ?? []}
+                cameraReadyPath={(sub as any).full_paper_pdf_path}
+                cameraReadyBuiltAt={(sub as any).full_paper_pdf_built_at}
               />
             </div>
+          ) : (
+            <>
+              <PaperDownload filePath={sub.file_path} fileName={sub.file_name} />
+              {sub.file_path && (
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
+                    Manuscript preview
+                  </p>
+                  <DocumentViewer
+                    filePath={sub.file_path}
+                    fileName={sub.file_name}
+                  />
+                </div>
+              )}
+            </>
           )}
         </div>
       </Section>

@@ -107,10 +107,10 @@ export async function DashboardShell({
               className="text-right hidden sm:block hover:opacity-80 transition-opacity"
               title="Edit my profile"
             >
-              <p className="text-sm font-medium text-slate-800 leading-tight">
+              <p className="text-sm font-medium text-slate-800 leading-tight whitespace-nowrap">
                 {profile.full_name || profile.email}
               </p>
-              <p className="text-xs text-slate-500 leading-tight">
+              <p className="text-[10px] text-slate-500 leading-tight whitespace-nowrap">
                 {profile.roles.map((r) => ROLE_LABELS[r]).join(" · ")}
               </p>
             </Link>

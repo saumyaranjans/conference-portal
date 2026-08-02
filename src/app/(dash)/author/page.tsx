@@ -23,6 +23,24 @@ type Predicate = (s: Row) => boolean;
 const isProcessing = (s: Row) =>
   s.status === "submitted" || s.status === "under_review";
 
+/**
+ * Pathway of a submission, from its (fixed) submission_type. Abstract-stage
+ * submissions are Pathway A; full-paper submissions are Pathway B. The label
+ * stays the same through every status, so an abstract in review and an
+ * accepted abstract both read "Pathway A".
+ */
+const pathwayOf = (s: Row) =>
+  (s as unknown as { submission_type: string }).submission_type ===
+  "full_paper_presentation"
+    ? {
+        label: "Pathway B",
+        cls: "bg-violet-50 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300",
+      }
+    : {
+        label: "Pathway A",
+        cls: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300",
+      };
+
 const FOLDERS: Record<string, { label: string; match: Predicate }> = {
   // New submissions
   incomplete: { label: "Incomplete Submissions", match: (s) => s.status === "draft" },
@@ -357,7 +375,14 @@ export default async function AuthorDashboard({
                 {s.paper_id ?? "—"}
               </td>
               <td className="td font-medium text-slate-900 dark:text-slate-100 max-w-sm">
-                {s.title || <span className="text-slate-400">Untitled</span>}
+                <div>
+                  {s.title || <span className="text-slate-400">Untitled</span>}
+                </div>
+                <span
+                  className={`mt-1 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${pathwayOf(s).cls}`}
+                >
+                  {pathwayOf(s).label}
+                </span>
               </td>
               <td className="td text-slate-500">{s.tracks?.name ?? "—"}</td>
               <td className="td whitespace-nowrap">

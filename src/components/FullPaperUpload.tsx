@@ -77,6 +77,8 @@ export function FullPaperUpload({
   const [picked, setPicked] = useState<string[]>(selectedOutlets ?? []);
   const [declared, setDeclared] = useState<boolean[]>([false, false, false]);
   const [building, setBuilding] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
 
   // Editable Title / Abstract / Keywords (auto-filled from the accepted abstract).
   const [detTitle, setDetTitle] = useState(title);
@@ -194,8 +196,14 @@ export function FullPaperUpload({
       setError(res.message ?? "Could not build the camera-ready PDF.");
       return;
     }
-    // Open the freshly built PDF for the author to review.
-    if (res.previewPdf) openBase64Pdf(res.previewPdf);
+    // Show the freshly built PDF inline for the author to review.
+    if (res.previewPdf) {
+      const url = base64ToBlobUrl(res.previewPdf);
+      if (url) {
+        setPreviewUrl(url);
+        setShowPreview(true);
+      }
+    }
     setNotice(
       res.warning
         ? `${res.message} ${res.warning}`
@@ -204,25 +212,31 @@ export function FullPaperUpload({
     router.refresh();
   }
 
-  function openBase64Pdf(b64: string) {
+  function base64ToBlobUrl(b64: string): string | null {
     try {
       const bin = atob(b64);
       const bytes = new Uint8Array(bin.length);
       for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-      const url = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
-      window.open(url, "_blank", "noopener,noreferrer");
-      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      return URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
     } catch {
-      /* ignore — the stored copy is still previewable below */
+      return null;
     }
   }
 
-  async function previewBuilt() {
-    if (!cameraReadyPath) return;
-    const { data } = await createClient()
-      .storage.from("papers")
-      .createSignedUrl(cameraReadyPath, 120);
-    if (data?.signedUrl) window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+  // Toggle the in-page preview. Uses the just-built blob if we have it,
+  // otherwise signs the stored camera-ready.
+  async function togglePreview() {
+    if (showPreview) {
+      setShowPreview(false);
+      return;
+    }
+    if (!previewUrl && cameraReadyPath) {
+      const { data } = await createClient()
+        .storage.from("papers")
+        .createSignedUrl(cameraReadyPath, 300);
+      if (data?.signedUrl) setPreviewUrl(data.signedUrl);
+    }
+    setShowPreview(true);
   }
 
   async function download(f: StoredFile) {
@@ -627,23 +641,35 @@ export function FullPaperUpload({
             {isBuilt && (
               <button
                 type="button"
-                onClick={previewBuilt}
+                onClick={togglePreview}
                 className="text-sm text-blue-700 hover:underline dark:text-blue-300"
               >
-                Preview camera-ready
+                {showPreview ? "Hide preview" : "Preview camera-ready"}
               </button>
             )}
           </div>
 
           {isBuilt ? (
             <p className="mt-2 text-xs text-emerald-700 dark:text-emerald-300">
-              ✓ Camera-ready built. Review it above — if you change any file you
+              ✓ Camera-ready built. Review it below — if you change any file you
               will need to rebuild before submitting.
             </p>
           ) : (
             <p className="mt-2 text-xs text-slate-500">
               Not built yet. Build it to unlock “Submit Manuscript”.
             </p>
+          )}
+
+          {isBuilt && showPreview && previewUrl && (
+            <div className="mt-3 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+              <iframe
+                src={previewUrl}
+                title="Camera-ready preview"
+                className="w-full"
+                style={{ height: "70vh" }}
+                sandbox="allow-same-origin"
+              />
+            </div>
           )}
         </div>
       )}

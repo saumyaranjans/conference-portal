@@ -10,7 +10,13 @@ import {
 } from "@/components/ui/Primitives";
 import { MAX_SUBMISSIONS_PER_AUTHOR, versionTag, type Submission } from "@/lib/types";
 import { MyCertificates } from "@/components/MyCertificates";
+import { CancelFullPaperButton } from "@/components/CancelFullPaperButton";
 import { listMyCertificates, certificatesReleased } from "@/lib/certificateAccess";
+
+/** A submission's fixed pathway, from its submission_type. */
+const isPathwayB = (s: Row) =>
+  (s as unknown as { submission_type: string }).submission_type ===
+  "full_paper_presentation";
 
 type Row = Submission & { tracks: { name: string } | null };
 
@@ -69,6 +75,17 @@ const GROUPS: { title: string; keys: (keyof typeof FOLDERS)[] }[] = [
   { title: "Completed", keys: ["accepted", "not_accepted", "withdrawn"] },
 ];
 
+/** Pathway B folder labels — the same folders, with "Manuscript" wording. */
+const FOLDER_LABELS_B: Record<keyof typeof FOLDERS, string> = {
+  incomplete: "Incomplete Manuscripts",
+  new_processing: "Manuscripts Being Processed",
+  needing_revision: "Manuscripts Needing Revision",
+  rev_processing: "Revisions Being Processed",
+  accepted: "Accepted",
+  not_accepted: "Not Accepted",
+  withdrawn: "Withdrawn",
+};
+
 function FolderRow({
   label,
   count,
@@ -102,9 +119,9 @@ function FolderRow({
 export default async function AuthorDashboard({
   searchParams,
 }: {
-  searchParams: Promise<{ folder?: string }>;
+  searchParams: Promise<{ folder?: string; pw?: string }>;
 }) {
-  const { folder } = await searchParams;
+  const { folder, pw } = await searchParams;
   const profile = await requireProfile();
   const supabase = await createClient();
   const certificates = certificatesReleased()
@@ -186,8 +203,10 @@ export default async function AuthorDashboard({
   const activeCount = ownedActive + coActive;
   const atLimit = activeCount >= MAX_SUBMISSIONS_PER_AUTHOR;
 
-  const countFor = (key: keyof typeof FOLDERS) =>
-    submissions.filter(FOLDERS[key].match).length;
+  // Folders are split by pathway: Pathway A holds the abstract submissions,
+  // Pathway B holds the full-paper (manuscript) submissions.
+  const pathwayASubs = submissions.filter((s) => !isPathwayB(s));
+  const pathwayBSubs = submissions.filter((s) => isPathwayB(s));
 
   // Every row carries the viewer's role on that submission, shown as a column.
   const ownedTagged: TaggedRow[] = submissions.map((s) => ({
@@ -203,14 +222,22 @@ export default async function AuthorDashboard({
   // author's own submissions; the full "All submissions" view also lists the
   // papers they co-author.
   const activeFolder = folder && folder in FOLDERS ? folder : null;
+  const activePw = pw === "A" || pw === "B" ? pw : null;
   const visible: TaggedRow[] = activeFolder
-    ? ownedTagged.filter((s) =>
-        FOLDERS[activeFolder as keyof typeof FOLDERS].match(s)
+    ? ownedTagged.filter(
+        (s) =>
+          FOLDERS[activeFolder as keyof typeof FOLDERS].match(s) &&
+          (!activePw || (activePw === "B") === isPathwayB(s))
       )
     : [...ownedTagged, ...coTagged].sort(
         (a, b) =>
           new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
       );
+  const activeFolderLabel = activeFolder
+    ? activePw === "B"
+      ? FOLDER_LABELS_B[activeFolder as keyof typeof FOLDERS]
+      : FOLDERS[activeFolder as keyof typeof FOLDERS].label
+    : "All submissions";
 
   return (
     <>
@@ -237,11 +264,23 @@ export default async function AuthorDashboard({
           Appears first, only when accepted Pathway B abstracts exist. Co-authors
           never reach this branch (their papers are in `coAuthored`). ---------- */}
       {manuscripts.length > 0 && (
-        <div className="card mb-8 border-teal-200">
+        <div
+          id="submit-manuscript"
+          className="card mb-8 border-teal-200 scroll-mt-6"
+        >
           <div className="px-5 py-3 border-b border-teal-100 bg-teal-50/70 flex items-center justify-between gap-4">
-            <h2 className="font-semibold text-teal-900">Submit New Manuscript</h2>
-            <span className="text-sm font-medium text-teal-700">
-              {manuscriptsDone} of {manuscripts.length} completed
+            <div>
+              <h2 className="font-semibold text-teal-900">
+                Submit New Manuscript
+              </h2>
+              <p className="text-xs text-teal-700/80">
+                One full paper per accepted Pathway B abstract (up to{" "}
+                {MAX_SUBMISSIONS_PER_AUTHOR}).
+              </p>
+            </div>
+            <span className="text-sm font-medium text-teal-700 whitespace-nowrap">
+              {manuscriptsDone} of {Math.min(manuscripts.length, MAX_SUBMISSIONS_PER_AUTHOR)}{" "}
+              completed
             </span>
           </div>
           <div className="divide-y divide-slate-100">
@@ -259,24 +298,30 @@ export default async function AuthorDashboard({
                     {m.title || "Untitled submission"}
                   </p>
                 </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  {m.done ? (
-                    <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800">
-                      Completed
-                    </span>
-                  ) : (
-                    <>
-                      <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">
-                        {m.revision ? "Revision requested" : "To submit"}
+                <div className="flex flex-col items-end gap-2 shrink-0">
+                  <div className="flex items-center gap-3">
+                    {m.done ? (
+                      <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800">
+                        Completed
                       </span>
-                      <Link
-                        href={`/author/submissions/${m.id}`}
-                        className="btn-primary"
-                      >
-                        {m.revision ? "Submit revision" : "Submit manuscript"}
-                      </Link>
-                    </>
-                  )}
+                    ) : (
+                      <>
+                        <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">
+                          {m.revision ? "Revision requested" : "To submit"}
+                        </span>
+                        <Link
+                          href={`/author/submissions/${m.id}`}
+                          className="btn-primary"
+                        >
+                          {m.revision ? "Submit revision" : "Submit manuscript"}
+                        </Link>
+                      </>
+                    )}
+                  </div>
+                  {/* Back out of Pathway B → revert to an accepted Pathway A
+                      abstract. Double-confirmed; notifies all authors + CCs the
+                      Track Editor and Convener. */}
+                  <CancelFullPaperButton submissionId={m.id} />
                 </div>
               </div>
             ))}
@@ -303,48 +348,10 @@ export default async function AuthorDashboard({
         </p>
       </div>
 
-      {/* -------- Folder groups -------- */}
-      <div className="grid md:grid-cols-3 gap-6 mb-10">
-        {GROUPS.map((group) => (
-          <div key={group.title} className="card">
-            <div className="px-4 py-3 border-b border-slate-100">
-              <h2 className="font-semibold text-slate-900">{group.title}</h2>
-            </div>
-            <div className="py-2">
-              {group.title === "New Submissions" && (
-                <div className="px-4 py-2.5">
-                  {atLimit ? (
-                    <span className="text-slate-400 font-medium cursor-not-allowed">
-                      Submit New Abstract
-                    </span>
-                  ) : (
-                    <Link
-                      href="/author/submissions/new"
-                      className="text-blue-700 hover:underline font-medium"
-                    >
-                      Submit New Abstract
-                    </Link>
-                  )}
-                </div>
-              )}
-              {group.keys.map((key) => (
-                <FolderRow
-                  key={key}
-                  label={FOLDERS[key].label}
-                  count={countFor(key)}
-                  href={`/author?folder=${key}`}
-                  active={activeFolder === key}
-                />
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-
       {/* -------- Table for the opened folder (or everything) -------- */}
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-          {activeFolder ? FOLDERS[activeFolder as keyof typeof FOLDERS].label : "All submissions"}
+          {activeFolderLabel}
         </h2>
         {activeFolder && (
           <Link href="/author" className="text-sm text-blue-700 hover:underline">
@@ -413,6 +420,112 @@ export default async function AuthorDashboard({
           ))}
         </DataTable>
       )}
+
+      {/* -------- Pathway dashboards (below All Submissions) --------------
+          Pathway A manages abstracts; Pathway B manages manuscripts (same
+          folders, "Manuscript" wording). Pathway B only shows once the author
+          has a full-paper submission. ------------------------------------- */}
+      <div className="mt-10">
+        <PathwayDashboard
+          subs={pathwayASubs}
+          pathway="A"
+          atLimit={atLimit}
+          activeFolder={activeFolder}
+          activePw={activePw}
+        />
+        {pathwayBSubs.length > 0 && (
+          <PathwayDashboard
+            subs={pathwayBSubs}
+            pathway="B"
+            atLimit={atLimit}
+            activeFolder={activeFolder}
+            activePw={activePw}
+          />
+        )}
+      </div>
     </>
+  );
+}
+
+/**
+ * One pathway's folder view. Pathway A uses the abstract wording and the
+ * "Submit New Abstract" entry; Pathway B swaps in the manuscript wording and a
+ * "Submit New Manuscript" link that jumps to the top window. Folder links carry
+ * `&pw=` so the All-Submissions table filters to the same pathway.
+ */
+function PathwayDashboard({
+  subs,
+  pathway,
+  atLimit,
+  activeFolder,
+  activePw,
+}: {
+  subs: Row[];
+  pathway: "A" | "B";
+  atLimit: boolean;
+  activeFolder: string | null;
+  activePw: string | null;
+}) {
+  const heading =
+    pathway === "B"
+      ? "Pathway B — Manuscript Submissions"
+      : "Pathway A — Abstract Submissions";
+  const headCls = pathway === "B" ? "text-violet-700" : "text-emerald-700";
+  const labelFor = (key: keyof typeof FOLDERS) =>
+    pathway === "B" ? FOLDER_LABELS_B[key] : FOLDERS[key].label;
+
+  return (
+    <section className="mb-10">
+      <h2
+        className={`mb-3 text-sm font-semibold uppercase tracking-wide ${headCls}`}
+      >
+        {heading}
+      </h2>
+      <div className="grid md:grid-cols-3 gap-6">
+        {GROUPS.map((group) => (
+          <div key={group.title} className="card">
+            <div className="px-4 py-3 border-b border-slate-100">
+              <h3 className="font-semibold text-slate-900">{group.title}</h3>
+            </div>
+            <div className="py-2">
+              {group.title === "New Submissions" && (
+                <div className="px-4 py-2.5">
+                  {pathway === "A" ? (
+                    atLimit ? (
+                      <span className="text-slate-400 font-medium cursor-not-allowed">
+                        Submit New Abstract
+                      </span>
+                    ) : (
+                      <Link
+                        href="/author/submissions/new"
+                        className="text-blue-700 hover:underline font-medium"
+                      >
+                        Submit New Abstract
+                      </Link>
+                    )
+                  ) : (
+                    <Link
+                      href="/author#submit-manuscript"
+                      className="text-blue-700 hover:underline font-medium"
+                    >
+                      Submit New Manuscript
+                    </Link>
+                  )}
+                </div>
+              )}
+              {group.keys.map((key) => (
+                <FolderRow
+                  key={key}
+                  label={labelFor(key)}
+                  count={subs.filter(FOLDERS[key].match).length}
+                  href={`/author?folder=${key}&pw=${pathway}`}
+                  active={activeFolder === key && activePw === pathway}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }

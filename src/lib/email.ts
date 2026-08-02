@@ -57,6 +57,8 @@ export async function sendEmail(args: {
   text: string;
   /** Per-message reply-to (e.g. the chair sending it), added ahead of the env. */
   replyTo?: string;
+  /** Carbon-copy recipients (e.g. the handling Track Editor + Convener). */
+  cc?: string | string[];
   /** What this message is, for the Convener's email counts. */
   kind?: string;
   /** Who sent it. */
@@ -86,6 +88,15 @@ export async function sendEmail(args: {
   if (!to)
     return { sent: false, error: `"${args.to?.trim()}" is not a valid email address.` };
 
+  // CC the handling Track Editor / Convener, de-duped and never repeating the
+  // primary recipient. Accepts a single address or a list.
+  const ccRaw = Array.isArray(args.cc) ? args.cc : args.cc ? [args.cc] : [];
+  const cc: string[] = [];
+  for (const a of ccRaw.flatMap((v) => addressList(v))) {
+    if (addressKey(a) === addressKey(to)) continue;
+    if (!cc.some((seen) => addressKey(seen) === addressKey(a))) cc.push(a);
+  }
+
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -98,6 +109,7 @@ export async function sendEmail(args: {
         to: [to],
         subject: args.subject,
         text: args.text,
+        ...(cc.length ? { cc } : {}),
         // Resend takes one address as a string, several as an array.
         ...(replyTo.length
           ? { reply_to: replyTo.length === 1 ? replyTo[0] : replyTo }

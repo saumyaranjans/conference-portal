@@ -493,3 +493,47 @@ export function certificateIssuedEmail(o: {
   ]);
   return { subject, body };
 }
+
+/**
+ * System-generated note when the corresponding author cancels a Pathway B full
+ * paper, reverting the paper to an accepted Pathway A abstract. Sent to every
+ * author, with the handling Track Editor and the Convener CC'd. Reminds them the
+ * accepted abstract still stands and they should proceed to register.
+ */
+export function fullPaperCancelledEmail(o: {
+  correspondingName?: string | null;
+  paperId?: string | null;
+  title: string;
+  track?: string | null;
+  conferenceName?: string;
+}): EmailContent {
+  const conf = o.conferenceName || CONF_DEFAULT;
+  const ref = [o.paperId ? `Paper ${o.paperId}` : null, `"${o.title}"`]
+    .filter(Boolean)
+    .join(" — ");
+  const who = (o.correspondingName ?? "").trim() || "The corresponding author";
+
+  const subject = `${conf} — Full paper cancelled, reverted to Pathway A (${ref})`;
+  const body = compose([
+    "Dear Author,",
+    "",
+    `${who} has chosen to cancel the full-paper (Pathway B) submission for ${ref}${
+      o.track ? ` in the ${o.track} track` : ""
+    }.`,
+    "",
+    "What this means:",
+    "• The paper reverts to Pathway A — Abstract & Presentation.",
+    "• Your abstract remains ACCEPTED; only the full-paper track has been withdrawn.",
+    "• No full paper is expected for this submission any longer.",
+    "",
+    "As your abstract stands accepted, please proceed to register for the conference to confirm your participation and presentation.",
+    "",
+    "The handling Track Editor and the Convener are copied on this note for their records.",
+    "",
+    "This is a system-generated email — please do not reply. For any query, kindly write to the conference organisers.",
+    "",
+    "With regards,",
+    `Editorial Office, ${conf}`,
+  ]);
+  return { subject, body };
+}

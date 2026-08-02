@@ -8,6 +8,7 @@ import { requireProfile, requireRole } from "@/lib/auth";
 import { emailConfigured, sendEmail } from "@/lib/email";
 import {
   chairInviteEmail,
+  fullPaperCancelledEmail,
   paperAssignmentEmail,
   signOffLine,
   submissionAcknowledgementEmail,
@@ -780,6 +781,147 @@ export async function submitFullPaper(
   revalidatePath("/author");
   revalidatePath(`/author/submissions/${id}`);
   return { ok: true, message: "Full paper submitted for review." };
+}
+
+/**
+ * Pathway B → Pathway A. The corresponding author cancels the full-paper track
+ * and reverts the paper to an accepted Pathway A abstract — the state the
+ * authors were in when first told to register. This is deliberate and covered
+ * by the double confirmation in the UI. Allowed only while the paper is still at
+ * the manuscript stage (accepted abstract, or a manuscript in review / needing
+ * revision) — never once a full-paper decision has been rendered.
+ *
+ * All authors are notified (in-app + email); the handling Track Editor and the
+ * Convener are CC'd on the email for their records.
+ */
+export async function cancelFullPaper(
+  formData: FormData
+): Promise<ActionResult> {
+  const profile = await requireProfile();
+  const admin = createAdminClient();
+  const id = String(formData.get("submission_id"));
+
+  const { data: sub } = await admin
+    .from("submissions")
+    .select(
+      "author_id, status, submission_type, title, paper_id, assigned_editor_id, tracks(name)"
+    )
+    .eq("id", id)
+    .maybeSingle();
+  if (!sub) return { ok: false, message: "Submission not found." };
+  const s = sub as any;
+  if (s.author_id !== profile.id)
+    return {
+      ok: false,
+      message: "Only the corresponding author can cancel the full paper.",
+    };
+  if (s.submission_type !== "full_paper_presentation")
+    return { ok: false, message: "This is not a full-paper (Pathway B) submission." };
+  if (
+    !["abstract_accepted", "submitted", "under_review", "revisions_requested"].includes(
+      s.status
+    )
+  )
+    return {
+      ok: false,
+      message:
+        "The full paper can be cancelled only while it is at the manuscript stage.",
+    };
+
+  // Revert to an accepted Pathway A abstract and strip everything full-paper.
+  const { error } = await admin
+    .from("submissions")
+    .update({
+      submission_type: "abstract_presentation",
+      stage: "abstract",
+      status: "accepted",
+      full_paper_option: null,
+      full_paper_deadline: null,
+      full_paper_submitted_at: null,
+      requested_outlet_ids: [],
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+  if (error) return { ok: false, message: error.message };
+
+  // Drop any uploaded manuscript files — they no longer apply.
+  await admin.from("submission_files").delete().eq("submission_id", id);
+
+  // Who to tell: every author on the paper.
+  const { data: authors } = await admin
+    .from("submission_authors")
+    .select("full_name, email, is_corresponding, profile_id")
+    .eq("submission_id", id);
+  const authorList = (authors as any[]) ?? [];
+  const corresponding = authorList.find((a) => a.is_corresponding);
+
+  // In-app notification for every linked author.
+  for (const a of authorList) {
+    if (!a.profile_id) continue;
+    await admin.from("notifications").insert({
+      profile_id: a.profile_id,
+      title: "Full paper cancelled — reverted to Pathway A",
+      body: `The corresponding author cancelled the full-paper submission for "${
+        s.title
+      }"${
+        s.paper_id ? ` (${s.paper_id})` : ""
+      }. Your abstract remains accepted (Pathway A) — please proceed to register for the conference.`,
+      link: `/author/submissions/${id}`,
+    });
+  }
+
+  // Email all authors; CC the handling Track Editor and the Convener(s).
+  if (emailConfigured()) {
+    const ccEmails: string[] = [];
+    if (s.assigned_editor_id) {
+      const { data: te } = await admin
+        .from("profiles")
+        .select("email")
+        .eq("id", s.assigned_editor_id)
+        .maybeSingle();
+      if ((te as any)?.email) ccEmails.push((te as any).email);
+    }
+    const { data: conveners } = await admin
+      .from("profiles")
+      .select("email")
+      .contains("roles", ["chief"]);
+    for (const c of (conveners as any[]) ?? [])
+      if (c.email) ccEmails.push(c.email);
+
+    const { subject, body } = fullPaperCancelledEmail({
+      correspondingName: corresponding?.full_name ?? profile.full_name,
+      paperId: s.paper_id,
+      title: s.title,
+      track: s.tracks?.name,
+      conferenceName: "GLOGIFT 2027",
+    });
+    for (const a of authorList) {
+      if (!a.email) continue;
+      try {
+        await sendEmail({
+          to: a.email,
+          cc: ccEmails,
+          subject,
+          text: body,
+          kind: "full_paper_cancelled",
+          sentBy: profile.id,
+        });
+      } catch {
+        // A mail failure must never leave the cancellation half-done.
+      }
+    }
+  }
+
+  await audit(profile.id, "full_paper.cancelled", "submission", id, {
+    reverted_to: "abstract_presentation",
+  });
+  revalidatePath("/author");
+  revalidatePath(`/author/submissions/${id}`);
+  return {
+    ok: true,
+    message:
+      "Full paper cancelled. The paper is now an accepted abstract (Pathway A) — please proceed to register.",
+  };
 }
 
 export async function withdrawSubmission(formData: FormData): Promise<ActionResult> {

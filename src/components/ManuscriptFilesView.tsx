@@ -49,10 +49,12 @@ export function ManuscriptFilesView({
   const isReviewer = role === "reviewer";
 
   // Blinded review copy = the compiled manuscript behind an author-less cover.
-  const reviewCopySrc =
-    isReviewer && reviewCopyBuiltAt
-      ? `/api/review-copy/${submissionId}?v=${encodeURIComponent(reviewCopyBuiltAt)}`
-      : null;
+  // Shown as the "Manuscript preview" for everyone (reviewers see only this;
+  // the Track Editor / Convener see it too, exactly as the reviewer does, in
+  // addition to the full camera-ready above).
+  const reviewCopySrc = reviewCopyBuiltAt
+    ? `/api/review-copy/${submissionId}?v=${encodeURIComponent(reviewCopyBuiltAt)}`
+    : null;
 
   // Reviewers never see identity-bearing files.
   const visible = files
@@ -116,12 +118,19 @@ export function ManuscriptFilesView({
         </p>
       )}
 
-      {/* Reviewer: the blinded review copy (author-less cover + manuscript). */}
+      {/* The blinded review copy (author-less cover + manuscript). Reviewers see
+          only this; editor/convener see it too — exactly as the reviewer does. */}
       {reviewCopySrc ? (
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1">
             Manuscript preview (blinded, with cover)
           </p>
+          {!isReviewer && (
+            <p className="text-xs text-slate-500 mb-2">
+              This is exactly what your reviewers see — the compiled manuscript
+              behind an author-less cover (single-blind).
+            </p>
+          )}
           <PdfFrame src={reviewCopySrc} title="Manuscript for review" />
         </div>
       ) : (

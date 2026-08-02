@@ -186,6 +186,7 @@ export default async function ChiefSubmissionPage({
                 submissionId={sub.id}
                 files={(manuscriptFiles as any[]) ?? []}
                 cameraReadyBuiltAt={(sub as any).full_paper_pdf_built_at}
+                reviewCopyBuiltAt={(sub as any).full_paper_pdf_built_at}
               />
             </div>
           ) : (

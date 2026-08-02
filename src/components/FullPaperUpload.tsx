@@ -7,9 +7,11 @@ import {
   setFullPaperOption,
   submitFullPaper,
   setRequestedOutlets,
+  reviseManuscriptDetails,
 } from "@/lib/actions";
 import {
   FULL_PAPER_OPTIONS,
+  GUIDELINES_URL,
   type FullPaperSlot,
 } from "@/lib/types";
 
@@ -17,10 +19,10 @@ type StoredFile = { id: string; slot: string; file_name: string; file_path: stri
 type Outlet = { id: string; title: string; category: string | null };
 
 /**
- * Pathway B full-paper packaging + upload. The author first picks Option A
- * (separated, blind-ready) or Option B (combined), then uploads the files for
- * each slot. Uploads go straight to Supabase Storage and are recorded in
- * submission_files (RLS-scoped to the owner). Required slots gate submission.
+ * Pathway B manuscript window. Below the deadline the author may revise the
+ * accepted Title/Abstract/Keywords (kept ≥70% similar to the Stage 1 version),
+ * then picks Option A (separated, blind-ready) or Option B (combined) and
+ * uploads the files. Required slots + one outlet + the declaration gate submit.
  */
 export function FullPaperUpload({
   submissionId,
@@ -30,6 +32,9 @@ export function FullPaperUpload({
   editable,
   outlets,
   selectedOutlets,
+  title,
+  abstract,
+  keywords,
 }: {
   submissionId: string;
   option: "A" | "B" | null;
@@ -38,14 +43,42 @@ export function FullPaperUpload({
   editable: boolean;
   outlets: Outlet[];
   selectedOutlets: string[];
+  title: string;
+  abstract: string;
+  keywords: string[];
 }) {
   const router = useRouter();
   const [busySlot, setBusySlot] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [picked, setPicked] = useState<string[]>(selectedOutlets ?? []);
-  // Re-affirmed for the full paper, on behalf of all authors, at submit time.
   const [declared, setDeclared] = useState<boolean[]>([false, false, false]);
+
+  // Editable Title / Abstract / Keywords (auto-filled from the accepted abstract).
+  const [detTitle, setDetTitle] = useState(title);
+  const [detAbstract, setDetAbstract] = useState(abstract);
+  const [detKeywords, setDetKeywords] = useState((keywords ?? []).join(", "));
+  const [detBusy, setDetBusy] = useState(false);
+  const [detMsg, setDetMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  async function saveDetails() {
+    setDetBusy(true);
+    setDetMsg(null);
+    const fd = new FormData();
+    fd.set("submission_id", submissionId);
+    fd.set("title", detTitle);
+    fd.set("abstract", detAbstract);
+    fd.set("keywords", detKeywords);
+    const res = await reviseManuscriptDetails(fd);
+    setDetBusy(false);
+    if (res.ok) {
+      setDetMsg({ ok: true, text: res.message ?? "Saved." });
+      router.refresh();
+    } else {
+      setDetMsg({ ok: false, text: res.message ?? "Could not save." });
+      if (typeof window !== "undefined") window.alert(res.message ?? "Could not save.");
+    }
+  }
 
   async function toggleOutlet(oid: string) {
     const next = picked.includes(oid)
@@ -135,53 +168,12 @@ export function FullPaperUpload({
     }
   }
 
-  // ---- Option not yet chosen: two-card picker ----
-  if (!option) {
-    return (
-      <div className="space-y-3">
-        {deadline && <DeadlineBanner deadline={deadline} />}
-        <p className="text-sm text-slate-600 dark:text-slate-300">
-          Choose how you will package your full paper. You can switch before
-          submitting.
-        </p>
-        <div className="grid sm:grid-cols-2 gap-3">
-          {(["A", "B"] as const).map((opt) => (
-            <button
-              key={opt}
-              type="button"
-              onClick={() => choose(opt)}
-              disabled={!editable}
-              className="text-left rounded-xl border border-slate-300 p-4 hover:bg-slate-50
-                         dark:border-slate-600 dark:hover:bg-slate-800 transition disabled:opacity-60"
-            >
-              <span className="block text-sm font-semibold text-slate-800 dark:text-slate-100">
-                {FULL_PAPER_OPTIONS[opt].title}
-              </span>
-              <span className="block text-xs text-slate-600 dark:text-slate-400 mt-1">
-                {FULL_PAPER_OPTIONS[opt].detail}
-              </span>
-              <ul className="mt-2 text-xs text-slate-500 dark:text-slate-400 list-disc pl-4 space-y-0.5">
-                {FULL_PAPER_OPTIONS[opt].slots.map((s) => (
-                  <li key={s.key}>
-                    {s.label}
-                    {s.required ? " *" : ""}
-                  </li>
-                ))}
-              </ul>
-            </button>
-          ))}
-        </div>
-        {error && <p className="text-sm text-rose-600">{error}</p>}
-      </div>
-    );
-  }
-
-  // ---- Option chosen: per-slot uploads ----
-  const cfg = FULL_PAPER_OPTIONS[option];
-  const required = cfg.slots.filter((s) => s.required);
+  const cfg = option ? FULL_PAPER_OPTIONS[option] : null;
+  const required = cfg ? cfg.slots.filter((s) => s.required) : [];
   const haveSlots = new Set(files.map((f) => f.slot));
   const requiredDone = required.filter((s) => haveSlots.has(s.key)).length;
   const canSubmit =
+    !!cfg &&
     requiredDone === required.length &&
     picked.length > 0 &&
     declared.every(Boolean);
@@ -196,108 +188,194 @@ export function FullPaperUpload({
     <div className="space-y-4">
       {deadline && <DeadlineBanner deadline={deadline} />}
 
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <p className="text-sm font-medium text-slate-800 dark:text-slate-100">
-          {cfg.title}
-        </p>
+      {/* ---- Paper details (from the accepted abstract) ---- */}
+      <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-3 space-y-3">
+        <div>
+          <p className="text-sm font-medium text-slate-800 dark:text-slate-100">
+            Paper details
+          </p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Auto-filled from your accepted (Stage 1) abstract. You may revise the
+            title and abstract, but a revision must stay at least 70% on the
+            accepted topic.
+          </p>
+        </div>
+        <label className="label">
+          Title
+          <input
+            className="input mt-1"
+            value={detTitle}
+            disabled={!editable}
+            onChange={(e) => setDetTitle(e.target.value)}
+          />
+        </label>
+        <label className="label">
+          Abstract
+          <textarea
+            className="input mt-1"
+            rows={6}
+            value={detAbstract}
+            disabled={!editable}
+            onChange={(e) => setDetAbstract(e.target.value)}
+          />
+        </label>
+        <label className="label">
+          Keywords
+          <input
+            className="input mt-1"
+            value={detKeywords}
+            disabled={!editable}
+            placeholder="comma, separated"
+            onChange={(e) => setDetKeywords(e.target.value)}
+          />
+        </label>
+        {detMsg && (
+          <p className={`text-sm ${detMsg.ok ? "text-emerald-700" : "text-rose-600"}`}>
+            {detMsg.text}
+          </p>
+        )}
         {editable && (
           <button
             type="button"
-            onClick={() => choose(option === "A" ? "B" : "A")}
-            className="text-xs text-blue-700 hover:underline dark:text-blue-300"
+            onClick={saveDetails}
+            disabled={detBusy}
+            className="btn-secondary"
           >
-            Switch to {option === "A" ? "Option B" : "Option A"}
+            {detBusy ? "Saving…" : "Save details"}
           </button>
         )}
       </div>
 
-      <div className="space-y-3">
-        {cfg.slots.map((slot) => {
-          const slotFiles = files.filter((f) => f.slot === slot.key);
-          return (
-            <div
-              key={slot.key}
-              className="rounded-lg border border-slate-200 dark:border-slate-700 p-3"
-            >
-              <div className="flex items-baseline justify-between gap-2 flex-wrap">
-                <span className="text-sm font-medium text-slate-800 dark:text-slate-100">
-                  {slot.label}
-                  {slot.required && (
-                    <span className="ml-2 text-[10px] uppercase tracking-wide text-rose-600 font-semibold">
-                      Required
-                    </span>
-                  )}
-                  {slot.multiple && (
-                    <span className="ml-2 text-[10px] uppercase tracking-wide text-slate-400">
-                      Multiple
-                    </span>
-                  )}
-                </span>
-                {slot.required && (
-                  <span className={haveSlots.has(slot.key) ? "text-emerald-600 text-xs" : "text-slate-400 text-xs"}>
-                    {haveSlots.has(slot.key) ? "✓ uploaded" : "missing"}
-                  </span>
-                )}
+      {/* ---- Packaging option: two buttons + (i) to the guidelines ---- */}
+      <div>
+        <p className="text-sm text-slate-600 dark:text-slate-300 mb-2">
+          Choose how you will package your full paper. You can switch before
+          submitting.
+        </p>
+        <div className="flex flex-wrap gap-3">
+          {(["A", "B"] as const).map((opt) => {
+            const active = option === opt;
+            return (
+              <div key={opt} className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => choose(opt)}
+                  disabled={!editable}
+                  aria-pressed={active}
+                  className={`rounded-lg border px-4 py-2 text-sm font-medium transition disabled:opacity-60 ${
+                    active
+                      ? "border-blue-500 bg-blue-50 text-blue-800 dark:bg-blue-500/15 dark:text-blue-200 dark:border-blue-400"
+                      : "border-slate-300 text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+                  }`}
+                >
+                  {FULL_PAPER_OPTIONS[opt].title}
+                </button>
+                <a
+                  href={GUIDELINES_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Submission guidelines"
+                  aria-label={`${FULL_PAPER_OPTIONS[opt].title} — submission guidelines`}
+                  className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-slate-400 text-[11px] font-semibold text-slate-500 hover:border-blue-500 hover:text-blue-600"
+                >
+                  i
+                </a>
               </div>
-              {slot.hint && (
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  {slot.hint}
-                </p>
-              )}
-
-              {slotFiles.length > 0 && (
-                <ul className="mt-2 space-y-1">
-                  {slotFiles.map((f) => (
-                    <li key={f.id} className="flex items-center gap-3 text-sm">
-                      <button
-                        type="button"
-                        onClick={() => download(f)}
-                        className="text-blue-700 hover:underline dark:text-blue-300 truncate max-w-[16rem]"
-                      >
-                        {f.file_name}
-                      </button>
-                      {editable && (
-                        <button
-                          type="button"
-                          onClick={() => remove(f)}
-                          className="text-xs text-rose-600 hover:underline"
-                        >
-                          remove
-                        </button>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              )}
-
-              {editable && (slot.multiple || slotFiles.length === 0) && (
-                <label className="block mt-2">
-                  <span className="sr-only">Upload {slot.label}</span>
-                  <input
-                    type="file"
-                    accept={slot.accept}
-                    disabled={busySlot === slot.key}
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) upload(slot, file);
-                      e.target.value = "";
-                    }}
-                    className="block w-full text-xs text-slate-600 file:mr-3 file:py-1.5 file:px-3
-                               file:rounded-lg file:border-0 file:text-xs file:font-medium
-                               file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 disabled:opacity-50"
-                  />
-                </label>
-              )}
-              {busySlot === slot.key && (
-                <p className="text-xs text-slate-500 mt-1">Uploading…</p>
-              )}
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
 
+      {/* ---- Slots for the chosen option ---- */}
+      {cfg && (
+        <div className="space-y-3">
+          {cfg.slots.map((slot) => {
+            const slotFiles = files.filter((f) => f.slot === slot.key);
+            return (
+              <div
+                key={slot.key}
+                className="rounded-lg border border-slate-200 dark:border-slate-700 p-3"
+              >
+                <div className="flex items-baseline justify-between gap-2 flex-wrap">
+                  <span className="text-sm font-medium text-slate-800 dark:text-slate-100">
+                    {slot.label}
+                    {slot.required && (
+                      <span className="ml-2 text-[10px] uppercase tracking-wide text-rose-600 font-semibold">
+                        Required
+                      </span>
+                    )}
+                    {slot.multiple && (
+                      <span className="ml-2 text-[10px] uppercase tracking-wide text-slate-400">
+                        Multiple
+                      </span>
+                    )}
+                  </span>
+                  {slot.required && (
+                    <span className={haveSlots.has(slot.key) ? "text-emerald-600 text-xs" : "text-slate-400 text-xs"}>
+                      {haveSlots.has(slot.key) ? "✓ uploaded" : "missing"}
+                    </span>
+                  )}
+                </div>
+                {slot.hint && (
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    {slot.hint}
+                  </p>
+                )}
+
+                {slotFiles.length > 0 && (
+                  <ul className="mt-2 space-y-1">
+                    {slotFiles.map((f) => (
+                      <li key={f.id} className="flex items-center gap-3 text-sm">
+                        <button
+                          type="button"
+                          onClick={() => download(f)}
+                          className="text-blue-700 hover:underline dark:text-blue-300 truncate max-w-[16rem]"
+                        >
+                          {f.file_name}
+                        </button>
+                        {editable && (
+                          <button
+                            type="button"
+                            onClick={() => remove(f)}
+                            className="text-xs text-rose-600 hover:underline"
+                          >
+                            remove
+                          </button>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                {editable && (slot.multiple || slotFiles.length === 0) && (
+                  <label className="block mt-2">
+                    <span className="sr-only">Upload {slot.label}</span>
+                    <input
+                      type="file"
+                      accept={slot.accept}
+                      disabled={busySlot === slot.key}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) upload(slot, file);
+                        e.target.value = "";
+                      }}
+                      className="block w-full text-xs text-slate-600 file:mr-3 file:py-1.5 file:px-3
+                                 file:rounded-lg file:border-0 file:text-xs file:font-medium
+                                 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 disabled:opacity-50"
+                    />
+                  </label>
+                )}
+                {busySlot === slot.key && (
+                  <p className="text-xs text-slate-500 mt-1">Uploading…</p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       {/* ---- Publishing outlet(s) ---- */}
-      {outlets.length > 0 && (
+      {cfg && outlets.length > 0 && (
         <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-3">
           <p className="text-sm font-medium text-slate-800 dark:text-slate-100">
             Publishing outlet(s){" "}
@@ -306,8 +384,8 @@ export function FullPaperUpload({
             </span>
           </p>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Select every outlet you would like your paper considered for. You
-            may pick one, some, or all.
+            Select every outlet you would like your paper considered for. You may
+            pick one, some, or all.
           </p>
           <div className="mt-2 space-y-1.5">
             {outlets.map((o) => (
@@ -334,7 +412,7 @@ export function FullPaperUpload({
       )}
 
       {/* ---- Declaration (re-affirmed for the full paper) ---- */}
-      {editable && (
+      {cfg && editable && (
         <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-3">
           <p className="text-sm font-medium text-slate-800 dark:text-slate-100">
             Declaration{" "}
@@ -367,7 +445,7 @@ export function FullPaperUpload({
       {error && <p className="text-sm text-rose-600">{error}</p>}
       {notice && <p className="text-sm text-emerald-700">{notice}</p>}
 
-      {editable && (
+      {cfg && editable && (
         <div className="flex items-center gap-3 flex-wrap">
           <button
             type="button"

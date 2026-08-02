@@ -24,6 +24,8 @@ import {
   reviewOf,
   FULL_PAPER_OPTIONS,
   fullPaperSlotLabel,
+  textSimilarity,
+  MANUSCRIPT_MIN_SIMILARITY,
 } from "@/lib/types";
 import type { AppRole, DecisionKind, Recommendation } from "@/lib/types";
 
@@ -549,6 +551,74 @@ export async function submitForReview(formData: FormData): Promise<ActionResult>
   revalidatePath("/author");
   revalidatePath(`/author/submissions/${id}`);
   return { ok: true, message: isRevision ? "Revision submitted." : "Submitted." };
+}
+
+/**
+ * Pathway B, manuscript stage: the corresponding author may revise the Title,
+ * Abstract and Keywords that were accepted in Stage 1. The Title+Abstract must
+ * stay at least 70% similar (word overlap) to the Stage 1 accepted snapshot, so
+ * the full paper stays on the accepted topic. Track is never changed here.
+ */
+export async function reviseManuscriptDetails(
+  formData: FormData
+): Promise<ActionResult> {
+  const profile = await requireProfile();
+  const admin = createAdminClient();
+  const id = String(formData.get("submission_id"));
+  const title = String(formData.get("title") ?? "").trim();
+  const abstract = String(formData.get("abstract") ?? "").trim();
+  const keywords = String(formData.get("keywords") ?? "")
+    .split(",")
+    .map((k) => k.trim())
+    .filter(Boolean);
+
+  const { data: sub } = await admin
+    .from("submissions")
+    .select(
+      "author_id, status, submission_type, stage1_title, stage1_abstract, title, abstract"
+    )
+    .eq("id", id)
+    .maybeSingle();
+  if (!sub) return { ok: false, message: "Submission not found." };
+  const s = sub as any;
+  if (s.author_id !== profile.id)
+    return { ok: false, message: "Only the corresponding author can revise this." };
+  if (s.submission_type !== "full_paper_presentation")
+    return { ok: false, message: "This is not a full-paper (Pathway B) submission." };
+  if (!["abstract_accepted", "revisions_requested"].includes(s.status))
+    return { ok: false, message: "These details can be revised only at the manuscript stage." };
+  if (!title || !abstract)
+    return { ok: false, message: "Title and abstract are required." };
+
+  // Compare against the Stage 1 snapshot (fall back to the current values if the
+  // snapshot is somehow absent, e.g. an older acceptance).
+  const baseTitle = s.stage1_title ?? s.title ?? "";
+  const baseAbstract = s.stage1_abstract ?? s.abstract ?? "";
+  const sim = textSimilarity(
+    `${title} ${abstract}`,
+    `${baseTitle} ${baseAbstract}`
+  );
+  if (sim < MANUSCRIPT_MIN_SIMILARITY) {
+    return {
+      ok: false,
+      message: `Your revision retains only ${Math.round(
+        sim * 100
+      )}% of the accepted title & abstract. The full paper must stay on the accepted topic — please keep at least ${Math.round(
+        MANUSCRIPT_MIN_SIMILARITY * 100
+      )}%.`,
+    };
+  }
+
+  const { error } = await admin
+    .from("submissions")
+    .update({ title, abstract, keywords, updated_at: new Date().toISOString() })
+    .eq("id", id);
+  if (error) return { ok: false, message: error.message };
+  await audit(profile.id, "manuscript.details_revised", "submission", id, {
+    similarity: Math.round(sim * 100),
+  });
+  revalidatePath(`/author/submissions/${id}`);
+  return { ok: true, message: "Saved." };
 }
 
 /**
@@ -2186,11 +2256,17 @@ export async function recordRecommendation(
   if (error) return { ok: false, message: error.message };
 
   // The trigger has moved a Pathway B abstract to abstract_accepted; record the
-  // deadline the author must submit the full paper by.
+  // deadline, and snapshot the accepted Title/Abstract/Keywords as the Stage 1
+  // baseline the manuscript-stage revision must stay ≥70% similar to.
   if (fullPaperDeadline) {
     await admin
       .from("submissions")
-      .update({ full_paper_deadline: fullPaperDeadline })
+      .update({
+        full_paper_deadline: fullPaperDeadline,
+        stage1_title: (sub as any).title,
+        stage1_abstract: (sub as any).abstract,
+        stage1_keywords: (sub as any).keywords,
+      })
       .eq("id", submissionId);
   }
 

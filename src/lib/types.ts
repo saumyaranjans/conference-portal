@@ -35,7 +35,34 @@ export const MAX_TRACKS_PER_CHAIR = 2;
 export const MAX_REVIEWS_PER_REVIEWER = 10;
 
 /** Author guidelines page, linked from the Pathway B acceptance email. */
-export const GUIDELINES_URL = "https://glogift2027.in/#guidelines";
+export const GUIDELINES_URL = "https://glogift2027.in/full-paper-submission-guidelines";
+
+/** A revised full-paper Title+Abstract must stay at least this similar to the
+ *  Stage 1 accepted version (word-overlap). */
+export const MANUSCRIPT_MIN_SIMILARITY = 0.7;
+
+/**
+ * Word-overlap (Jaccard) similarity of two texts, 0..1: shared words over the
+ * union of words, case- and punctuation-insensitive. Used to keep a revised
+ * manuscript Title+Abstract close to what was accepted in Stage 1.
+ */
+export function textSimilarity(a: string, b: string): number {
+  const words = (s: string) =>
+    new Set(
+      (s || "")
+        .toLowerCase()
+        .replace(/[^\p{L}\p{N}\s]/gu, " ")
+        .split(/\s+/)
+        .filter(Boolean)
+    );
+  const A = words(a);
+  const B = words(b);
+  if (A.size === 0 && B.size === 0) return 1;
+  let inter = 0;
+  for (const w of A) if (B.has(w)) inter += 1;
+  const union = A.size + B.size - inter;
+  return union === 0 ? 1 : inter / union;
+}
 
 export type FullPaperSlot = {
   key: string;
@@ -80,7 +107,7 @@ export const FULL_PAPER_OPTIONS: Record<
       "Upload one manuscript with figures, tables and appendices included, plus any extra files.",
     slots: [
       { key: "title_page", label: "Title Page", required: true, accept: `${DOC},.pdf`, hint: "Authors, affiliations and contact details." },
-      { key: "manuscript_full", label: "Manuscript — figures, tables & appendices included", required: true, accept: DOC },
+      { key: "manuscript_full", label: "Manuscript — figures, tables & appendices included, with no author names", required: true, accept: DOC, hint: "Anonymised for single-blind review." },
       { key: "supplementary", label: "Supplementary files", multiple: true, accept: EXTRA },
       { key: "others", label: "Others", multiple: true, accept: EXTRA },
     ],

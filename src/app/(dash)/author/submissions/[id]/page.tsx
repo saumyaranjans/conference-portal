@@ -172,6 +172,9 @@ export default async function AuthorSubmissionPage({
                   editable={isOwner}
                   outlets={(outlets as any[]) ?? []}
                   selectedOutlets={(sub as any).requested_outlet_ids ?? []}
+                  title={sub.title ?? ""}
+                  abstract={sub.abstract ?? ""}
+                  keywords={sub.keywords ?? []}
                 />
               </>
             ) : (sub.stage === "full_paper" &&
@@ -185,6 +188,9 @@ export default async function AuthorSubmissionPage({
                 editable={isOwner && sub.status === "revisions_requested"}
                 outlets={(outlets as any[]) ?? []}
                 selectedOutlets={(sub as any).requested_outlet_ids ?? []}
+                title={sub.title ?? ""}
+                abstract={sub.abstract ?? ""}
+                keywords={sub.keywords ?? []}
               />
             ) : (
               <p className="text-sm text-slate-500">

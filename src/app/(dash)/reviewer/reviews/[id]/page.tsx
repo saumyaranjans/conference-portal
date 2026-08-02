@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireRole } from "@/lib/auth";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { ReviewForm } from "@/components/ReviewForm";
 import { CameraReadyPreview } from "@/components/CameraReadyPreview";
 import { DocumentViewer } from "@/components/DocumentViewer";
@@ -25,6 +25,7 @@ export default async function ReviewPage({
     )
     .eq("id", id)
     .eq("reviewer_id", profile.id)
+    .neq("status", "declined")
     .single();
 
   if (!assignment) notFound();
@@ -39,12 +40,18 @@ export default async function ReviewPage({
   const locked = assignment.status === "submitted";
 
   // For a Pathway B manuscript under review, pull the blinded file package.
+  // submission_files RLS has no reviewer SELECT policy (staff-only), so the
+  // user client returns nothing here. The assignment lookup above already
+  // proved this reviewer is assigned, so read with the admin client and drop
+  // the identity-bearing Title Page (single-blind). File bytes are still served
+  // through /api/paper-file, which re-checks blinding server-side.
   const { data: manuscriptFiles } =
     sub?.stage === "full_paper"
-      ? await supabase
+      ? await createAdminClient()
           .from("submission_files")
           .select("id, slot, file_name, file_path")
           .eq("submission_id", sub.id)
+          .neq("slot", "title_page")
       : { data: [] as any[] };
 
   return (

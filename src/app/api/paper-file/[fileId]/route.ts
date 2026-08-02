@@ -45,6 +45,7 @@ export async function GET(
     .select("id")
     .eq("submission_id", f.submission_id)
     .eq("reviewer_id", profile.id)
+    .neq("status", "declined")
     .limit(1);
   const isReviewer = ((asg as any[]) ?? []).length > 0;
   const identityCleared = isAuthor || isEditor || isStaff;

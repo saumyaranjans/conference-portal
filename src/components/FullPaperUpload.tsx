@@ -178,9 +178,10 @@ export function FullPaperUpload({
     router.refresh();
   }
 
-  // A changed file set invalidates any prior camera-ready build.
+  // A changed file set invalidates any prior camera-ready build. Always call
+  // the server — it no-ops if nothing is built. (Guarding on the cameraReadyBuiltAt
+  // prop would miss a build made moments earlier that this render hasn't seen yet.)
   async function invalidateBuild() {
-    if (!cameraReadyBuiltAt) return;
     const fd = new FormData();
     fd.set("submission_id", submissionId);
     await clearCameraReadyBuild(fd);
@@ -227,6 +228,7 @@ export function FullPaperUpload({
   }
 
   async function submit() {
+    if (building) return; // never submit while a (re)build is in flight
     setError(null);
     setNotice(null);
     const fd = new FormData();
@@ -248,7 +250,11 @@ export function FullPaperUpload({
   const isBuilt = !!cameraReadyBuiltAt;
   const canBuild = filesReady && !building;
   const canSubmit =
-    filesReady && isBuilt && picked.length > 0 && declared.every(Boolean);
+    filesReady &&
+    isBuilt &&
+    !building &&
+    picked.length > 0 &&
+    declared.every(Boolean);
 
   const DECLARATIONS = [
     "On behalf of all authors, I confirm this full paper is original, not plagiarised, and not submitted or published elsewhere.",

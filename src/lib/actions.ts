@@ -635,7 +635,14 @@ export async function reviseManuscriptDetails(
 
   const { error } = await admin
     .from("submissions")
-    .update({ title, abstract, keywords, updated_at: new Date().toISOString() })
+    .update({
+      title,
+      abstract,
+      keywords,
+      // The title appears on the camera-ready cover — invalidate any build.
+      full_paper_pdf_built_at: null,
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", id);
   if (error) return { ok: false, message: error.message };
   await audit(profile.id, "manuscript.details_revised", "submission", id, {
@@ -674,7 +681,12 @@ export async function setFullPaperOption(
 
   await admin
     .from("submissions")
-    .update({ full_paper_option: option, updated_at: new Date().toISOString() })
+    .update({
+      full_paper_option: option,
+      // Option (and its file set) is on the camera-ready — invalidate any build.
+      full_paper_pdf_built_at: null,
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", id);
   revalidatePath(`/author/submissions/${id}`);
   return { ok: true, message: `Option ${option} selected.` };
@@ -840,11 +852,11 @@ export async function buildCameraReady(
         "The manuscript must be a PDF so it can be compiled. Please upload a PDF manuscript and try again.",
     };
 
-  // Page ceiling (excludes the generated cover).
+  // Page ceiling on the compiled content (all merged files, excluding the cover).
   if (built.contentPages > MANUSCRIPT_MAX_PAGES)
     return {
       ok: false,
-      message: `Your manuscript is ${built.contentPages} pages. The limit is ${MANUSCRIPT_MAX_PAGES} pages — please shorten it and rebuild.`,
+      message: `Your compiled manuscript is ${built.contentPages} pages (excluding the cover). The limit is ${MANUSCRIPT_MAX_PAGES} compiled pages — please shorten it and rebuild.`,
     };
 
   const path = `${id}/camera-ready/${(s.paper_id ?? "manuscript").replace(/[^\w.-]/g, "_")}-camera-ready.pdf`;
@@ -1368,6 +1380,12 @@ export async function moveAuthor(formData: FormData): Promise<ActionResult> {
     .from("submission_authors")
     .update({ author_order: a.author_order })
     .eq("id", b.id);
+
+  // Author order appears on the camera-ready cover — invalidate any build.
+  await createAdminClient()
+    .from("submissions")
+    .update({ full_paper_pdf_built_at: null })
+    .eq("id", submissionId);
 
   revalidatePath(`/author/submissions/${submissionId}`);
   return { ok: true };
@@ -2520,6 +2538,11 @@ export async function updateCoAuthorDetails(
   }
 
   await admin.from("submission_authors").update(patch).eq("id", id);
+  // Author affiliations appear on the camera-ready cover — invalidate any build.
+  await admin
+    .from("submissions")
+    .update({ full_paper_pdf_built_at: null })
+    .eq("id", submissionId);
   revalidatePath(`/author/submissions/${submissionId}`);
   return { ok: true, message: "Author details updated." };
 }

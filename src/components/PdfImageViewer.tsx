@@ -24,6 +24,11 @@ export function PdfImageViewer({ src }: { src: string }) {
     (async () => {
       try {
         setStatus("loading");
+        // Clear any previously-rendered pages up front so a slow or failing new
+        // src never leaves the old document (possibly a different paper) visible.
+        if (containerRef.current) containerRef.current.innerHTML = "";
+        setPageCount(0);
+
         const pdfjs: any = await import("pdfjs-dist");
         pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
 
@@ -35,7 +40,14 @@ export function PdfImageViewer({ src }: { src: string }) {
         // isEvalSupported:false keeps pdf.js off new Function()/eval, which our
         // CSP blocks (no 'unsafe-eval').
         doc = await pdfjs.getDocument({ data: buf, isEvalSupported: false }).promise;
-        if (cancelled) return;
+        if (cancelled) {
+          try {
+            doc.destroy();
+          } catch {
+            /* ignore */
+          }
+          return;
+        }
         setPageCount(doc.numPages);
 
         const container = containerRef.current;

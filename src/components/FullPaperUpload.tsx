@@ -408,6 +408,13 @@ export function FullPaperUpload({
               </label>
             ))}
           </div>
+          <p className="mt-3 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-900 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-amber-200">
+            <span className="font-semibold">Please note:</span> the outlets you
+            select are your preferences only. The final decision on whether a
+            paper is forwarded for further submission to any journal, edited book
+            or the conference proceedings rests with the Track Editor and the
+            GLOGIFT 2027 conference committee.
+          </p>
         </div>
       )}
 

@@ -109,6 +109,9 @@ export default async function EditorSubmissionPage({
   const reviewRoute = (sub as any).abstract_review_route ?? null;
   const decisionUnlocked = !isAbstract || Boolean(reviewRoute);
   const hasDecision = ((decisions ?? []) as any[]).length > 0;
+  const latestDecision = ((decisions ?? []) as any[])[0]?.decision as
+    | string
+    | undefined;
   // A chair judging an abstract on their own expertise has no use for the
   // reviewer sections. Anything already assigned still shows, so choosing
   // "evaluate myself" after inviting someone never hides real work.
@@ -581,13 +584,19 @@ export default async function EditorSubmissionPage({
       {hasDecision && (
       <Section title="Email the author">
         <NotifyAuthor
-          /* Accepting a Pathway B abstract flips the stage to full_paper before
-             the full paper is submitted — until it is, the letter is still the
-             abstract decision (accept → submit full paper by the deadline). */
+          /* The letter follows the decision being conveyed. Accepting a Pathway
+             B abstract flips the stage to full_paper before the manuscript is
+             submitted — that acceptance letter is still the ABSTRACT one (accept
+             → submit full paper by the deadline). But a manuscript decision
+             (e.g. "sent back to author", which clears the submitted flag) is a
+             FULL-PAPER letter, so it must not be forced back to "abstract". */
           stage={
-            sub.stage === "full_paper" && !(sub as any).full_paper_submitted_at
-              ? "abstract"
-              : sub.stage
+            latestDecision === "sent_back"
+              ? "full_paper"
+              : sub.stage === "full_paper" &&
+                  !(sub as any).full_paper_submitted_at
+                ? "abstract"
+                : sub.stage
           }
           submissionType={sub.submission_type}
           fullPaperDeadline={(sub as any).full_paper_deadline}
@@ -596,7 +605,7 @@ export default async function EditorSubmissionPage({
           track={sub.tracks?.name}
           authorName={sub.profiles?.full_name}
           authorEmail={sub.profiles?.email}
-          defaultDecision={((decisions ?? []) as any[])[0]?.decision}
+          defaultDecision={latestDecision}
           defaultMessage={((decisions ?? []) as any[])[0]?.rationale}
           reviews={authorFacingReviews}
           chairName={profile.full_name}

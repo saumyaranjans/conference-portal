@@ -460,16 +460,22 @@ export const STATUS_LABELS: Record<SubmissionStatus, string> = {
  * Pathway- and stage-aware status label. Every status reads against the thing
  * currently under decision — the "Abstract" for Pathway A and for a Pathway B
  * paper still at the abstract stage, the "Manuscript" once a Pathway B paper has
- * entered the full-paper stage. Both the review states (under_review /
- * revisions_requested) collapse to "… Under Review", matching the lifecycle:
- * Submitted → Under Review → Accepted (with Rejected as the terminal negative).
+ * entered the full-paper stage.
  *
- * A revised paper (version > 1) in the review cycle reads "Revised … Under
- * Review": a revision that has gone back to reviewers — because the assigned
- * reviewers accepted the Track Editor's re-invitation, or a new reviewer was
- * invited during the revision round. `abstract_accepted` always reads "Abstract
- * Accepted" because it marks the moment the abstract cleared, before any
- * manuscript.
+ * The lifecycle, per the folder boxes:
+ *   Submitted (round 1, before the Track Editor accepts)
+ *   → Under Review (Track Editor accepted / reviewers engaged)
+ *   → [revision decision] Under Review (author revising — "Needing Revision")
+ *   → Revised … Under Review (resubmitted revision back in re-review —
+ *      "Revisions Being Processed", recursive over rounds; version > 1)
+ *   → Accepted | Rejected | Withdrawn (terminal).
+ *
+ * "Revised … Under Review" is reserved for the Revisions-Being-Processed stage:
+ * a resubmitted paper (version > 1) that is back with the editor/reviewers
+ * (status submitted or under_review). A paper merely awaiting the author's
+ * revision (revisions_requested — the "Needing Revision" box) stays plain
+ * "… Under Review". `abstract_accepted` always reads "Abstract Accepted"
+ * because it marks the moment the abstract cleared, before any manuscript.
  */
 export function statusLabel(
   status: SubmissionStatus,
@@ -478,21 +484,28 @@ export function statusLabel(
   version?: number | null
 ): string {
   if (status === "draft") return "Draft";
-  if (status === "withdrawn") return "Withdrawn";
-  if (status === "abstract_accepted") return "Abstract Accepted";
 
   const noun =
     submissionType === "full_paper_presentation" && stage === "full_paper"
       ? "Manuscript"
       : "Abstract";
-  const revised = (version ?? 1) > 1;
+
+  if (status === "withdrawn") return `${noun} Withdrawn`;
+  if (status === "abstract_accepted") return "Abstract Accepted";
+
+  // A resubmitted revision (version > 1) that is back in processing — the
+  // "Revisions Being Processed" box — reads "Revised … Under Review".
+  const revisedInReview = (version ?? 1) > 1;
 
   switch (status) {
     case "submitted":
-      return `${noun} Submitted`;
+      // Round 1 shows "Submitted"; a resubmitted revision is already in re-review.
+      return revisedInReview ? `Revised ${noun} Under Review` : `${noun} Submitted`;
     case "under_review":
+      return revisedInReview ? `Revised ${noun} Under Review` : `${noun} Under Review`;
     case "revisions_requested":
-      return `${revised ? "Revised " : ""}${noun} Under Review`;
+      // "Needing Revision" — awaiting the author's revision; stays plain.
+      return `${noun} Under Review`;
     case "accepted":
       return `${noun} Accepted`;
     case "rejected":

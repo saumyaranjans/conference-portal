@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { requireProfile } from "@/lib/auth";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/ui/Primitives";
 import { NewSubmissionForm } from "@/components/NewSubmissionForm";
 import {
@@ -18,14 +18,27 @@ export default async function NewSubmissionPage({
   const profile = await requireProfile();
   const supabase = await createClient();
 
-  // How many submissions the author already holds (withdrawn excluded).
-  const { count: activeCount } = await supabase
+  // The 2-submission rule counts BOTH roles — papers you submit and papers you
+  // co-author (withdrawn excluded) — matching the server-side guard, so the
+  // form and its counter don't disagree with what submission will actually do.
+  const { count: ownedActive } = await supabase
     .from("submissions")
     .select("*", { count: "exact", head: true })
     .eq("author_id", profile.id)
     .neq("status", "withdrawn");
+  const { data: coRows } = await createAdminClient()
+    .from("submission_authors")
+    .select("submissions(status)")
+    .eq("profile_id", profile.id)
+    .eq("is_corresponding", false);
+  const coActive = (coRows ?? []).filter((r) => {
+    const s = (r as any).submissions;
+    const status = Array.isArray(s) ? s[0]?.status : s?.status;
+    return status && status !== "withdrawn";
+  }).length;
+  const activeCount = (ownedActive ?? 0) + coActive;
 
-  const atLimit = (activeCount ?? 0) >= MAX_SUBMISSIONS_PER_AUTHOR;
+  const atLimit = activeCount >= MAX_SUBMISSIONS_PER_AUTHOR;
 
   const { data: conferences } = await supabase
     .from("conferences")

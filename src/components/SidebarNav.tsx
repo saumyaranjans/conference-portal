@@ -82,7 +82,13 @@ export function SidebarNav({
   if (!current) return null;
 
   return (
-    <nav className="sticky top-20">
+    <nav
+      className={`sticky top-20 ${
+        current === "chief"
+          ? "max-h-[calc(100vh-6rem)] overflow-y-auto pr-1 [scrollbar-width:thin]"
+          : ""
+      }`}
+    >
       {/* Two clearly-distinct destinations (moved here from the header): the
           public conference website vs. the submission-portal home. */}
       <a

@@ -113,12 +113,15 @@ export function Section({
 export function DataTable({
   headers,
   children,
+  className,
 }: {
   headers: string[];
   children: ReactNode;
+  /** Extra classes on the wrapper (e.g. compact descendant overrides). */
+  className?: string;
 }) {
   return (
-    <div className="card overflow-hidden">
+    <div className={`card overflow-hidden ${className ?? ""}`}>
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-slate-200">
           <thead>

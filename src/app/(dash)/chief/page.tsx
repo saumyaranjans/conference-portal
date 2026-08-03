@@ -292,6 +292,7 @@ export default async function ChiefDashboard() {
               "Missed deadline",
               "",
             ]}
+            className="[&_.th]:py-2 [&_.th]:text-[10px] [&_.td]:py-2 [&_.td]:text-xs"
           >
             {editorSummary.map((e) => (
               <tr key={e.id} className="hover:bg-slate-50">
@@ -427,6 +428,7 @@ export default async function ChiefDashboard() {
         ) : (
           <DataTable
             headers={["Paper ID", "Title", "Track", "Status", "Track Editor", "Reviews", "Avg", "Updated", ""]}
+            className="[&_.th]:py-2 [&_.th]:text-[10px] [&_.td]:py-2 [&_.td]:text-xs"
           >
             {submissions.map((s) => {
               const st = stats.get(s.id);

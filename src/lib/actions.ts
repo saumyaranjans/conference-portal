@@ -911,7 +911,7 @@ export async function buildCameraReady(
     : undefined;
   return {
     ok: true,
-    message: "Camera-ready PDF built. Please preview and approve it.",
+    message: "Camera-ready PDF built. Preview it, then submit.",
     previewPdf: Buffer.from(built.bytes).toString("base64"),
     fileName: `${s.paper_id ?? "manuscript"}-camera-ready.pdf`,
     warning,

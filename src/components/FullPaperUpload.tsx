@@ -593,7 +593,7 @@ export function FullPaperUpload({
         </div>
       )}
 
-      {/* ---- Camera-ready: build → preview → approve, before submit ---- */}
+      {/* ---- Camera-ready: build → preview → submit ---- */}
       {cfg && editable && (
         <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-3">
           <p className="text-sm font-medium text-slate-800 dark:text-slate-100">
@@ -623,7 +623,7 @@ export function FullPaperUpload({
                 ? "Building…"
                 : isBuilt
                   ? "Rebuild Camera-Ready PDF"
-                  : "Build Camera-Ready PDF for Approval"}
+                  : "Build Camera-Ready PDF"}
             </button>
             {isBuilt && (
               <button

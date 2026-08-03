@@ -1029,6 +1029,25 @@ export async function submitFullPaper(
     };
 
   const isRevision = s.status === "revisions_requested";
+
+  // Revision-round rules: the reviewers must be able to see WHAT changed, so a
+  // point-by-point response letter is compulsory and the author must attest that
+  // the revised manuscript carries the changes marked (track-changes / a
+  // distinct highlight colour).
+  if (isRevision) {
+    if (!have.has("response_letter"))
+      return {
+        ok: false,
+        message:
+          "Upload the point-by-point Response letter to Reviewer & Track Editor — it is required for a revision.",
+      };
+    if (String(formData.get("revision_attest_marked")) !== "true")
+      return {
+        ok: false,
+        message:
+          "Please confirm the revised manuscript shows all changes in track-changes mode or highlighted in a distinct colour.",
+      };
+  }
   await admin
     .from("submissions")
     .update({

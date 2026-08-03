@@ -79,6 +79,8 @@ export function FullPaperUpload({
   const [notice, setNotice] = useState<string | null>(null);
   const [picked, setPicked] = useState<string[]>(selectedOutlets ?? []);
   const [declared, setDeclared] = useState<boolean[]>([false, false, false]);
+  // Revision-only attestation: the revised manuscript marks its changes.
+  const [revisionAttest, setRevisionAttest] = useState(false);
   const [building, setBuilding] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
 
@@ -234,6 +236,7 @@ export function FullPaperUpload({
     const fd = new FormData();
     fd.set("submission_id", submissionId);
     fd.set("declared", String(declared.every(Boolean)));
+    fd.set("revision_attest_marked", String(revisionAttest));
     const res = await submitFullPaper(fd);
     if (!res.ok) setError(res.message ?? "Could not submit.");
     else {
@@ -249,12 +252,17 @@ export function FullPaperUpload({
   const filesReady = !!cfg && requiredDone === required.length;
   const isBuilt = !!cameraReadyBuiltAt;
   const canBuild = filesReady && !building;
+  // In a revision round the response letter is compulsory and the author must
+  // attest the manuscript's changes are marked.
+  const responseLetterDone = files.some((f) => f.slot === "response_letter");
+  const revisionReady = !isRevision || (responseLetterDone && revisionAttest);
   const canSubmit =
     filesReady &&
     isBuilt &&
     !building &&
     picked.length > 0 &&
-    declared.every(Boolean);
+    declared.every(Boolean) &&
+    revisionReady;
 
   const DECLARATIONS = [
     "On behalf of all authors, I confirm this full paper is original, not plagiarised, and not submitted or published elsewhere.",
@@ -454,12 +462,22 @@ export function FullPaperUpload({
 
       {/* ---- Response letter (revision stage only, both options) ---- */}
       {isRevision && cfg && (
-        <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-3">
+        <div
+          className={`rounded-lg border p-3 ${
+            responseLetterDone
+              ? "border-slate-200 dark:border-slate-700"
+              : "border-rose-300 dark:border-rose-500/40"
+          }`}
+        >
           <p className="text-sm font-medium text-slate-800 dark:text-slate-100">
             {RESPONSE_LETTER_SLOT.label}
+            <span className="ml-1 text-[10px] uppercase tracking-wide text-rose-600 font-semibold">
+              required for revision
+            </span>
           </p>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            {RESPONSE_LETTER_SLOT.hint}
+            {RESPONSE_LETTER_SLOT.hint} This lets the reviewers see exactly what
+            you changed for each comment.
           </p>
           {(() => {
             const rl = files.filter((f) => f.slot === RESPONSE_LETTER_SLOT.key);
@@ -515,6 +533,23 @@ export function FullPaperUpload({
               </>
             );
           })()}
+
+          {/* Track-changes attestation — reviewers must be able to see the edits. */}
+          {editable && (
+            <label className="mt-3 flex items-start gap-2 text-sm cursor-pointer border-t border-slate-100 dark:border-slate-700 pt-3">
+              <input
+                type="checkbox"
+                className="mt-0.5"
+                checked={revisionAttest}
+                onChange={(e) => setRevisionAttest(e.target.checked)}
+              />
+              <span className="text-slate-700 dark:text-slate-200">
+                I confirm the revised manuscript shows all changes in
+                track-changes mode or highlighted in a distinct colour, so the
+                reviewers can see exactly what was changed.
+              </span>
+            </label>
+          )}
         </div>
       )}
 
@@ -686,6 +721,13 @@ export function FullPaperUpload({
             Files: {requiredDone}/{required.length} · Camera-ready:{" "}
             {isBuilt ? "✓" : "pending"} · Outlets: {picked.length} · Declaration:{" "}
             {declared.every(Boolean) ? "✓" : "pending"}
+            {isRevision && (
+              <>
+                {" "}
+                · Response letter: {responseLetterDone ? "✓" : "pending"} ·
+                Changes marked: {revisionAttest ? "✓" : "pending"}
+              </>
+            )}
           </span>
         </div>
       )}

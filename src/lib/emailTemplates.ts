@@ -650,6 +650,44 @@ export function certificateIssuedEmail(o: {
 }
 
 /**
+ * System-generated notice to an author that their participation certificate has
+ * been generated and can be downloaded from their submission dashboard.
+ */
+export function participationCertificateReadyEmail(o: {
+  recipientName?: string | null;
+  paperCount: number;
+  conferenceName?: string;
+  brand?: string;
+  dashboardUrl: string;
+}): EmailContent {
+  const brand = o.brand || CONF_DEFAULT;
+  const conf = o.conferenceName || CONF_DEFAULT;
+  const many = o.paperCount > 1;
+  const subject = `${brand} — Your participation certificate is ready to download`;
+  const body = compose([
+    greeting(o.recipientName ?? undefined),
+    "",
+    `Thank you for your participation in ${conf}. Your Certificate of Participation${
+      many ? "s have" : " has"
+    } now been generated.`,
+    "",
+    `You can download ${
+      many ? "them" : "it"
+    } from your submission dashboard: open ${
+      many ? "each of your papers" : "your paper"
+    } and use the “Download Participation Certificate” button.`,
+    "",
+    `Dashboard: ${o.dashboardUrl}`,
+    "",
+    "This is a system-generated email — please do not reply. For any query, kindly write to the conference organisers.",
+    "",
+    "With warm regards,",
+    `Editorial Office, ${brand}`,
+  ]);
+  return { subject, body };
+}
+
+/**
  * System-generated acknowledgement to every author (corresponding + co-authors)
  * once the full paper is submitted for review — carries the Manuscript ID. Fires
  * for both packaging options (A and B).

@@ -5116,6 +5116,96 @@ export async function confirmAuthorAttendance(
   };
 }
 
+/** Author Management: mark (or clear) attendance for a PERSON across every
+ *  submission_author row they appear on (deduped by email). Used by the last
+ *  column of the Author Management directory, where the view is per-person. */
+export async function markPersonAttendance(
+  formData: FormData
+): Promise<ActionResult> {
+  const profile = await requireRole("chief", "admin");
+  // Staff write across another person's author rows — bypass RLS after the
+  // role check, mirroring confirmAuthorAttendance.
+  const supabase = createAdminClient();
+
+  const email = String(formData.get("email") ?? "").trim();
+  const attended = String(formData.get("attended")) === "true";
+  if (!email) return { ok: false, message: "Missing author email." };
+
+  const { data: rows, error } = await supabase
+    .from("submission_authors")
+    .update({
+      attended_confirmed: attended,
+      attendance_confirmed_at: attended ? new Date().toISOString() : null,
+      attendance_confirmed_by: attended ? profile.id : null,
+    })
+    .ilike("email", email)
+    .select("id");
+
+  if (error) return { ok: false, message: error.message };
+
+  await audit(
+    profile.id,
+    attended ? "attendance.confirmed" : "attendance.cleared",
+    "submission_author",
+    rows?.[0]?.id ?? null,
+    { email, rows: rows?.length ?? 0, via: "author-management" }
+  );
+  revalidatePath("/chief/authors");
+  revalidatePath("/admin/authors");
+  return {
+    ok: true,
+    message: attended
+      ? `Marked as attended (${rows?.length ?? 0} record${
+          (rows?.length ?? 0) === 1 ? "" : "s"
+        }).`
+      : "Attendance cleared.",
+  };
+}
+
+/** Author Management: mark (or clear) registration for a PERSON across every
+ *  submission_author row they appear on (deduped by email). Companion to
+ *  markPersonAttendance; together they gate certificate generation. */
+export async function markPersonRegistration(
+  formData: FormData
+): Promise<ActionResult> {
+  const profile = await requireRole("chief", "admin");
+  const supabase = createAdminClient();
+
+  const email = String(formData.get("email") ?? "").trim();
+  const registered = String(formData.get("registered")) === "true";
+  if (!email) return { ok: false, message: "Missing author email." };
+
+  const { data: rows, error } = await supabase
+    .from("submission_authors")
+    .update({
+      registration_fee_paid: registered,
+      registration_fee_paid_at: registered ? new Date().toISOString() : null,
+      registration_fee_paid_by: registered ? profile.id : null,
+    })
+    .ilike("email", email)
+    .select("id");
+
+  if (error) return { ok: false, message: error.message };
+
+  await audit(
+    profile.id,
+    registered ? "registration.paid" : "registration.cleared",
+    "submission_author",
+    rows?.[0]?.id ?? null,
+    { email, rows: rows?.length ?? 0, via: "author-management" }
+  );
+  revalidatePath("/chief/authors");
+  revalidatePath("/admin/authors");
+  return {
+    ok: true,
+    message: registered
+      ? `Marked as registered (${rows?.length ?? 0} record${
+          (rows?.length ?? 0) === 1 ? "" : "s"
+        }).`
+      : "Registration cleared.",
+  };
+}
+
 /** Editorial Office / Convener records that a listed author paid the
  *  registration fee, alongside attendance. */
 export async function markRegistrationFee(

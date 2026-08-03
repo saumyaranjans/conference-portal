@@ -116,6 +116,24 @@ export default async function AuthorSubmissionPage({
   const fullPaperDeadline =
     (sub as any).full_paper_deadline ?? (conf as any)?.full_paper_deadline ?? null;
 
+  // Participation certificate: shown only once the Convener / Editorial Office
+  // has generated it for this reader's author row on this paper.
+  const myAuthorRow = ((coAuthors as any[]) ?? []).find(
+    (a) =>
+      a.profile_id === profile.id ||
+      (a.email &&
+        (profile as any).email &&
+        a.email.trim().toLowerCase() ===
+          (profile as any).email.trim().toLowerCase())
+  );
+  const { data: participationCert } = myAuthorRow
+    ? await createAdminClient()
+        .from("participation_certificates")
+        .select("id, certificate_number, generated_at")
+        .eq("submission_author_id", myAuthorRow.id)
+        .maybeSingle()
+    : { data: null as any };
+
   // Only the corresponding (submitting) author may edit; a co-author is
   // view-only. Editing is further limited to a draft or a revision.
   const isOwner = sub.author_id === profile.id;
@@ -184,6 +202,31 @@ export default async function AuthorSubmissionPage({
             resubmit. Your submission will move to version {sub.version + 1}.
           </p>
         </div>
+      )}
+
+      {/* ---------------- Participation certificate ---------------- */}
+      {participationCert && (
+        <Section title="Participation certificate">
+          <div className="card card-pad flex flex-wrap items-center justify-between gap-4 bg-emerald-50 border-emerald-200">
+            <div>
+              <p className="text-sm font-medium text-emerald-900">
+                Your participation certificate is ready 🎉
+              </p>
+              <p className="text-xs text-emerald-700 mt-0.5">
+                Certificate no. {participationCert.certificate_number} · Generated{" "}
+                {formatDate(participationCert.generated_at)}
+              </p>
+            </div>
+            <a
+              href={`/api/participation-certificate/${participationCert.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-primary shrink-0"
+            >
+              Download Participation Certificate
+            </a>
+          </div>
+        </Section>
       )}
 
       {/* ---------------- Full paper (after abstract acceptance) --------- */}

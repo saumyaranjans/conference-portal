@@ -2,6 +2,9 @@
 
 import { useMemo, useState } from "react";
 import { formatMoney, type RegistrationFee } from "@/lib/registrationFees";
+import { ActionForm, SubmitButton } from "@/components/ActionForm";
+import { markPersonAttendance, markPersonRegistration } from "@/lib/actions";
+import { generateParticipationCertificates } from "@/lib/participationCertificateActions";
 
 export type PersonRow = {
   name: string;
@@ -19,6 +22,11 @@ export type PersonRow = {
   roles: ("Corresponding" | "Co-author")[];
   signedUp: boolean;
   registered: boolean;
+  /** Staff-confirmed attendance (distinct from the declared intention). */
+  attended: boolean;
+  /** Papers that can earn a participation certificate, and how many already have one. */
+  certEligiblePapers: number;
+  certsGenerated: number;
   /** Attendance intention as declared (attending → fee applies). */
   intention: "attending" | "not" | "undeclared";
   /** The delegate's single participation mode (virtual / onsite). */
@@ -107,7 +115,7 @@ export function AuthorManagement({
                   "Author",
                   "Papers (Paper ID · Role · Pathway) & participation",
                   "Role & status",
-                  "Registration amount",
+                  "Registration amount · attendance & certificate",
                 ].map((h) => (
                   <th key={h} className="th">
                     {h}
@@ -269,8 +277,8 @@ export function AuthorManagement({
                     </div>
                   </td>
 
-                  {/* Registration amount — only when intending to attend */}
-                  <td className="td whitespace-nowrap">
+                  {/* Registration amount + attendance / certificate actions */}
+                  <td className="td align-top min-w-[13rem]">
                     {r.intention !== "attending" ? (
                       <span className="text-xs text-slate-400">
                         Not applicable
@@ -308,6 +316,66 @@ export function AuthorManagement({
                         Category not set
                       </span>
                     )}
+
+                    {/* Attendance · Registration · Certificate controls */}
+                    <div className="mt-2.5 space-y-1.5 border-t border-slate-100 pt-2 dark:border-slate-800">
+                      <ActionForm action={markPersonAttendance}>
+                        <input type="hidden" name="email" value={r.email} />
+                        <input
+                          type="hidden"
+                          name="attended"
+                          value={r.attended ? "false" : "true"}
+                        />
+                        <SubmitButton
+                          variant="secondary"
+                          className="w-full justify-center text-[11px] py-0.5 px-2"
+                        >
+                          {r.attended ? "✓ Attended · undo" : "Mark attended"}
+                        </SubmitButton>
+                      </ActionForm>
+
+                      <ActionForm action={markPersonRegistration}>
+                        <input type="hidden" name="email" value={r.email} />
+                        <input
+                          type="hidden"
+                          name="registered"
+                          value={r.registered ? "false" : "true"}
+                        />
+                        <SubmitButton
+                          variant="secondary"
+                          className="w-full justify-center text-[11px] py-0.5 px-2"
+                        >
+                          {r.registered ? "✓ Registered · undo" : "Mark registered"}
+                        </SubmitButton>
+                      </ActionForm>
+
+                      {r.certEligiblePapers > 0 &&
+                      r.certsGenerated >= r.certEligiblePapers ? (
+                        <span className="block rounded-md bg-emerald-50 px-2 py-1 text-center text-[11px] font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+                          ✓ Certificate generated
+                        </span>
+                      ) : (
+                        <>
+                          <ActionForm action={generateParticipationCertificates}>
+                            <input type="hidden" name="email" value={r.email} />
+                            <SubmitButton
+                              variant="primary"
+                              disabled={!(r.attended && r.registered)}
+                              className="w-full justify-center text-[11px] py-0.5 px-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                              {r.certsGenerated > 0
+                                ? "Generate remaining"
+                                : "Generate certificate"}
+                            </SubmitButton>
+                          </ActionForm>
+                          {!(r.attended && r.registered) && (
+                            <span className="block text-center text-[10px] text-slate-400">
+                              Mark attended &amp; registered first
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}

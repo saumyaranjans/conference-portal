@@ -1722,13 +1722,17 @@ export async function prepareReviewerInvite(
       };
 
     // A reviewer may hold at most MAX_REVIEWS_PER_REVIEWER papers. Declined
-    // invitations don't count against the cap.
-    const { count: heldCount } = await admin
+    // invitations don't count, and multiple rounds on one paper count once —
+    // so this is DISTINCT papers, not assignment rows.
+    const { data: heldRows } = await admin
       .from("assignments")
-      .select("id", { count: "exact", head: true })
+      .select("submission_id")
       .eq("reviewer_id", target.id)
       .neq("status", "declined");
-    if ((heldCount ?? 0) >= MAX_REVIEWS_PER_REVIEWER)
+    const heldCount = new Set(
+      ((heldRows as any[]) ?? []).map((h) => h.submission_id)
+    ).size;
+    if (heldCount >= MAX_REVIEWS_PER_REVIEWER)
       return {
         ok: false,
         message: `A reviewer may be allocated at most ${MAX_REVIEWS_PER_REVIEWER} papers, and this reviewer already holds ${heldCount}.`,
@@ -2359,6 +2363,8 @@ function buildInviteEmail(opts: {
   dueDate?: string;
   inviterName?: string;
   inviterEmail?: string;
+  /** Transparent history for a revision-round / additional-reviewer invite. */
+  contextBlock?: string;
 }): { subject: string; body: string } {
   const conf = opts.conferenceName || "GLOGIFT 2027";
   const brand = opts.shortName || "GLOGIFT 2027";
@@ -2381,6 +2387,7 @@ function buildInviteEmail(opts: {
     "",
     "We would be truly grateful for your expertise, and we thank you in advance for your time and valuable contribution to the review process.",
   ];
+  if (opts.contextBlock) lines.push("", opts.contextBlock);
   if (opts.dueDate)
     lines.push(
       "",
@@ -2459,6 +2466,8 @@ function buildAssignmentEmail(opts: {
   inviterEmail?: string | null;
   agreeLink?: string;
   rejectLink?: string;
+  /** Transparent history for a revision-round / additional-reviewer invite. */
+  contextBlock?: string;
 }): { subject: string; body: string } {
   const conf = opts.conferenceName || "GLOGIFT 2027";
   const brand = opts.shortName || "GLOGIFT 2027";
@@ -2479,6 +2488,7 @@ function buildAssignmentEmail(opts: {
     "",
     "We thank you in advance for your time and valuable contribution to the review process.",
   ];
+  if (opts.contextBlock) lines.push("", opts.contextBlock);
   if (opts.dueDate)
     lines.push(
       "",

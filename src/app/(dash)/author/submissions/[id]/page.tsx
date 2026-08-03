@@ -238,7 +238,8 @@ export default async function AuthorSubmissionPage({
             ) : (
               <p className="text-sm text-slate-500">
                 The full paper upload becomes available once your abstract has
-                been accepted (reviewer → track editor → convener).
+                been accepted (reviewed by reviewers; the Track Editor records
+                the final decision).
               </p>
             )}
           </div>

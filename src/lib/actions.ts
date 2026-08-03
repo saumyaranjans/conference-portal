@@ -2740,6 +2740,11 @@ export async function recordRecommendation(
   // Free-text decision value: accept | minor_revision | major_revision | reject
   // | sent_back. The status-mapping trigger interprets it.
   const decision = String(formData.get("decision"));
+  // The editor may preview + tailor the exact author email; when both are
+  // present the (edited) letter is sent verbatim instead of the generated one.
+  const editedSubject = String(formData.get("letter_subject") ?? "").trim();
+  const editedBody = String(formData.get("letter_body") ?? "").trim();
+  const hasEditedLetter = Boolean(editedSubject && editedBody);
 
   const { data: sub } = await admin
     .from("submissions")
@@ -2899,18 +2904,20 @@ export async function recordRecommendation(
         const email = rawEmail.toLowerCase();
         if (!email || seen.has(email)) continue;
         seen.add(email);
-        const letter = manuscriptReturnedEmail({
-          paperId: (sub as any).paper_id,
-          title: sub.title ?? "",
-          track: trackName,
-          message: String(formData.get("rationale") ?? ""),
-          name: a.full_name,
-          chairName: profile.full_name,
-          chairEmail: profile.email,
-          signerRole,
-          conferenceName: conf?.name ?? null,
-          brand,
-        });
+        const letter = hasEditedLetter
+          ? { subject: editedSubject, body: editedBody }
+          : manuscriptReturnedEmail({
+              paperId: (sub as any).paper_id,
+              title: sub.title ?? "",
+              track: trackName,
+              message: String(formData.get("rationale") ?? ""),
+              name: a.full_name,
+              chairName: profile.full_name,
+              chairEmail: profile.email,
+              signerRole,
+              conferenceName: conf?.name ?? null,
+              brand,
+            });
         try {
           await sendEmail({
             to: rawEmail,
@@ -2992,22 +2999,24 @@ export async function recordRecommendation(
       const key = raw.toLowerCase();
       if (!key || seenD.has(key)) continue;
       seenD.add(key);
-      const letter = build({
-        paperId: (sub as any).paper_id,
-        title: sub.title ?? "",
-        track: dTrack,
-        decision,
-        submissionType: (sub as any).submission_type,
-        fullPaperDeadline,
-        message: String(formData.get("rationale") ?? ""),
-        name: a.full_name ?? undefined,
-        reviews,
-        chairName: profile.full_name,
-        chairEmail: profile.email,
-        signerRole: dSignerRole,
-        conferenceName: dConf?.name ?? null,
-        brand: dBrand,
-      });
+      const letter = hasEditedLetter
+        ? { subject: editedSubject, body: editedBody }
+        : build({
+            paperId: (sub as any).paper_id,
+            title: sub.title ?? "",
+            track: dTrack,
+            decision,
+            submissionType: (sub as any).submission_type,
+            fullPaperDeadline,
+            message: String(formData.get("rationale") ?? ""),
+            name: a.full_name ?? undefined,
+            reviews,
+            chairName: profile.full_name,
+            chairEmail: profile.email,
+            signerRole: dSignerRole,
+            conferenceName: dConf?.name ?? null,
+            brand: dBrand,
+          });
       try {
         await sendEmail({
           to: raw,

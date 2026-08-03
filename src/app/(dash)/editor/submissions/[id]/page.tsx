@@ -2,13 +2,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import {
-  recordRecommendation,
-  removeAssignment,
-  setSuggestedOutlet,
-} from "@/lib/actions";
+import { removeAssignment, setSuggestedOutlet } from "@/lib/actions";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { AbstractReviewRoute } from "@/components/AbstractReviewRoute";
+import { DecisionForm } from "@/components/DecisionForm";
 import { AddReviewer } from "@/components/AddReviewer";
 import { RemindReviewer } from "@/components/RemindReviewer";
 import { NotifyAuthor } from "@/components/NotifyAuthor";
@@ -135,6 +132,59 @@ export default async function EditorSubmissionPage({
     recommendation: reviewOf(a)?.recommendation,
     comments: reviewOf(a)?.comments_to_author,
   }));
+
+  const decisionOptions =
+    sub.stage === "full_paper"
+      ? [
+          { value: "accept", label: "Accept", locked: acceptsShort, hint: `Needs ${FULL_PAPER_ACCEPTS_REQUIRED} Accept recommendations` },
+          { value: "minor_revision", label: "Minor Revision", locked: !reviewRoundDone, hint: `Needs a completed review round (${FULL_PAPER_ACCEPTS_REQUIRED} reviews)` },
+          { value: "major_revision", label: "Major Revision", locked: !reviewRoundDone, hint: `Needs a completed review round (${FULL_PAPER_ACCEPTS_REQUIRED} reviews)` },
+          { value: "sent_back", label: "Send back to author", locked: false, hint: "Guidelines not followed — author restarts the manuscript" },
+          { value: "reject", label: "Reject", locked: false, hint: "Manuscript inappropriate" },
+        ]
+      : [
+          { value: "accept", label: "Accept", locked: false, hint: undefined },
+          { value: "minor_revision", label: "Minor Revision", locked: false, hint: undefined },
+          { value: "major_revision", label: "Major Revision", locked: false, hint: undefined },
+          { value: "reject", label: "Reject", locked: false, hint: undefined },
+        ];
+
+  const decisionNote =
+    sub.stage === "full_paper" ? (
+      acceptsShort ? (
+        <p className="text-sm text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+          <strong>Accept</strong> needs {FULL_PAPER_ACCEPTS_REQUIRED} reviewers
+          recommending Accept ({acceptCount} so far).{" "}
+          <strong>Minor / Major Revision</strong> unlock only after a completed
+          review round — {FULL_PAPER_ACCEPTS_REQUIRED} reviewers must have
+          submitted a review ({completed.length} so far). Right now you can{" "}
+          <strong>Send back to author</strong> (guidelines not followed) or{" "}
+          <strong>Reject</strong> (manuscript inappropriate).
+        </p>
+      ) : (
+        <p className="text-sm text-emerald-800 bg-emerald-50 rounded-lg px-3 py-2">
+          {acceptCount} reviewers recommend Accept — this paper may be accepted
+          for the publication stage.
+        </p>
+      )
+    ) : reviewRoute === "self" ? (
+      <p className="text-sm text-slate-600 bg-slate-50 rounded-lg px-3 py-2">
+        You are deciding this abstract <strong>in your own capacity</strong> as
+        Track Editor — the review process is bypassed. The Convener can override
+        your decision.
+      </p>
+    ) : completed.length === 0 ? (
+      <p className="text-sm text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+        You chose to send this abstract out for review and{" "}
+        <strong>no review has come in yet</strong>. You may still decide at your
+        discretion, but the usual course is to wait for the reviewers you invited.
+      </p>
+    ) : (
+      <p className="text-sm text-slate-600 bg-slate-50 rounded-lg px-3 py-2">
+        {completed.length} review{completed.length === 1 ? "" : "s"} received. The
+        Convener can override your decision.
+      </p>
+    );
 
   return (
     <>
@@ -434,136 +484,27 @@ export default async function EditorSubmissionPage({
             </p>
           </div>
         ) : (
-          <ActionForm action={recordRecommendation} className="card card-pad space-y-4">
-            <input type="hidden" name="submission_id" value={id} />
-
-            {sub.stage === "full_paper" ? (
-              acceptsShort ? (
-                <p className="text-sm text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-                  <strong>Accept</strong> needs {FULL_PAPER_ACCEPTS_REQUIRED}{" "}
-                  reviewers recommending Accept ({acceptCount} so far).{" "}
-                  <strong>Minor / Major Revision</strong> unlock only after a
-                  completed review round — {FULL_PAPER_ACCEPTS_REQUIRED} reviewers
-                  must have submitted a review ({completed.length} so far).{" "}
-                  Right now you can <strong>Send back to author</strong> (they
-                  did not follow the submission guidelines — restarts their
-                  manuscript) or <strong>Reject</strong> (manuscript
-                  inappropriate).
-                </p>
-              ) : (
-                <p className="text-sm text-emerald-800 bg-emerald-50 rounded-lg px-3 py-2">
-                  {acceptCount} reviewers recommend Accept — this paper may be
-                  accepted for the publication stage.
-                </p>
-              )
-            ) : reviewRoute === "self" ? (
-              <p className="text-sm text-slate-600 bg-slate-50 rounded-lg px-3 py-2">
-                You are deciding this abstract <strong>in your own capacity</strong>{" "}
-                as Track Editor — the review process is bypassed because
-                the topic falls within your expertise. The Convener can override
-                your decision.
-              </p>
-            ) : completed.length === 0 ? (
-              <p className="text-sm text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-                You chose to send this abstract out for review and{" "}
-                <strong>no review has come in yet</strong>. You may still decide
-                at your discretion, but the usual course is to wait for the
-                reviewers you invited.
-              </p>
-            ) : (
-              <p className="text-sm text-slate-600 bg-slate-50 rounded-lg px-3 py-2">
-                {completed.length} review{completed.length === 1 ? "" : "s"}{" "}
-                received from the reviewers you invited. The Convener can
-                override your decision.
-              </p>
-            )}
-
-            <div>
-              <label className="label">Your decision</label>
-              <div className="grid sm:grid-cols-2 gap-2">
-                {(sub.stage === "full_paper"
-                  ? [
-                      { value: "accept", label: "Accept", locked: acceptsShort, hint: `Needs ${FULL_PAPER_ACCEPTS_REQUIRED} Accept recommendations` },
-                      { value: "minor_revision", label: "Minor Revision", locked: !reviewRoundDone, hint: `Needs a completed review round (${FULL_PAPER_ACCEPTS_REQUIRED} reviews)` },
-                      { value: "major_revision", label: "Major Revision", locked: !reviewRoundDone, hint: `Needs a completed review round (${FULL_PAPER_ACCEPTS_REQUIRED} reviews)` },
-                      { value: "sent_back", label: "Send back to author", locked: false, hint: "Guidelines not followed — author restarts the manuscript" },
-                      { value: "reject", label: "Reject", locked: false, hint: "Manuscript inappropriate" },
-                    ]
-                  : [
-                      { value: "accept", label: "Accept", locked: false, hint: undefined },
-                      { value: "minor_revision", label: "Minor Revision", locked: false, hint: undefined },
-                      { value: "major_revision", label: "Major Revision", locked: false, hint: undefined },
-                      { value: "reject", label: "Reject", locked: false, hint: undefined },
-                    ]
-                ).map(({ value, label, locked, hint }) => (
-                  <label
-                    key={value}
-                    title={hint}
-                    className={`flex items-center gap-2 border border-slate-300 rounded-lg
-                               px-3 py-2 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 ${
-                                 locked
-                                   ? "opacity-50 cursor-not-allowed"
-                                   : "cursor-pointer hover:bg-slate-50"
-                               }`}
-                  >
-                    <input
-                      type="radio"
-                      name="decision"
-                      value={value}
-                      required
-                      disabled={locked}
-                    />
-                    <span className="text-sm">
-                      {label}
-                      {hint && (
-                        <span className="block text-[11px] text-slate-400">
-                          {hint}
-                        </span>
-                      )}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            {sub.submission_type === "full_paper_presentation" &&
-              sub.stage !== "full_paper" && (
-                <div>
-                  <label className="label" htmlFor="full_paper_deadline">
-                    Full-paper submission deadline{" "}
-                    <span className="text-slate-400 font-normal">
-                      (Pathway B — required if you Accept)
-                    </span>
-                  </label>
-                  <input
-                    type="date"
-                    id="full_paper_deadline"
-                    name="full_paper_deadline"
-                    className="input max-w-xs"
-                  />
-                  <p className="text-xs text-slate-500 mt-1">
-                    On accepting the abstract, the author is invited to submit
-                    the full paper by this date. It must be on or before the
-                    conference full-paper deadline.
-                  </p>
-                </div>
-              )}
-
-            <div>
-              <label className="label" htmlFor="rationale">
-                Message to the author
-              </label>
-              <textarea
-                id="rationale"
-                name="rationale"
-                rows={5}
-                className="input"
-                placeholder="Shown to the author alongside your decision."
-              />
-            </div>
-
-            <SubmitButton>Record decision</SubmitButton>
-          </ActionForm>
+          <DecisionForm
+            submissionId={id}
+            stage={sub.stage === "full_paper" ? "full_paper" : "abstract"}
+            note={decisionNote}
+            options={decisionOptions}
+            showDeadline={
+              sub.submission_type === "full_paper_presentation" &&
+              sub.stage !== "full_paper"
+            }
+            paperId={sub.paper_id}
+            title={sub.title}
+            track={sub.tracks?.name}
+            submissionType={sub.submission_type}
+            conferenceName={conf?.name}
+            brand={conferenceBrand}
+            chairName={profile.full_name}
+            chairEmail={profile.email}
+            signerRole="Track Editor"
+            authorName={sub.profiles?.full_name}
+            reviews={authorFacingReviews}
+          />
         )}
       </Section>
       )}

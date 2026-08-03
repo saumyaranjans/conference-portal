@@ -1634,6 +1634,64 @@ export async function saveReview(formData: FormData): Promise<ActionResult> {
 // =====================================================================
 
 /**
+ * A transparent history block for a revision-round / additional-reviewer invite:
+ * the latest Track Editor decision plus each reviewer's author-facing comments
+ * (numbered, never named — double-blind is preserved). Returns null for a
+ * first-round invite (nothing to disclose yet).
+ */
+async function reviewHistoryContext(
+  admin: ReturnType<typeof createAdminClient>,
+  submissionId: string,
+  currentRound: number
+): Promise<string | null> {
+  if ((currentRound ?? 1) <= 1) return null;
+
+  const [{ data: dec }, { data: asg }] = await Promise.all([
+    admin
+      .from("decisions")
+      .select("decision, rationale")
+      .eq("submission_id", submissionId)
+      .order("created_at", { ascending: false })
+      .limit(1),
+    admin
+      .from("assignments")
+      .select("reviewer_number, reviews(is_submitted, recommendation, comments_to_author)")
+      .eq("submission_id", submissionId),
+  ]);
+
+  const latest = ((dec as any[]) ?? [])[0];
+  // One entry per reviewer number: prefer a banked Accept, else any submitted.
+  const byNum = new Map<number, any>();
+  for (const a of ((asg as any[]) ?? [])) {
+    const rv = reviewOf(a);
+    if (!rv?.is_submitted) continue;
+    const n = a.reviewer_number ?? 0;
+    const prev = byNum.get(n);
+    if (!prev || rv.recommendation === "accept") byNum.set(n, rv);
+  }
+  if (!latest && byNum.size === 0) return null;
+
+  const pretty = (d?: string | null) =>
+    d ? d.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase()) : "";
+  const lines: string[] = [
+    `FOR YOUR CONTEXT — this manuscript is under revision (round ${currentRound}). A summary of the review so far follows (author identities are withheld — reviews are double-blind):`,
+  ];
+  if (latest) {
+    lines.push("", `Track Editor's decision: ${pretty(latest.decision)}.`);
+    if ((latest.rationale ?? "").trim()) lines.push(latest.rationale.trim());
+  }
+  for (const n of [...byNum.keys()].sort((a, b) => a - b)) {
+    const rv = byNum.get(n);
+    lines.push(
+      "",
+      `Reviewer ${n} (${pretty(rv.recommendation)}):`,
+      (rv.comments_to_author ?? "").trim() || "(no written comments)"
+    );
+  }
+  return lines.join("\n");
+}
+
+/**
  * Step 1 of adding a reviewer: draft the invitation. Nothing is assigned and
  * nothing is emailed here — the chair previews the letter first.
  *
@@ -1660,7 +1718,7 @@ export async function prepareReviewerInvite(
   const { data: sub } = await admin
     .from("submissions")
     .select(
-      "id, title, paper_id, stage, author_id, tracks(name, conferences(name, acronym, year))"
+      "id, title, paper_id, stage, author_id, review_round, tracks(name, conferences(name, acronym, year))"
     )
     .eq("id", submissionId)
     .single();
@@ -1668,6 +1726,11 @@ export async function prepareReviewerInvite(
 
   const s = sub as any;
   const track: string = s.tracks?.name ?? "";
+  // For a revision-round (additional-reviewer) invite, include a transparent
+  // history so the new reviewer sees the earlier decision + reviewer comments.
+  const contextBlock =
+    (await reviewHistoryContext(admin, submissionId, s.review_round ?? 1)) ??
+    undefined;
   const conferenceName: string = s.tracks?.conferences?.name ?? "GLOGIFT 2027";
   const shortName: string = shortConf(s.tracks?.conferences);
 
@@ -1754,6 +1817,7 @@ export async function prepareReviewerInvite(
       inviterEmail: profile.email,
       agreeLink: `${siteUrl()}/review-invite/${inviteToken}/agree`,
       rejectLink: `${siteUrl()}/review-invite/${inviteToken}/reject`,
+      contextBlock,
     });
 
     return {
@@ -1804,6 +1868,7 @@ export async function prepareReviewerInvite(
     dueDate: dueDate || undefined,
     inviterName: profile.full_name || undefined,
     inviterEmail: profile.email || undefined,
+    contextBlock,
   });
 
   await audit(profile.id, "reviewer.invited", "submission", submissionId, { email });

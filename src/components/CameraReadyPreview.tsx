@@ -27,37 +27,26 @@ export function CameraReadyPreview({
 }) {
   return (
     <div
-      className="rounded-xl border border-slate-300 p-8 sm:p-10"
+      className="rounded-xl border border-slate-300 overflow-hidden"
       style={{ backgroundColor: "#ffffff", color: "#0f172a" }}
     >
-      {/* -------- Header -------- */}
-      <header className="border-b-2 border-slate-800 pb-4 text-center">
-        <div className="flex items-center justify-center gap-6 flex-wrap">
-          <img
-            src="/glogift-logo.png"
-            alt="GLOGIFT"
-            className="h-16 w-auto object-contain"
-          />
-          <img
-            src="/iim-sambalpur.png"
-            alt="Indian Institute of Management Sambalpur"
-            className="h-12 w-auto object-contain"
-          />
-        </div>
+      {/* -------- Standardized letterhead (single image) -------- */}
+      <img
+        src="/letterhead.png"
+        alt="GLOGIFT 2027 — Indian Institute of Management Sambalpur"
+        className="w-full block"
+      />
 
-        <p className="text-xl font-bold tracking-wide mt-4">GLOGIFT 2027</p>
-        <p className="text-[13px] leading-snug mt-1 max-w-2xl mx-auto">
-          {conferenceName}
-        </p>
-        <p className="text-[13px] font-semibold mt-1">
+      <div className="px-8 sm:px-12 pb-10 pt-2">
+        {/* -------- Track -------- */}
+        <p className="text-center text-[11px] font-semibold uppercase tracking-widest text-slate-500">
           Track: {trackName || "—"}
         </p>
-      </header>
 
-      {/* -------- Title -------- */}
-      <h1 className="text-center text-lg font-bold mt-8 leading-snug">
-        {title || "—"}
-      </h1>
+        {/* -------- Title -------- */}
+        <h1 className="text-center text-lg font-bold mt-4 leading-snug">
+          {title || "—"}
+        </h1>
 
       {/* -------- Authors in declared order -------- */}
       <div className="text-center mt-4 space-y-1">
@@ -91,6 +80,7 @@ export function CameraReadyPreview({
           </p>
         </section>
       )}
+      </div>
     </div>
   );
 }

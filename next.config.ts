@@ -32,6 +32,7 @@ const nextConfig: NextConfig = {
       "./src/assets/fonts/**/*",
       "./public/glogift-logo.png",
       "./public/iim-sambalpur.png",
+      "./public/letterhead.png",
     ],
   },
   // Nothing gains from advertising the framework.

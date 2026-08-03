@@ -122,32 +122,31 @@ async function buildOne(
 
   let y = A4_H - 60;
 
-  // ---- Logo (centered) ----
+  // ---- Standardized letterhead (single image: logos + GLOGIFT 2027 +
+  //      conference name + dates + gold/navy rule) ----
   try {
-    const logoBytes = await readFile(path.join(process.cwd(), "public", "glogift-logo.png"));
-    const logo = await out.embedPng(logoBytes);
-    const h = 62;
-    const w = (logo.width / logo.height) * h;
-    page.drawImage(logo, { x: (A4_W - w) / 2, y: y - h, width: w, height: h });
-    y -= h + 18;
+    const lhBytes = await readFile(
+      path.join(process.cwd(), "public", "letterhead.png")
+    );
+    const lh = await out.embedPng(lhBytes);
+    const w = contentW;
+    const h = (lh.height / lh.width) * w;
+    page.drawImage(lh, { x: MARGIN, y: y - h, width: w, height: h });
+    y -= h + 24;
   } catch {
-    y -= 8;
+    // Fallback to a text header if the letterhead asset is unavailable.
+    center("GLOGIFT 2027", y, 22, bold, NAVY);
+    y -= 20;
+    for (const line of wrap(CONFERENCE_FULL, reg, 10, contentW - 20)) {
+      center(line, y, 10, reg, MUTED);
+      y -= 13;
+    }
+    y -= 2;
+    center(CONFERENCE_WHEN, y, 10, obl, MUTED);
+    y -= 20;
+    page.drawRectangle({ x: MARGIN, y, width: contentW, height: 2, color: GOLD });
+    y -= 30;
   }
-
-  // ---- Conference identity ----
-  center("GLOGIFT 2027", y, 22, bold, NAVY);
-  y -= 20;
-  for (const line of wrap(CONFERENCE_FULL, reg, 10, contentW - 20)) {
-    center(line, y, 10, reg, MUTED);
-    y -= 13;
-  }
-  y -= 2;
-  center(CONFERENCE_WHEN, y, 10, obl, MUTED);
-  y -= 20;
-
-  // ---- Gold rule ----
-  page.drawRectangle({ x: MARGIN, y, width: contentW, height: 2, color: GOLD });
-  y -= 30;
 
   // ---- Label ----
   center(

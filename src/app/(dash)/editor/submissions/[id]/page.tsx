@@ -8,7 +8,6 @@ import { AbstractReviewRoute } from "@/components/AbstractReviewRoute";
 import { DecisionForm } from "@/components/DecisionForm";
 import { AddReviewer } from "@/components/AddReviewer";
 import { RemindReviewer } from "@/components/RemindReviewer";
-import { NotifyAuthor } from "@/components/NotifyAuthor";
 import { DocumentViewer } from "@/components/DocumentViewer";
 import { ManuscriptFilesView } from "@/components/ManuscriptFilesView";
 import { PaperDownload } from "@/components/PaperUpload";
@@ -105,10 +104,6 @@ export default async function EditorSubmissionPage({
   const isAbstract = sub.stage !== "full_paper";
   const reviewRoute = (sub as any).abstract_review_route ?? null;
   const decisionUnlocked = !isAbstract || Boolean(reviewRoute);
-  const hasDecision = ((decisions ?? []) as any[]).length > 0;
-  const latestDecision = ((decisions ?? []) as any[])[0]?.decision as
-    | string
-    | undefined;
   // A chair judging an abstract on their own expertise has no use for the
   // reviewer sections. Anything already assigned still shows, so choosing
   // "evaluate myself" after inviting someone never hides real work.
@@ -509,55 +504,9 @@ export default async function EditorSubmissionPage({
       </Section>
       )}
 
-      {/* ---- Email the author — only once a decision exists to convey ---- */}
-      {decisionUnlocked && !hasDecision && (
-        <Section title="Email the author">
-          <div className="card card-pad">
-            <p className="text-sm text-slate-500">
-              Record the decision above first. The letter to the author — with
-              the reviewers&rsquo; comments and your own message — opens here
-              once you have.
-            </p>
-          </div>
-        </Section>
-      )}
-
-      {hasDecision && (
-      <Section title="Email the author">
-        <NotifyAuthor
-          /* The letter follows the decision being conveyed. The ONLY time a
-             full_paper-stage paper uses the ABSTRACT letter is the Pathway B
-             abstract-acceptance window: accepting the abstract flips the stage
-             to full_paper, and that acceptance letter (accept → submit the full
-             paper by the deadline) is the abstract one. Every OTHER manuscript
-             decision — sent back, reject, minor/major revision — is a FULL-PAPER
-             letter, even if the submitted flag is momentarily clear (e.g. right
-             after a send-back). Keyed on the latest decision being "accept". */
-          stage={
-            sub.stage === "full_paper" &&
-            !(sub as any).full_paper_submitted_at &&
-            latestDecision === "accept"
-              ? "abstract"
-              : sub.stage
-          }
-          submissionType={sub.submission_type}
-          fullPaperDeadline={(sub as any).full_paper_deadline}
-          paperId={sub.paper_id}
-          title={sub.title}
-          track={sub.tracks?.name}
-          authorName={sub.profiles?.full_name}
-          authorEmail={sub.profiles?.email}
-          defaultDecision={latestDecision}
-          defaultMessage={((decisions ?? []) as any[])[0]?.rationale}
-          reviews={authorFacingReviews}
-          chairName={profile.full_name}
-          chairEmail={profile.email}
-          signerRole="Track Editor"
-          conferenceName={sub.tracks?.conferences?.name}
-          brand={conferenceBrand}
-        />
-      </Section>
-      )}
+      {/* The decision letter is previewed, (optionally) edited, and emailed to
+          the author — with the Convener CC'd — in one step from the decision
+          panel above, so there is no separate "email the author" section. */}
 
       {/* ---- Highlight a publication outlet (accepted papers) ----
            Only Pathway B (full paper) produces a paper for a publication

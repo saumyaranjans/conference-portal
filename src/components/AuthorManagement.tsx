@@ -119,6 +119,15 @@ export function AuthorManagement({
                   <td className="td whitespace-nowrap">
                     <span className="font-medium text-slate-900">{r.name}</span>
                     <span className="block text-xs text-slate-500">{r.email}</span>
+                    {r.category ? (
+                      <span className="badge bg-violet-100 text-violet-800 mt-1 inline-block">
+                        {r.category}
+                      </span>
+                    ) : (
+                      <span className="block text-[10px] text-slate-400 mt-1">
+                        Category not specified
+                      </span>
+                    )}
                   </td>
 
                   {/* Papers + per-paper role */}

@@ -3,7 +3,11 @@
 import { useMemo, useState } from "react";
 import { formatMoney, type RegistrationFee } from "@/lib/registrationFees";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
-import { markPersonAttendance, markPersonRegistration } from "@/lib/actions";
+import {
+  markPersonAttendance,
+  markPersonRegistration,
+  markPersonPaid,
+} from "@/lib/actions";
 import { generateParticipationCertificates } from "@/lib/participationCertificateActions";
 
 export type PersonRow = {
@@ -21,7 +25,10 @@ export type PersonRow = {
   trackCodes: string[];
   roles: ("Corresponding" | "Co-author")[];
   signedUp: boolean;
+  /** Enrolled for the event (staff-confirmed). Distinct from fee payment. */
   registered: boolean;
+  /** Registration fee received (staff-confirmed). */
+  paid: boolean;
   /** Staff-confirmed attendance (distinct from the declared intention). */
   attended: boolean;
   /** Papers that can earn a participation certificate, and how many already have one. */
@@ -115,7 +122,7 @@ export function AuthorManagement({
                   "Author",
                   "Papers (Paper ID · Role · Pathway) & participation",
                   "Role & status",
-                  "Registration amount · attendance & certificate",
+                  "Participation desk",
                 ].map((h) => (
                   <th key={h} className="th">
                     {h}
@@ -349,6 +356,21 @@ export function AuthorManagement({
                         </SubmitButton>
                       </ActionForm>
 
+                      <ActionForm action={markPersonPaid}>
+                        <input type="hidden" name="email" value={r.email} />
+                        <input
+                          type="hidden"
+                          name="paid"
+                          value={r.paid ? "false" : "true"}
+                        />
+                        <SubmitButton
+                          variant="secondary"
+                          className="w-full justify-center text-[11px] py-0.5 px-2"
+                        >
+                          {r.paid ? "✓ Fee paid · undo" : "Mark paid"}
+                        </SubmitButton>
+                      </ActionForm>
+
                       {r.certEligiblePapers > 0 &&
                       r.certsGenerated >= r.certEligiblePapers ? (
                         <span className="block rounded-md bg-emerald-50 px-2 py-1 text-center text-[11px] font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
@@ -360,7 +382,7 @@ export function AuthorManagement({
                             <input type="hidden" name="email" value={r.email} />
                             <SubmitButton
                               variant="primary"
-                              disabled={!(r.attended && r.registered)}
+                              disabled={!(r.attended && r.paid)}
                               className="w-full justify-center text-[11px] py-0.5 px-2 disabled:opacity-40 disabled:cursor-not-allowed"
                             >
                               {r.certsGenerated > 0
@@ -368,9 +390,9 @@ export function AuthorManagement({
                                 : "Generate certificate"}
                             </SubmitButton>
                           </ActionForm>
-                          {!(r.attended && r.registered) && (
+                          {!(r.attended && r.paid) && (
                             <span className="block text-center text-[10px] text-slate-400">
-                              Mark attended &amp; registered first
+                              Mark attended &amp; paid first
                             </span>
                           )}
                         </>

@@ -5162,9 +5162,9 @@ export async function markPersonAttendance(
   };
 }
 
-/** Author Management: mark (or clear) registration for a PERSON across every
- *  submission_author row they appear on (deduped by email). Companion to
- *  markPersonAttendance; together they gate certificate generation. */
+/** Author Management: mark (or clear) registration (enrolled for the event) for
+ *  a PERSON across every submission_author row they appear on (deduped by
+ *  email). Distinct from payment (markPersonPaid) and attendance. */
 export async function markPersonRegistration(
   formData: FormData
 ): Promise<ActionResult> {
@@ -5178,9 +5178,9 @@ export async function markPersonRegistration(
   const { data: rows, error } = await supabase
     .from("submission_authors")
     .update({
-      registration_fee_paid: registered,
-      registration_fee_paid_at: registered ? new Date().toISOString() : null,
-      registration_fee_paid_by: registered ? profile.id : null,
+      registration_confirmed: registered,
+      registration_confirmed_at: registered ? new Date().toISOString() : null,
+      registration_confirmed_by: registered ? profile.id : null,
     })
     .ilike("email", email)
     .select("id");
@@ -5189,7 +5189,7 @@ export async function markPersonRegistration(
 
   await audit(
     profile.id,
-    registered ? "registration.paid" : "registration.cleared",
+    registered ? "registration.confirmed" : "registration.cleared",
     "submission_author",
     rows?.[0]?.id ?? null,
     { email, rows: rows?.length ?? 0, via: "author-management" }
@@ -5203,6 +5203,50 @@ export async function markPersonRegistration(
           (rows?.length ?? 0) === 1 ? "" : "s"
         }).`
       : "Registration cleared.",
+  };
+}
+
+/** Author Management: mark (or clear) that a PERSON has PAID the registration
+ *  fee, across every submission_author row they appear on (deduped by email).
+ *  Attendance + payment together gate participation-certificate generation. */
+export async function markPersonPaid(
+  formData: FormData
+): Promise<ActionResult> {
+  const profile = await requireRole("chief", "admin");
+  const supabase = createAdminClient();
+
+  const email = String(formData.get("email") ?? "").trim();
+  const paid = String(formData.get("paid")) === "true";
+  if (!email) return { ok: false, message: "Missing author email." };
+
+  const { data: rows, error } = await supabase
+    .from("submission_authors")
+    .update({
+      registration_fee_paid: paid,
+      registration_fee_paid_at: paid ? new Date().toISOString() : null,
+      registration_fee_paid_by: paid ? profile.id : null,
+    })
+    .ilike("email", email)
+    .select("id");
+
+  if (error) return { ok: false, message: error.message };
+
+  await audit(
+    profile.id,
+    paid ? "registration.paid" : "registration.unpaid",
+    "submission_author",
+    rows?.[0]?.id ?? null,
+    { email, rows: rows?.length ?? 0, via: "author-management" }
+  );
+  revalidatePath("/chief/authors");
+  revalidatePath("/admin/authors");
+  return {
+    ok: true,
+    message: paid
+      ? `Marked fee paid (${rows?.length ?? 0} record${
+          (rows?.length ?? 0) === 1 ? "" : "s"
+        }).`
+      : "Fee-paid mark cleared.",
   };
 }
 

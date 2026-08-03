@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import type { CookieToSet } from "@/lib/supabase/cookies";
+import { sessionScopedCookie, type CookieToSet } from "@/lib/supabase/cookies";
 
 const PROTECTED = ["/author", "/reviewer", "/editor", "/chief", "/admin"];
 
@@ -75,7 +75,7 @@ export default async function proxy(request: NextRequest) {
           response.headers.set("content-security-policy", csp);
           response.headers.set("x-frame-options", "DENY");
           cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
+            response.cookies.set(name, value, sessionScopedCookie(value, options))
           );
         },
       },

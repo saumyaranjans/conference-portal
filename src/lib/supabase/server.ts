@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
-import type { CookieToSet } from "@/lib/supabase/cookies";
+import { sessionScopedCookie, type CookieToSet } from "@/lib/supabase/cookies";
 
 /** Request-scoped client that respects RLS as the signed-in user. */
 export async function createClient() {
@@ -18,7 +18,7 @@ export async function createClient() {
         setAll(cookiesToSet: CookieToSet[]) {
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
+              cookieStore.set(name, value, sessionScopedCookie(value, options))
             );
           } catch {
             // Called from a Server Component — middleware refreshes the

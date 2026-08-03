@@ -84,14 +84,14 @@ export async function generateParticipationCertificates(
     return { ok: false, message: "This author has no papers eligible for a certificate." };
   }
 
-  // Gate: the person must be marked attended AND registered.
+  // Gate: the person must be marked attended AND have paid the fee.
   const attended = eligible.some((r) => r.attended_confirmed);
-  const registered = eligible.some((r) => r.registration_fee_paid);
-  if (!attended || !registered) {
+  const paid = eligible.some((r) => r.registration_fee_paid);
+  if (!attended || !paid) {
     return {
       ok: false,
       message:
-        "Mark the author as attended and registered before generating the certificate.",
+        "Mark the author as attended and fee-paid before generating the certificate.",
     };
   }
 

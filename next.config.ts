@@ -46,6 +46,20 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
+      // The public landing page must return to its original (signed-out) state
+      // on every revisit — never a back/forward-cached logged-in view. Once the
+      // session cookie is dropped (window closed), a fresh render shows the
+      // public page rather than a restored dashboard redirect.
+      {
+        source: "/",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "private, no-store, max-age=0, must-revalidate",
+          },
+          { key: "Pragma", value: "no-cache" },
+        ],
+      },
       // Public conference PDFs are rendered by Chromium's internal PDF
       // extension. It uses an extension origin even when the parent page is
       // first-party, so the static resource must be readable across that

@@ -31,10 +31,26 @@ export default async function ReviewerDashboard() {
 
   const assignments = (data ?? []) as any[];
 
-  const invited = assignments.filter((a) => a.status === "invited");
-  const active = assignments.filter((a) => a.status === "accepted");
-  const done = assignments.filter((a) => a.status === "submitted");
-  const declined = assignments.filter((a) => a.status === "declined");
+  // Round-aware: a paper may have several assignments (one per review round).
+  // The tiles and buckets reflect the CURRENT round only, so a paper that is
+  // being re-reviewed counts once (in progress) rather than appearing as both
+  // completed (round 1) and in progress (round 2). Earlier rounds move to
+  // History as "superseded" context.
+  const maxRoundBySub = new Map<string, number>();
+  for (const a of assignments) {
+    const sid = a.submission_id;
+    maxRoundBySub.set(sid, Math.max(maxRoundBySub.get(sid) ?? 0, a.round ?? 1));
+  }
+  const isCurrent = (a: any) =>
+    (a.round ?? 1) === (maxRoundBySub.get(a.submission_id) ?? 1);
+
+  const current = assignments.filter(isCurrent);
+  const superseded = assignments.filter((a) => !isCurrent(a));
+
+  const invited = current.filter((a) => a.status === "invited");
+  const active = current.filter((a) => a.status === "accepted");
+  const done = current.filter((a) => a.status === "submitted");
+  const declined = current.filter((a) => a.status === "declined");
 
   const overdue = active.filter(
     (a) => a.due_date && new Date(a.due_date) < new Date()
@@ -143,34 +159,43 @@ export default async function ReviewerDashboard() {
         )}
       </Section>
 
-      {/* -------- History -------- */}
-      {(done.length > 0 || declined.length > 0) && (
+      {/* -------- History (current-round completed/declined + superseded earlier rounds) -------- */}
+      {(done.length > 0 || declined.length > 0 || superseded.length > 0) && (
         <Section title="History">
           <div className="card divide-y divide-slate-100">
-            {[...done, ...declined].map((a) => (
-              <div
-                key={a.id}
-                className="px-5 py-3 flex items-center justify-between gap-4"
-              >
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-slate-800 truncate">
-                    {a.submissions?.title}
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    {a.status === "submitted" ? "Review submitted" : "Declined"}
-                    {a.responded_at ? ` · ${formatDate(a.responded_at)}` : ""}
-                  </p>
+            {[...done, ...declined, ...superseded].map((a) => {
+              const supersededRow = !isCurrent(a);
+              const label =
+                a.status === "submitted"
+                  ? supersededRow
+                    ? `Round ${a.round ?? 1} review submitted · superseded by a later round`
+                    : "Review submitted"
+                  : "Declined";
+              return (
+                <div
+                  key={a.id}
+                  className="px-5 py-3 flex items-center justify-between gap-4"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-slate-800 truncate">
+                      {a.submissions?.title}
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      {label}
+                      {a.responded_at ? ` · ${formatDate(a.responded_at)}` : ""}
+                    </p>
+                  </div>
+                  {a.status === "submitted" && (
+                    <Link
+                      href={`/reviewer/reviews/${a.id}`}
+                      className="text-sm text-blue-700 hover:underline shrink-0"
+                    >
+                      View
+                    </Link>
+                  )}
                 </div>
-                {a.status === "submitted" && (
-                  <Link
-                    href={`/reviewer/reviews/${a.id}`}
-                    className="text-sm text-blue-700 hover:underline shrink-0"
-                  >
-                    View
-                  </Link>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         </Section>
       )}

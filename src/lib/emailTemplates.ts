@@ -1,8 +1,9 @@
 /**
  * Pure builders for the copy-paste / mailto email templates surfaced on the
  * dashboards. No email is sent by the portal — these just prefill the sender's
- * own mail client. Author identity is never referenced where reviews are
- * single-blind; these go author-ward or chair-ward only.
+ * own mail client. Reviews are double-blind: author identities are never shown
+ * to reviewers, and reviewer identities are never shown to authors (reviews are
+ * labelled "Reviewer 1/2"). These go author-ward or chair-ward only.
  */
 
 import { GUIDELINES_URL } from "@/lib/types";

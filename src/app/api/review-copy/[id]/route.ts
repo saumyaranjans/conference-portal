@@ -5,7 +5,7 @@ import { createAdminClient } from "@/lib/supabase/server";
 /**
  * Streams the blinded review copy of a Pathway B manuscript — the same compiled
  * PDF as the camera-ready but with a cover that WITHHOLDS the author list. It is
- * therefore safe for single-blind reviewers, and is also visible to the author,
+ * therefore safe for double-blind reviewers, and is also visible to the author,
  * the assigned Track Editor and the Convener/Editorial Office.
  *
  * Served from our own origin (with CORP cross-origin) so the inline PDF viewer

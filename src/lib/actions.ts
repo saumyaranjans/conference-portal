@@ -879,7 +879,7 @@ export async function buildCameraReady(
     .from("papers")
     .upload(path, built.bytes, { upsert: true, contentType: "application/pdf", cacheControl: "0" });
   if (upErr) return { ok: false, message: `Could not store the camera-ready: ${upErr.message}` };
-  // Blinded review copy (cover without authors) for single-blind reviewers.
+  // Blinded review copy (cover without authors) for double-blind reviewers.
   const { error: rvErr } = await admin.storage
     .from("papers")
     .upload(reviewPath, built.blindedBytes, {

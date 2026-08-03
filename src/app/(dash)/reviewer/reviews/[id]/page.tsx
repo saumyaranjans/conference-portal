@@ -74,7 +74,7 @@ export default async function ReviewPage({
         }
       />
 
-      {/* The reviewer never sees author identities — single-blind by design.
+      {/* The reviewer never sees author identities — double-blind by design.
           At the manuscript stage the reviewer is assessing the full paper, so we
           lead with the blinded manuscript preview and do not surface a separate
           abstract camera-ready proof. At the abstract stage, the camera-ready
@@ -88,7 +88,7 @@ export default async function ReviewPage({
             reviewCopyBuiltAt={(sub as any).full_paper_pdf_built_at}
           />
           <p className="text-xs text-slate-400 mt-2">
-            Author identities are withheld — reviews are single-blind.
+            Author identities are withheld — reviews are double-blind.
           </p>
         </Section>
       ) : (
@@ -103,7 +103,7 @@ export default async function ReviewPage({
               keywords={(sub?.keywords ?? []).join(", ")}
             />
             <p className="text-xs text-slate-400 mt-2">
-              Author identities are withheld — reviews are single-blind.
+              Author identities are withheld — reviews are double-blind.
             </p>
           </Section>
 

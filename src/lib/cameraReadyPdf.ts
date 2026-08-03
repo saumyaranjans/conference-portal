@@ -87,7 +87,7 @@ export async function buildCameraReadyPdf(
 }> {
   // Two PDFs from the same files: the full camera-ready (cover WITH authors) and
   // a blinded review copy (identical cover WITHOUT the author list) for
-  // single-blind reviewers.
+  // double-blind reviewers.
   const full = await buildOne(meta, parts, true);
   const blinded = await buildOne(meta, parts, false);
   return {
@@ -217,7 +217,7 @@ async function buildOne(
     y -= 4;
     page.drawText("AUTHORS", { x: MARGIN, y, size: 8, font: bold, color: MUTED });
     y -= 16;
-    page.drawText("Withheld for single-blind review.", {
+    page.drawText("Withheld for double-blind review.", {
       x: MARGIN + 6,
       y,
       size: 10.5,
@@ -229,8 +229,8 @@ async function buildOne(
 
   // ---- Footer note ----
   const note = includeAuthors
-    ? "The manuscript that follows is anonymised for single-blind review and carries no author names. Author identities appear on this cover page only."
-    : "This is the single-blind review copy. Author identities are withheld throughout, including on this cover page.";
+    ? "The manuscript that follows is anonymised for double-blind review and carries no author names. Author identities appear on this cover page only."
+    : "This is the double-blind review copy. Author identities are withheld throughout, including on this cover page.";
   let fy = MARGIN + 24;
   for (const l of wrap(note, obl, 8.5, contentW)) {
     page.drawText(l, { x: MARGIN, y: fy, size: 8.5, font: obl, color: MUTED });

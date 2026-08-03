@@ -9,9 +9,10 @@ type StoredFile = { id: string; slot: string; file_name: string; file_path: stri
 /**
  * Role-aware view of a Pathway B manuscript package.
  *
- *  - reviewer: single-blind. Sees the blinded review copy (author-less cover +
+ *  - reviewer: double-blind. Sees the blinded review copy (author-less cover +
  *    manuscript) and neutral extras only — never the Title Page and never the
- *    author-named camera-ready cover.
+ *    author-named camera-ready cover. Authors likewise never learn reviewer
+ *    identities — reviews reach them labelled "Reviewer 1/2", never by name.
  *  - editor / chief: identity-aware. Sees the full camera-ready PDF (cover with
  *    author names), the blinded review copy (exactly what reviewers see) and
  *    every raw uploaded file, including the Title Page.
@@ -88,7 +89,7 @@ export function ManuscriptFilesView({
     <div className="space-y-3">
       {isReviewer && (
         <p className="text-xs text-slate-400">
-          Author identities are withheld — reviews are single-blind. The Title
+          Author identities are withheld — reviews are double-blind. The Title
           Page and any author-identifying material are not shown here.
         </p>
       )}
@@ -111,7 +112,7 @@ export function ManuscriptFilesView({
           note={
             isReviewer
               ? undefined
-              : "Exactly what your reviewers see — the compiled manuscript behind an author-less cover (single-blind)."
+              : "Exactly what your reviewers see — the compiled manuscript behind an author-less cover (double-blind)."
           }
         />
       ) : (

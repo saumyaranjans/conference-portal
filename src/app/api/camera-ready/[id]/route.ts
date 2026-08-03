@@ -10,7 +10,7 @@ import { createAdminClient } from "@/lib/supabase/server";
  *
  * The camera-ready cover carries author identities, so this is limited to the
  * corresponding author, the assigned Track Editor, and the Convener/Editorial
- * Office. Reviewers never receive it (single-blind).
+ * Office. Reviewers never receive it (double-blind).
  */
 export async function GET(
   _req: NextRequest,

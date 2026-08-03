@@ -9,7 +9,7 @@ import { createAdminClient } from "@/lib/supabase/server";
  *
  * Access mirrors the storage RLS: the corresponding author, the assigned Track
  * Editor, the Convener/Editorial Office, and assigned reviewers. Reviewers are
- * single-blind — they are refused identity-bearing files (the Title Page).
+ * double-blind — they are refused identity-bearing files (the Title Page).
  */
 const IDENTITY_SLOTS = new Set(["title_page"]);
 

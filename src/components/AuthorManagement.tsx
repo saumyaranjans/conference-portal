@@ -103,8 +103,7 @@ export function AuthorManagement({
                 {[
                   "Author",
                   "Papers (Paper ID · role)",
-                  "Role",
-                  "Status",
+                  "Role & status",
                   "Intention to participate",
                   "Registration amount",
                 ].map((h) => (
@@ -117,7 +116,7 @@ export function AuthorManagement({
             <tbody className="divide-y divide-slate-100">
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="td text-center text-slate-400 py-8">
+                  <td colSpan={5} className="td text-center text-slate-400 py-8">
                     No authors match your filters.
                   </td>
                 </tr>
@@ -194,9 +193,9 @@ export function AuthorManagement({
                     </ul>
                   </td>
 
-                  {/* Role summary */}
+                  {/* Role & status (role + sign-up + registration) */}
                   <td className="td">
-                    <div className="flex flex-col gap-1">
+                    <div className="flex flex-col gap-1 items-start">
                       {r.roles.includes("Corresponding") && (
                         <span className="badge bg-indigo-100 text-indigo-800">
                           Corresponding
@@ -207,12 +206,6 @@ export function AuthorManagement({
                           Co-author
                         </span>
                       )}
-                    </div>
-                  </td>
-
-                  {/* Status: sign-up + registration */}
-                  <td className="td">
-                    <div className="flex flex-col gap-1">
                       {r.signedUp ? (
                         <span className="badge bg-emerald-100 text-emerald-800">
                           Signed up

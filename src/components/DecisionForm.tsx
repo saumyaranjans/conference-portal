@@ -66,6 +66,7 @@ export function DecisionForm({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [done, setDone] = useState(false);
 
   // The letter stage: an accepted Pathway B abstract is still an abstract
   // letter ("now submit the full paper"); everything else follows `stage`.
@@ -142,11 +143,32 @@ export function DecisionForm({
       setError(res.message ?? "Could not record the decision.");
       return;
     }
-    // Done with this paper — return to the Track Queue (which reflects the new
-    // status) rather than leaving the editor on the same, now-stale form.
+    // Show a brief thank-you in place of the form, then return to the Track
+    // Queue (which reflects the new status) rather than leaving the editor on
+    // the same, now-stale form.
+    setDone(true);
     setNotice(res.message ?? "Decision recorded and emailed to the author.");
-    router.push("/editor");
-    router.refresh();
+    setTimeout(() => {
+      router.push("/editor");
+      router.refresh();
+    }, 2200);
+  }
+
+  if (done) {
+    return (
+      <div className="card card-pad">
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-4 dark:bg-emerald-500/10 dark:border-emerald-500/30">
+          <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-200">
+            Thank you — the decision has been recorded.
+          </p>
+          <p className="text-sm text-emerald-800/90 dark:text-emerald-300/90 mt-1">
+            {notice ??
+              "The decision letter has been emailed to the author."}{" "}
+            Returning you to your Track Queue…
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (

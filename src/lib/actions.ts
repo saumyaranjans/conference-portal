@@ -17,6 +17,7 @@ import {
   manuscriptNeedsEditorEmail,
   manuscriptReturnedEmail,
   paperAssignmentEmail,
+  reviewDecisionNoticeEmail,
   reviewThankYouEmail,
   signOffLine,
   submissionAcknowledgementEmail,
@@ -3040,9 +3041,12 @@ export async function recordRecommendation(
 
     const { data: asg } = await admin
       .from("assignments")
-      .select("reviewer_number, reviews(is_submitted, recommendation, comments_to_author)")
+      .select(
+        "reviewer_id, reviewer_number, status, reviews(is_submitted, recommendation, comments_to_author)"
+      )
       .eq("submission_id", submissionId);
-    const reviews = ((asg as any[]) ?? [])
+    const asgRows = (asg as any[]) ?? [];
+    const reviews = asgRows
       .filter((a) => reviewOf(a)?.is_submitted)
       .map((a, i) => ({
         label: `Reviewer ${a.reviewer_number ?? i + 1}`,
@@ -3050,9 +3054,24 @@ export async function recordRecommendation(
         comments: reviewOf(a)?.comments_to_author,
       }));
 
+    // Reviewers actively assigned to this paper (not declined/expired). When any
+    // exist, the review process — not a solo editorial call — produced this
+    // decision, so the CC rules change:
+    //   • author letter: NO Convener CC (kept author-facing);
+    //   • a separate notice goes to the reviewers (BCC) with the Convener CC'd.
+    // With no reviewers (e.g. a Pathway A abstract the Track Editor decides on
+    // their own), the author letter CCs the Convener as before.
+    const activeReviewerIds: string[] = asgRows
+      .filter(
+        (a) => a.reviewer_id && a.status !== "declined" && a.status !== "expired"
+      )
+      .map((a) => a.reviewer_id as string);
+    const reviewersAssigned = activeReviewerIds.length > 0;
+
     const build =
       sub.stage === "full_paper" ? fullPaperDecisionEmail : abstractDecisionEmail;
-    const dcc = await convenerEmails(admin);
+    const conveners = await convenerEmails(admin);
+    const authorCc = reviewersAssigned ? undefined : conveners;
     const authorRows = await submissionAuthors(admin, submissionId, sub.author_id);
     const seenD = new Set<string>();
     for (const a of authorRows) {
@@ -3083,12 +3102,51 @@ export async function recordRecommendation(
           to: raw,
           subject: letter.subject,
           text: letter.body,
-          cc: dcc,
+          cc: authorCc,
           kind: "decision",
           sentBy: profile.id,
         });
       } catch {
         // Mail failure must never break the decision.
+      }
+    }
+
+    // Separate decision-outcome notice to the reviewers: reviewers BCC'd (they
+    // never see one another, and no author identity is disclosed), Convener CC'd.
+    if (reviewersAssigned) {
+      const { data: revProfiles } = await admin
+        .from("profiles")
+        .select("email")
+        .in("id", activeReviewerIds);
+      const bccList = ((revProfiles as any[]) ?? [])
+        .map((p) => (p.email ?? "").trim())
+        .filter(Boolean);
+      const noticeTo = (profile.email ?? "").trim() || conveners[0];
+      if (bccList.length && noticeTo) {
+        const notice = reviewDecisionNoticeEmail({
+          paperId: (sub as any).paper_id,
+          title: sub.title ?? "",
+          track: dTrack,
+          decision,
+          itemLabel: sub.stage === "full_paper" ? "manuscript" : "abstract",
+          chairName: profile.full_name,
+          chairEmail: profile.email,
+          conferenceName: dConf?.name ?? null,
+          brand: dBrand,
+        });
+        try {
+          await sendEmail({
+            to: noticeTo,
+            subject: notice.subject,
+            text: notice.body,
+            cc: conveners,
+            bcc: bccList,
+            kind: "review_decision_notice",
+            sentBy: profile.id,
+          });
+        } catch {
+          // Mail failure must never break the decision.
+        }
       }
     }
   }
@@ -3100,7 +3158,7 @@ export async function recordRecommendation(
   revalidatePath("/chief");
   return {
     ok: true,
-    message: "Decision recorded. Send the author the decision letter below.",
+    message: "Decision recorded and the decision letter emailed to the author.",
   };
 }
 

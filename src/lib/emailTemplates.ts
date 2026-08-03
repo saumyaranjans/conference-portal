@@ -198,6 +198,56 @@ export function fullPaperDecisionEmail(o: DecisionOpts): EmailContent {
   return decisionEmail("full_paper", o);
 }
 
+/**
+ * The decision-outcome notice sent to the reviewers once the Track Editor
+ * records a decision on a paper they reviewed. Double-blind: it carries the
+ * paper id, title and track only — never the author identities. Reviewers are
+ * BCC'd (they never see one another) and the Convener is CC'd. Signed by the
+ * handling Track Editor.
+ */
+export function reviewDecisionNoticeEmail(o: {
+  paperId?: string | null;
+  title: string;
+  track?: string | null;
+  decision: string;
+  /** "abstract" (Pathway A) or "manuscript" (Pathway B). */
+  itemLabel: "abstract" | "manuscript";
+  chairName?: string | null;
+  chairEmail?: string | null;
+  conferenceName?: string | null;
+  brand?: string;
+}): EmailContent {
+  const conf = o.conferenceName || CONF_DEFAULT;
+  const brand = o.brand || CONF_DEFAULT;
+  const pid = o.paperId || "(to be assigned)";
+  const decision = prettyRecommendation(
+    o.decision === "sent_back" ? "sent back to author" : o.decision
+  );
+  const subject = `${brand} — Review outcome: ${pid}`;
+  const body = compose([
+    "Dear Reviewer,",
+    "",
+    `Thank you for reviewing the following ${o.itemLabel} for ${brand}${
+      o.track ? `, ${o.track} track` : ""
+    }:`,
+    "",
+    `Paper ID: ${pid}`,
+    `Title: ${o.title}`,
+    "",
+    `A decision has now been recorded on this ${o.itemLabel}: ${decision.toUpperCase()}.`,
+    "",
+    "We are grateful for the time and expertise you contributed. Your assessment was central to reaching this decision, and we look forward to working with you again.",
+    "",
+    `For any additional information, please contact the Chair and Coordinator: ${ORG_CONTACTS}.`,
+    "",
+    "With regards,",
+    o.chairName || null,
+    signOffLine({ role: "Track Editor", track: o.track, conf, brand }),
+    o.chairEmail || null,
+  ]);
+  return { subject, body };
+}
+
 /** Where to write for help with a Track Editor invitation. */
 const CHAIR_HELP = "glogift27.chair@iimsambalpur.ac.in";
 

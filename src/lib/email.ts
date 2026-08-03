@@ -59,6 +59,8 @@ export async function sendEmail(args: {
   replyTo?: string;
   /** Carbon-copy recipients (e.g. the handling Track Editor + Convener). */
   cc?: string | string[];
+  /** Blind-carbon-copy recipients (e.g. reviewers on a decision notice). */
+  bcc?: string | string[];
   /** What this message is, for the Convener's email counts. */
   kind?: string;
   /** Who sent it. */
@@ -97,6 +99,16 @@ export async function sendEmail(args: {
     if (!cc.some((seen) => addressKey(seen) === addressKey(a))) cc.push(a);
   }
 
+  // BCC recipients (e.g. reviewers), de-duped and never repeating the primary
+  // recipient or anyone already CC'd.
+  const bccRaw = Array.isArray(args.bcc) ? args.bcc : args.bcc ? [args.bcc] : [];
+  const bcc: string[] = [];
+  for (const a of bccRaw.flatMap((v) => addressList(v))) {
+    if (addressKey(a) === addressKey(to)) continue;
+    if (cc.some((seen) => addressKey(seen) === addressKey(a))) continue;
+    if (!bcc.some((seen) => addressKey(seen) === addressKey(a))) bcc.push(a);
+  }
+
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -110,6 +122,7 @@ export async function sendEmail(args: {
         subject: args.subject,
         text: args.text,
         ...(cc.length ? { cc } : {}),
+        ...(bcc.length ? { bcc } : {}),
         // Resend takes one address as a string, several as an array.
         ...(replyTo.length
           ? { reply_to: replyTo.length === 1 ? replyTo[0] : replyTo }

@@ -11,6 +11,8 @@ export type PersonRow = {
     trackCode: string;
     role: "Corresponding" | "Co-author";
     pathway: "A" | "B";
+    title: string;
+    trackName: string;
   }[];
   trackCodes: string[];
   roles: ("Corresponding" | "Co-author")[];
@@ -39,6 +41,8 @@ export function AuthorManagement({
   const [track, setTrack] = useState("all");
   const [q, setQ] = useState("");
   const [dir, setDir] = useState<"asc" | "desc">("asc");
+  // Which paper's title/track popup is open (keyed by email + paper index).
+  const [openPaper, setOpenPaper] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -138,21 +142,55 @@ export function AuthorManagement({
                   {/* Papers + per-paper role */}
                   <td className="td">
                     <ul className="space-y-0.5">
-                      {r.papers.map((p, i) => (
-                        <li key={`${p.paperId}-${i}`} className="text-xs">
-                          <span className="font-mono text-slate-600">{p.paperId}</span>
-                          <span className="text-slate-400"> · {p.role}</span>
-                          <span
-                            className={`ml-2 inline-block rounded-md px-1.5 py-0 text-[10px] font-medium ${
-                              p.pathway === "A"
-                                ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
-                                : "bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300"
-                            }`}
-                          >
-                            {p.pathway === "A" ? "Pathway A · Abstract" : "Pathway B · Full paper"}
-                          </span>
-                        </li>
-                      ))}
+                      {r.papers.map((p, i) => {
+                        const key = `${r.email}-${i}`;
+                        const open = openPaper === key;
+                        return (
+                          <li key={key} className="text-xs relative">
+                            <button
+                              type="button"
+                              onClick={() => setOpenPaper(open ? null : key)}
+                              className="font-mono text-blue-700 hover:underline dark:text-blue-300"
+                              title="Click for paper title & track"
+                            >
+                              {p.paperId}
+                            </button>
+                            <span className="text-slate-400"> · {p.role}</span>
+                            <span
+                              className={`ml-2 inline-block rounded-md px-1.5 py-0 text-[10px] font-medium ${
+                                p.pathway === "A"
+                                  ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
+                                  : "bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300"
+                              }`}
+                            >
+                              {p.pathway === "A" ? "Pathway A · Abstract" : "Pathway B · Full paper"}
+                            </span>
+                            {open && (
+                              <div className="absolute z-30 mt-1 w-72 rounded-lg border border-slate-200 bg-white p-3 shadow-xl dark:border-slate-700 dark:bg-slate-800">
+                                <div className="flex items-start justify-between gap-2">
+                                  <span className="font-mono text-[11px] text-slate-500">
+                                    {p.paperId}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => setOpenPaper(null)}
+                                    className="text-slate-400 hover:text-slate-600 text-sm leading-none"
+                                    aria-label="Close"
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
+                                <p className="mt-1 text-sm font-medium text-slate-900 dark:text-slate-100">
+                                  {p.title}
+                                </p>
+                                <p className="mt-1 text-xs text-slate-500">
+                                  Track: {p.trackName}
+                                </p>
+                              </div>
+                            )}
+                          </li>
+                        );
+                      })}
                     </ul>
                   </td>
 

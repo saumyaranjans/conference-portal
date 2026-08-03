@@ -103,7 +103,14 @@ export default async function EditorSubmissionPage({
   // record the decision → send the letter. Each step opens the next.
   const isAbstract = sub.stage !== "full_paper";
   const reviewRoute = (sub as any).abstract_review_route ?? null;
-  const decisionUnlocked = !isAbstract || Boolean(reviewRoute);
+  // A manuscript is decidable only once it has actually been submitted for
+  // review — not while it sits at abstract_accepted waiting for the author to
+  // submit (or re-submit, after a send-back).
+  const manuscriptDecidable =
+    sub.stage === "full_paper" &&
+    ["submitted", "under_review", "revisions_requested"].includes(sub.status);
+  const decidable = manuscriptDecidable || (isAbstract && Boolean(reviewRoute));
+  const decisionUnlocked = decidable || isFinal;
   // A chair judging an abstract on their own expertise has no use for the
   // reviewer sections. Anything already assigned still shows, so choosing
   // "evaluate myself" after inviting someone never hides real work.
@@ -438,7 +445,7 @@ export default async function EditorSubmissionPage({
       )}
 
       {/* ---- Decision (track chair finalises) ---- */}
-      {decisionUnlocked && (
+      {(decisionUnlocked || ((decisions ?? []) as any[]).length > 0) && (
       <Section
         title={
           sub.stage === "full_paper"
@@ -476,6 +483,14 @@ export default async function EditorSubmissionPage({
             <p className="text-sm text-slate-500">
               This paper is {sub.status.replace("_", " ")}. This decision is
               final — only the Convener can change it.
+            </p>
+          </div>
+        ) : !decidable ? (
+          <div className="card card-pad bg-amber-50 border-amber-200">
+            <p className="text-sm text-amber-900">
+              {sub.status === "abstract_accepted"
+                ? "The abstract is accepted and the manuscript is back with the author. The decision panel opens again once they submit (or re-submit) the full paper."
+                : "This submission is not awaiting a decision right now."}
             </p>
           </div>
         ) : (

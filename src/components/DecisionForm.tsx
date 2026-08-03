@@ -142,7 +142,10 @@ export function DecisionForm({
       setError(res.message ?? "Could not record the decision.");
       return;
     }
+    // Done with this paper — return to the Track Queue (which reflects the new
+    // status) rather than leaving the editor on the same, now-stale form.
     setNotice(res.message ?? "Decision recorded and emailed to the author.");
+    router.push("/editor");
     router.refresh();
   }
 

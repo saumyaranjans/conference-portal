@@ -5,6 +5,7 @@ import { formatMoney, type RegistrationFee } from "@/lib/registrationFees";
 
 export type PersonRow = {
   name: string;
+  mobile: string | null;
   email: string;
   papers: {
     paperId: string;
@@ -127,6 +128,11 @@ export function AuthorManagement({
                   {/* Author */}
                   <td className="td whitespace-nowrap">
                     <span className="font-medium text-slate-900">{r.name}</span>
+                    {r.mobile && (
+                      <span className="block text-xs text-slate-500">
+                        {r.mobile}
+                      </span>
+                    )}
                     <span className="block text-xs text-slate-500">{r.email}</span>
                     <span
                       className={`mt-1.5 inline-block rounded-md border px-2 py-0.5 text-[11px] font-medium ${

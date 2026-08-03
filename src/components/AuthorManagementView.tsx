@@ -15,7 +15,7 @@ export async function AuthorManagementView() {
   const { data } = await supabase
     .from("submission_authors")
     .select(
-      "full_name, email, participant_category, profile_id, is_corresponding, attendance, registration_fee_paid, submissions!inner(paper_id, title, status, submission_type, participation_mode, tracks(code, name))"
+      "full_name, email, mobile, participant_category, profile_id, is_corresponding, attendance, registration_fee_paid, submissions!inner(paper_id, title, status, submission_type, participation_mode, tracks(code, name))"
     );
 
   const authors = ((data ?? []) as any[]).filter(
@@ -27,7 +27,7 @@ export async function AuthorManagementView() {
   const { data: profs } = emails.length
     ? await supabase
         .from("profiles")
-        .select("email, glogift_member, participant_category")
+        .select("email, glogift_member, participant_category, mobile")
         .in("email", emails)
     : { data: [] as any[] };
   const profByEmail = new Map(
@@ -80,6 +80,10 @@ export async function AuthorManagementView() {
       modeSource?.submissions?.participation_mode || null;
     return {
       name: list.map((a) => a.full_name).find(Boolean) || key,
+      mobile:
+        (list.map((a) => a.mobile).find(Boolean) as string | undefined) ||
+        prof?.mobile ||
+        null,
       email: list[0].email.trim(),
       papers,
       trackCodes,

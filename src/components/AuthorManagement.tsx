@@ -102,7 +102,7 @@ export function AuthorManagement({
               <tr>
                 {[
                   "Author",
-                  "Papers (Paper ID · role)",
+                  "Papers (Paper ID · Role · Pathway)",
                   "Role & status",
                   "Intention to participate",
                   "Registration amount",

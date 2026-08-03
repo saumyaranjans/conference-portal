@@ -145,6 +145,8 @@ export function NewSubmissionForm({
     if (!title.trim()) return "Enter a title.";
     if (!trackId) return "Choose a track.";
     if (!abstract.trim()) return "Enter an abstract.";
+    if (abstractWords < ABSTRACT_MIN_WORDS)
+      return `The abstract is ${abstractWords} words — please write at least ${ABSTRACT_MIN_WORDS} words.`;
     if (abstractWords > ABSTRACT_WORD_LIMIT)
       return `The abstract is ${abstractWords} words — please reduce it to ${ABSTRACT_WORD_LIMIT} words or fewer.`;
     if (!submissionType) return "Select your level of participation.";
@@ -389,19 +391,18 @@ export function NewSubmissionForm({
           />
           <p
             className={`text-xs mt-1 ${
-              abstractWords > ABSTRACT_WORD_LIMIT
+              abstractWords > ABSTRACT_WORD_LIMIT ||
+              (abstractWords > 0 && abstractWords < ABSTRACT_MIN_WORDS)
                 ? "text-red-600 font-medium"
-                : abstractWords > 0 && abstractWords < ABSTRACT_MIN_WORDS
-                  ? "text-amber-600"
-                  : "text-slate-400"
+                : "text-slate-400"
             }`}
           >
             {abstractWords} / {ABSTRACT_WORD_LIMIT} words
             {abstractWords > ABSTRACT_WORD_LIMIT
-              ? ` — ${abstractWords - ABSTRACT_WORD_LIMIT} over the limit`
+              ? ` — ${abstractWords - ABSTRACT_WORD_LIMIT} over the ${ABSTRACT_WORD_LIMIT}-word limit`
               : abstractWords > 0 && abstractWords < ABSTRACT_MIN_WORDS
-                ? ` — around ${ABSTRACT_MIN_WORDS}+ words is recommended`
-                : ` · recommended ${ABSTRACT_MIN_WORDS}–${ABSTRACT_WORD_LIMIT} words`}
+                ? ` — ${ABSTRACT_MIN_WORDS - abstractWords} short of the ${ABSTRACT_MIN_WORDS}-word minimum`
+                : ` · ${ABSTRACT_MIN_WORDS}–${ABSTRACT_WORD_LIMIT} words required`}
           </p>
         </div>
 

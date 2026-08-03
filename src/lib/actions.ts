@@ -24,6 +24,7 @@ import {
 } from "@/lib/emailTemplates";
 import {
   ABSTRACT_WORD_LIMIT,
+  ABSTRACT_MIN_WORDS,
   countWords,
   DELETABLE_SUBMISSION_STATUSES,
   FULL_PAPER_ACCEPTS_REQUIRED,
@@ -329,6 +330,12 @@ export async function createSubmissionOnePage(payload: {
   if (!payload.track_id) return { ok: false, message: "Choose a track." };
 
   const words = countWords(payload.abstract);
+  if (words < ABSTRACT_MIN_WORDS) {
+    return {
+      ok: false,
+      message: `The abstract is ${words} words; a minimum of ${ABSTRACT_MIN_WORDS} words is required.`,
+    };
+  }
   if (words > ABSTRACT_WORD_LIMIT) {
     return {
       ok: false,
@@ -425,6 +432,12 @@ export async function updateSubmission(formData: FormData): Promise<ActionResult
 
   const abstract = String(formData.get("abstract") ?? "").trim();
   const words = countWords(abstract);
+  if (words < ABSTRACT_MIN_WORDS) {
+    return {
+      ok: false,
+      message: `The abstract is ${words} words; a minimum of ${ABSTRACT_MIN_WORDS} words is required.`,
+    };
+  }
   if (words > ABSTRACT_WORD_LIMIT) {
     return {
       ok: false,

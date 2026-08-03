@@ -37,6 +37,7 @@ export function DecisionForm({
   signerRole,
   authorName,
   reviews,
+  reviewersAssigned,
 }: {
   submissionId: string;
   stage: "abstract" | "full_paper";
@@ -55,6 +56,9 @@ export function DecisionForm({
   signerRole?: "Track Editor" | "Convener";
   authorName?: string | null;
   reviews?: ReviewComment[];
+  /** True when reviewers are assigned: the author letter omits the Convener CC
+   *  (they are notified separately, BCC'd, with the Convener CC'd). */
+  reviewersAssigned?: boolean;
 }) {
   const router = useRouter();
   const [decision, setDecision] = useState("");
@@ -261,7 +265,9 @@ export function DecisionForm({
       {previewed && (
         <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-3 space-y-3">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Author email — editable · Convener CC&rsquo;d
+            {reviewersAssigned
+              ? "Author email — editable · to the author only · reviewers notified separately (BCC), Convener CC’d on that notice"
+              : "Author email — editable · Convener CC’d"}
           </p>
           <label className="label">
             Subject

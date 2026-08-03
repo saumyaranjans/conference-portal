@@ -514,6 +514,9 @@ export default async function EditorSubmissionPage({
             signerRole="Track Editor"
             authorName={sub.profiles?.full_name}
             reviews={authorFacingReviews}
+            reviewersAssigned={rows.some(
+              (a) => a.status !== "declined" && a.status !== "expired"
+            )}
           />
         )}
       </Section>

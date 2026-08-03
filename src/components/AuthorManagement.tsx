@@ -54,7 +54,7 @@ export function AuthorManagement({
   }, [rows, track, q, dir]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 [&_.badge]:rounded-md">
       <div className="flex flex-wrap items-center gap-3">
         <select
           value={track}

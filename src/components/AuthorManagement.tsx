@@ -6,7 +6,12 @@ import { formatMoney, type RegistrationFee } from "@/lib/registrationFees";
 export type PersonRow = {
   name: string;
   email: string;
-  papers: { paperId: string; trackCode: string; role: "Corresponding" | "Co-author" }[];
+  papers: {
+    paperId: string;
+    trackCode: string;
+    role: "Corresponding" | "Co-author";
+    pathway: "A" | "B";
+  }[];
   trackCodes: string[];
   roles: ("Corresponding" | "Co-author")[];
   signedUp: boolean;
@@ -137,6 +142,15 @@ export function AuthorManagement({
                         <li key={`${p.paperId}-${i}`} className="text-xs">
                           <span className="font-mono text-slate-600">{p.paperId}</span>
                           <span className="text-slate-400"> · {p.role}</span>
+                          <span
+                            className={`ml-2 inline-block rounded-md px-1.5 py-0 text-[10px] font-medium ${
+                              p.pathway === "A"
+                                ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
+                                : "bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300"
+                            }`}
+                          >
+                            {p.pathway === "A" ? "Pathway A · Abstract" : "Pathway B · Full paper"}
+                          </span>
                         </li>
                       ))}
                     </ul>

@@ -15,7 +15,7 @@ export async function AuthorManagementView() {
   const { data } = await supabase
     .from("submission_authors")
     .select(
-      "full_name, email, participant_category, profile_id, is_corresponding, attendance, registration_fee_paid, submissions!inner(paper_id, status, tracks(code, name))"
+      "full_name, email, participant_category, profile_id, is_corresponding, attendance, registration_fee_paid, submissions!inner(paper_id, status, submission_type, tracks(code, name))"
     );
 
   const authors = ((data ?? []) as any[]).filter(
@@ -52,6 +52,9 @@ export async function AuthorManagementView() {
       role: (a.is_corresponding ? "Corresponding" : "Co-author") as
         | "Corresponding"
         | "Co-author",
+      pathway: (a.submissions.submission_type === "full_paper_presentation"
+        ? "B"
+        : "A") as "A" | "B",
     }));
     const roles = [...new Set(papers.map((p) => p.role))];
     const trackCodes = [...new Set(papers.map((p) => p.trackCode))];

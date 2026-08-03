@@ -195,6 +195,9 @@ export function AuthorManagement({
 
                     {/* Intention to participate + mode, below the papers */}
                     <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                      <span className="text-[11px] font-medium text-slate-500">
+                        Intentions:
+                      </span>
                       {r.intention === "attending" ? (
                         <span className="badge bg-emerald-100 text-emerald-800">
                           Attending

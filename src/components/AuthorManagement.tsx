@@ -1,31 +1,34 @@
 "use client";
 
 import { useMemo, useState } from "react";
-
 import { formatMoney, type RegistrationFee } from "@/lib/registrationFees";
 
-export type AuthorRow = {
-  paperId: string | null;
-  title: string;
-  track: string;
-  trackCode: string;
-  author: string;
+export type PersonRow = {
+  name: string;
+  email: string;
+  papers: { paperId: string; trackCode: string; role: "Corresponding" | "Co-author" }[];
+  trackCodes: string[];
+  roles: ("Corresponding" | "Co-author")[];
+  signedUp: boolean;
+  registered: boolean;
+  /** Attendance intention as declared (attending → fee applies). */
+  intention: "attending" | "not" | "undeclared";
   category: string | null;
-  coAuthors: string[];
   member: boolean;
   fee: RegistrationFee;
 };
 
 /**
- * Author Management — a filterable list of every submission's corresponding
- * author + co-authors and the chosen participant category. Filter by track and
- * search; sort alphabetically by author name (A→Z / Z→A).
+ * Author Management — one row per PERSON (deduped by email): the papers they are
+ * on and their role, whether they have signed up / registered, their declared
+ * intention to attend, and the registration amount (only when they intend to
+ * attend). Filter by track and search; sort alphabetically by author name.
  */
 export function AuthorManagement({
   rows,
   tracks,
 }: {
-  rows: AuthorRow[];
+  rows: PersonRow[];
   tracks: { code: string; name: string }[];
 }) {
   const [track, setTrack] = useState("all");
@@ -35,17 +38,16 @@ export function AuthorManagement({
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
     let r = rows.filter((row) => {
-      if (track !== "all" && row.trackCode !== track) return false;
+      if (track !== "all" && !row.trackCodes.includes(track)) return false;
       if (!needle) return true;
       return (
-        row.author.toLowerCase().includes(needle) ||
-        row.title.toLowerCase().includes(needle) ||
-        (row.paperId ?? "").toLowerCase().includes(needle) ||
-        row.coAuthors.some((c) => c.toLowerCase().includes(needle))
+        row.name.toLowerCase().includes(needle) ||
+        row.email.toLowerCase().includes(needle) ||
+        row.papers.some((p) => p.paperId.toLowerCase().includes(needle))
       );
     });
     r = [...r].sort((a, b) => {
-      const c = a.author.localeCompare(b.author);
+      const c = a.name.localeCompare(b.name);
       return dir === "asc" ? c : -c;
     });
     return r;
@@ -53,7 +55,6 @@ export function AuthorManagement({
 
   return (
     <div className="space-y-4">
-      {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
         <select
           value={track}
@@ -70,19 +71,18 @@ export function AuthorManagement({
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search author, co-author, paper…"
+          placeholder="Search author, email, paper…"
           className="input max-w-xs"
         />
         <button
           type="button"
           onClick={() => setDir((d) => (d === "asc" ? "desc" : "asc"))}
           className="btn-secondary text-sm"
-          title="Sort by author name"
         >
           Author name {dir === "asc" ? "A → Z" : "Z → A"}
         </button>
         <span className="text-xs text-slate-500 ml-auto">
-          {filtered.length} of {rows.length}
+          {filtered.length} of {rows.length} authors
         </span>
       </div>
 
@@ -92,13 +92,12 @@ export function AuthorManagement({
             <thead>
               <tr>
                 {[
-                  "Paper ID",
-                  "Name of Paper",
                   "Author",
-                  "Co-authors",
-                  "Participant Category",
-                  "GLOGIFT member",
-                  "Registration fee",
+                  "Papers (Paper ID · role)",
+                  "Role",
+                  "Status",
+                  "Intention to participate",
+                  "Registration amount",
                 ].map((h) => (
                   <th key={h} className="th">
                     {h}
@@ -109,52 +108,105 @@ export function AuthorManagement({
             <tbody className="divide-y divide-slate-100">
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="td text-center text-slate-400 py-8">
+                  <td colSpan={6} className="td text-center text-slate-400 py-8">
                     No authors match your filters.
                   </td>
                 </tr>
               )}
-              {filtered.map((r, i) => (
-                <tr key={`${r.paperId}-${i}`} className="hover:bg-slate-50 align-top">
-                  <td className="td font-mono text-xs text-slate-500 whitespace-nowrap">
-                    {r.paperId ?? "—"}
-                    <span className="block text-[10px] text-slate-400">{r.trackCode}</span>
+              {filtered.map((r) => (
+                <tr key={r.email} className="hover:bg-slate-50 align-top">
+                  {/* Author */}
+                  <td className="td whitespace-nowrap">
+                    <span className="font-medium text-slate-900">{r.name}</span>
+                    <span className="block text-xs text-slate-500">{r.email}</span>
                   </td>
-                  <td className="td text-slate-800 max-w-xs">{r.title}</td>
-                  <td className="td font-medium text-slate-900 whitespace-nowrap">
-                    {r.author}
-                  </td>
-                  <td className="td text-slate-600 max-w-sm">
-                    {r.coAuthors.length ? r.coAuthors.join(", ") : "—"}
-                  </td>
+
+                  {/* Papers + per-paper role */}
                   <td className="td">
-                    {r.category ? (
-                      <span className="badge bg-violet-100 text-violet-800">
-                        {r.category}
+                    <ul className="space-y-0.5">
+                      {r.papers.map((p, i) => (
+                        <li key={`${p.paperId}-${i}`} className="text-xs">
+                          <span className="font-mono text-slate-600">{p.paperId}</span>
+                          <span className="text-slate-400"> · {p.role}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </td>
+
+                  {/* Role summary */}
+                  <td className="td">
+                    <div className="flex flex-col gap-1">
+                      {r.roles.includes("Corresponding") && (
+                        <span className="badge bg-indigo-100 text-indigo-800">
+                          Corresponding
+                        </span>
+                      )}
+                      {r.roles.includes("Co-author") && (
+                        <span className="badge bg-slate-100 text-slate-600">
+                          Co-author
+                        </span>
+                      )}
+                    </div>
+                  </td>
+
+                  {/* Status: sign-up + registration */}
+                  <td className="td">
+                    <div className="flex flex-col gap-1">
+                      {r.signedUp ? (
+                        <span className="badge bg-emerald-100 text-emerald-800">
+                          Signed up
+                        </span>
+                      ) : (
+                        <span className="badge bg-rose-100 text-rose-800">
+                          Not signed up
+                        </span>
+                      )}
+                      {r.registered ? (
+                        <span className="badge bg-emerald-100 text-emerald-800">
+                          Registered
+                        </span>
+                      ) : (
+                        <span className="badge bg-amber-100 text-amber-800">
+                          Not registered
+                        </span>
+                      )}
+                    </div>
+                  </td>
+
+                  {/* Intention to participate */}
+                  <td className="td">
+                    {r.intention === "attending" ? (
+                      <span className="badge bg-emerald-100 text-emerald-800">
+                        Attending
+                      </span>
+                    ) : r.intention === "not" ? (
+                      <span className="badge bg-slate-100 text-slate-600">
+                        Not attending
                       </span>
                     ) : (
-                      <span className="text-xs text-slate-400">Not specified</span>
+                      <span className="badge bg-slate-100 text-slate-500">
+                        Not declared
+                      </span>
                     )}
                   </td>
-                  <td className="td">
-                    {r.member ? (
-                      <span className="badge bg-blue-100 text-blue-800">GLOGIFT member</span>
-                    ) : (
-                      <span className="badge bg-slate-100 text-slate-600">Non-member</span>
-                    )}
-                  </td>
+
+                  {/* Registration amount — only when intending to attend */}
                   <td className="td whitespace-nowrap">
-                    <span
-                      className={`badge mr-2 ${
-                        r.fee.tier === "early"
-                          ? "bg-emerald-100 text-emerald-800"
-                          : "bg-amber-100 text-amber-800"
-                      }`}
-                    >
-                      {r.fee.tier === "early" ? "Early bird" : "Regular"}
-                    </span>
-                    {r.fee.known ? (
-                      <>
+                    {r.intention !== "attending" ? (
+                      <span className="text-xs text-slate-400">
+                        Not applicable
+                      </span>
+                    ) : r.fee.known ? (
+                      <div>
+                        <span
+                          className={`badge mr-2 ${
+                            r.fee.tier === "early"
+                              ? "bg-emerald-100 text-emerald-800"
+                              : "bg-amber-100 text-amber-800"
+                          }`}
+                        >
+                          {r.fee.tier === "early" ? "Early bird" : "Regular"}
+                        </span>
                         <span className="font-semibold text-slate-800">
                           {formatMoney(r.fee.currency, r.fee.amount)}
                         </span>
@@ -163,12 +215,19 @@ export function AuthorManagement({
                             <span className="line-through">
                               {formatMoney(r.fee.currency, r.fee.base)}
                             </span>{" "}
-                            −15% member
+                            −15% member ({r.category})
                           </span>
                         )}
-                      </>
+                        {r.fee.discount === 0 && r.category && (
+                          <span className="block text-[10px] text-slate-400">
+                            {r.category}
+                          </span>
+                        )}
+                      </div>
                     ) : (
-                      <span className="text-xs text-slate-400">—</span>
+                      <span className="text-xs text-slate-400">
+                        Category not set
+                      </span>
                     )}
                   </td>
                 </tr>

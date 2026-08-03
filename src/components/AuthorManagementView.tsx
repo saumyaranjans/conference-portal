@@ -1,65 +1,82 @@
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/ui/Primitives";
-import { AuthorManagement, type AuthorRow } from "@/components/AuthorManagement";
+import { AuthorManagement, type PersonRow } from "@/components/AuthorManagement";
 import { computeRegistrationFee } from "@/lib/registrationFees";
 
 /**
- * Author Management — a per-paper list of the corresponding author + co-authors,
- * their participant category, GLOGIFT membership and computed registration fee.
- * Shared by the Convener and Editorial Office. Client-side track + alphabetical
- * filtering lives in <AuthorManagement>.
+ * Author Management — a per-PERSON directory (deduped by email): the papers each
+ * author is on and their role, sign-up / registration status, declared intention
+ * to attend, and the registration amount (applicable only when attending).
+ * Shared by the Convener and Editorial Office.
  */
 export async function AuthorManagementView() {
   const supabase = await createClient();
 
   const { data } = await supabase
-    .from("submissions")
+    .from("submission_authors")
     .select(
-      "id, paper_id, title, tracks(name, code), submission_authors(full_name, is_corresponding, author_order, participant_category, profile_id)"
-    )
-    .neq("status", "draft")
-    .order("paper_id");
+      "full_name, email, participant_category, profile_id, is_corresponding, attendance, registration_fee_paid, submissions!inner(paper_id, status, tracks(code, name))"
+    );
 
-  const subs = (data ?? []) as any[];
+  const authors = ((data ?? []) as any[]).filter(
+    (a) => a.submissions && a.submissions.status !== "draft" && (a.email ?? "").trim()
+  );
 
-  // Resolve GLOGIFT membership + category from the corresponding author's profile.
-  const corrProfileIds = [
-    ...new Set(
-      subs
-        .map((s) => {
-          const a = (s.submission_authors ?? []) as any[];
-          const corr = a.find((x) => x.is_corresponding) ?? a[0];
-          return corr?.profile_id;
-        })
-        .filter(Boolean)
-    ),
-  ];
-  const { data: profs } = corrProfileIds.length
+  // Accounts (sign-up) + membership + category live on profiles; match by email.
+  const emails = [...new Set(authors.map((a) => (a.email ?? "").trim()).filter(Boolean))];
+  const { data: profs } = emails.length
     ? await supabase
         .from("profiles")
-        .select("id, glogift_member, participant_category")
-        .in("id", corrProfileIds)
+        .select("email, glogift_member, participant_category")
+        .in("email", emails)
     : { data: [] as any[] };
-  const profMap = new Map(((profs ?? []) as any[]).map((p) => [p.id, p]));
+  const profByEmail = new Map(
+    ((profs ?? []) as any[]).map((p) => [(p.email ?? "").trim().toLowerCase(), p])
+  );
+
+  // Group author rows into one row per person.
+  const byEmail = new Map<string, any[]>();
+  for (const a of authors) {
+    const key = a.email.trim().toLowerCase();
+    const arr = byEmail.get(key) ?? [];
+    arr.push(a);
+    byEmail.set(key, arr);
+  }
 
   const now = new Date();
-  const rows: AuthorRow[] = subs.map((s) => {
-    const authors = ((s.submission_authors ?? []) as any[])
-      .slice()
-      .sort((a, b) => (a.author_order ?? 99) - (b.author_order ?? 99));
-    const corr = authors.find((a) => a.is_corresponding) ?? authors[0] ?? {};
-    const coAuthors = authors.filter((a) => a !== corr).map((a) => a.full_name);
-    const prof = corr.profile_id ? profMap.get(corr.profile_id) : null;
-    const category = corr.participant_category || prof?.participant_category || null;
+  const rows: PersonRow[] = [...byEmail.entries()].map(([key, list]) => {
+    const prof = profByEmail.get(key) ?? null;
+    const papers = list.map((a) => ({
+      paperId: a.submissions.paper_id ?? "—",
+      trackCode: a.submissions.tracks?.code ?? "—",
+      role: (a.is_corresponding ? "Corresponding" : "Co-author") as
+        | "Corresponding"
+        | "Co-author",
+    }));
+    const roles = [...new Set(papers.map((p) => p.role))];
+    const trackCodes = [...new Set(papers.map((p) => p.trackCode))];
+    const intention: PersonRow["intention"] = list.some(
+      (a) => a.attendance === "attending"
+    )
+      ? "attending"
+      : list.some((a) => a.attendance === "not_attending")
+        ? "not"
+        : "undeclared";
+    const category =
+      list.map((a) => a.participant_category).find(Boolean) ||
+      prof?.participant_category ||
+      null;
     const member = Boolean(prof?.glogift_member);
     return {
-      paperId: s.paper_id ?? null,
-      title: s.title,
-      track: s.tracks?.name ?? "—",
-      trackCode: s.tracks?.code ?? "—",
-      author: corr.full_name ?? "—",
+      name: list.map((a) => a.full_name).find(Boolean) || key,
+      email: list[0].email.trim(),
+      papers,
+      trackCodes,
+      roles,
+      signedUp: Boolean(prof),
+      registered: list.some((a) => a.registration_fee_paid),
+      intention,
       category,
-      coAuthors,
       member,
       fee: computeRegistrationFee(category, member, now),
     };
@@ -67,9 +84,12 @@ export async function AuthorManagementView() {
 
   const tracks = [
     ...new Map(
-      subs
-        .filter((s) => s.tracks?.code)
-        .map((s) => [s.tracks.code, { code: s.tracks.code, name: s.tracks.name }])
+      authors
+        .filter((a) => a.submissions.tracks?.code)
+        .map((a) => [
+          a.submissions.tracks.code,
+          { code: a.submissions.tracks.code, name: a.submissions.tracks.name },
+        ])
     ).values(),
   ].sort((a, b) => a.code.localeCompare(b.code));
 
@@ -77,7 +97,7 @@ export async function AuthorManagementView() {
     <>
       <PageHeader
         title="Author Management"
-        subtitle="Every submission's author and co-authors, participant category, GLOGIFT membership and registration fee. Filter by track or search; sort alphabetically."
+        subtitle="Every author and co-author across all submissions — their papers and role, sign-up and registration status, intention to attend, and registration amount."
       />
       <AuthorManagement rows={rows} tracks={tracks} />
     </>

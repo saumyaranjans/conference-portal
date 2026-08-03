@@ -20,6 +20,8 @@ export type PersonRow = {
   registered: boolean;
   /** Attendance intention as declared (attending → fee applies). */
   intention: "attending" | "not" | "undeclared";
+  /** Participation modes across their papers (virtual / onsite). */
+  modes: string[];
   category: string | null;
   member: boolean;
   fee: RegistrationFee;
@@ -102,9 +104,8 @@ export function AuthorManagement({
               <tr>
                 {[
                   "Author",
-                  "Papers (Paper ID · Role · Pathway)",
+                  "Papers (Paper ID · Role · Pathway) & participation",
                   "Role & status",
-                  "Intention to participate",
                   "Registration amount",
                 ].map((h) => (
                   <th key={h} className="th">
@@ -116,7 +117,7 @@ export function AuthorManagement({
             <tbody className="divide-y divide-slate-100">
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="td text-center text-slate-400 py-8">
+                  <td colSpan={4} className="td text-center text-slate-400 py-8">
                     No authors match your filters.
                   </td>
                 </tr>
@@ -191,6 +192,35 @@ export function AuthorManagement({
                         );
                       })}
                     </ul>
+
+                    {/* Intention to participate + mode, below the papers */}
+                    <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                      {r.intention === "attending" ? (
+                        <span className="badge bg-emerald-100 text-emerald-800">
+                          Attending
+                        </span>
+                      ) : r.intention === "not" ? (
+                        <span className="badge bg-slate-100 text-slate-600">
+                          Not attending
+                        </span>
+                      ) : (
+                        <span className="badge bg-slate-100 text-slate-500">
+                          Intention not declared
+                        </span>
+                      )}
+                      {r.modes.map((m) => (
+                        <span
+                          key={m}
+                          className={`badge ${
+                            m === "onsite"
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-teal-100 text-teal-800"
+                          }`}
+                        >
+                          {m === "onsite" ? "On-site" : m === "virtual" ? "Virtual" : m}
+                        </span>
+                      ))}
+                    </div>
                   </td>
 
                   {/* Role & status (role + sign-up + registration) */}
@@ -225,23 +255,6 @@ export function AuthorManagement({
                         </span>
                       )}
                     </div>
-                  </td>
-
-                  {/* Intention to participate */}
-                  <td className="td">
-                    {r.intention === "attending" ? (
-                      <span className="badge bg-emerald-100 text-emerald-800">
-                        Attending
-                      </span>
-                    ) : r.intention === "not" ? (
-                      <span className="badge bg-slate-100 text-slate-600">
-                        Not attending
-                      </span>
-                    ) : (
-                      <span className="badge bg-slate-100 text-slate-500">
-                        Not declared
-                      </span>
-                    )}
                   </td>
 
                   {/* Registration amount — only when intending to attend */}

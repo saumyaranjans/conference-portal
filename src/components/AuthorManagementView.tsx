@@ -15,7 +15,7 @@ export async function AuthorManagementView() {
   const { data } = await supabase
     .from("submission_authors")
     .select(
-      "full_name, email, participant_category, profile_id, is_corresponding, attendance, registration_fee_paid, submissions!inner(paper_id, title, status, submission_type, tracks(code, name))"
+      "full_name, email, participant_category, profile_id, is_corresponding, attendance, registration_fee_paid, submissions!inner(paper_id, title, status, submission_type, participation_mode, tracks(code, name))"
     );
 
   const authors = ((data ?? []) as any[]).filter(
@@ -72,6 +72,11 @@ export async function AuthorManagementView() {
       prof?.participant_category ||
       null;
     const member = Boolean(prof?.glogift_member);
+    const modes = [
+      ...new Set(
+        list.map((a) => a.submissions.participation_mode).filter(Boolean)
+      ),
+    ] as string[];
     return {
       name: list.map((a) => a.full_name).find(Boolean) || key,
       email: list[0].email.trim(),
@@ -83,6 +88,7 @@ export async function AuthorManagementView() {
       intention,
       category,
       member,
+      modes,
       fee: computeRegistrationFee(category, member, now),
     };
   });

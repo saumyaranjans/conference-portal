@@ -8,6 +8,12 @@ import {
   StatCard,
   formatDate,
 } from "@/components/ui/Primitives";
+import {
+  computeRegistrationFee,
+  formatMoney,
+  isEarlyBird,
+  EARLY_BIRD_CUTOFF,
+} from "@/lib/registrationFees";
 
 /** Attendance register shared by the Editorial Office and Convener views. */
 export async function AttendanceRegister() {
@@ -17,13 +23,36 @@ export async function AttendanceRegister() {
   const { data } = await supabase
     .from("submission_authors")
     .select(
-      "id, full_name, email, affiliation, attendance, attended_confirmed, attendance_confirmed_at, registration_fee_paid, registration_fee_paid_at, author_order, submissions!inner(id, paper_id, title, status)"
+      "id, full_name, email, affiliation, participant_category, profile_id, attendance, attended_confirmed, attendance_confirmed_at, registration_fee_paid, registration_fee_paid_at, author_order, submissions!inner(id, paper_id, title, status)"
     )
     .order("author_order");
 
   const rows = ((data ?? []) as any[]).filter(
     (r) => r.submissions && r.submissions.status !== "draft"
   );
+
+  // GLOGIFT membership + category live on the person's profile (co-authors who
+  // signed up). Look them up so the fee can apply the 15% member discount.
+  const profileIds = [...new Set(rows.map((r) => r.profile_id).filter(Boolean))];
+  const { data: profs } = profileIds.length
+    ? await supabase
+        .from("profiles")
+        .select("id, glogift_member, participant_category")
+        .in("id", profileIds)
+    : { data: [] as any[] };
+  const profMap = new Map(
+    ((profs ?? []) as any[]).map((p) => [p.id, p])
+  );
+
+  // Attach the chosen category, membership and computed registration fee.
+  const now = new Date();
+  const earlyBird = isEarlyBird(now);
+  for (const r of rows) {
+    const prof = r.profile_id ? profMap.get(r.profile_id) : null;
+    r._category = r.participant_category || prof?.participant_category || null;
+    r._member = Boolean(prof?.glogift_member);
+    r._fee = computeRegistrationFee(r._category, r._member, now);
+  }
 
   const attending = rows.filter((r) => r.attendance === "attending");
   const confirmed = attending.filter((r) => r.attended_confirmed);
@@ -56,14 +85,32 @@ export async function AttendanceRegister() {
         />
       ) : (
         <>
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 mb-3">
-            Attending — requires registration ({attending.length})
-          </h2>
+          <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+              Attending — requires registration ({attending.length})
+            </h2>
+            <span
+              className={`badge ${
+                earlyBird
+                  ? "bg-emerald-100 text-emerald-800"
+                  : "bg-amber-100 text-amber-800"
+              }`}
+            >
+              {earlyBird ? "Early-bird rates in effect" : "Regular rates in effect"}
+            </span>
+          </div>
+          <p className="text-xs text-slate-500 mb-3">
+            Early-bird fees apply on or before {formatDate(EARLY_BIRD_CUTOFF)};
+            regular fees apply from 21 Dec 2026. GLOGIFT members receive a 15%
+            discount. Fees are per delegate, based on the category chosen at
+            sign-up.
+          </p>
           <DataTable
             headers={[
               "Paper ID",
               "Author",
-              "Affiliation",
+              "GLOGIFT member",
+              "Participant category",
               "Registration fee",
               "Attended",
             ]}
@@ -77,41 +124,97 @@ export async function AttendanceRegister() {
                   <span className="font-medium text-slate-900">
                     {r.full_name}
                   </span>
-                  <span className="block text-xs text-slate-500">
-                    {r.email}
-                  </span>
+                  <span className="block text-xs text-slate-500">{r.email}</span>
+                  {r.affiliation && (
+                    <span className="block text-xs text-slate-400">
+                      {r.affiliation}
+                    </span>
+                  )}
                 </td>
-                <td className="td text-slate-500 max-w-xs">{r.affiliation}</td>
 
-                {/* Registration fee */}
+                {/* GLOGIFT member box */}
+                <td className="td">
+                  {r._member ? (
+                    <span className="badge bg-blue-100 text-blue-800">
+                      GLOGIFT member
+                    </span>
+                  ) : (
+                    <span className="badge bg-slate-100 text-slate-600">
+                      Non-member
+                    </span>
+                  )}
+                </td>
+
+                {/* Participant category box */}
+                <td className="td">
+                  {r._category ? (
+                    <span className="badge bg-violet-100 text-violet-800">
+                      {r._category}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-slate-400">Not specified</span>
+                  )}
+                </td>
+
+                {/* Registration fee box (tier + amount + paid toggle) */}
                 <td className="td">
                   <div className="space-y-1.5">
-                    {r.registration_fee_paid ? (
-                      <span className="badge bg-emerald-100 text-emerald-800">
-                        Paid
-                        {r.registration_fee_paid_at
-                          ? ` · ${formatDate(r.registration_fee_paid_at)}`
-                          : ""}
-                      </span>
+                    <span
+                      className={`badge ${
+                        r._fee.tier === "early"
+                          ? "bg-emerald-100 text-emerald-800"
+                          : "bg-amber-100 text-amber-800"
+                      }`}
+                    >
+                      {r._fee.tier === "early" ? "Early bird" : "Regular"}
+                    </span>
+                    {r._fee.known ? (
+                      <div className="text-sm text-slate-800">
+                        <span className="font-semibold">
+                          {formatMoney(r._fee.currency, r._fee.amount)}
+                        </span>
+                        {r._fee.discount > 0 && (
+                          <span className="block text-xs text-slate-400">
+                            <span className="line-through">
+                              {formatMoney(r._fee.currency, r._fee.base)}
+                            </span>{" "}
+                            − 15% member (−{formatMoney(r._fee.currency, r._fee.discount)})
+                          </span>
+                        )}
+                      </div>
                     ) : (
-                      <span className="badge bg-amber-100 text-amber-800">
-                        Unpaid
-                      </span>
+                      <div className="text-xs text-slate-400">
+                        Category not set — fee not determined
+                      </div>
                     )}
-                    <ActionForm action={markRegistrationFee}>
-                      <input type="hidden" name="author_id" value={r.id} />
-                      <input
-                        type="hidden"
-                        name="paid"
-                        value={String(!r.registration_fee_paid)}
-                      />
-                      <SubmitButton
-                        variant="secondary"
-                        className="text-xs py-1 px-2"
-                      >
-                        {r.registration_fee_paid ? "Undo" : "Mark paid"}
-                      </SubmitButton>
-                    </ActionForm>
+                    <div className="flex items-center gap-2 pt-0.5">
+                      {r.registration_fee_paid ? (
+                        <span className="badge bg-emerald-100 text-emerald-800">
+                          Paid
+                          {r.registration_fee_paid_at
+                            ? ` · ${formatDate(r.registration_fee_paid_at)}`
+                            : ""}
+                        </span>
+                      ) : (
+                        <span className="badge bg-amber-100 text-amber-800">
+                          Unpaid
+                        </span>
+                      )}
+                      <ActionForm action={markRegistrationFee}>
+                        <input type="hidden" name="author_id" value={r.id} />
+                        <input
+                          type="hidden"
+                          name="paid"
+                          value={String(!r.registration_fee_paid)}
+                        />
+                        <SubmitButton
+                          variant="secondary"
+                          className="text-xs py-1 px-2"
+                        >
+                          {r.registration_fee_paid ? "Undo" : "Mark paid"}
+                        </SubmitButton>
+                      </ActionForm>
+                    </div>
                   </div>
                 </td>
 

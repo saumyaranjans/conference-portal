@@ -461,6 +461,56 @@ export function announcementEmail(o: {
 }
 
 /**
+ * System-generated thank-you to a reviewer the moment they submit their review.
+ */
+export function reviewThankYouEmail(o: {
+  reviewerName?: string | null;
+  paperId?: string | null;
+  title?: string | null;
+  track?: string | null;
+  /** Whether the reviewed item was an abstract or a full paper. */
+  itemLabel?: "abstract" | "manuscript";
+  /** The handling Track Editor, for the signature. */
+  chairName?: string | null;
+  chairEmail?: string | null;
+  signerRole?: "Track Editor" | "Convener";
+  conferenceName?: string | null;
+  brand?: string | null;
+}): EmailContent {
+  const brand = (o.brand ?? "").trim() || CONF_DEFAULT;
+  const conf = (o.conferenceName ?? "").trim();
+  const role = o.signerRole || "Track Editor";
+  const item = o.itemLabel || "submission";
+  const idPart = o.paperId ? ` (${o.paperId})` : "";
+  const subject = `${brand} — Thank you for your review${idPart}`;
+  // Signed by the handling Track Editor when known; otherwise the office.
+  const signature = o.chairName
+    ? [
+        "With sincere thanks,",
+        o.chairName,
+        signOffLine({ role, track: role === "Convener" ? null : o.track, conf, brand }),
+        o.chairEmail || null,
+      ]
+    : ["With sincere thanks,", `Editorial Office, ${brand}`];
+  const body = compose([
+    greeting(o.reviewerName ?? undefined, "Reviewer"),
+    "",
+    `Thank you for submitting your review of the ${item}${idPart}${o.title ? ` — "${o.title}"` : ""}${o.track ? `, in the ${o.track} track` : ""}.`,
+    "",
+    "We are truly grateful for the time and expertise you have given. Your assessment is an essential part of maintaining the quality and credibility of the conference, and it will directly inform the decision.",
+    "",
+    "Your review has been recorded and can no longer be edited. There is nothing further you need to do.",
+    "",
+    `For any query, please contact the Chair and Coordinator: ${ORG_CONTACTS}.`,
+    "",
+    "This is a system-generated email — please do not reply.",
+    "",
+    ...signature,
+  ]);
+  return { subject, body };
+}
+
+/**
  * System-generated note when the Track Editor returns a full paper to the
  * author to RESTART the manuscript submission — used when the corresponding
  * author has not followed the submission guidelines. The abstract acceptance

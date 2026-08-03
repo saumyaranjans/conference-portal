@@ -17,6 +17,7 @@ import {
   manuscriptNeedsEditorEmail,
   manuscriptReturnedEmail,
   paperAssignmentEmail,
+  reviewThankYouEmail,
   signOffLine,
   submissionAcknowledgementEmail,
 } from "@/lib/emailTemplates";
@@ -1523,6 +1524,66 @@ export async function saveReview(formData: FormData): Promise<ActionResult> {
   );
 
   if (error) return { ok: false, message: error.message };
+
+  // On submit: mark the assignment complete (so the review page locks) and send
+  // the reviewer a system-generated thank-you.
+  if (finalise) {
+    const admin = createAdminClient();
+    await admin
+      .from("assignments")
+      .update({ status: "submitted" })
+      .eq("id", assignmentId);
+
+    if (emailConfigured() && profile.email) {
+      const { data: sub } = await admin
+        .from("submissions")
+        .select(
+          "paper_id, title, stage, assigned_editor_id, tracks(name, conferences(name, acronym, year))"
+        )
+        .eq("id", submissionId)
+        .maybeSingle();
+      const t = sub as any;
+      const conf = t?.tracks?.conferences;
+      const brand =
+        conf?.acronym && conf?.year ? `${conf.acronym} ${conf.year}` : "GLOGIFT 2027";
+      // The handling Track Editor signs the thank-you and is CC'd on it.
+      let chairName: string | null = null;
+      let chairEmail: string | null = null;
+      if (t?.assigned_editor_id) {
+        const { data: te } = await admin
+          .from("profiles")
+          .select("full_name, email")
+          .eq("id", t.assigned_editor_id)
+          .maybeSingle();
+        chairName = (te as any)?.full_name ?? null;
+        chairEmail = (te as any)?.email ?? null;
+      }
+      const letter = reviewThankYouEmail({
+        reviewerName: profile.full_name,
+        paperId: t?.paper_id,
+        title: t?.title,
+        track: t?.tracks?.name,
+        itemLabel: t?.stage === "full_paper" ? "manuscript" : "abstract",
+        chairName,
+        chairEmail,
+        signerRole: "Track Editor",
+        conferenceName: conf?.name,
+        brand,
+      });
+      try {
+        await sendEmail({
+          to: profile.email,
+          subject: letter.subject,
+          text: letter.body,
+          cc: chairEmail ? [chairEmail] : undefined,
+          kind: "review_thanks",
+          sentBy: profile.id,
+        });
+      } catch {
+        // Mail failure must never block the review submission.
+      }
+    }
+  }
 
   await audit(profile.id, finalise ? "review.submitted" : "review.saved", "review", assignmentId);
   revalidatePath("/reviewer");

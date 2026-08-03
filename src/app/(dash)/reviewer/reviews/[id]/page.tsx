@@ -37,7 +37,7 @@ export default async function ReviewPage({
     .maybeSingle();
 
   const sub = (assignment as any).submissions;
-  const locked = assignment.status === "submitted";
+  const locked = assignment.status === "submitted" || !!review?.is_submitted;
 
   // For a Pathway B manuscript under review, pull the blinded file package.
   // submission_files RLS has no reviewer SELECT policy (staff-only), so the
@@ -108,13 +108,6 @@ export default async function ReviewPage({
       )}
 
       <Section title={locked ? "Your submitted review" : "Your review"}>
-        {locked && (
-          <div className="card card-pad bg-emerald-50 border-emerald-200 mb-4">
-            <p className="text-sm text-emerald-900">
-              This review has been submitted and can no longer be edited.
-            </p>
-          </div>
-        )}
         <ReviewForm
           assignmentId={id}
           submissionId={sub.id}

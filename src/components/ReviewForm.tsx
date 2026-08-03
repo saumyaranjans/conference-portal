@@ -28,6 +28,10 @@ export function ReviewForm({
     null
   );
   const [busy, setBusy] = useState(false);
+  const [justSubmitted, setJustSubmitted] = useState(false);
+  // Locked once the review is submitted — server-side flag, or the submit we
+  // just made this session (so the buttons vanish immediately).
+  const isLocked = locked || justSubmitted;
 
   async function run(form: HTMLFormElement, finalise: boolean) {
     if (
@@ -44,7 +48,10 @@ export function ReviewForm({
     const res = await saveReview(fd);
     setResult(res);
     setBusy(false);
-    if (res.ok) router.refresh();
+    if (res.ok) {
+      if (finalise) setJustSubmitted(true);
+      router.refresh();
+    }
   }
 
   return (
@@ -58,7 +65,7 @@ export function ReviewForm({
       <input type="hidden" name="assignment_id" value={assignmentId} />
       <input type="hidden" name="submission_id" value={submissionId} />
 
-      <fieldset disabled={locked || busy} className="space-y-6">
+      <fieldset disabled={isLocked || busy} className="space-y-6">
         {/* ---- Scores ---- */}
         <div className="grid sm:grid-cols-2 gap-4">
           {SCORES.map(({ key, label, hint }) => (
@@ -175,32 +182,45 @@ export function ReviewForm({
         </div>
       </fieldset>
 
-      {result?.message && (
-        <p
-          className={`text-sm rounded-lg px-3 py-2 ${
-            result.ok ? "text-emerald-700 bg-emerald-50" : "text-red-600 bg-red-50"
-          }`}
-        >
-          {result.message}
-        </p>
-      )}
-
-      {!locked && (
-        <div className="flex gap-3 pt-2 border-t border-slate-100">
-          <button type="submit" disabled={busy} className="btn-secondary">
-            Save draft
-          </button>
-          <button
-            type="button"
-            disabled={busy}
-            className="btn-primary"
-            onClick={(e) =>
-              run(e.currentTarget.closest("form") as HTMLFormElement, true)
-            }
-          >
-            Submit review
-          </button>
+      {isLocked ? (
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-3 dark:bg-emerald-500/10 dark:border-emerald-500/30">
+          <p className="text-sm font-medium text-emerald-900 dark:text-emerald-200">
+            Thank you — your review has been submitted.
+          </p>
+          <p className="text-sm text-emerald-800/90 dark:text-emerald-300/90 mt-1">
+            We are grateful for your time and expertise. A confirmation email has
+            been sent to you. This review can no longer be edited.
+          </p>
         </div>
+      ) : (
+        <>
+          {result?.message && (
+            <p
+              className={`text-sm rounded-lg px-3 py-2 ${
+                result.ok
+                  ? "text-emerald-700 bg-emerald-50"
+                  : "text-red-600 bg-red-50"
+              }`}
+            >
+              {result.message}
+            </p>
+          )}
+          <div className="flex gap-3 pt-2 border-t border-slate-100">
+            <button type="submit" disabled={busy} className="btn-secondary">
+              Save draft
+            </button>
+            <button
+              type="button"
+              disabled={busy}
+              className="btn-primary"
+              onClick={(e) =>
+                run(e.currentTarget.closest("form") as HTMLFormElement, true)
+              }
+            >
+              Submit review
+            </button>
+          </div>
+        </>
       )}
     </form>
   );

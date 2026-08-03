@@ -462,7 +462,7 @@ export async function submitForReview(formData: FormData): Promise<ActionResult>
   const { data: sub } = await supabase
     .from("submissions")
     .select(
-      "status, file_path, track_id, version, declared_original, declared_ai_assistance, declared_consent_publication"
+      "status, file_path, track_id, version, review_round, declared_original, declared_ai_assistance, declared_consent_publication"
     )
     .eq("id", id)
     .single();
@@ -508,7 +508,13 @@ export async function submitForReview(formData: FormData): Promise<ActionResult>
       status: "submitted",
       submitted_at: new Date().toISOString(),
       version: isRevision ? sub.version + 1 : sub.version,
-      ...(isRevision ? { revision_response: revisionResponse } : {}),
+      // A revision resubmission opens a new review round.
+      ...(isRevision
+        ? {
+            revision_response: revisionResponse,
+            review_round: ((sub as any).review_round ?? 1) + 1,
+          }
+        : {}),
       updated_at: new Date().toISOString(),
     })
     .eq("id", id);
@@ -962,7 +968,7 @@ export async function submitFullPaper(
   const { data: sub } = await admin
     .from("submissions")
     .select(
-      "author_id, status, submission_type, full_paper_option, full_paper_deadline, conference_id, version, requested_outlet_ids, full_paper_pdf_built_at"
+      "author_id, status, submission_type, full_paper_option, full_paper_deadline, conference_id, version, review_round, requested_outlet_ids, full_paper_pdf_built_at"
     )
     .eq("id", id)
     .maybeSingle();
@@ -1031,6 +1037,9 @@ export async function submitFullPaper(
       full_paper_submitted_at: new Date().toISOString(),
       submitted_at: new Date().toISOString(),
       version: isRevision ? (s.version ?? 1) + 1 : s.version ?? 1,
+      // A revision resubmission opens a new review round; reassigned reviewers
+      // are invited into this round.
+      ...(isRevision ? { review_round: (s.review_round ?? 1) + 1 } : {}),
       updated_at: new Date().toISOString(),
     })
     .eq("id", id);
@@ -1504,11 +1513,20 @@ export async function saveReview(formData: FormData): Promise<ActionResult> {
   if (finalise && !recommendation)
     return { ok: false, message: "Pick a recommendation before submitting." };
 
+  // The review inherits its assignment's round, so a re-review at a later round
+  // is recorded against that round rather than overwriting the earlier one.
+  const { data: asgRound } = await supabase
+    .from("assignments")
+    .select("round")
+    .eq("id", assignmentId)
+    .maybeSingle();
+
   const { error } = await supabase.from("reviews").upsert(
     {
       assignment_id: assignmentId,
       submission_id: submissionId,
       reviewer_id: profile.id,
+      round: (asgRound as any)?.round ?? 1,
       score_originality: num("score_originality"),
       score_technical: num("score_technical"),
       score_clarity: num("score_clarity"),
@@ -1814,12 +1832,21 @@ export async function sendReviewerInvite(
     // they ACCEPT — see agreeReviewAssignment. A reject leaves their roles
     // untouched, so someone invited but declining never gains the dashboard.
 
+    // Assign into the submission's current review round so a reviewer joining
+    // at a revision round does not collide with their earlier-round assignment.
+    const { data: subRound } = await admin
+      .from("submissions")
+      .select("review_round")
+      .eq("id", submissionId)
+      .maybeSingle();
+
     const { error } = await admin.from("assignments").insert({
       submission_id: submissionId,
       reviewer_id: reviewerId,
       assigned_by: profile.id,
       due_date: dueDate || null,
       invite_token: inviteToken || null,
+      round: (subRound as any)?.review_round ?? 1,
     });
     if (error && error.code !== "23505")
       return { ok: false, message: error.message };
@@ -1882,6 +1909,142 @@ export async function sendReviewerInvite(
     message: `Invitation sent to ${to}.${
       assigned ? " They are now assigned to this paper." : ""
     }`,
+  };
+}
+
+/**
+ * Re-invite an existing reviewer into the submission's CURRENT (revision) round.
+ * Used once the author has resubmitted a revision and the Track Editor wants the
+ * same reviewer to re-assess. A reviewer whose recommendation was ever Accept is
+ * "banked" and is refused (no reassignment needed). Sends the same token-backed
+ * Agree/Decline invitation; the revised paper appears in their dashboard only
+ * once they Agree. If they decline, the editor invites an additional reviewer.
+ */
+export async function reassignReviewer(
+  formData: FormData
+): Promise<ActionResult> {
+  const profile = await requireRole("editor", "chief");
+  const admin = createAdminClient();
+
+  const submissionId = String(formData.get("submission_id") ?? "");
+  const reviewerId = String(formData.get("reviewer_id") ?? "").trim();
+  const dueDate = String(formData.get("due_date") ?? "").trim();
+  if (!submissionId || !reviewerId)
+    return { ok: false, message: "Missing submission or reviewer." };
+
+  const { data: sub } = await admin
+    .from("submissions")
+    .select(
+      "id, title, paper_id, stage, review_round, tracks(name, conferences(name, acronym, year))"
+    )
+    .eq("id", submissionId)
+    .maybeSingle();
+  if (!sub) return { ok: false, message: "Submission not found." };
+  const s = sub as any;
+  const round: number = s.review_round ?? 1;
+
+  // The reviewer must have handled an earlier round of this paper.
+  const { data: prior } = await admin
+    .from("assignments")
+    .select("id, round, reviews(is_submitted, recommendation)")
+    .eq("submission_id", submissionId)
+    .eq("reviewer_id", reviewerId);
+  const priorRows = (prior as any[]) ?? [];
+  if (!priorRows.length)
+    return {
+      ok: false,
+      message: "This reviewer has not reviewed an earlier round of this paper.",
+    };
+
+  // Banked accept — a prior Accept is terminal, so no reassignment is needed.
+  const bankedAccept = priorRows.some(
+    (a) => reviewOf(a)?.is_submitted && reviewOf(a)?.recommendation === "accept"
+  );
+  if (bankedAccept)
+    return {
+      ok: false,
+      message:
+        "This reviewer already recommended Accept — that Accept stands, no reassignment is needed.",
+    };
+
+  // Already invited into the current round?
+  if (priorRows.some((a) => (a.round ?? 1) === round))
+    return {
+      ok: false,
+      message: "This reviewer is already assigned to the current round.",
+    };
+
+  const { data: rev } = await admin
+    .from("profiles")
+    .select("full_name, email")
+    .eq("id", reviewerId)
+    .maybeSingle();
+  const reviewer = rev as any;
+  if (!reviewer)
+    return { ok: false, message: "That reviewer no longer exists." };
+
+  const inviteToken = randomBytes(24).toString("hex");
+  const { error: insErr } = await admin.from("assignments").insert({
+    submission_id: submissionId,
+    reviewer_id: reviewerId,
+    assigned_by: profile.id,
+    due_date: dueDate || null,
+    invite_token: inviteToken,
+    round,
+  });
+  if (insErr && insErr.code !== "23505")
+    return { ok: false, message: insErr.message };
+
+  await admin.from("notifications").insert({
+    profile_id: reviewerId,
+    title: "Invitation to review a revised paper",
+    body: `You are invited to review the revised "${s.title}"${
+      s.paper_id ? ` (${s.paper_id})` : ""
+    }. Open to accept or decline.`,
+    link: `/review-invite/${inviteToken}`,
+  });
+
+  await audit(profile.id, "assignment.reassigned", "submission", submissionId, {
+    reviewer_id: reviewerId,
+    round,
+  });
+  revalidatePath(`/editor/submissions/${submissionId}`);
+
+  if (emailConfigured() && reviewer.email) {
+    const conf = s.tracks?.conferences;
+    const { subject, body } = buildAssignmentEmail({
+      paperId: s.paper_id,
+      title: s.title,
+      stage: s.stage,
+      track: s.tracks?.name ?? "",
+      conferenceName: conf?.name ?? "GLOGIFT 2027",
+      shortName: shortConf(conf),
+      reviewerName: reviewer.full_name,
+      dueDate: dueDate || undefined,
+      inviterName: profile.full_name,
+      inviterEmail: profile.email,
+      agreeLink: `${siteUrl()}/review-invite/${inviteToken}/agree`,
+      rejectLink: `${siteUrl()}/review-invite/${inviteToken}/reject`,
+    });
+    try {
+      await sendEmail({
+        to: reviewer.email,
+        subject,
+        text: body,
+        replyTo: profile.email || undefined,
+        kind: "reviewer_invitation",
+        sentBy: profile.id,
+      });
+    } catch {
+      // Mail failure must never break the reassignment.
+    }
+  }
+
+  return {
+    ok: true,
+    message: `Reassignment invite sent to ${
+      reviewer.full_name || reviewer.email
+    }. The revised paper appears in their dashboard once they accept.`,
   };
 }
 
@@ -2446,7 +2609,7 @@ export async function acceptReviewerInvite(token: string): Promise<ActionResult>
 
   const { data: sub } = await admin
     .from("submissions")
-    .select("author_id")
+    .select("author_id, review_round")
     .eq("id", inv.submission_id)
     .single();
   if (sub && sub.author_id === profile.id)
@@ -2477,6 +2640,7 @@ export async function acceptReviewerInvite(token: string): Promise<ActionResult>
     assigned_by: inv.invited_by,
     status: "accepted",
     responded_at: new Date().toISOString(),
+    round: (sub as any)?.review_round ?? 1,
   });
   if (aErr && aErr.code !== "23505")
     return { ok: false, message: aErr.message };

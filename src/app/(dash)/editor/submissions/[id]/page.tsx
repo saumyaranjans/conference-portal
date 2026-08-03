@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { removeAssignment, setSuggestedOutlet } from "@/lib/actions";
+import { removeAssignment, reassignReviewer, setSuggestedOutlet } from "@/lib/actions";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { AbstractReviewRoute } from "@/components/AbstractReviewRoute";
 import { DecisionForm } from "@/components/DecisionForm";
@@ -17,12 +17,17 @@ import { ReviewPanel } from "@/components/ReviewPanel";
 import {
   FULL_PAPER_ACCEPTS_REQUIRED,
   MIN_REVIEWS_PER_SUBMISSION,
+  RECOMMENDATION_LABELS,
   reviewOf,
   participationModeLabel,
   submissionTypeLabel,
   versionLabel,
   type Submission,
 } from "@/lib/types";
+
+// A reviewer invited into a revision round who has not responded within this
+// many days may be cancelled so the Track Editor can invite someone else.
+const REASSIGN_RESPONSE_DAYS = 5;
 
 export default async function EditorSubmissionPage({
   params,
@@ -93,10 +98,54 @@ export default async function EditorSubmissionPage({
     (c) => !assignedIds.has(c.reviewer_id) && c.reviewer_id !== sub.author_id
   );
 
-  const completed = rows.filter((a) => reviewOf(a)?.is_submitted);
-  const acceptCount = completed.filter(
-    (a) => reviewOf(a)?.recommendation === "accept"
-  ).length;
+  // ---- Round-aware reviewer aggregation (banked-accept rule) ----
+  // A reviewer may hold one assignment per review round. An Accept in any round
+  // is "banked" (terminal) — it counts toward the required Accepts forever and
+  // the reviewer is never reassigned. Everyone else is reassignable each new
+  // revision round until they Accept (or decline → invite an additional one).
+  const currentRound: number = (sub as any).review_round ?? 1;
+  const byReviewer = new Map<string, any[]>();
+  for (const a of rows) {
+    const arr = byReviewer.get(a.reviewer_id) ?? [];
+    arr.push(a);
+    byReviewer.set(a.reviewer_id, arr);
+  }
+  const reviewers = [...byReviewer.entries()]
+    .map(([rid, list]) => {
+      const sorted = [...list].sort((x, y) => (x.round ?? 1) - (y.round ?? 1));
+      const latest = sorted[sorted.length - 1];
+      const submitted = sorted.filter((a) => reviewOf(a)?.is_submitted);
+      const bankedAccept = submitted.some(
+        (a) => reviewOf(a)?.recommendation === "accept"
+      );
+      const latestSubmitted = submitted[submitted.length - 1] ?? null;
+      const bankedRec = bankedAccept
+        ? "accept"
+        : latestSubmitted
+          ? reviewOf(latestSubmitted)?.recommendation ?? null
+          : null;
+      const currentAssignment =
+        sorted.find((a) => (a.round ?? 1) === currentRound) ?? null;
+      const p = latest.profiles;
+      return {
+        reviewerId: rid,
+        reviewerNumber: latest.reviewer_number ?? null,
+        name: p?.full_name || p?.email || "Reviewer",
+        affiliation: p?.affiliation || "—",
+        assignments: sorted,
+        currentAssignment,
+        bankedAccept,
+        bankedRec,
+        hasSubmitted: submitted.length > 0,
+        // Eligible to re-invite: not a banked Accept, a new round is open, and
+        // they have no assignment in it yet.
+        reassignable: !bankedAccept && !currentAssignment && currentRound > 1,
+      };
+    })
+    .sort((a, b) => (a.reviewerNumber ?? 99) - (b.reviewerNumber ?? 99));
+
+  const acceptCount = reviewers.filter((r) => r.bankedAccept).length;
+  const submittedReviewerCount = reviewers.filter((r) => r.hasSubmitted).length;
   const isFinal = ["accepted", "rejected"].includes(sub.status);
 
   // The abstract stage runs as a sequence: declare how it will be reviewed →
@@ -125,15 +174,30 @@ export default async function EditorSubmissionPage({
     sub.stage === "full_paper" && acceptCount < FULL_PAPER_ACCEPTS_REQUIRED;
   // Manuscript revisions need a completed review round — at least
   // FULL_PAPER_ACCEPTS_REQUIRED reviewers must have submitted a review.
-  const reviewRoundDone = completed.length >= FULL_PAPER_ACCEPTS_REQUIRED;
+  const reviewRoundDone = submittedReviewerCount >= FULL_PAPER_ACCEPTS_REQUIRED;
 
   // What the author may see: numbered, never named, and only the comments the
-  // reviewer wrote for them — comments_to_editor stays confidential.
-  const authorFacingReviews = completed.map((a, i) => ({
-    label: `Reviewer ${a.reviewer_number ?? i + 1}`,
-    recommendation: reviewOf(a)?.recommendation,
-    comments: reviewOf(a)?.comments_to_author,
-  }));
+  // reviewer wrote for them — comments_to_editor stays confidential. One entry
+  // per reviewer: a banked Accept, otherwise their latest submitted review.
+  const authorFacingReviews = reviewers
+    .map((r) => {
+      const submitted = r.assignments.filter((a) => reviewOf(a)?.is_submitted);
+      if (!submitted.length) return null;
+      const chosen =
+        submitted.find((a) => reviewOf(a)?.recommendation === "accept") ??
+        submitted[submitted.length - 1];
+      const rv = reviewOf(chosen);
+      return {
+        label: `Reviewer ${r.reviewerNumber ?? "?"}`,
+        recommendation: rv?.recommendation,
+        comments: rv?.comments_to_author,
+      };
+    })
+    .filter(Boolean) as {
+    label: string;
+    recommendation: any;
+    comments: any;
+  }[];
 
   const decisionOptions =
     sub.stage === "full_paper"
@@ -159,7 +223,7 @@ export default async function EditorSubmissionPage({
           recommending Accept ({acceptCount} so far).{" "}
           <strong>Minor / Major Revision</strong> unlock only after a completed
           review round — {FULL_PAPER_ACCEPTS_REQUIRED} reviewers must have
-          submitted a review ({completed.length} so far). Right now you can{" "}
+          submitted a review ({submittedReviewerCount} so far). Right now you can{" "}
           <strong>Send back to author</strong> (guidelines not followed) or{" "}
           <strong>Reject</strong> (manuscript inappropriate).
         </p>
@@ -175,7 +239,7 @@ export default async function EditorSubmissionPage({
         Track Editor — the review process is bypassed. The Convener can override
         your decision.
       </p>
-    ) : completed.length === 0 ? (
+    ) : submittedReviewerCount === 0 ? (
       <p className="text-sm text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
         You chose to send this abstract out for review and{" "}
         <strong>no review has come in yet</strong>. You may still decide at your
@@ -183,8 +247,8 @@ export default async function EditorSubmissionPage({
       </p>
     ) : (
       <p className="text-sm text-slate-600 bg-slate-50 rounded-lg px-3 py-2">
-        {completed.length} review{completed.length === 1 ? "" : "s"} received. The
-        Convener can override your decision.
+        {submittedReviewerCount} review{submittedReviewerCount === 1 ? "" : "s"}{" "}
+        received. The Convener can override your decision.
       </p>
     );
 
@@ -314,8 +378,8 @@ export default async function EditorSubmissionPage({
             </p>
             <div className="grid sm:grid-cols-3 gap-3">
               {[
-                ["Reviewers invited", rows.length],
-                ["Reviews received", completed.length],
+                ["Reviewers", reviewers.length],
+                ["Reviews received", submittedReviewerCount],
                 [
                   "Accept recommendations",
                   `${acceptCount} of ${FULL_PAPER_ACCEPTS_REQUIRED}`,
@@ -351,79 +415,141 @@ export default async function EditorSubmissionPage({
 
       {/* ---- Reviewer assignment — only when reviewers are part of the plan ---- */}
       {showReviewers && (
-      <Section title={`Reviewers (${completed.length}/${rows.length} complete)`}>
+      <Section
+        title={`Reviewers (${submittedReviewerCount}/${reviewers.length} complete · ${acceptCount}/${FULL_PAPER_ACCEPTS_REQUIRED} Accept${
+          currentRound > 1 ? ` · round ${currentRound}` : ""
+        })`}
+      >
         <div className="card divide-y divide-slate-100">
-          {rows.length === 0 && (
+          {reviewers.length === 0 && (
             <p className="px-5 py-4 text-sm text-slate-500">
               No reviewers assigned yet.
             </p>
           )}
 
-          {rows.map((a) => {
+          {reviewers.map((r) => {
+            const ca = r.currentAssignment;
+            const caStatus: string | null = ca?.status ?? null;
             const overdue =
-              a.status !== "submitted" &&
-              a.status !== "declined" &&
-              a.due_date &&
-              new Date(a.due_date) < new Date();
+              ca &&
+              caStatus !== "submitted" &&
+              caStatus !== "declined" &&
+              ca.due_date &&
+              new Date(ca.due_date) < new Date();
+            // A revision-round invitation with no response within the response
+            // window: the Track Editor may cancel it and invite someone else.
+            const awaitingDays =
+              ca && caStatus === "invited" && ca.created_at
+                ? Math.floor(
+                    (Date.now() - new Date(ca.created_at).getTime()) / 86400000
+                  )
+                : 0;
+            const stalled =
+              ca && caStatus === "invited" && awaitingDays >= REASSIGN_RESPONSE_DAYS;
+
             return (
-              <div key={a.id} className="px-5 py-3 flex flex-wrap items-center justify-between gap-4">
+              <div key={r.reviewerId} className="px-5 py-3 flex flex-wrap items-center justify-between gap-4">
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-slate-800">
                     <span className="badge bg-slate-100 text-slate-700 mr-2">
-                      Reviewer {a.reviewer_number ?? "—"}
+                      Reviewer {r.reviewerNumber ?? "—"}
                     </span>
-                    {a.profiles?.full_name || a.profiles?.email}
+                    {r.name}
                   </p>
                   <p className="text-xs text-slate-500">
-                    {a.profiles?.affiliation || "—"}
-                    {a.due_date ? ` · Due ${formatDate(a.due_date)}` : ""}
-                    {a.last_reminded_at
-                      ? ` · Reminded ${formatDate(a.last_reminded_at)}${
-                          a.reminder_count > 1 ? ` (${a.reminder_count}×)` : ""
-                        }`
-                      : ""}
+                    {r.affiliation}
+                    {ca?.due_date ? ` · Due ${formatDate(ca.due_date)}` : ""}
+                  </p>
+                  {/* Round history: what each round produced. */}
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    {r.assignments
+                      .map((a) => {
+                        const rv = reviewOf(a);
+                        const label = rv?.is_submitted
+                          ? RECOMMENDATION_LABELS[
+                              rv.recommendation as keyof typeof RECOMMENDATION_LABELS
+                            ] ?? rv.recommendation
+                          : a.status;
+                        return `R${a.round ?? 1}: ${label}`;
+                      })
+                      .join(" · ")}
                   </p>
                 </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  {overdue && (
-                    <span className="badge bg-amber-100 text-amber-900">
-                      Overdue
+
+                <div className="flex items-center gap-2 shrink-0">
+                  {r.bankedAccept ? (
+                    <span className="badge bg-emerald-100 text-emerald-800">
+                      Accept — complete
+                    </span>
+                  ) : (
+                    <span
+                      className={`badge ${
+                        caStatus === "submitted"
+                          ? "bg-emerald-100 text-emerald-800"
+                          : caStatus === "accepted"
+                            ? "bg-blue-100 text-blue-800"
+                            : caStatus === "declined"
+                              ? "bg-red-100 text-red-800"
+                              : caStatus === "invited"
+                                ? "bg-amber-100 text-amber-900"
+                                : "bg-slate-100 text-slate-600"
+                      }`}
+                    >
+                      {caStatus ??
+                        (r.bankedRec
+                          ? RECOMMENDATION_LABELS[
+                              r.bankedRec as keyof typeof RECOMMENDATION_LABELS
+                            ] ?? r.bankedRec
+                          : "—")}
                     </span>
                   )}
-                  <span
-                    className={`badge ${
-                      a.status === "submitted"
-                        ? "bg-emerald-100 text-emerald-800"
-                        : a.status === "accepted"
-                          ? "bg-blue-100 text-blue-800"
-                          : a.status === "declined"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-slate-100 text-slate-600"
-                    }`}
-                  >
-                    {a.status}
-                  </span>
-                  {a.status !== "submitted" && (
+                  {overdue && (
+                    <span className="badge bg-amber-100 text-amber-900">Overdue</span>
+                  )}
+
+                  {r.reassignable && !isFinal && (
+                    <ActionForm
+                      action={reassignReviewer}
+                      confirm={`Re-invite ${r.name} to review the revision (round ${currentRound})? They'll get an Agree/Decline email.`}
+                    >
+                      <input type="hidden" name="submission_id" value={id} />
+                      <input type="hidden" name="reviewer_id" value={r.reviewerId} />
+                      <SubmitButton variant="primary" className="text-xs py-1 px-2">
+                        Reassign
+                      </SubmitButton>
+                    </ActionForm>
+                  )}
+
+                  {ca && caStatus !== "submitted" && (
                     <ActionForm
                       action={removeAssignment}
-                      confirm="Remove this reviewer assignment?"
+                      confirm={
+                        stalled
+                          ? "Cancel this pending invitation so you can invite someone else?"
+                          : "Remove this reviewer assignment?"
+                      }
                     >
-                      <input type="hidden" name="assignment_id" value={a.id} />
+                      <input type="hidden" name="assignment_id" value={ca.id} />
                       <input type="hidden" name="submission_id" value={id} />
                       <SubmitButton variant="secondary" className="text-xs py-1 px-2">
-                        Remove
+                        {stalled ? "Cancel" : "Remove"}
                       </SubmitButton>
                     </ActionForm>
                   )}
                 </div>
 
-                {overdue && (
+                {stalled && (
+                  <p className="w-full text-xs text-amber-900 bg-amber-50 border border-amber-200 rounded-md px-2 py-1">
+                    No response in {awaitingDays} days. You may cancel this
+                    invitation and invite an additional reviewer below.
+                  </p>
+                )}
+
+                {overdue && ca && (
                   <RemindReviewer
-                    assignmentId={a.id}
+                    assignmentId={ca.id}
                     submissionId={id}
-                    reviewerName={
-                      a.profiles?.full_name || a.profiles?.email || "reviewer"
-                    }
+                    reviewerName={r.name}
                   />
                 )}
               </div>

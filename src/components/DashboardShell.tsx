@@ -38,6 +38,7 @@ export async function DashboardShell({
   // Email volume + revenue, shown in the Convener's sidebar.
   const isChief = profile.roles.includes("chief") || profile.roles.includes("admin");
   let emailStats: { today: number; total: number } | undefined;
+  let visitStats: { today: number; total: number } | undefined;
   let revenueStats:
     | { currency: string; fees: number; tax: number; total: number }[]
     | undefined;
@@ -52,6 +53,16 @@ export async function DashboardShell({
       supabase.from("email_log").select("id", { count: "exact", head: true }),
     ]);
     emailStats = { today: today ?? 0, total: total ?? 0 };
+
+    // Website visits (one row per visitor session — see /api/visit).
+    const [{ count: vToday }, { count: vTotal }] = await Promise.all([
+      supabase
+        .from("site_visits")
+        .select("id", { count: "exact", head: true })
+        .gte("visited_at", startOfToday.toISOString()),
+      supabase.from("site_visits").select("id", { count: "exact", head: true }),
+    ]);
+    visitStats = { today: vToday ?? 0, total: vTotal ?? 0 };
 
     // Registration revenue recorded by the Editorial Office: base fees per
     // currency; tax is 18% on top, total is base + tax. Read defensively.
@@ -120,6 +131,7 @@ export async function DashboardShell({
             roles={visibleRoles}
             opportunities={(opportunities ?? []) as PublicationOpportunity[]}
             emailStats={emailStats}
+            visitStats={visitStats}
             revenueStats={revenueStats}
           />
         </aside>

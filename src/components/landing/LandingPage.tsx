@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Banner } from "@/components/landing/Banner";
 import { IkatStrip } from "@/components/landing/IkatStrip";
 import { BackToTop } from "@/components/landing/BackToTop";
+import { VisitTracker } from "@/components/landing/VisitTracker";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { TRACKS } from "@/components/landing/tracks";
 
@@ -480,6 +481,8 @@ export function LandingPage() {
 
   return (
     <main className="min-h-screen">
+      {/* Count this visit once per session (fire-and-forget). */}
+      <VisitTracker />
       {/* Sambalpuri Ikat borders, top and bottom of the page. */}
       <IkatStrip />
 

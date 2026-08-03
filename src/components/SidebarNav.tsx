@@ -63,12 +63,14 @@ export function SidebarNav({
   roles,
   opportunities = [],
   emailStats,
+  visitStats,
   revenueStats,
 }: {
   roles: AppRole[];
   opportunities?: PublicationOpportunity[];
   /** Convener only: how much mail the portal has sent. */
   emailStats?: { today: number; total: number };
+  visitStats?: { today: number; total: number };
   /** Convener only: registration revenue per currency (base / tax / total). */
   revenueStats?: { currency: string; fees: number; tax: number; total: number }[];
 }) {
@@ -177,6 +179,28 @@ export function SidebarNav({
               <p className="text-[10px] text-slate-500 leading-tight">Total to date</p>
               <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 leading-tight">
                 {emailStats.total}
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {visitStats && current === "chief" && (
+        <section className="mt-6">
+          <p className="px-3 text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2">
+            Website visits
+          </p>
+          <div className="space-y-1.5">
+            <div className="card px-2.5 py-1">
+              <p className="text-[10px] text-slate-500 leading-tight">Today</p>
+              <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 leading-tight">
+                {visitStats.today}
+              </p>
+            </div>
+            <div className="card px-2.5 py-1">
+              <p className="text-[10px] text-slate-500 leading-tight">Total to date</p>
+              <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 leading-tight">
+                {visitStats.total}
               </p>
             </div>
           </div>

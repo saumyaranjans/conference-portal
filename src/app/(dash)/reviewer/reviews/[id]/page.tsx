@@ -74,37 +74,45 @@ export default async function ReviewPage({
         }
       />
 
-      {/* The reviewer never sees author identities — single-blind by design,
-          so the camera-ready proof is shown with the author block withheld. */}
-      <Section title="Abstract (camera-ready)">
-        <CameraReadyPreview
-          conferenceName={sub?.tracks?.conferences?.name ?? "GLOGIFT 2027"}
-          trackName={sub?.tracks?.name ?? ""}
-          title={sub?.title ?? ""}
-          authors={[]}
-          abstract={sub?.abstract ?? ""}
-          keywords={(sub?.keywords ?? []).join(", ")}
-        />
-        <p className="text-xs text-slate-400 mt-2">
-          Author identities are withheld — reviews are single-blind.
-        </p>
-      </Section>
-
+      {/* The reviewer never sees author identities — single-blind by design.
+          At the manuscript stage the reviewer is assessing the full paper, so we
+          lead with the blinded manuscript preview and do not surface a separate
+          abstract camera-ready proof. At the abstract stage, the camera-ready
+          proof is the thing under review. */}
       {sub?.stage === "full_paper" ? (
-        <Section title="Full paper (blinded)">
+        <Section title="Manuscript (blinded)">
           <ManuscriptFilesView
             role="reviewer"
             submissionId={sub.id}
             files={(manuscriptFiles as any[]) ?? []}
             reviewCopyBuiltAt={(sub as any).full_paper_pdf_built_at}
           />
+          <p className="text-xs text-slate-400 mt-2">
+            Author identities are withheld — reviews are single-blind.
+          </p>
         </Section>
       ) : (
-        sub?.file_path && (
-          <Section title="Manuscript">
-            <DocumentViewer filePath={sub.file_path} fileName={sub.file_name} />
+        <>
+          <Section title="Abstract (camera-ready)">
+            <CameraReadyPreview
+              conferenceName={sub?.tracks?.conferences?.name ?? "GLOGIFT 2027"}
+              trackName={sub?.tracks?.name ?? ""}
+              title={sub?.title ?? ""}
+              authors={[]}
+              abstract={sub?.abstract ?? ""}
+              keywords={(sub?.keywords ?? []).join(", ")}
+            />
+            <p className="text-xs text-slate-400 mt-2">
+              Author identities are withheld — reviews are single-blind.
+            </p>
           </Section>
-        )
+
+          {sub?.file_path && (
+            <Section title="Manuscript">
+              <DocumentViewer filePath={sub.file_path} fileName={sub.file_name} />
+            </Section>
+          )}
+        </>
       )}
 
       <Section title={locked ? "Your submitted review" : "Your review"}>

@@ -217,7 +217,7 @@ export function AuthorManagement({
                       )}
                       {r.registered ? (
                         <span className="badge bg-emerald-100 text-emerald-800">
-                          Registered
+                          Confirmed participation
                         </span>
                       ) : (
                         <span className="badge bg-amber-100 text-amber-800">

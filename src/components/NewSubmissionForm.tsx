@@ -109,6 +109,8 @@ export function NewSubmissionForm({
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("");
   const [error, setError] = useState<string | null>(null);
+  // Popup shown when the abstract is under the 350-word minimum.
+  const [shortAbstract, setShortAbstract] = useState(false);
 
   const tracks = conferences.find((c) => c.id === confId)?.tracks ?? [];
   const abstractWords = countWords(abstract);
@@ -145,8 +147,6 @@ export function NewSubmissionForm({
     if (!title.trim()) return "Enter a title.";
     if (!trackId) return "Choose a track.";
     if (!abstract.trim()) return "Enter an abstract.";
-    if (abstractWords < ABSTRACT_MIN_WORDS)
-      return `The abstract is ${abstractWords} words — please write at least ${ABSTRACT_MIN_WORDS} words.`;
     if (abstractWords > ABSTRACT_WORD_LIMIT)
       return `The abstract is ${abstractWords} words — please reduce it to ${ABSTRACT_WORD_LIMIT} words or fewer.`;
     if (!submissionType) return "Select your level of participation.";
@@ -179,11 +179,19 @@ export function NewSubmissionForm({
   function onReview(e: React.FormEvent) {
     e.preventDefault();
     const problem = validate();
-    setError(problem);
-    if (!problem) {
-      setShowPreview(true);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+    if (problem) {
+      setError(problem);
+      return;
     }
+    // The 350-word minimum is enforced, but surfaced as a popup rather than an
+    // always-visible counter hint.
+    if (abstractWords < ABSTRACT_MIN_WORDS) {
+      setShortAbstract(true);
+      return;
+    }
+    setError(null);
+    setShowPreview(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   async function onSubmit() {
@@ -317,6 +325,40 @@ export function NewSubmissionForm({
 
   return (
     <form onSubmit={onReview} className="space-y-6 max-w-4xl">
+      {/* Popup: abstract below the 350-word minimum. */}
+      {shortAbstract && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setShortAbstract(false)}
+        >
+          <div
+            className="card card-pad max-w-md w-full text-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mx-auto mb-3 w-12 h-12 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-2xl">
+              !
+            </div>
+            <h3 className="text-base font-semibold text-slate-900">
+              Abstract is too short
+            </h3>
+            <p className="text-sm text-slate-600 mt-2">
+              Your abstract is <strong>{abstractWords}</strong> words. Please
+              write at least <strong>{ABSTRACT_MIN_WORDS} words</strong> before
+              you can proceed to submit.
+            </p>
+            <button
+              type="button"
+              onClick={() => setShortAbstract(false)}
+              className="btn-primary mt-5"
+            >
+              Continue editing
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ---------------- Abstract ---------------- */}
       <div className="card card-pad space-y-5">
         <h2 className="font-semibold text-slate-900">Abstract</h2>
@@ -391,18 +433,14 @@ export function NewSubmissionForm({
           />
           <p
             className={`text-xs mt-1 ${
-              abstractWords > ABSTRACT_WORD_LIMIT ||
-              (abstractWords > 0 && abstractWords < ABSTRACT_MIN_WORDS)
+              abstractWords > ABSTRACT_WORD_LIMIT
                 ? "text-red-600 font-medium"
                 : "text-slate-400"
             }`}
           >
             {abstractWords} / {ABSTRACT_WORD_LIMIT} words
-            {abstractWords > ABSTRACT_WORD_LIMIT
-              ? ` — ${abstractWords - ABSTRACT_WORD_LIMIT} over the ${ABSTRACT_WORD_LIMIT}-word limit`
-              : abstractWords > 0 && abstractWords < ABSTRACT_MIN_WORDS
-                ? ` — ${ABSTRACT_MIN_WORDS - abstractWords} short of the ${ABSTRACT_MIN_WORDS}-word minimum`
-                : ` · ${ABSTRACT_MIN_WORDS}–${ABSTRACT_WORD_LIMIT} words required`}
+            {abstractWords > ABSTRACT_WORD_LIMIT &&
+              ` — ${abstractWords - ABSTRACT_WORD_LIMIT} over the limit`}
           </p>
         </div>
 

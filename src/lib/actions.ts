@@ -5250,6 +5250,65 @@ export async function markPersonPaid(
   };
 }
 
+/** Author Management "Participation desk": manually set a PERSON's attendance,
+ *  registration, payment and participant category in one Save, across every
+ *  submission_author row they appear on (deduped by email). */
+export async function saveParticipationStatus(
+  formData: FormData
+): Promise<ActionResult> {
+  const profile = await requireRole("chief", "admin");
+  const supabase = createAdminClient();
+
+  const email = String(formData.get("email") ?? "").trim();
+  if (!email) return { ok: false, message: "Missing author email." };
+
+  const attended = String(formData.get("attended")) === "true";
+  const registered = String(formData.get("registered")) === "true";
+  const paid = String(formData.get("paid")) === "true";
+  const category = String(formData.get("category") ?? "").trim();
+  const now = new Date().toISOString();
+
+  const patch: Record<string, unknown> = {
+    attended_confirmed: attended,
+    attendance_confirmed_at: attended ? now : null,
+    attendance_confirmed_by: attended ? profile.id : null,
+    registration_confirmed: registered,
+    registration_confirmed_at: registered ? now : null,
+    registration_confirmed_by: registered ? profile.id : null,
+    registration_fee_paid: paid,
+    registration_fee_paid_at: paid ? now : null,
+    registration_fee_paid_by: paid ? profile.id : null,
+  };
+  // Only overwrite the category when one is chosen — "— not set —" leaves it.
+  if (category) patch.participant_category = category;
+
+  const { data: rows, error } = await supabase
+    .from("submission_authors")
+    .update(patch)
+    .ilike("email", email)
+    .select("id");
+
+  if (error) return { ok: false, message: error.message };
+
+  await audit(profile.id, "participation.saved", "submission_author", rows?.[0]?.id ?? null, {
+    email,
+    attended,
+    registered,
+    paid,
+    category: category || null,
+    rows: rows?.length ?? 0,
+    via: "author-management",
+  });
+  revalidatePath("/chief/authors");
+  revalidatePath("/admin/authors");
+  return {
+    ok: true,
+    message: `Saved (${rows?.length ?? 0} record${
+      (rows?.length ?? 0) === 1 ? "" : "s"
+    }).`,
+  };
+}
+
 /** Editorial Office / Convener records that a listed author paid the
  *  registration fee, alongside attendance. */
 export async function markRegistrationFee(

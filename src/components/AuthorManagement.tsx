@@ -3,12 +3,9 @@
 import { useMemo, useState } from "react";
 import { formatMoney, type RegistrationFee } from "@/lib/registrationFees";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
-import {
-  markPersonAttendance,
-  markPersonRegistration,
-  markPersonPaid,
-} from "@/lib/actions";
+import { saveParticipationStatus } from "@/lib/actions";
 import { generateParticipationCertificates } from "@/lib/participationCertificateActions";
+import { PARTICIPANT_CATEGORIES } from "@/lib/types";
 
 export type PersonRow = {
   name: string;
@@ -61,6 +58,8 @@ export function AuthorManagement({
   const [dir, setDir] = useState<"asc" | "desc">("asc");
   // Which paper's title/track popup is open (keyed by email + paper index).
   const [openPaper, setOpenPaper] = useState<string | null>(null);
+  // Which person's participation desk is in edit mode (by email).
+  const [editEmail, setEditEmail] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -324,52 +323,105 @@ export function AuthorManagement({
                       </span>
                     )}
 
-                    {/* Attendance · Registration · Certificate controls */}
+                    {/* Attendance · Registration · Payment — editable desk */}
                     <div className="mt-2.5 space-y-1.5 border-t border-slate-100 pt-2 dark:border-slate-800">
-                      <ActionForm action={markPersonAttendance}>
-                        <input type="hidden" name="email" value={r.email} />
-                        <input
-                          type="hidden"
-                          name="attended"
-                          value={r.attended ? "false" : "true"}
-                        />
-                        <SubmitButton
-                          variant="secondary"
-                          className="w-full justify-center text-[11px] py-0.5 px-2"
+                      {editEmail === r.email ? (
+                        <ActionForm
+                          action={saveParticipationStatus}
+                          onDone={() => setEditEmail(null)}
+                          className="space-y-1.5"
                         >
-                          {r.attended ? "✓ Attended · undo" : "Mark attended"}
-                        </SubmitButton>
-                      </ActionForm>
-
-                      <ActionForm action={markPersonRegistration}>
-                        <input type="hidden" name="email" value={r.email} />
-                        <input
-                          type="hidden"
-                          name="registered"
-                          value={r.registered ? "false" : "true"}
-                        />
-                        <SubmitButton
-                          variant="secondary"
-                          className="w-full justify-center text-[11px] py-0.5 px-2"
-                        >
-                          {r.registered ? "✓ Registered · undo" : "Mark registered"}
-                        </SubmitButton>
-                      </ActionForm>
-
-                      <ActionForm action={markPersonPaid}>
-                        <input type="hidden" name="email" value={r.email} />
-                        <input
-                          type="hidden"
-                          name="paid"
-                          value={r.paid ? "false" : "true"}
-                        />
-                        <SubmitButton
-                          variant="secondary"
-                          className="w-full justify-center text-[11px] py-0.5 px-2"
-                        >
-                          {r.paid ? "✓ Fee paid · undo" : "Mark paid"}
-                        </SubmitButton>
-                      </ActionForm>
+                          <input type="hidden" name="email" value={r.email} />
+                          {(
+                            [
+                              ["attended", "Attendance", r.attended, "Attended", "Not attended"],
+                              ["registered", "Registration", r.registered, "Registered", "Not registered"],
+                              ["paid", "Payment", r.paid, "Fee paid", "Not paid"],
+                            ] as const
+                          ).map(([name, label, current, yes, no]) => (
+                            <label key={name} className="block">
+                              <span className="block text-[10px] font-medium uppercase tracking-wide text-slate-400">
+                                {label}
+                              </span>
+                              <select
+                                name={name}
+                                defaultValue={current ? "true" : "false"}
+                                className="input text-[11px] py-0.5 h-auto"
+                              >
+                                <option value="true">{yes}</option>
+                                <option value="false">{no}</option>
+                              </select>
+                            </label>
+                          ))}
+                          <label className="block">
+                            <span className="block text-[10px] font-medium uppercase tracking-wide text-slate-400">
+                              Participant category
+                            </span>
+                            <select
+                              name="category"
+                              defaultValue={r.category ?? ""}
+                              className="input text-[11px] py-0.5 h-auto"
+                            >
+                              <option value="">— not set —</option>
+                              {PARTICIPANT_CATEGORIES.map((c) => (
+                                <option key={c} value={c}>
+                                  {c}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                          <div className="flex gap-1.5 pt-0.5">
+                            <SubmitButton
+                              variant="primary"
+                              className="flex-1 justify-center text-[11px] py-0.5 px-2"
+                            >
+                              Save
+                            </SubmitButton>
+                            <button
+                              type="button"
+                              onClick={() => setEditEmail(null)}
+                              className="btn-secondary flex-1 justify-center text-[11px] py-0.5 px-2"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </ActionForm>
+                      ) : (
+                        <>
+                          <div className="space-y-1">
+                            {(
+                              [
+                                ["Attendance", r.attended],
+                                ["Registration", r.registered],
+                                ["Payment", r.paid],
+                              ] as const
+                            ).map(([label, on]) => (
+                              <div
+                                key={label}
+                                className="flex items-center justify-between gap-2 text-[11px]"
+                              >
+                                <span className="text-slate-500">{label}</span>
+                                <span
+                                  className={`rounded px-1.5 py-0 font-medium ${
+                                    on
+                                      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
+                                      : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
+                                  }`}
+                                >
+                                  {on ? "Yes" : "No"}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setEditEmail(r.email)}
+                            className="btn-secondary w-full justify-center text-[11px] py-0.5 px-2"
+                          >
+                            Edit &amp; save
+                          </button>
+                        </>
+                      )}
 
                       {r.certEligiblePapers > 0 &&
                       r.certsGenerated >= r.certEligiblePapers ? (

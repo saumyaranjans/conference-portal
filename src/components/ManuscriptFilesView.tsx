@@ -43,6 +43,8 @@ export function ManuscriptFilesView({
   files,
   cameraReadyBuiltAt,
   reviewCopyBuiltAt,
+  originalReviewCopySrc,
+  isRevisionRound,
 }: {
   role: "reviewer" | "editor" | "chief";
   submissionId: string;
@@ -50,6 +52,10 @@ export function ManuscriptFilesView({
   cameraReadyBuiltAt?: string | null;
   /** When the blinded review copy was built (shown to reviewers with a cover). */
   reviewCopyBuiltAt?: string | null;
+  /** Previous round's blinded copy, for the original-vs-revised comparison. */
+  originalReviewCopySrc?: string | null;
+  /** True when this is a revision round (label the current copy as "revised"). */
+  isRevisionRound?: boolean;
 }) {
   const isReviewer = role === "reviewer";
 
@@ -104,14 +110,29 @@ export function ManuscriptFilesView({
         />
       )}
 
+      {/* Original (previous round) copy for comparison in a revision round. */}
+      {originalReviewCopySrc && (
+        <PdfBox
+          src={originalReviewCopySrc}
+          label="Original manuscript — previous round (for comparison)"
+          note="The version reviewed in the previous round. Compare it against the revised manuscript below."
+        />
+      )}
+
       {/* Manuscript preview — the blinded review copy (author-less cover). */}
       {reviewCopySrc ? (
         <PdfBox
           src={reviewCopySrc}
-          label="Manuscript preview — blinded, with cover"
+          label={
+            isRevisionRound
+              ? "Revised manuscript — blinded, with cover (changes marked by the author)"
+              : "Manuscript preview — blinded, with cover"
+          }
           note={
             isReviewer
-              ? undefined
+              ? isRevisionRound
+                ? "The author has marked their changes (track-changes / highlight). See their point-by-point response in Files below."
+                : undefined
               : "Exactly what your reviewers see — the compiled manuscript behind an author-less cover (double-blind)."
           }
         />

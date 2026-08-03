@@ -12,7 +12,7 @@ import { createAdminClient } from "@/lib/supabase/server";
  * can render it — see /api/camera-ready for the same pattern.
  */
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
@@ -25,7 +25,22 @@ export async function GET(
     .eq("id", id)
     .maybeSingle();
   const s = sub as any;
-  if (!s?.full_paper_review_pdf_path) return new Response("Not found", { status: 404 });
+  if (!s) return new Response("Not found", { status: 404 });
+
+  // Optional ?round=N serves that round's retained copy (for the reviewer's
+  // original-vs-revised comparison); otherwise the current review copy.
+  const roundParam = req.nextUrl.searchParams.get("round");
+  let objectPath: string | null = s.full_paper_review_pdf_path ?? null;
+  if (roundParam) {
+    const { data: rc } = await admin
+      .from("submission_review_copies")
+      .select("path")
+      .eq("submission_id", id)
+      .eq("round", Number(roundParam))
+      .maybeSingle();
+    objectPath = (rc as any)?.path ?? null;
+  }
+  if (!objectPath) return new Response("Not found", { status: 404 });
 
   const isStaff = profile.roles.includes("chief") || profile.roles.includes("admin");
   let allowed =
@@ -45,7 +60,7 @@ export async function GET(
 
   const { data: blob, error } = await admin.storage
     .from("papers")
-    .download(s.full_paper_review_pdf_path);
+    .download(objectPath);
   if (error || !blob) return new Response("Not found", { status: 404 });
 
   const bytes = new Uint8Array(await blob.arrayBuffer());

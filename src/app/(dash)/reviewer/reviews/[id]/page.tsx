@@ -45,14 +45,35 @@ export default async function ReviewPage({
   // proved this reviewer is assigned, so read with the admin client and drop
   // the identity-bearing Title Page (single-blind). File bytes are still served
   // through /api/paper-file, which re-checks blinding server-side.
+  const admin = createAdminClient();
   const { data: manuscriptFiles } =
     sub?.stage === "full_paper"
-      ? await createAdminClient()
+      ? await admin
           .from("submission_files")
           .select("id, slot, file_name, file_path")
           .eq("submission_id", sub.id)
           .neq("slot", "title_page")
       : { data: [] as any[] };
+
+  // In a revision round, offer the previous round's blinded copy so the
+  // reviewer can compare the original against the change-marked revision.
+  const assignmentRound = (assignment as any).round ?? 1;
+  const isRevisionRound = sub?.stage === "full_paper" && assignmentRound > 1;
+  let originalReviewCopySrc: string | null = null;
+  if (isRevisionRound) {
+    const { data: prior } = await admin
+      .from("submission_review_copies")
+      .select("round, built_at")
+      .eq("submission_id", sub.id)
+      .lt("round", assignmentRound)
+      .order("round", { ascending: false })
+      .limit(1);
+    const p = ((prior as any[]) ?? [])[0];
+    if (p)
+      originalReviewCopySrc = `/api/review-copy/${sub.id}?round=${p.round}&v=${encodeURIComponent(
+        p.built_at ?? ""
+      )}`;
+  }
 
   return (
     <>
@@ -86,6 +107,8 @@ export default async function ReviewPage({
             submissionId={sub.id}
             files={(manuscriptFiles as any[]) ?? []}
             reviewCopyBuiltAt={(sub as any).full_paper_pdf_built_at}
+            originalReviewCopySrc={originalReviewCopySrc}
+            isRevisionRound={isRevisionRound}
           />
           <p className="text-xs text-slate-400 mt-2">
             Author identities are withheld — reviews are double-blind.

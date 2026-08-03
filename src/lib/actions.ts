@@ -781,7 +781,7 @@ export async function buildCameraReady(
   const { data: sub } = await admin
     .from("submissions")
     .select(
-      "author_id, submission_type, full_paper_option, paper_id, title, tracks(name)"
+      "author_id, submission_type, full_paper_option, paper_id, title, review_round, tracks(name)"
     )
     .eq("id", id)
     .maybeSingle();
@@ -880,8 +880,11 @@ export async function buildCameraReady(
     };
 
   const safeId = (s.paper_id ?? "manuscript").replace(/[^\w.-]/g, "_");
+  const round: number = (s as any).review_round ?? 1;
   const path = `${id}/camera-ready/${safeId}-camera-ready.pdf`;
-  const reviewPath = `${id}/camera-ready/${safeId}-review-copy.pdf`;
+  // Round-specific review-copy key so earlier rounds are retained for the
+  // reviewer's original-vs-revised comparison (rather than being overwritten).
+  const reviewPath = `${id}/camera-ready/${safeId}-review-copy-r${round}.pdf`;
   const { error: upErr } = await admin.storage
     .from("papers")
     .upload(path, built.bytes, { upsert: true, contentType: "application/pdf", cacheControl: "0" });
@@ -905,6 +908,14 @@ export async function buildCameraReady(
       updated_at: new Date().toISOString(),
     })
     .eq("id", id);
+
+  // Record this round's review copy so a later round can show the original.
+  await admin
+    .from("submission_review_copies")
+    .upsert(
+      { submission_id: id, round, path: reviewPath, built_at: new Date().toISOString() },
+      { onConflict: "submission_id,round" }
+    );
 
   await audit(profile.id, "full_paper.camera_ready_built", "submission", id, {
     merged: built.merged.length,

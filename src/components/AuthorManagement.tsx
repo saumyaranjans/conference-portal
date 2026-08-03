@@ -20,8 +20,8 @@ export type PersonRow = {
   registered: boolean;
   /** Attendance intention as declared (attending → fee applies). */
   intention: "attending" | "not" | "undeclared";
-  /** Participation modes across their papers (virtual / onsite). */
-  modes: string[];
+  /** The delegate's single participation mode (virtual / onsite). */
+  mode: string | null;
   category: string | null;
   member: boolean;
   fee: RegistrationFee;
@@ -211,18 +211,21 @@ export function AuthorManagement({
                           Intention not declared
                         </span>
                       )}
-                      {r.modes.map((m) => (
+                      {r.mode && (
                         <span
-                          key={m}
                           className={`badge ${
-                            m === "onsite"
+                            r.mode === "onsite"
                               ? "bg-blue-100 text-blue-800"
                               : "bg-teal-100 text-teal-800"
                           }`}
                         >
-                          {m === "onsite" ? "On-site" : m === "virtual" ? "Virtual" : m}
+                          {r.mode === "onsite"
+                            ? "On-site"
+                            : r.mode === "virtual"
+                              ? "Virtual"
+                              : r.mode}
                         </span>
-                      ))}
+                      )}
                     </div>
                   </td>
 

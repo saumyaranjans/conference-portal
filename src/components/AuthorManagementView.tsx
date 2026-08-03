@@ -72,11 +72,12 @@ export async function AuthorManagementView() {
       prof?.participant_category ||
       null;
     const member = Boolean(prof?.glogift_member);
-    const modes = [
-      ...new Set(
-        list.map((a) => a.submissions.participation_mode).filter(Boolean)
-      ),
-    ] as string[];
+    // A delegate attends in one mode; prefer the mode declared on the paper they
+    // lead (corresponding author), otherwise their first paper's mode.
+    const modeSource =
+      list.find((a) => a.is_corresponding) ?? list[0];
+    const mode: string | null =
+      modeSource?.submissions?.participation_mode || null;
     return {
       name: list.map((a) => a.full_name).find(Boolean) || key,
       email: list[0].email.trim(),
@@ -88,7 +89,7 @@ export async function AuthorManagementView() {
       intention,
       category,
       member,
-      modes,
+      mode,
       fee: computeRegistrationFee(category, member, now),
     };
   });

@@ -1,22 +1,11 @@
-import { redirect } from "next/navigation";
-import { getProfile } from "@/lib/auth";
-import { ROLE_HOME, type AppRole } from "@/lib/types";
 import { LandingPage } from "@/components/landing/LandingPage";
 
-// Landing priority for multi-role users: Convener → Track Editor → Author →
-// Reviewer → Editorial Office.
-const PRIORITY: AppRole[] = ["chief", "editor", "author", "reviewer", "admin"];
-
-export default async function Home() {
-  const profile = await getProfile();
-
-  // Signed in? Go straight to the most privileged dashboard they hold.
-  if (profile) {
-    const primary = PRIORITY.find((r) => profile.roles.includes(r)) ?? "author";
-    redirect(ROLE_HOME[primary]);
-  }
-
-  // Not signed in? The conference landing page is the front door; the portal
-  // is one click away from it.
+/**
+ * The root URL (www.glogift2027.in) is ALWAYS the public conference landing
+ * page — never the submission portal, even when a portal session is open. The
+ * portal is reached only by going through Login (a signed-in visitor who opens
+ * /login is forwarded to their dashboard by the proxy; see src/proxy.ts).
+ */
+export default function Home() {
   return <LandingPage />;
 }

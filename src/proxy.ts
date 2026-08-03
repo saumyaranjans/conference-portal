@@ -1,8 +1,13 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { sessionScopedCookie, type CookieToSet } from "@/lib/supabase/cookies";
+import { ROLE_HOME, type AppRole } from "@/lib/types";
 
 const PROTECTED = ["/author", "/reviewer", "/editor", "/chief", "/admin"];
+
+// Landing priority for multi-role users: Convener → Track Editor → Author →
+// Reviewer → Editorial Office (mirrors src/app/page.tsx's former logic).
+const ROLE_PRIORITY: AppRole[] = ["chief", "editor", "author", "reviewer", "admin"];
 
 /**
  * Content Security Policy, built per request around a fresh nonce.
@@ -98,10 +103,20 @@ export default async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // A signed-in visitor who opens Login/Signup is sent straight into the
+  // portal (their most privileged dashboard) — NOT to "/", which is always the
+  // public landing. This is the only path from the landing into the portal.
   if (user && (path === "/login" || path === "/signup")) {
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("roles")
+      .eq("id", user.id)
+      .maybeSingle();
+    const roles: string[] = (prof?.roles as string[] | null) ?? [];
+    const primary =
+      ROLE_PRIORITY.find((r) => roles.includes(r)) ?? "author";
     const url = request.nextUrl.clone();
-    // Home applies the multi-role landing priority (see src/app/page.tsx).
-    url.pathname = "/";
+    url.pathname = ROLE_HOME[primary];
     url.search = "";
     return NextResponse.redirect(url);
   }

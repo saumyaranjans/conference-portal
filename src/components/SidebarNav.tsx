@@ -99,17 +99,17 @@ export function SidebarNav({
       <a
         href="https://www.glogift2027.in/Home"
         className="flex items-center gap-2 px-3 py-2 mb-2 rounded-lg border border-amber-300 bg-amber-50 text-sm font-medium text-amber-800 transition hover:bg-amber-100 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200"
-        title="Go to the conference website (www.glogift2027.in)"
+        title="Go to the conference home (www.glogift2027.in)"
       >
         <svg viewBox="0 0 24 24" className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
           <circle cx="12" cy="12" r="9" />
           <path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18" />
         </svg>
-        Conference Website
+        Glogift2027.in
       </a>
 
       <Link
-        href="/"
+        href={ROLE_HOME[current]}
         className="flex items-center gap-2 px-3 py-2 mb-4 rounded-lg border border-blue-200 bg-blue-50 text-sm font-medium text-blue-700 transition hover:bg-blue-100 dark:border-blue-500/40 dark:bg-blue-500/10 dark:text-blue-300"
         title="Go to your submission-portal home"
       >

@@ -12,7 +12,28 @@ export async function POST(req: NextRequest) {
     const body = (await req.json().catch(() => ({}))) as { path?: unknown };
     const path =
       typeof body.path === "string" ? body.path.slice(0, 200) : "/";
-    await createAdminClient().from("site_visits").insert({ path });
+    // Geolocation from the edge/CDN headers (Vercel injects these).
+    const h = req.headers;
+    const dec = (v: string | null) => {
+      if (!v) return null;
+      try {
+        return decodeURIComponent(v).slice(0, 120);
+      } catch {
+        return v.slice(0, 120);
+      }
+    };
+    const num = (v: string | null) => {
+      const n = v ? Number(v) : NaN;
+      return Number.isFinite(n) ? n : null;
+    };
+    await createAdminClient().from("site_visits").insert({
+      path,
+      country: h.get("x-vercel-ip-country"),
+      region: h.get("x-vercel-ip-country-region"),
+      city: dec(h.get("x-vercel-ip-city")),
+      lat: num(h.get("x-vercel-ip-latitude")),
+      lng: num(h.get("x-vercel-ip-longitude")),
+    });
   } catch {
     // swallow — a counter must never affect the page
   }

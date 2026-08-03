@@ -11,6 +11,7 @@ import { InstitutionInput } from "@/components/InstitutionInput";
 import { CameraReadyPreview } from "@/components/CameraReadyPreview";
 import {
   ABSTRACT_WORD_LIMIT,
+  ABSTRACT_MIN_WORDS,
   AUTHOR_ATTENDANCE,
   countWords,
   COUNTRY_DIAL_CODES,
@@ -390,12 +391,17 @@ export function NewSubmissionForm({
             className={`text-xs mt-1 ${
               abstractWords > ABSTRACT_WORD_LIMIT
                 ? "text-red-600 font-medium"
-                : "text-slate-400"
+                : abstractWords > 0 && abstractWords < ABSTRACT_MIN_WORDS
+                  ? "text-amber-600"
+                  : "text-slate-400"
             }`}
           >
             {abstractWords} / {ABSTRACT_WORD_LIMIT} words
-            {abstractWords > ABSTRACT_WORD_LIMIT &&
-              ` — ${abstractWords - ABSTRACT_WORD_LIMIT} over the limit`}
+            {abstractWords > ABSTRACT_WORD_LIMIT
+              ? ` — ${abstractWords - ABSTRACT_WORD_LIMIT} over the limit`
+              : abstractWords > 0 && abstractWords < ABSTRACT_MIN_WORDS
+                ? ` — around ${ABSTRACT_MIN_WORDS}+ words is recommended`
+                : ` · recommended ${ABSTRACT_MIN_WORDS}–${ABSTRACT_WORD_LIMIT} words`}
           </p>
         </div>
 

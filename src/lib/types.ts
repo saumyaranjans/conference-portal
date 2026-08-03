@@ -4,6 +4,10 @@ export const MAX_SUBMISSIONS_PER_AUTHOR = 2;
 /** Abstracts are capped at this many words. */
 export const ABSTRACT_WORD_LIMIT = 500;
 
+/** Recommended minimum length for an abstract — a soft guideline, never a hard
+ *  block on submission. */
+export const ABSTRACT_MIN_WORDS = 350;
+
 /** Completed reviews required before a track editor may recommend. */
 export const MIN_REVIEWS_PER_SUBMISSION = 2;
 

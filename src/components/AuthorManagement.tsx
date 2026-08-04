@@ -1,11 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { formatMoney, type RegistrationFee } from "@/lib/registrationFees";
+import {
+  formatMoney,
+  feeForTier,
+  type RegistrationFee,
+} from "@/lib/registrationFees";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { saveParticipationStatus } from "@/lib/actions";
 import { generateParticipationCertificates } from "@/lib/participationCertificateActions";
-import { PARTICIPANT_CATEGORIES } from "@/lib/types";
 
 export type PersonRow = {
   name: string;
@@ -26,6 +29,8 @@ export type PersonRow = {
   registered: boolean;
   /** Registration fee received (staff-confirmed). */
   paid: boolean;
+  /** Which fee tier was actually paid (null when unpaid). */
+  paidTier: "early" | "regular" | null;
   /** Staff-confirmed attendance (distinct from the declared intention). */
   attended: boolean;
   /** Papers that can earn a participation certificate, and how many already have one. */
@@ -336,7 +341,6 @@ export function AuthorManagement({
                             [
                               ["attended", "Attendance", r.attended, "Attended", "Not attended"],
                               ["registered", "Registration", r.registered, "Registered", "Not registered"],
-                              ["paid", "Payment", r.paid, "Fee paid", "Not paid"],
                             ] as const
                           ).map(([name, label, current, yes, no]) => (
                             <label key={name} className="block">
@@ -353,21 +357,37 @@ export function AuthorManagement({
                               </select>
                             </label>
                           ))}
+                          {/* Fees paid: which tier was collected. The amounts
+                              here are the per-tier rates for this delegate's
+                              category; the headline fee above stays timeline-based. */}
                           <label className="block">
                             <span className="block text-[10px] font-medium uppercase tracking-wide text-slate-400">
-                              Participant category
+                              Fees paid
                             </span>
                             <select
-                              name="category"
-                              defaultValue={r.category ?? ""}
+                              name="paid_tier"
+                              defaultValue={r.paidTier ?? ""}
                               className="input text-[11px] py-0.5 h-auto"
                             >
-                              <option value="">— not set —</option>
-                              {PARTICIPANT_CATEGORIES.map((c) => (
-                                <option key={c} value={c}>
-                                  {c}
-                                </option>
-                              ))}
+                              <option value="">Not paid</option>
+                              <option value="early">
+                                Early Bird Fee
+                                {feeForTier(r.category, r.member, "early").known
+                                  ? ` — ${formatMoney(
+                                      feeForTier(r.category, r.member, "early").currency,
+                                      feeForTier(r.category, r.member, "early").amount
+                                    )}`
+                                  : ""}
+                              </option>
+                              <option value="regular">
+                                Regular Fee
+                                {feeForTier(r.category, r.member, "regular").known
+                                  ? ` — ${formatMoney(
+                                      feeForTier(r.category, r.member, "regular").currency,
+                                      feeForTier(r.category, r.member, "regular").amount
+                                    )}`
+                                  : ""}
+                              </option>
                             </select>
                           </label>
                           <div className="flex gap-1.5 pt-0.5">
@@ -393,7 +413,6 @@ export function AuthorManagement({
                               [
                                 ["Attendance", r.attended],
                                 ["Registration", r.registered],
-                                ["Payment", r.paid],
                               ] as const
                             ).map(([label, on]) => (
                               <div
@@ -412,6 +431,25 @@ export function AuthorManagement({
                                 </span>
                               </div>
                             ))}
+                            {/* Fees paid — the tier collected + its amount. */}
+                            <div className="flex items-center justify-between gap-2 text-[11px]">
+                              <span className="text-slate-500">Fees paid</span>
+                              {r.paidTier ? (
+                                <span className="rounded px-1.5 py-0 font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+                                  {r.paidTier === "early" ? "Early bird" : "Regular"}
+                                  {feeForTier(r.category, r.member, r.paidTier).known
+                                    ? ` · ${formatMoney(
+                                        feeForTier(r.category, r.member, r.paidTier).currency,
+                                        feeForTier(r.category, r.member, r.paidTier).amount
+                                      )}`
+                                    : ""}
+                                </span>
+                              ) : (
+                                <span className="rounded px-1.5 py-0 font-medium bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                                  Not paid
+                                </span>
+                              )}
+                            </div>
                           </div>
                           <button
                             type="button"

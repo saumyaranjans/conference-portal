@@ -5264,8 +5264,11 @@ export async function saveParticipationStatus(
 
   const attended = String(formData.get("attended")) === "true";
   const registered = String(formData.get("registered")) === "true";
-  const paid = String(formData.get("paid")) === "true";
-  const category = String(formData.get("category") ?? "").trim();
+  // Payment is recorded as the tier actually paid: "" (unpaid), "early" or
+  // "regular". The displayed fee stays timeline-driven elsewhere.
+  const tierRaw = String(formData.get("paid_tier") ?? "").trim();
+  const tier = tierRaw === "early" || tierRaw === "regular" ? tierRaw : null;
+  const paid = tier !== null;
   const now = new Date().toISOString();
 
   const patch: Record<string, unknown> = {
@@ -5278,9 +5281,8 @@ export async function saveParticipationStatus(
     registration_fee_paid: paid,
     registration_fee_paid_at: paid ? now : null,
     registration_fee_paid_by: paid ? profile.id : null,
+    registration_fee_tier: tier,
   };
-  // Only overwrite the category when one is chosen — "— not set —" leaves it.
-  if (category) patch.participant_category = category;
 
   const { data: rows, error } = await supabase
     .from("submission_authors")
@@ -5295,7 +5297,7 @@ export async function saveParticipationStatus(
     attended,
     registered,
     paid,
-    category: category || null,
+    tier,
     rows: rows?.length ?? 0,
     via: "author-management",
   });

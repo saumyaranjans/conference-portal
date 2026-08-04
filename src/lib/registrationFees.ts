@@ -57,6 +57,20 @@ export function computeRegistrationFee(
   return { category, known: true, tier, currency: fee.currency, base, isMember, discount, amount: base - discount };
 }
 
+/** Fee for a SPECIFIC tier (regardless of today's date) — used when staff
+ *  record which fee a delegate actually paid (Early Bird vs Regular). */
+export function feeForTier(
+  category: string | null,
+  isMember: boolean,
+  tier: "early" | "regular"
+): { known: boolean; currency: "INR" | "USD"; base: number; discount: number; amount: number } {
+  const fee = category ? REGISTRATION_FEE_BY_CATEGORY[category] : undefined;
+  if (!fee) return { known: false, currency: "INR", base: 0, discount: 0, amount: 0 };
+  const base = tier === "early" ? fee.earlyBird : fee.regular;
+  const discount = isMember ? Math.round(base * GLOGIFT_MEMBER_DISCOUNT) : 0;
+  return { known: true, currency: fee.currency, base, discount, amount: base - discount };
+}
+
 export function formatMoney(currency: "INR" | "USD", n: number): string {
   return (currency === "INR" ? "₹" : "$") + n.toLocaleString("en-IN");
 }

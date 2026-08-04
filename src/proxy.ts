@@ -64,6 +64,18 @@ export default async function proxy(request: NextRequest) {
   // internal PDF viewer can render them inside the first-party viewer page.
   response.headers.set("x-frame-options", "DENY");
 
+  const path = request.nextUrl.pathname;
+  const isProtected = PROTECTED.some((p) => path === p || path.startsWith(p + "/"));
+  const isAuthEntry = path === "/login" || path === "/signup";
+
+  // Public pages — the landing and the marketing/info routes — need no session
+  // work. Skipping the Supabase auth round-trip here removes a blocking network
+  // hop from every public page load (the biggest per-request cost). The session
+  // cookie still refreshes the next time the visitor hits a portal route.
+  if (!isProtected && !isAuthEntry) {
+    return response;
+  }
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -92,11 +104,9 @@ export default async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const path = request.nextUrl.pathname;
-
   // Segment-aware match so /reviewer-invite (a public invitation link) is not
   // caught by the /reviewer prefix.
-  if (!user && PROTECTED.some((p) => path === p || path.startsWith(p + "/"))) {
+  if (!user && isProtected) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("next", path);

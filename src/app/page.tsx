@@ -69,6 +69,50 @@ const EVENT_JSONLD = {
   ],
 };
 
+// schema.org FAQPage — gives search engines (and AI overviews) a clean,
+// authoritative answer for the most-confused facts. GLOGIFT is a recurring
+// series, so third-party listings of PAST editions (e.g. an earlier IIM
+// Kozhikode edition in January) get mistaken for this one; these entries state
+// the correct 2027 dates and venue explicitly.
+const FAQ_JSONLD = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: [
+    {
+      "@type": "Question",
+      name: "When is GLOGIFT 27 (GLOGIFT 2027) being held?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "GLOGIFT 27 is being held on 25–27 February 2027.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Where is GLOGIFT 27 (GLOGIFT 2027) being held?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "GLOGIFT 27 is hosted at the Indian Institute of Management (IIM) Sambalpur, Odisha, India.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Who organises GLOGIFT 27?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "GLOGIFT 27 is organised by IIM Sambalpur in association with the GIFT Society (Global Institute of Flexible Systems Management). It is the Twenty Seventh Global Conference on Flexible Systems Management.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "What is the theme of GLOGIFT 27?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "GLOGIFT 27 is the International Conference on AI-Driven Solutions in Management: Flexibility, Digitalisation & Decarbonization, with a call for papers across ten tracks.",
+      },
+    },
+  ],
+};
+
 /**
  * The root URL (www.glogift2027.in) is ALWAYS the public conference landing
  * page — never the submission portal, even when a portal session is open. The
@@ -83,6 +127,10 @@ export default function Home() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(EVENT_JSONLD) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSONLD) }}
       />
       <LandingPage />
     </>

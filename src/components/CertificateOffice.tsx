@@ -113,7 +113,7 @@ export async function CertificateOffice() {
     await Promise.all([
       admin
         .from("submissions")
-        .select("id, paper_id, title, status, track_id")
+        .select("id, paper_id, title, status, track_id, assigned_editor_id")
         .eq("conference_id", conference.id)
         .neq("status", "draft")
         .neq("status", "rejected")
@@ -136,7 +136,7 @@ export async function CertificateOffice() {
       submissionIds.length
         ? admin
             .from("submission_authors")
-            .select("id, submission_id, profile_id, full_name, email, affiliation, author_order")
+            .select("id, submission_id, profile_id, full_name, email, affiliation, author_order, registration_confirmed, registration_fee_paid")
             .in("submission_id", submissionIds)
             .order("author_order")
         : Promise.resolve({ data: [] as any[] }),
@@ -214,7 +214,21 @@ export async function CertificateOffice() {
   }
   const reviewers = reviewerIds.map((id) => profileMap.get(id)).filter(Boolean);
 
-  const eligibleParticipants = (authors ?? []).filter((item) => {
+  // Section scoping:
+  // • Authors — only REGISTERED authors (registration confirmed or fee paid).
+  // • Reviewers — already only those with ≥1 submitted review (reviewerIds).
+  // • Track Editors — only those who actually HANDLED a submission (assigned).
+  const registeredAuthors = (authors ?? []).filter(
+    (a) => a.registration_confirmed || a.registration_fee_paid
+  );
+  const handledEditorIds = new Set(
+    (submissions ?? []).map((s) => s.assigned_editor_id).filter(Boolean)
+  );
+  const handlingTrackEditors = (trackEditors ?? []).filter((te) =>
+    handledEditorIds.has(te.profile_id)
+  );
+
+  const eligibleParticipants = registeredAuthors.filter((item) => {
     const row = evidenceMap.get(item.id);
     const personProfile = item.profile_id ? profileMap.get(item.profile_id) : null;
     return (
@@ -222,7 +236,7 @@ export async function CertificateOffice() {
       Boolean((row?.salutation_override || personProfile?.title)?.trim())
     );
   }).length;
-  const confirmedEditors = (trackEditors ?? []).filter(
+  const confirmedEditors = handlingTrackEditors.filter(
     (item) => serviceMap.get(item.id)?.service_confirmed
   ).length;
 
@@ -286,14 +300,21 @@ export async function CertificateOffice() {
       <section className="mb-8">
         <div className="mb-4">
           <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
-            Participant certificates
+            Authors — participant certificates
           </h2>
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-            Eligibility is individual. Every named author must independently have payment, amount, attendance and presentation verified.
+            Only registered authors appear here. Eligibility is individual — each
+            named author must independently have payment, amount, attendance and
+            presentation verified.
           </p>
         </div>
         <div className="space-y-3">
-          {(authors ?? []).map((author) => {
+          {registeredAuthors.length === 0 && (
+            <p className="text-sm text-slate-400">
+              No registered authors yet.
+            </p>
+          )}
+          {registeredAuthors.map((author) => {
             const submission = submissionMap.get(author.submission_id);
             const track = trackMap.get(submission?.track_id);
             const row = evidenceMap.get(author.id) ?? {};
@@ -423,10 +444,17 @@ export async function CertificateOffice() {
       <section className="mb-8">
         <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Track Editor certificates</h2>
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-          Attendance and payment are not required. The Editorial Office confirms that the appointed Track Editor handled the track.
+          Only Track Editors who have handled a submission appear here. Attendance
+          and payment are not required — the Editorial Office confirms the
+          appointed Track Editor served the track.
         </p>
         <div className="mt-4 grid gap-4 lg:grid-cols-2">
-          {(trackEditors ?? []).map((membership) => {
+          {handlingTrackEditors.length === 0 && (
+            <p className="text-sm text-slate-400">
+              No Track Editors have handled a submission yet.
+            </p>
+          )}
+          {handlingTrackEditors.map((membership) => {
             const editor = profileMap.get(membership.profile_id);
             const track = trackMap.get(membership.track_id);
             const service = serviceMap.get(membership.id) ?? {};

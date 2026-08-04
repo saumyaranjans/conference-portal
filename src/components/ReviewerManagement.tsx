@@ -79,24 +79,44 @@ export function ReviewerManagement({
   const [pathway, setPathway] = useState<"all" | "A" | "B">("all");
   const [letter, setLetter] = useState("all");
   const [anaTrack, setAnaTrack] = useState("all");
+  const [anaPathway, setAnaPathway] = useState<"all" | "A" | "B">("all");
 
   const inTrack = (r: ReviewerRow, code: string) =>
     code === "all" || r.trackCodes.includes(code);
 
+  // Computed per-assignment so the pathway/track filter scopes the counts.
   const analytics = useMemo(() => {
-    const base = rows.filter((r) => inTrack(r, anaTrack));
+    const reviewers = new Set<string>();
+    const active = new Set<string>();
     let completed = 0;
     let inProgress = 0;
     let invites = 0;
-    let active = 0;
-    for (const r of base) {
-      completed += r.counts.completed;
-      inProgress += r.counts.accepted;
-      invites += r.counts.invited;
-      if (r.counts.accepted > 0 || r.counts.completed > 0) active += 1;
+    for (const r of rows) {
+      let matched = false;
+      for (const a of r.assignments) {
+        if (anaTrack !== "all" && a.trackCode !== anaTrack) continue;
+        if (anaPathway !== "all" && a.pathway !== anaPathway) continue;
+        matched = true;
+        if (a.status === "submitted") {
+          completed += 1;
+          active.add(r.email);
+        } else if (a.status === "accepted") {
+          inProgress += 1;
+          active.add(r.email);
+        } else if (a.status === "invited") {
+          invites += 1;
+        }
+      }
+      if (matched) reviewers.add(r.email);
     }
-    return { reviewers: base.length, active, completed, inProgress, invites };
-  }, [rows, anaTrack]);
+    return {
+      reviewers: reviewers.size,
+      active: active.size,
+      completed,
+      inProgress,
+      invites,
+    };
+  }, [rows, anaTrack, anaPathway]);
 
   const { list: filtered, available } = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -178,18 +198,30 @@ export function ReviewerManagement({
           <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
             Review analytics
           </h3>
-          <select
-            value={anaTrack}
-            onChange={(e) => setAnaTrack(e.target.value)}
-            className="input max-w-xs text-sm"
-          >
-            <option value="all">All tracks</option>
-            {tracks.map((t) => (
-              <option key={t.code} value={t.code}>
-                {t.code} — {t.name}
-              </option>
-            ))}
-          </select>
+          <div className="flex flex-nowrap items-center gap-2">
+            <select
+              value={anaTrack}
+              onChange={(e) => setAnaTrack(e.target.value)}
+              className="input w-40 shrink-0 text-sm sm:w-48"
+            >
+              <option value="all">All tracks</option>
+              {tracks.map((t) => (
+                <option key={t.code} value={t.code}>
+                  {t.code} — {t.name}
+                </option>
+              ))}
+            </select>
+            <select
+              value={anaPathway}
+              onChange={(e) => setAnaPathway(e.target.value as typeof anaPathway)}
+              className="input w-36 shrink-0 text-sm"
+              aria-label="Pathway filter (analytics)"
+            >
+              <option value="all">All pathways</option>
+              <option value="A">Pathway A</option>
+              <option value="B">Pathway B</option>
+            </select>
+          </div>
         </div>
         <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-5">
           {tiles.map(([label, value, cls]) => (

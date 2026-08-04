@@ -250,11 +250,11 @@ const GUIDELINES: [string, string, boolean?][] = [
   ],
 ];
 
-// Pathway A = blue, Pathway B = amber — matching this page's timeline / route
-// diagram, so the reader sees one consistent colour language.
+// Pathway A = emerald, Pathway B = violet — consistent with the Convener
+// dashboard's pathway badges (see AuthorManagement.tsx).
 const PATHWAY_CLASS = {
-  A: "rounded px-1 font-bold text-blue-800 bg-blue-100 dark:bg-blue-500/20 dark:text-blue-200",
-  B: "rounded px-1 font-bold text-amber-800 bg-amber-100 dark:bg-amber-500/20 dark:text-amber-200",
+  A: "rounded px-1 font-bold text-emerald-700 bg-emerald-100 dark:bg-emerald-500/15 dark:text-emerald-300",
+  B: "rounded px-1 font-bold text-violet-700 bg-violet-100 dark:bg-violet-500/15 dark:text-violet-300",
 } as const;
 
 /** Inline bold+highlighted "Pathway A" / "Pathway B" tag, for prose that also

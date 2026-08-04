@@ -578,6 +578,42 @@ export function AuthorManagement({
                                 </span>
                               )}
                             </div>
+                            {/* Mode — the effective (possibly changed) value. */}
+                            {(() => {
+                              const effMode = r.modeActual ?? r.mode;
+                              const modeChanged =
+                                r.modeActual != null &&
+                                r.mode != null &&
+                                r.modeActual !== r.mode;
+                              return (
+                                <div className="flex items-center justify-between gap-2 text-[11px]">
+                                  <span className="text-slate-500">Mode</span>
+                                  <span className="text-right">
+                                    <span
+                                      className={`rounded px-1.5 py-0 font-medium ${
+                                        effMode === "onsite"
+                                          ? "bg-blue-100 text-blue-800 dark:bg-blue-500/15 dark:text-blue-300"
+                                          : effMode === "virtual"
+                                            ? "bg-teal-100 text-teal-800 dark:bg-teal-500/15 dark:text-teal-300"
+                                            : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
+                                      }`}
+                                    >
+                                      {effMode === "onsite"
+                                        ? "On-site"
+                                        : effMode === "virtual"
+                                          ? "Virtual"
+                                          : "—"}
+                                    </span>
+                                    {modeChanged && (
+                                      <span className="block text-[10px] font-medium text-amber-600">
+                                        changed from{" "}
+                                        {r.mode === "onsite" ? "On-site" : "Virtual"}
+                                      </span>
+                                    )}
+                                  </span>
+                                </div>
+                              );
+                            })()}
                           </div>
                           <button
                             type="button"

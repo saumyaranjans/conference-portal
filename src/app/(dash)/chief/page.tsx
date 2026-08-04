@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireRole } from "@/lib/auth";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { removeTrackChair } from "@/lib/actions";
+import { feeForTier, isEarlyBird } from "@/lib/registrationFees";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { ChairInviteComposer } from "@/components/ChairInviteComposer";
 import { DeleteSubmissionButton } from "@/components/DeleteSubmissionButton";
@@ -50,21 +51,55 @@ export default async function ChiefDashboard() {
 
   const submissions = (subs ?? []) as (Submission & { tracks: any })[];
 
-  // Registration collections recorded by the Editorial Office. That evidence
-  // table is admin-only, so read it with the service client after the chief
-  // check. Defensive: if the certificate migration isn't applied yet the query
-  // returns nothing and the section simply doesn't show.
-  const { data: feeEvidence } = await createAdminClient()
-    .from("participant_certificate_evidence")
-    .select("amount_paid, currency, registration_fee_paid, glogift_member");
+  // Registration collections from the Author Management "Participation desk":
+  // each person marked fee-paid contributes the fee for the tier collected
+  // (Early Bird / Regular) at their category rate, less any GLOGIFT-member
+  // discount. Counted ONCE per person (they pay once, even across papers). Tax
+  // is 18% on top; total is fees + tax.
+  const admin = createAdminClient();
+  const { data: paidRows } = await admin
+    .from("submission_authors")
+    .select("email, participant_category, registration_fee_tier, registration_fee_paid")
+    .eq("registration_fee_paid", true);
+
+  const paidPerPerson = new Map<
+    string,
+    { email: string; category: string | null; tier: "early" | "regular" | null }
+  >();
+  for (const r of (paidRows ?? []) as any[]) {
+    const key = (r.email ?? "").trim().toLowerCase();
+    if (!key || paidPerPerson.has(key)) continue;
+    paidPerPerson.set(key, {
+      email: (r.email ?? "").trim(),
+      category: r.participant_category ?? null,
+      tier: (r.registration_fee_tier as "early" | "regular" | null) ?? null,
+    });
+  }
+
+  const paidEmails = [...paidPerPerson.values()].map((v) => v.email);
+  const memberByEmail = new Map<string, boolean>();
+  if (paidEmails.length) {
+    const { data: profs } = await admin
+      .from("profiles")
+      .select("email, glogift_member")
+      .in("email", paidEmails);
+    for (const p of (profs ?? []) as any[]) {
+      memberByEmail.set((p.email ?? "").trim().toLowerCase(), Boolean(p.glogift_member));
+    }
+  }
+
+  const timelineTier: "early" | "regular" = isEarlyBird() ? "early" : "regular";
   const collectionsByCurrency = new Map<string, number>();
   let memberCount = 0;
-  for (const e of (feeEvidence ?? []) as any[]) {
-    if (e.glogift_member) memberCount += 1;
-    if (e.registration_fee_paid && e.amount_paid) {
-      const cur = e.currency ?? "INR";
-      collectionsByCurrency.set(cur, (collectionsByCurrency.get(cur) ?? 0) + Number(e.amount_paid));
-    }
+  for (const [key, info] of paidPerPerson) {
+    const member = memberByEmail.get(key) ?? false;
+    if (member) memberCount += 1;
+    const fee = feeForTier(info.category, member, info.tier ?? timelineTier);
+    if (!fee.known) continue;
+    collectionsByCurrency.set(
+      fee.currency,
+      (collectionsByCurrency.get(fee.currency) ?? 0) + fee.amount
+    );
   }
   const collections = [...collectionsByCurrency.entries()]
     .map(([currency, amount]) => ({ currency, amount, tax: amount * 0.18, total: amount * 1.18 }))

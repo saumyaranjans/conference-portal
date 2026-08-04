@@ -6,6 +6,7 @@ import {
   type Profile,
   type PublicationOpportunity,
 } from "@/lib/types";
+import { feeForTier, isEarlyBird } from "@/lib/registrationFees";
 import { SignOutButton } from "@/components/SignOutButton";
 import { NotificationBell } from "@/components/NotificationBell";
 import { RoleSwitcher } from "@/components/RoleSwitcher";
@@ -64,17 +65,51 @@ export async function DashboardShell({
     ]);
     visitStats = { today: vToday ?? 0, total: vTotal ?? 0 };
 
-    // Registration revenue recorded by the Editorial Office: base fees per
-    // currency; tax is 18% on top, total is base + tax. Read defensively.
-    const { data: evidence } = await supabase
-      .from("participant_certificate_evidence")
-      .select("amount_paid, currency, registration_fee_paid");
-    const byCurrency = new Map<string, number>();
-    for (const e of (evidence ?? []) as any[]) {
-      if (e.registration_fee_paid && e.amount_paid) {
-        const cur = (e.currency as string) || "INR";
-        byCurrency.set(cur, (byCurrency.get(cur) ?? 0) + Number(e.amount_paid));
+    // Registration revenue from the Author Management "Participation desk":
+    // every person marked fee-paid contributes the fee for the tier collected
+    // (Early Bird / Regular) at their category rate, less any GLOGIFT-member
+    // discount. Counted ONCE per person (they pay once, even on several
+    // papers). Tax is 18% on top; total is fees + tax.
+    const { data: paidRows } = await supabase
+      .from("submission_authors")
+      .select("email, participant_category, registration_fee_tier, registration_fee_paid")
+      .eq("registration_fee_paid", true);
+
+    const perPerson = new Map<
+      string,
+      { email: string; category: string | null; tier: "early" | "regular" | null }
+    >();
+    for (const r of (paidRows ?? []) as any[]) {
+      const key = (r.email ?? "").trim().toLowerCase();
+      if (!key || perPerson.has(key)) continue;
+      perPerson.set(key, {
+        email: (r.email ?? "").trim(),
+        category: r.participant_category ?? null,
+        tier: (r.registration_fee_tier as "early" | "regular" | null) ?? null,
+      });
+    }
+
+    // GLOGIFT membership (15% discount) lives on profiles — match by email.
+    const emails = [...perPerson.values()].map((v) => v.email);
+    const memberByEmail = new Map<string, boolean>();
+    if (emails.length) {
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("email, glogift_member")
+        .in("email", emails);
+      for (const p of (profs ?? []) as any[]) {
+        memberByEmail.set((p.email ?? "").trim().toLowerCase(), Boolean(p.glogift_member));
       }
+    }
+
+    const timelineTier: "early" | "regular" = isEarlyBird() ? "early" : "regular";
+    const byCurrency = new Map<string, number>();
+    for (const [key, info] of perPerson) {
+      // Fall back to the timeline tier for any legacy paid row without one.
+      const tier = info.tier ?? timelineTier;
+      const fee = feeForTier(info.category, memberByEmail.get(key) ?? false, tier);
+      if (!fee.known) continue;
+      byCurrency.set(fee.currency, (byCurrency.get(fee.currency) ?? 0) + fee.amount);
     }
     revenueStats = [...byCurrency.entries()].map(([currency, fees]) => ({
       currency,

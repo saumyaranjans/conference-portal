@@ -497,26 +497,24 @@ export function AuthorManagement({
                         <span className="block rounded-md bg-emerald-50 px-2 py-1 text-center text-[11px] font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
                           ✓ Certificate generated
                         </span>
+                      ) : r.attended && r.registered && r.paid ? (
+                        // The Generate control appears only once attendance,
+                        // registration AND payment are all recorded.
+                        <ActionForm action={generateParticipationCertificates}>
+                          <input type="hidden" name="email" value={r.email} />
+                          <SubmitButton
+                            variant="primary"
+                            className="w-full justify-center text-[11px] py-0.5 px-2"
+                          >
+                            {r.certsGenerated > 0
+                              ? "Generate remaining"
+                              : "Generate certificate"}
+                          </SubmitButton>
+                        </ActionForm>
                       ) : (
-                        <>
-                          <ActionForm action={generateParticipationCertificates}>
-                            <input type="hidden" name="email" value={r.email} />
-                            <SubmitButton
-                              variant="primary"
-                              disabled={!(r.attended && r.paid)}
-                              className="w-full justify-center text-[11px] py-0.5 px-2 disabled:opacity-40 disabled:cursor-not-allowed"
-                            >
-                              {r.certsGenerated > 0
-                                ? "Generate remaining"
-                                : "Generate certificate"}
-                            </SubmitButton>
-                          </ActionForm>
-                          {!(r.attended && r.paid) && (
-                            <span className="block text-center text-[10px] text-slate-400">
-                              Mark attended &amp; paid first
-                            </span>
-                          )}
-                        </>
+                        <span className="block text-center text-[10px] text-slate-400">
+                          Mark attended, registered &amp; paid to generate
+                        </span>
                       )}
                     </div>
                   </td>

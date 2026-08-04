@@ -123,7 +123,7 @@ function LatticeSlideMobile() {
 
       <text x="500" y="320" textAnchor="middle" fill="#ffffff" fontSize="96"
         fontWeight="800" fontFamily="Georgia, 'Times New Roman', serif">
-        GLOGIFT 2027
+        GLOGIFT 27
       </text>
       <text x="500" y="378" textAnchor="middle" fill="#a5b4fc" fontSize="28"
         letterSpacing="6" fontWeight="600" fontFamily="system-ui, sans-serif">
@@ -251,7 +251,7 @@ function LatticeSlide() {
         fontFamily="Georgia, 'Times New Roman', serif"
         letterSpacing="2"
       >
-        GLOGIFT 2027
+        GLOGIFT 27
       </text>
 
       <text

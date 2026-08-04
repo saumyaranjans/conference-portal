@@ -2,18 +2,73 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import "./globals.css";
 
+const SITE_URL = "https://glogift2027.in";
+const SITE_TITLE =
+  "GLOGIFT 27 — International Conference on AI-Driven Solutions in Management";
+const SITE_DESC =
+  "GLOGIFT 27 (Twenty Seventh Global Conference on Flexible Systems Management) — International Conference on AI-Driven Solutions in Management: Flexibility, Digitalisation & Decarbonization. 25–27 February 2027 at IIM Sambalpur, India. Call for papers across ten tracks; in-person and hybrid.";
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://glogift2027.in"),
-  title: "GLOGIFT2027 - IIM SAMBALPUR",
-  description:
-    "International Conference on AI-Driven Solutions in Management: Flexibility, Digitalisation and Decarbonization — GLOGIFT 27, IIM Sambalpur.",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: SITE_TITLE,
+    template: "%s · GLOGIFT 27",
+  },
+  description: SITE_DESC,
+  applicationName: "GLOGIFT 27",
+  keywords: [
+    "GLOGIFT 27",
+    "GLOGIFT 2027",
+    "Flexible Systems Management",
+    "AI in management conference",
+    "IIM Sambalpur conference",
+    "management conference 2027 India",
+    "call for papers management",
+    "AI-Driven Solutions in Management",
+    "digitalisation",
+    "decarbonization",
+    "GIFT Society",
+  ],
+  authors: [{ name: "IIM Sambalpur · GIFT Society" }],
+  creator: "IIM Sambalpur",
+  publisher: "IIM Sambalpur",
+  category: "education",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
   openGraph: {
-    title: "GLOGIFT2027 - IIM SAMBALPUR",
-    description:
-      "International Conference on AI-Driven Solutions in Management: Flexibility, Digitalisation and Decarbonization — GLOGIFT 27, IIM Sambalpur.",
-    url: "https://glogift2027.in",
-    siteName: "GLOGIFT2027 - IIM SAMBALPUR",
+    title: SITE_TITLE,
+    description: SITE_DESC,
+    url: SITE_URL,
+    siteName: "GLOGIFT 27",
     type: "website",
+    locale: "en_IN",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "GLOGIFT 27 — International Conference on AI-Driven Solutions in Management, IIM Sambalpur, 25–27 February 2027",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_TITLE,
+    description: SITE_DESC,
+    images: ["/og-image.png"],
+  },
+  icons: {
+    icon: "/glogift-logo.png",
+    apple: "/glogift-logo.png",
   },
 };
 

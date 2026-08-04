@@ -10,6 +10,7 @@ import {
 } from "@/lib/nameIndex";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { generateReviewerCertificate } from "@/lib/reviewerCertificateActions";
+import { MAX_REVIEWS_PER_REVIEWER } from "@/lib/types";
 
 export type ReviewerAssignment = {
   paperId: string;
@@ -436,9 +437,19 @@ export function ReviewerManagement({
                     )}
                     <span className="block text-xs text-slate-500">{r.email}</span>
                     {/* Workload summary */}
+                    {(() => {
+                      const held = r.counts.assigned - r.counts.declined;
+                      const remaining = Math.max(
+                        0,
+                        MAX_REVIEWS_PER_REVIEWER - held
+                      );
+                      return (
                     <div className="mt-2 flex flex-col items-start gap-1 border-t border-slate-100 pt-2 text-[11px] dark:border-slate-800">
                       <span className="text-slate-600">
-                        Assigned: <b>{r.counts.assigned}</b>
+                        Assigned: <b>{r.counts.assigned}</b>{" "}
+                        <span className="text-slate-400">
+                          of {MAX_REVIEWS_PER_REVIEWER} max
+                        </span>
                       </span>
                       <span className="flex flex-wrap gap-1">
                         <span className={`badge ${PATHWAY_CLASS.A}`}>
@@ -447,6 +458,18 @@ export function ReviewerManagement({
                         <span className={`badge ${PATHWAY_CLASS.B}`}>
                           Pathway B: {r.counts.pathwayB}
                         </span>
+                      </span>
+                      <span
+                        className={`badge ${
+                          remaining > 0
+                            ? "bg-indigo-100 text-indigo-800"
+                            : "bg-slate-200 text-slate-600"
+                        }`}
+                        title={`Cap ${MAX_REVIEWS_PER_REVIEWER} papers total; declined don't count. Remaining can go to either pathway.`}
+                      >
+                        {remaining > 0
+                          ? `Can take ${remaining} more (either pathway)`
+                          : "At capacity"}
                       </span>
                       <span className="flex flex-wrap gap-1">
                         {r.counts.invited > 0 && (
@@ -476,6 +499,8 @@ export function ReviewerManagement({
                         )}
                       </span>
                     </div>
+                      );
+                    })()}
                   </td>
                   <td className="td">
                     {r.assignments.length === 0 ? (

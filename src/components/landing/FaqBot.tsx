@@ -82,7 +82,7 @@ export function FaqBot({ items }: { items: FaqItem[] }) {
   const [msgs, setMsgs] = useState<Msg[]>([
     {
       role: "bot",
-      text: "Hi, I'm Toshi — your GLOGIFT 27 assistant. Ask me about dates, submission, fees, publication or registration, or tap a question below.",
+      text: "Hi, I'm Toshi — your GLOGIFT 27 assistant. Ask me about dates, submission, fees, publication or registration, or tap a question above.",
     },
   ]);
   const bodyRef = useRef<HTMLDivElement>(null);
@@ -146,25 +146,8 @@ export function FaqBot({ items }: { items: FaqItem[] }) {
           </div>
 
           <div ref={bodyRef} className="flex-1 space-y-3 overflow-y-auto px-3 py-3">
-            {msgs.map((m, i) => (
-              <div
-                key={i}
-                className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
-              >
-                <div
-                  className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm leading-relaxed ${
-                    m.role === "user"
-                      ? "rounded-br-sm bg-blue-600 text-white"
-                      : "rounded-bl-sm bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-100"
-                  }`}
-                >
-                  {m.text}
-                </div>
-              </div>
-            ))}
-
-            {/* Suggested questions */}
-            <div className="pt-1">
+            {/* Suggested questions — above the conversation */}
+            <div className="pb-1">
               <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
                 Suggested questions
               </p>
@@ -181,6 +164,24 @@ export function FaqBot({ items }: { items: FaqItem[] }) {
                 ))}
               </div>
             </div>
+
+            {/* Conversation — questions above, responses below */}
+            {msgs.map((m, i) => (
+              <div
+                key={i}
+                className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
+              >
+                <div
+                  className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm leading-relaxed ${
+                    m.role === "user"
+                      ? "rounded-br-sm bg-blue-600 text-white"
+                      : "rounded-bl-sm bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-100"
+                  }`}
+                >
+                  {m.text}
+                </div>
+              </div>
+            ))}
           </div>
 
           <form
@@ -211,21 +212,21 @@ export function FaqBot({ items }: { items: FaqItem[] }) {
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-label={open ? "Close assistant" : "Ask Toshi — FAQ assistant"}
-        className={`fixed bottom-6 right-6 z-[9999] flex items-center gap-2 rounded-full bg-gradient-to-br from-[#1d4ed8] to-[#0e7490] py-2 pl-2 pr-4 text-sm font-semibold text-white shadow-xl transition-all duration-300 hover:scale-105 ${
+        className={`fixed bottom-6 right-6 z-[9999] flex items-center gap-1.5 rounded-full bg-gradient-to-br from-[#1d4ed8] to-[#0e7490] py-1 pl-1 pr-3 text-xs font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 ${
           visible
             ? "translate-y-0 opacity-100"
             : "pointer-events-none translate-y-3 opacity-0"
         }`}
       >
         <span
-          className={`grid h-9 w-9 place-items-center overflow-hidden rounded-full bg-white/20 ${
+          className={`grid h-7 w-7 place-items-center overflow-hidden rounded-full bg-white/20 ${
             open ? "" : "animate-bounce"
           }`}
         >
           {open ? (
-            <span className="text-lg">✕</span>
+            <span className="text-sm">✕</span>
           ) : (
-            <ToshiAvatar className="h-8 w-8" />
+            <ToshiAvatar className="h-6 w-6" />
           )}
         </span>
         <span>{open ? "Close" : "Ask Toshi"}</span>

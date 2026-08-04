@@ -99,12 +99,16 @@ export function AuthorManagement({
   const [pathwayFilter, setPathwayFilter] = useState<"all" | "A" | "B">("all");
   // Active alphabet-index letter ("all" = every author).
   const [letter, setLetter] = useState<string>("all");
-  // Track filter for the Registration analytics panel (independent of the table).
+  // Track + pathway filters for the Registration analytics panel (independent
+  // of the table filters).
   const [anaTrack, setAnaTrack] = useState("all");
+  const [anaPathway, setAnaPathway] = useState<"all" | "A" | "B">("all");
 
   const analytics = useMemo(() => {
     const base = rows.filter(
-      (r) => anaTrack === "all" || r.trackCodes.includes(anaTrack)
+      (r) =>
+        (anaTrack === "all" || r.trackCodes.includes(anaTrack)) &&
+        (anaPathway === "all" || r.papers.some((p) => p.pathway === anaPathway))
     );
     const registered = base.filter((r) => r.registered);
     let onsite = 0;
@@ -121,6 +125,7 @@ export function AuthorManagement({
     for (const r of rows) {
       for (const p of r.papers) {
         if (anaTrack !== "all" && p.trackCode !== anaTrack) continue;
+        if (anaPathway !== "all" && p.pathway !== anaPathway) continue;
         if (!paperMap.has(p.paperId))
           paperMap.set(p.paperId, { pathway: p.pathway, reverted: p.reverted });
       }
@@ -137,7 +142,7 @@ export function AuthorManagement({
       pathwayB: papers.filter((p) => p.pathway === "B").length,
       cancelledBtoA: papers.filter((p) => p.reverted).length,
     };
-  }, [rows, anaTrack]);
+  }, [rows, anaTrack, anaPathway]);
 
   // Download the currently-filtered list as a spreadsheet (CSV, opens in
   // Excel). Row 1 records the active filters; row 2 is the column header.
@@ -265,18 +270,30 @@ export function AuthorManagement({
           <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
             Registration analytics
           </h3>
-          <select
-            value={anaTrack}
-            onChange={(e) => setAnaTrack(e.target.value)}
-            className="input max-w-xs text-sm"
-          >
-            <option value="all">All tracks</option>
-            {tracks.map((t) => (
-              <option key={t.code} value={t.code}>
-                {t.code} — {t.name}
-              </option>
-            ))}
-          </select>
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              value={anaTrack}
+              onChange={(e) => setAnaTrack(e.target.value)}
+              className="input max-w-xs text-sm"
+            >
+              <option value="all">All tracks</option>
+              {tracks.map((t) => (
+                <option key={t.code} value={t.code}>
+                  {t.code} — {t.name}
+                </option>
+              ))}
+            </select>
+            <select
+              value={anaPathway}
+              onChange={(e) => setAnaPathway(e.target.value as typeof anaPathway)}
+              className="input max-w-xs text-sm"
+              aria-label="Pathway filter (analytics)"
+            >
+              <option value="all">All pathways</option>
+              <option value="A">Pathway A</option>
+              <option value="B">Pathway B</option>
+            </select>
+          </div>
         </div>
         <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-500/30 dark:bg-emerald-500/10">

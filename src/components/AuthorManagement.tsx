@@ -287,6 +287,38 @@ export function AuthorManagement({
                         </span>
                       )}
                     </div>
+
+                    {/* Actual, as on today: confirmed attendance (from the
+                        Participation desk) + the mode they are attending in. */}
+                    <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                      <span className="text-[11px] font-medium text-slate-500">
+                        Actual (as on today):
+                      </span>
+                      {r.attended ? (
+                        <span className="badge bg-emerald-100 text-emerald-800">
+                          Attended
+                        </span>
+                      ) : (
+                        <span className="badge bg-slate-100 text-slate-500">
+                          Not attended
+                        </span>
+                      )}
+                      {r.mode && (
+                        <span
+                          className={`badge ${
+                            r.mode === "onsite"
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-teal-100 text-teal-800"
+                          }`}
+                        >
+                          {r.mode === "onsite"
+                            ? "On-site"
+                            : r.mode === "virtual"
+                              ? "Virtual"
+                              : r.mode}
+                        </span>
+                      )}
+                    </div>
                   </td>
 
                   {/* Role & status (role + sign-up + registration) */}

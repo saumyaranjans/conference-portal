@@ -270,11 +270,11 @@ export function AuthorManagement({
           <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
             Registration analytics
           </h3>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-nowrap items-center gap-2">
             <select
               value={anaTrack}
               onChange={(e) => setAnaTrack(e.target.value)}
-              className="input max-w-xs text-sm"
+              className="input w-40 shrink-0 text-sm sm:w-48"
             >
               <option value="all">All tracks</option>
               {tracks.map((t) => (
@@ -286,7 +286,7 @@ export function AuthorManagement({
             <select
               value={anaPathway}
               onChange={(e) => setAnaPathway(e.target.value as typeof anaPathway)}
-              className="input max-w-xs text-sm"
+              className="input w-36 shrink-0 text-sm"
               aria-label="Pathway filter (analytics)"
             >
               <option value="all">All pathways</option>

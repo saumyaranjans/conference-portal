@@ -1,4 +1,8 @@
 import Link from "next/link";
+import {
+  DeadlineCountdown,
+  type Deadline,
+} from "@/components/landing/DeadlineCountdown";
 import { Banner } from "@/components/landing/Banner";
 import { IkatStrip } from "@/components/landing/IkatStrip";
 import { BackToTop } from "@/components/landing/BackToTop";
@@ -113,6 +117,41 @@ const MILESTONES = [
     note: "IIM Sambalpur",
     dot: "bg-pink-600",
     halo: "group-hover:shadow-pink-600/50",
+  },
+];
+
+// Action deadlines for the live countdown, in chronological order. It shows
+// the next one still in the future and auto-advances as each passes.
+const DEADLINES: Deadline[] = [
+  {
+    label: "Abstract submission",
+    date: "2026-11-23",
+    ctaLabel: "Submit your abstract",
+    ctaHref: "/signup",
+  },
+  {
+    label: "Full paper submission (Pathway B)",
+    date: "2026-12-08",
+    ctaLabel: "Submit your full paper",
+    ctaHref: "/login",
+  },
+  {
+    label: "Early-bird registration",
+    date: "2026-12-20",
+    ctaLabel: "Register — early bird",
+    ctaHref: "/login",
+  },
+  {
+    label: "Regular registration",
+    date: "2027-01-24",
+    ctaLabel: "Register now",
+    ctaHref: "/login",
+  },
+  {
+    label: "Conference begins",
+    date: "2027-02-25",
+    ctaLabel: "See important dates",
+    ctaHref: "#dates",
   },
 ];
 
@@ -585,6 +624,9 @@ export function LandingPage() {
         <section className="space-y-4">
           <Banner />
         </section>
+
+        {/* ---- Deadline countdown + call to action ---- */}
+        <DeadlineCountdown deadlines={DEADLINES} />
 
         {/* ---- 1. About ---- */}
         <section>

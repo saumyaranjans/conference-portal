@@ -289,7 +289,7 @@ const LEADERSHIP = [
   {
     name: "Prof (Dr) Sushil",
     role: "GLOGIFT President",
-    org: "Founder, GLOGIFT Society · Emeritus Professor, IIT Delhi",
+    org: "Founder, GIFT Society · Emeritus Professor, IIT Delhi",
   },
   {
     name: "Prof (Dr) Seema Gupta",
@@ -570,7 +570,7 @@ export function LandingPage() {
                 Flexibility, Digitalisation &amp; Decarbonization
               </strong>{" "}
               is jointly organised by the Indian Institute of Management
-              Sambalpur and the GLOGIFT Society — Global Institute of Flexible
+              Sambalpur and the GIFT Society — Global Institute of Flexible
               Systems Management — at IIM Sambalpur, Odisha, from 25 to 27
               February 2027.
             </p>
@@ -886,7 +886,7 @@ export function LandingPage() {
             </table>
           </div>
           <p className="text-sm leading-relaxed text-blue-900 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 dark:text-blue-100 dark:bg-blue-500/15 dark:border-blue-500/40">
-            <strong>GLOGIFT Society members</strong> can avail a{" "}
+            <strong>GIFT Society members</strong> can avail a{" "}
             <strong>15% discount on registration fees</strong> only, by applying
             the coupon code shared by the conference organizers or the GLOGIFT
             Society at the time of registration check-out.
@@ -1177,7 +1177,7 @@ export function LandingPage() {
                 Co-organised with
               </p>
               <p className="text-slate-600 mt-1 dark:text-slate-400">
-                GLOGIFT Society — Global Institute of Flexible Systems
+                GIFT Society — Global Institute of Flexible Systems
                 Management
                 <br />
                 B-51 (Basement), Sarvodaya Enclave, New Delhi 110017

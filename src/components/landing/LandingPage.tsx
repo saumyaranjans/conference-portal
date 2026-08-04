@@ -907,12 +907,14 @@ export function LandingPage() {
               {/* Content — centred on mobile, left-aligned on desktop */}
               <div className="text-center sm:text-left">
                 <h3 className="text-lg font-bold text-white sm:text-xl">
-                  Ready to present your research at GLOGIFT 27?
+                  We warmly welcome you to IIM Sambalpur 🙏
                 </h3>
                 <p className="mt-1 text-sm leading-relaxed text-blue-100">
-                  Submit a 500-word abstract across ten tracks — accepted papers
-                  appear in the ISBN proceedings, with selected papers in
-                  ABDC-listed journals and a Scopus-indexed book.
+                  Be part of GLOGIFT 27 — submit a 500-word abstract across ten
+                  tracks. Accepted papers appear in the ISBN proceedings, with
+                  selected papers in ABDC-listed journals and a Scopus-indexed
+                  book. We look forward to hosting you on campus, 25–27 February
+                  2027.
                 </p>
                 <div className="mt-3 flex flex-wrap justify-center gap-2 text-[11px] font-medium text-blue-100 sm:justify-start">
                   {[

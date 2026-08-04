@@ -625,6 +625,9 @@ export function LandingPage() {
           <Banner />
         </section>
 
+        {/* ---- Deadline countdown + call to action ---- */}
+        <DeadlineCountdown deadlines={DEADLINES} />
+
         {/* ---- 1. About ---- */}
         <section>
           <Heading id="about">About GLOGIFT 27</Heading>
@@ -918,8 +921,10 @@ export function LandingPage() {
               "Choosing Pathway B keeps you in the Pathway A (abstract) phase until your abstract is accepted. Even after acceptance, the corresponding author may still return to Pathway A and present on the accepted abstract, or continue to submit the full manuscript under Pathway B."
             )}
           </p>
-          <div className="mt-6">
-            <DeadlineCountdown deadlines={DEADLINES} />
+          <div className="mt-4 flex justify-center">
+            <Link href="/login" className="btn-primary px-6 py-3">
+              Go to the submission portal
+            </Link>
           </div>
         </section>
 

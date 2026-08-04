@@ -909,9 +909,7 @@ export function LandingPage() {
                 <p className="text-sm leading-relaxed text-blue-100">
                   Be part of GLOGIFT 27 — submit a 500-word abstract across ten
                   tracks. We look forward to hosting you on campus, 25–27
-                  February 2027.
-                </p>
-                <div className="mt-3 flex flex-wrap justify-center gap-2 text-[11px] font-medium text-blue-100 sm:justify-start">
+                  February 2027.{" "}
                   {[
                     "⭐ ABDC-Listed Journals",
                     "📖 Scopus-Indexed Book",
@@ -920,12 +918,12 @@ export function LandingPage() {
                   ].map((chip) => (
                     <span
                       key={chip}
-                      className="rounded-full bg-white/10 px-3 py-1 ring-1 ring-white/15"
+                      className="mr-1.5 mt-1.5 inline-flex items-center whitespace-nowrap rounded-full bg-white/10 px-2.5 py-0.5 align-middle text-[11px] font-medium ring-1 ring-white/15"
                     >
                       {chip}
                     </span>
                   ))}
-                </div>
+                </p>
               </div>
               {/* CTA — on the right */}
               <Link

@@ -180,6 +180,30 @@ const FAQ_ITEMS: { q: string; a: string }[] = [
     q: "Will accepted papers be published?",
     a: "All accepted and presented papers appear in the GLOGIFT 27 Conference Proceedings (a volume with ISBN). Selected best papers may be fast-tracked, after further peer review, to associated journals and edited volumes.",
   },
+  {
+    q: "How do I register and submit my work?",
+    a: "Create an account on the submission portal, submit your 500-word abstract under the relevant track, and complete registration. Corresponding authors manage co-authors, revisions and the camera-ready copy from the same dashboard.",
+  },
+  {
+    q: "Is there a discount for GIFT Society members?",
+    a: "Yes — GIFT Society members receive a 15% discount on the registration fee. Indicate your membership at sign-up (with your membership number) to have the discount applied.",
+  },
+  {
+    q: "Can I attend and present online (hybrid)?",
+    a: "Yes. GLOGIFT 27 runs in person at IIM Sambalpur with a hybrid option. Virtual delegates present remotely and receive an e-certificate of participation; the Book of Abstracts and the ISBN Proceedings reach every participant digitally.",
+  },
+  {
+    q: "What are the key dates I should track?",
+    a: "Abstract submission opens 7 Aug 2026 and closes 23 Nov 2026; abstract decisions on 30 Nov 2026; full-paper (Pathway B) submission closes 8 Dec 2026 with decisions by 15 Dec 2026; early-bird registration closes 20 Dec 2026; regular registration closes 24 Jan 2027; the conference runs 25–27 Feb 2027.",
+  },
+  {
+    q: "Will I receive a certificate?",
+    a: "Yes. Presenting authors receive a certificate of participation and presentation; reviewers and Track Editors receive certificates of appreciation for their service. On-site delegates receive printed certificates; virtual delegates receive e-certificates.",
+  },
+  {
+    q: "Who do I contact for queries?",
+    a: "Write to the Conference Chair at glogift27.chair@iimsambalpur.ac.in or the Coordinator at glogift27.coordinator@iimsambalpur.ac.in. GLOGIFT 27 is organised by IIM Sambalpur with the GIFT Society (Global Institute of Flexible Systems Management).",
+  },
 ];
 
 const PUBLICATIONS = [
@@ -1335,16 +1359,22 @@ export function LandingPage() {
         {/* ---- FAQ ---- */}
         <section>
           <Heading id="faq">Frequently asked questions</Heading>
-          <div className="card divide-y divide-slate-100 dark:divide-slate-800">
+          <div className="columns-1 gap-4 sm:columns-2 [&>details]:mb-4 [&>details]:break-inside-avoid">
             {FAQ_ITEMS.map((f) => (
-              <details key={f.q} className="group px-5 py-4">
-                <summary className="flex cursor-pointer items-center justify-between gap-4 text-sm font-medium text-slate-900 marker:content-none dark:text-slate-100">
-                  {f.q}
-                  <span className="text-blue-600 transition-transform group-open:rotate-45">
+              <details
+                key={f.q}
+                className="group rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:border-blue-300 hover:shadow-md open:border-blue-300 open:shadow-md dark:border-slate-700 dark:bg-slate-800/60 dark:open:border-blue-500/40"
+              >
+                <summary className="flex cursor-pointer list-none items-start gap-3 text-sm font-semibold text-slate-900 marker:content-none dark:text-slate-100">
+                  <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-700 transition-colors group-open:bg-blue-600 group-open:text-white dark:bg-blue-500/20 dark:text-blue-300">
+                    Q
+                  </span>
+                  <span className="flex-1">{f.q}</span>
+                  <span className="text-xl leading-none text-blue-500 transition-transform duration-200 group-open:rotate-45">
                     +
                   </span>
                 </summary>
-                <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                <p className="mt-3 pl-9 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
                   {f.a}
                 </p>
               </details>

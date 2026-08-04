@@ -524,7 +524,7 @@ export function ReviewerManagement({
                             const open = openPaper === key;
                             return (
                               <tr key={key} className="align-top">
-                                <td className="relative pr-3 py-0.5 font-mono">
+                                <td className="relative whitespace-nowrap pr-3 py-0.5 font-mono">
                                   <button
                                     type="button"
                                     onClick={() => setOpenPaper(open ? null : key)}

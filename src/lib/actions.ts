@@ -5371,6 +5371,59 @@ export async function saveParticipationStatus(
   };
 }
 
+/**
+ * Reset a person's participation desk back to blank: not attended, not
+ * registered, no fee, no tier, and no mode override. Clears the audit
+ * timestamps/actors too. Used by the "Reset" control in Author Management.
+ */
+export async function resetParticipationStatus(
+  formData: FormData
+): Promise<ActionResult> {
+  const profile = await requireRole("chief", "admin");
+  const supabase = createAdminClient();
+
+  const email = String(formData.get("email") ?? "").trim();
+  if (!email) return { ok: false, message: "Missing author email." };
+
+  const patch: Record<string, unknown> = {
+    attended_confirmed: false,
+    attendance_confirmed_at: null,
+    attendance_confirmed_by: null,
+    registration_confirmed: false,
+    registration_confirmed_at: null,
+    registration_confirmed_by: null,
+    registration_fee_paid: false,
+    registration_fee_paid_at: null,
+    registration_fee_paid_by: null,
+    registration_fee_tier: null,
+    participation_mode_actual: null,
+  };
+
+  const { data: rows, error } = await supabase
+    .from("submission_authors")
+    .update(patch)
+    .ilike("email", email)
+    .select("id");
+  if (error) return { ok: false, message: error.message };
+
+  await audit(
+    profile.id,
+    "participation.reset",
+    "submission_author",
+    rows?.[0]?.id ?? null,
+    { email, rows: rows?.length ?? 0, via: "author-management" }
+  );
+
+  revalidatePath("/chief/authors");
+  revalidatePath("/admin/authors");
+  return {
+    ok: true,
+    message: `Participation status reset (${rows?.length ?? 0} record${
+      (rows?.length ?? 0) === 1 ? "" : "s"
+    }).`,
+  };
+}
+
 /** Editorial Office / Convener records that a listed author paid the
  *  registration fee, alongside attendance. */
 export async function markRegistrationFee(

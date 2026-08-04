@@ -7,7 +7,10 @@ import {
   type RegistrationFee,
 } from "@/lib/registrationFees";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
-import { saveParticipationStatus } from "@/lib/actions";
+import {
+  saveParticipationStatus,
+  resetParticipationStatus,
+} from "@/lib/actions";
 import { generateParticipationCertificates } from "@/lib/participationCertificateActions";
 
 export type PersonRow = {
@@ -232,6 +235,8 @@ export function AuthorManagement({
   const [openPaper, setOpenPaper] = useState<string | null>(null);
   // Which person's participation desk is in edit mode (by email).
   const [editEmail, setEditEmail] = useState<string | null>(null);
+  // Per-author confirmation gate for the certificate actions (keyed by email).
+  const [certUnlocked, setCertUnlocked] = useState<Record<string, boolean>>({});
 
   const { list: filtered, available } = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -797,6 +802,7 @@ export function AuthorManagement({
                     {/* Attendance · Registration · Payment — editable desk */}
                     <div className="mt-2.5 space-y-1.5 border-t border-slate-100 pt-2 dark:border-slate-800">
                       {editEmail === r.email ? (
+                        <>
                         <ActionForm
                           action={saveParticipationStatus}
                           onDone={() => setEditEmail(null)}
@@ -895,6 +901,20 @@ export function AuthorManagement({
                             </button>
                           </div>
                         </ActionForm>
+                        <ActionForm
+                          action={resetParticipationStatus}
+                          onDone={() => setEditEmail(null)}
+                          confirm="Reset this author's participation — attendance, registration, fee and mode — back to blank? This does not delete any certificate already generated."
+                        >
+                          <input type="hidden" name="email" value={r.email} />
+                          <SubmitButton
+                            variant="danger"
+                            className="mt-1 w-full justify-center text-[11px] py-0.5 px-2"
+                          >
+                            Reset participation
+                          </SubmitButton>
+                        </ActionForm>
+                        </>
                       ) : (
                         <>
                           <div className="space-y-1">
@@ -993,31 +1013,69 @@ export function AuthorManagement({
                         </span>
                       ) : r.attended && r.registered && r.paid ? (
                         // The Preview + Generate controls appear only once
-                        // attendance, registration AND payment are all recorded.
-                        <div className="space-y-1">
-                          <a
-                            href={`/api/participation-certificate/preview?email=${encodeURIComponent(
-                              r.email
-                            )}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="btn-secondary block w-full justify-center text-center text-[11px] py-0.5 px-2"
-                            title="Open the certificate as it will look — nothing is saved or emailed"
-                          >
-                            Preview certificate
-                          </a>
-                          <ActionForm action={generateParticipationCertificates}>
-                            <input type="hidden" name="email" value={r.email} />
-                            <SubmitButton
-                              variant="primary"
-                              className="w-full justify-center text-[11px] py-0.5 px-2"
-                            >
-                              {r.certsGenerated > 0
-                                ? "Generate remaining"
-                                : "Generate certificate"}
-                            </SubmitButton>
-                          </ActionForm>
-                        </div>
+                        // attendance, registration AND payment are all recorded,
+                        // and are unlocked by an explicit verification checkbox.
+                        (() => {
+                          const unlocked = !!certUnlocked[r.email];
+                          return (
+                            <div className="space-y-1">
+                              <label className="flex items-start gap-1.5 rounded-md border border-slate-200 px-2 py-1 text-[10px] leading-tight text-slate-600 dark:border-slate-700 dark:text-slate-300">
+                                <input
+                                  type="checkbox"
+                                  checked={unlocked}
+                                  onChange={(e) =>
+                                    setCertUnlocked((s) => ({
+                                      ...s,
+                                      [r.email]: e.target.checked,
+                                    }))
+                                  }
+                                  className="mt-0.5 shrink-0"
+                                />
+                                <span>
+                                  I&apos;ve verified this author — enable preview
+                                  &amp; generate
+                                </span>
+                              </label>
+                              <a
+                                href={
+                                  unlocked
+                                    ? `/api/participation-certificate/preview?email=${encodeURIComponent(
+                                        r.email
+                                      )}`
+                                    : undefined
+                                }
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-disabled={!unlocked}
+                                tabIndex={unlocked ? 0 : -1}
+                                className={`btn-secondary block w-full justify-center text-center text-[11px] py-0.5 px-2 ${
+                                  unlocked ? "" : "pointer-events-none opacity-40"
+                                }`}
+                                title={
+                                  unlocked
+                                    ? "Open the certificate as it will look — nothing is saved or emailed"
+                                    : "Tick the checkbox above to enable"
+                                }
+                              >
+                                Preview certificate
+                              </a>
+                              <ActionForm action={generateParticipationCertificates}>
+                                <input type="hidden" name="email" value={r.email} />
+                                <SubmitButton
+                                  variant="primary"
+                                  disabled={!unlocked}
+                                  className={`w-full justify-center text-[11px] py-0.5 px-2 ${
+                                    unlocked ? "" : "cursor-not-allowed opacity-40"
+                                  }`}
+                                >
+                                  {r.certsGenerated > 0
+                                    ? "Generate remaining"
+                                    : "Generate certificate"}
+                                </SubmitButton>
+                              </ActionForm>
+                            </div>
+                          );
+                        })()
                       ) : (
                         <span className="block text-center text-[10px] text-slate-400">
                           Mark attended, registered &amp; paid to generate

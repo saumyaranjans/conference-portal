@@ -210,12 +210,13 @@ export async function generateParticipationCertificates(
       const brand = conf.acronym
         ? `${conf.acronym} ${String(conf.year).slice(-2)}`
         : "GLOGIFT 27";
+      const base = process.env.NEXT_PUBLIC_SITE_URL || "https://glogift2027.in";
       const { subject, body } = participationCertificateReadyEmail({
         recipientName: eligible[0]?.full_name ?? undefined,
         paperCount: generated,
         conferenceName: conf.name,
         brand,
-        dashboardUrl: process.env.NEXT_PUBLIC_SITE_URL || "https://glogift2027.in",
+        dashboardUrl: `${base.replace(/\/$/, "")}/author`,
       });
       await sendEmail({
         to: email,

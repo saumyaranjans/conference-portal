@@ -663,25 +663,27 @@ export function participationCertificateReadyEmail(o: {
   const brand = o.brand || CONF_DEFAULT;
   const conf = o.conferenceName || CONF_DEFAULT;
   const many = o.paperCount > 1;
-  const subject = `${brand} — Your participation certificate is ready to download`;
+  const subject = `${brand} — Thank you for participating · your Certificate of Participation is ready`;
   const body = compose([
     greeting(o.recipientName ?? undefined),
     "",
-    `Thank you for your participation in ${conf}. Your Certificate of Participation${
+    `Thank you for being part of ${conf}. It was a privilege to host you, and we are obliged for your support and contribution to the conference.`,
+    "",
+    `In appreciation, your Certificate of Participation${
       many ? "s have" : " has"
     } now been generated.`,
     "",
-    `You can download ${
-      many ? "them" : "it"
-    } from your submission dashboard: open ${
+    `You can download ${many ? "them" : "it"} any time from the submission portal:`,
+    `• Sign in to your account and open your dashboard: ${o.dashboardUrl}`,
+    `• Open ${
       many ? "each of your papers" : "your paper"
     } and use the “Download Participation Certificate” button.`,
     "",
-    `Dashboard: ${o.dashboardUrl}`,
+    "We look forward to your continued association with the conference.",
     "",
     "This is a system-generated email — please do not reply. For any query, kindly write to the conference organisers.",
     "",
-    "With warm regards,",
+    "With gratitude,",
     `Editorial Office, ${brand}`,
   ]);
   return { subject, body };

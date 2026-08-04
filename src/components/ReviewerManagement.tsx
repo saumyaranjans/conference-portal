@@ -305,7 +305,7 @@ export function ReviewerManagement({
           <table className="min-w-full divide-y divide-slate-200">
             <thead>
               <tr>
-                {["Reviewer", "Assignments (Paper · Track · Status)", "Workload"].map(
+                {["Reviewer & workload", "Assignments (Paper · Track · Pathway · Status)"].map(
                   (h) => (
                     <th key={h} className="th">
                       {h}
@@ -317,7 +317,7 @@ export function ReviewerManagement({
             <tbody className="divide-y divide-slate-100">
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={3} className="td py-8 text-center text-slate-400">
+                  <td colSpan={2} className="td py-8 text-center text-slate-400">
                     No reviewers match your filters.
                   </td>
                 </tr>
@@ -335,6 +335,47 @@ export function ReviewerManagement({
                         {r.affiliation}
                       </span>
                     )}
+                    {/* Workload summary */}
+                    <div className="mt-2 flex flex-col items-start gap-1 border-t border-slate-100 pt-2 text-[11px] dark:border-slate-800">
+                      <span className="text-slate-600">
+                        Assigned: <b>{r.counts.assigned}</b>
+                      </span>
+                      <span className="flex flex-wrap gap-1">
+                        <span className={`badge ${PATHWAY_CLASS.A}`}>
+                          Pathway A: {r.counts.pathwayA}
+                        </span>
+                        <span className={`badge ${PATHWAY_CLASS.B}`}>
+                          Pathway B: {r.counts.pathwayB}
+                        </span>
+                      </span>
+                      <span className="flex flex-wrap gap-1">
+                        {r.counts.invited > 0 && (
+                          <span className="badge bg-amber-100 text-amber-800">
+                            {r.counts.invited} invited
+                          </span>
+                        )}
+                        {r.counts.accepted > 0 && (
+                          <span className="badge bg-blue-100 text-blue-800">
+                            {r.counts.accepted} in progress
+                          </span>
+                        )}
+                        {r.counts.completed > 0 && (
+                          <span className="badge bg-emerald-100 text-emerald-800">
+                            {r.counts.completed} completed
+                          </span>
+                        )}
+                        {r.counts.declined > 0 && (
+                          <span className="badge bg-rose-100 text-rose-800">
+                            {r.counts.declined} declined
+                          </span>
+                        )}
+                        {r.counts.overdue > 0 && (
+                          <span className="badge bg-rose-100 text-rose-700">
+                            {r.counts.overdue} overdue
+                          </span>
+                        )}
+                      </span>
+                    </div>
                   </td>
                   <td className="td">
                     {r.assignments.length === 0 ? (
@@ -367,46 +408,6 @@ export function ReviewerManagement({
                         ))}
                       </ul>
                     )}
-                  </td>
-                  <td className="td">
-                    <div className="flex flex-col items-start gap-1 text-[11px]">
-                      <span className="text-slate-600">
-                        Assigned: <b>{r.counts.assigned}</b>
-                      </span>
-                      <span className="flex flex-wrap gap-1">
-                        <span className={`badge ${PATHWAY_CLASS.A}`}>
-                          Pathway A: {r.counts.pathwayA}
-                        </span>
-                        <span className={`badge ${PATHWAY_CLASS.B}`}>
-                          Pathway B: {r.counts.pathwayB}
-                        </span>
-                      </span>
-                      {r.counts.invited > 0 && (
-                        <span className="badge bg-amber-100 text-amber-800">
-                          {r.counts.invited} invited
-                        </span>
-                      )}
-                      {r.counts.accepted > 0 && (
-                        <span className="badge bg-blue-100 text-blue-800">
-                          {r.counts.accepted} in progress
-                        </span>
-                      )}
-                      {r.counts.completed > 0 && (
-                        <span className="badge bg-emerald-100 text-emerald-800">
-                          {r.counts.completed} completed
-                        </span>
-                      )}
-                      {r.counts.declined > 0 && (
-                        <span className="badge bg-rose-100 text-rose-800">
-                          {r.counts.declined} declined
-                        </span>
-                      )}
-                      {r.counts.overdue > 0 && (
-                        <span className="badge bg-rose-100 text-rose-700">
-                          {r.counts.overdue} overdue
-                        </span>
-                      )}
-                    </div>
                   </td>
                 </tr>
               ))}

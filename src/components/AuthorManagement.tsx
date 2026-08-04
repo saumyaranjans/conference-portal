@@ -49,9 +49,28 @@ export type PersonRow = {
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
-/** The alphabet-index bucket for a name: its first A–Z letter, else "#". */
+// Leading honorifics to ignore when indexing / sorting by name.
+const SALUTATIONS = new Set([
+  "dr", "prof", "professor", "mr", "mrs", "ms", "miss", "mx", "sri", "smt",
+  "shri", "er", "capt", "col", "maj", "rev", "hon", "adv",
+]);
+
+/** Drop any leading salutation tokens (e.g. "Dr.", "Prof.") from a name. */
+function stripSalutation(name: string): string {
+  let n = (name ?? "").trim();
+  for (;;) {
+    const m = n.match(/^([A-Za-z]+)\.?\s+/);
+    if (m && SALUTATIONS.has(m[1].toLowerCase())) {
+      n = n.slice(m[0].length).trim();
+    } else break;
+  }
+  return n || (name ?? "").trim();
+}
+
+/** The alphabet-index bucket for a name (ignoring salutation): first A–Z
+ *  letter, else "#". */
 function initialOf(name: string): string {
-  const c = (name.trim()[0] || "").toUpperCase();
+  const c = (stripSalutation(name)[0] || "").toUpperCase();
   return c >= "A" && c <= "Z" ? c : "#";
 }
 
@@ -93,7 +112,7 @@ export function AuthorManagement({
     const avail = new Set(base.map((row) => initialOf(row.name)));
     let r = letter === "all" ? base : base.filter((row) => initialOf(row.name) === letter);
     r = [...r].sort((a, b) => {
-      const c = a.name.localeCompare(b.name);
+      const c = stripSalutation(a.name).localeCompare(stripSalutation(b.name));
       return dir === "asc" ? c : -c;
     });
     return { list: r, available: avail };

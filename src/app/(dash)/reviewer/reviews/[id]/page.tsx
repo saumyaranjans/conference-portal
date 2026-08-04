@@ -118,7 +118,7 @@ export default async function ReviewPage({
         <>
           <Section title="Abstract (camera-ready)">
             <CameraReadyPreview
-              conferenceName={sub?.tracks?.conferences?.name ?? "GLOGIFT 2027"}
+              conferenceName={sub?.tracks?.conferences?.name ?? "GLOGIFT 27"}
               trackName={sub?.tracks?.name ?? ""}
               title={sub?.title ?? ""}
               authors={[]}

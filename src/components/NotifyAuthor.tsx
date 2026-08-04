@@ -66,7 +66,7 @@ export function NotifyAuthor({
   signerRole?: "Track Editor" | "Convener";
   /** Full conference title, for the signature. */
   conferenceName?: string;
-  /** Short brand for the subject line, e.g. "GLOGIFT 2027". */
+  /** Short brand for the subject line, e.g. "GLOGIFT 27". */
   brand?: string;
 }) {
   const [decision, setDecision] = useState(defaultDecision || "accept");

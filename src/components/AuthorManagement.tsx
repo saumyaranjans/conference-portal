@@ -170,7 +170,7 @@ export function AuthorManagement({
       `Name starts with: ${letter === "all" ? "All" : letter}`,
     ].join("   |   ");
     const headers = [
-      "Author Name", "Mobile", "Email", "Participant Category", "GLOGIFT Member",
+      "Author Name", "Mobile", "Email", "Participant Category", "GIFT Society Member",
       "Paper IDs", "Papers (pathway)", "Tracks", "Role(s)", "Signed up",
       "Registered", "Fee paid", "Fee amount", "Attendance intention", "Attended",
       "Reported mode", "Actual mode", "Mode changed", "Certificate generated",
@@ -550,7 +550,7 @@ export function AuthorManagement({
                           : "border-slate-200 bg-slate-50 text-slate-400 dark:border-slate-700 dark:bg-slate-800"
                       }`}
                     >
-                      {r.member ? "★ GLOGIFT member" : "Not a GLOGIFT member"}
+                      {r.member ? "★ GIFT Society member" : "Not a GIFT Society member"}
                     </span>
                   </td>
 

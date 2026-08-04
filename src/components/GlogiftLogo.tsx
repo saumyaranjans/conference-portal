@@ -1,5 +1,5 @@
 /**
- * Original GLOGIFT 2027 emblem — an interlocking-rings mark standing for the
+ * Original GLOGIFT 27 emblem — an interlocking-rings mark standing for the
  * conference's three pillars (Flexibility · Digitalisation · Decarbonization).
  * Self-contained SVG so it stays crisp at any size and in any theme.
  */
@@ -16,7 +16,7 @@ export function GlogiftMark({
       viewBox="0 0 64 64"
       className={className}
       role="img"
-      aria-label="GLOGIFT 2027"
+      aria-label="GLOGIFT 27"
     >
       <defs>
         <linearGradient id={grad} x1="0" y1="0" x2="1" y2="1">
@@ -35,7 +35,7 @@ export function GlogiftMark({
   );
 }
 
-/** Horizontal lockup: emblem + GLOGIFT 2027 wordmark. `light` for dark panels. */
+/** Horizontal lockup: emblem + GLOGIFT 27 wordmark. `light` for dark panels. */
 export function GlogiftLockup({
   light = false,
   className = "",

@@ -48,7 +48,7 @@ export function ConferenceDocumentPage({
       <div className="mx-auto max-w-5xl space-y-6 px-4 py-4">
         <section className="card card-pad">
           <p className="mb-1 text-xs font-semibold tracking-wide text-slate-500">
-            GLOGIFT 2027 &middot; IIM SAMBALPUR
+            GLOGIFT 27 &middot; IIM SAMBALPUR
           </p>
           <h1 className="mb-3 text-3xl font-bold text-gradient">{title}</h1>
           <p className="max-w-3xl text-sm text-slate-600 dark:text-slate-300">
@@ -106,7 +106,7 @@ export function ConferenceDocumentPage({
 
         <footer className="border-t border-slate-200 pb-6 pt-5 text-center text-xs text-slate-500 dark:border-slate-700">
           <span className="font-semibold text-slate-700 dark:text-slate-300">
-            GLOGIFT 2027
+            GLOGIFT 27
           </span>
           <span aria-hidden className="mx-2 text-slate-300 dark:text-slate-600">|</span>
           Indian Institute of Management Sambalpur

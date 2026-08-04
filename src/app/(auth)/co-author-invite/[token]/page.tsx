@@ -99,7 +99,7 @@ export default async function CoAuthorInvitePage({
           You have been added as a co-author on{" "}
           <span className="font-medium text-slate-700 dark:text-slate-200">
             {sub?.paper_id ? `${sub.paper_id} — ` : ""}
-            {sub?.title ?? "a GLOGIFT 2027 submission"}
+            {sub?.title ?? "a GLOGIFT 27 submission"}
           </span>
           {trackName ? ` (${trackName})` : ""}.
         </p>

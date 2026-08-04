@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Security | GLOGIFT2027 - IIM SAMBALPUR",
-  description: "Responsible security reporting for the GLOGIFT 2027 website and submission portal.",
+  description: "Responsible security reporting for the GLOGIFT 27 website and submission portal.",
 };
 
 export default function SecurityPage() {
@@ -11,7 +11,7 @@ export default function SecurityPage() {
     <main className="min-h-screen bg-slate-50 px-4 py-12 text-slate-900">
       <article className="mx-auto max-w-2xl rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-9">
         <p className="text-sm font-semibold uppercase tracking-wider text-blue-700">
-          GLOGIFT 2027
+          GLOGIFT 27
         </p>
         <h1 className="mt-2 text-3xl font-bold">Responsible security reporting</h1>
         <p className="mt-4 leading-7 text-slate-600">

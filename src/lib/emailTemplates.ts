@@ -10,13 +10,13 @@ import { GUIDELINES_URL } from "@/lib/types";
 
 export type EmailContent = { subject: string; body: string };
 
-const CONF_DEFAULT = "GLOGIFT 2027";
+const CONF_DEFAULT = "GLOGIFT 27";
 
 /**
  * The role line of a signature: role, the track (chairs only), the full
  * conference title, then the short brand — e.g.
  * "Track Editor, Operations & Supply Chain, International Conference
- * on …, GLOGIFT 2027". Empty parts are dropped rather than leaving stray
+ * on …, GLOGIFT 27". Empty parts are dropped rather than leaving stray
  * commas, and a title identical to the brand is not repeated.
  */
 export function signOffLine(o: {
@@ -69,7 +69,7 @@ type DecisionOpts = {
   chairEmail?: string | null;
   /** How the sender signs: a track chair names their track, a Convener does not. */
   signerRole?: "Track Editor" | "Convener";
-  /** Short brand for the subject line, e.g. "GLOGIFT 2027". */
+  /** Short brand for the subject line, e.g. "GLOGIFT 27". */
   brand?: string;
 };
 
@@ -260,7 +260,7 @@ export function chairInviteEmail(o: {
   track: string;
   openCount?: number;
   conferenceName?: string;
-  /** Short brand, e.g. "GLOGIFT 2027". */
+  /** Short brand, e.g. "GLOGIFT 27". */
   brand?: string;
   /** The conference's own web address. */
   siteUrl?: string;
@@ -421,7 +421,7 @@ export function submissionAcknowledgementEmail(o: {
     "This is a system-generated email — please do not reply to this message. If any detail above is incorrect, or you have any questions, write to us at the addresses below.",
     "",
     "Warm regards,",
-    "GLOGIFT 2027 Editorial Office",
+    "GLOGIFT 27 Editorial Office",
     FULL_CONF_TITLE,
     "Indian Institute of Management Sambalpur",
     "glogift27.chair@iimsambalpur.ac.in · glogift27.coordinator@iimsambalpur.ac.in",
@@ -708,8 +708,8 @@ export function participationModeChangedEmail(o: {
     `Based upon your request, your mode of participation for ${conf} has been changed from ${o.fromMode} to ${o.toMode}.`,
     "",
     "Please note: this change is now final and cannot be reversed online. If this is not correct, or you need any further change, kindly contact the conference team:",
-    "  - Chair, GLOGIFT 2027 - glogift27.chair@iimsambalpur.ac.in",
-    "  - Coordinator, GLOGIFT 2027 - glogift27.coordinator@iimsambalpur.ac.in",
+    "  - Chair, GLOGIFT 27 - glogift27.chair@iimsambalpur.ac.in",
+    "  - Coordinator, GLOGIFT 27 - glogift27.coordinator@iimsambalpur.ac.in",
     "",
     "This is a system-generated email - please do not reply.",
     "",

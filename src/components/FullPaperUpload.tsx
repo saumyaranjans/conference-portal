@@ -267,7 +267,7 @@ export function FullPaperUpload({
   const DECLARATIONS = [
     "On behalf of all authors, I confirm this full paper is original, not plagiarised, and not submitted or published elsewhere.",
     "On behalf of all authors, I confirm any AI tools were used only for assistance, not as co-authors.",
-    "On behalf of all authors, I consent, if accepted, to the paper being shared with the Editorial Offices of associated journals, edited books, and the GLOGIFT 2027 conference proceedings.",
+    "On behalf of all authors, I consent, if accepted, to the paper being shared with the Editorial Offices of associated journals, edited books, and the GLOGIFT 27 conference proceedings.",
   ];
 
   return (
@@ -592,7 +592,7 @@ export function FullPaperUpload({
             select are your preferences only. The final decision on whether a
             paper is forwarded for further submission to any journal, edited book
             or the conference proceedings rests with the Track Editor and the
-            GLOGIFT 2027 conference committee.
+            GLOGIFT 27 conference committee.
           </p>
         </div>
       )}

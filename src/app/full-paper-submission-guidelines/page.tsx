@@ -7,7 +7,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 export const metadata: Metadata = {
   title: "Full Paper Submission Guidelines (Pathway B) - GLOGIFT2027",
   description:
-    "Read the GLOGIFT 2027 Pathway B full-paper guidelines and download the author worksheet and blinded manuscript template.",
+    "Read the GLOGIFT 27 Pathway B full-paper guidelines and download the author worksheet and blinded manuscript template.",
 };
 
 const downloads = [
@@ -122,7 +122,7 @@ export default function FullPaperSubmissionGuidelinesPage() {
             </h1>
             <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600 dark:text-slate-300">
               Prepare an editorially complete, double-anonymous manuscript for
-              papers progressing through GLOGIFT 2027 Pathway B and subsequently
+              papers progressing through GLOGIFT 27 Pathway B and subsequently
               considered for the selected Springer journals.
             </p>
             <div className="mt-5 inline-flex max-w-4xl items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-950 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100">
@@ -372,7 +372,7 @@ export default function FullPaperSubmissionGuidelinesPage() {
         <section className="card card-pad text-center">
           <h2 className="text-xl font-bold text-slate-900 dark:text-white">Need conference assistance?</h2>
           <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-            For questions about GLOGIFT 2027 Pathway B, contact the conference editorial team.
+            For questions about GLOGIFT 27 Pathway B, contact the conference editorial team.
           </p>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
             <a href="mailto:glogift27.chair@iimsambalpur.ac.in" className="inline-flex text-sm font-semibold text-blue-700 hover:underline dark:text-blue-300">
@@ -385,7 +385,7 @@ export default function FullPaperSubmissionGuidelinesPage() {
         </section>
 
         <footer className="border-t border-slate-200 pb-6 pt-5 text-center text-xs text-slate-500 dark:border-slate-700">
-          <span className="font-semibold text-slate-700 dark:text-slate-300">GLOGIFT 2027</span>
+          <span className="font-semibold text-slate-700 dark:text-slate-300">GLOGIFT 27</span>
           <span aria-hidden className="mx-2 text-slate-300 dark:text-slate-600">|</span>
           Indian Institute of Management Sambalpur
         </footer>

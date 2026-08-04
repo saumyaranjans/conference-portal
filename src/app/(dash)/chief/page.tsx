@@ -309,7 +309,7 @@ export default async function ChiefDashboard() {
           </div>
           <p className="text-xs text-slate-500 mt-2">
             Based on amounts recorded by the Editorial Office; tax is 18% of the
-            amount. {memberCount} GLOGIFT member
+            amount. {memberCount} GIFT Society member
             {memberCount === 1 ? "" : "s"} recorded.
           </p>
         </Section>

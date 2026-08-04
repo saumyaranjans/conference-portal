@@ -5,7 +5,7 @@ import { createAdminClient } from "@/lib/supabase/server";
  * Best-effort transactional email via Resend. Gated behind env vars so the
  * portal works unchanged until email is configured:
  *   RESEND_API_KEY   – Resend API key
- *   RESEND_FROM      – verified sender, e.g. "GLOGIFT 2027 <no-reply@glogift2027.co.in>"
+ *   RESEND_FROM      – verified sender, e.g. "GLOGIFT 27 <no-reply@glogift2027.co.in>"
  *   RESEND_REPLY_TO  – optional reply-to; comma-separate for several inboxes,
  *                      e.g. "chair@x.ac.in, coordinator@x.ac.in"
  *

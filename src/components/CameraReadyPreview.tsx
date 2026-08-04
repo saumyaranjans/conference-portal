@@ -33,7 +33,7 @@ export function CameraReadyPreview({
       {/* -------- Standardized letterhead (single image) -------- */}
       <img
         src="/letterhead.png"
-        alt="GLOGIFT 2027 — Indian Institute of Management Sambalpur"
+        alt="GLOGIFT 27 — Indian Institute of Management Sambalpur"
         className="w-full block"
       />
 

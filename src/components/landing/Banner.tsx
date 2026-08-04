@@ -81,8 +81,8 @@ function Organiser({
  */
 function LatticeSlideMobile() {
   return (
-    <svg viewBox="0 0 1000 800" className="w-full h-auto block sm:hidden" role="img"
-      aria-label="GLOGIFT 2027 — International Conference on AI-Driven Solutions in Management, 25 to 27 February 2027, IIM Sambalpur">
+    <svg viewBox="0 0 1000 856" className="w-full h-auto block sm:hidden" role="img"
+      aria-label="GLOGIFT 27 — International Conference on AI-Driven Solutions in Management, 25 to 27 February 2027, IIM Sambalpur">
       <defs>
         <linearGradient id="m-sky" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stopColor="#0f172a" />
@@ -101,7 +101,7 @@ function LatticeSlideMobile() {
         </radialGradient>
       </defs>
 
-      <rect width="1000" height="800" fill="url(#m-sky)" />
+      <rect width="1000" height="856" fill="url(#m-sky)" />
       <circle cx="820" cy="140" r="330" fill="url(#m-glow)" />
       <circle cx="140" cy="700" r="280" fill="url(#m-glow)" opacity="0.6" />
       <g stroke="#93c5fd" strokeOpacity="0.2" strokeWidth="2" fill="none">
@@ -125,29 +125,33 @@ function LatticeSlideMobile() {
         fontWeight="800" fontFamily="Georgia, 'Times New Roman', serif">
         GLOGIFT 27
       </text>
-      <text x="500" y="378" textAnchor="middle" fill="#a5b4fc" fontSize="28"
+      <text x="500" y="374" textAnchor="middle" fill="#c7d2fe" fontSize="24"
+        fontFamily="Georgia, 'Times New Roman', serif">
+        Twenty Seventh Global Conference on Flexible Systems Management
+      </text>
+      <text x="500" y="434" textAnchor="middle" fill="#a5b4fc" fontSize="28"
         letterSpacing="6" fontWeight="600" fontFamily="system-ui, sans-serif">
         INTERNATIONAL CONFERENCE ON
       </text>
-      <text x="500" y="450" textAnchor="middle" fill="#e0e7ff" fontSize="44"
+      <text x="500" y="506" textAnchor="middle" fill="#e0e7ff" fontSize="44"
         fontWeight="600" fontFamily="system-ui, sans-serif">
         AI-Driven Solutions in Management
       </text>
-      <text x="500" y="506" textAnchor="middle" fill="#a5b4fc" fontSize="31"
+      <text x="500" y="562" textAnchor="middle" fill="#a5b4fc" fontSize="31"
         fontFamily="system-ui, sans-serif">
         Flexibility, Digitalisation &amp; Decarbonization
       </text>
 
-      <rect x="330" y="576" width="340" height="4" fill="url(#m-accent)" />
-      <text x="500" y="646" textAnchor="middle" fill="#ffffff" fontSize="42"
+      <rect x="330" y="632" width="340" height="4" fill="url(#m-accent)" />
+      <text x="500" y="702" textAnchor="middle" fill="#ffffff" fontSize="42"
         fontWeight="700" fontFamily="system-ui, sans-serif">
         25 – 27 February 2027
       </text>
-      <text x="500" y="700" textAnchor="middle" fill="#c7d2fe" fontSize="30"
+      <text x="500" y="756" textAnchor="middle" fill="#c7d2fe" fontSize="30"
         fontFamily="system-ui, sans-serif">
         IIM Sambalpur, Odisha, India
       </text>
-      <text x="500" y="748" textAnchor="middle" fill="#c7d2fe" fontSize="30"
+      <text x="500" y="804" textAnchor="middle" fill="#c7d2fe" fontSize="30"
         fontFamily="system-ui, sans-serif">
         In-Person | Hybrid
       </text>
@@ -164,7 +168,7 @@ function LatticeSlide() {
       viewBox="0 0 2400 1000"
       className="w-full h-auto hidden sm:block"
       role="img"
-      aria-label="GLOGIFT 2027 — International Conference on AI-Driven Solutions in Management, 25 to 27 February 2027, IIM Sambalpur"
+      aria-label="GLOGIFT 27 — International Conference on AI-Driven Solutions in Management, 25 to 27 February 2027, IIM Sambalpur"
     >
       <defs>
         <linearGradient id="l-sky" x1="0" y1="0" x2="1" y2="1">
@@ -256,7 +260,18 @@ function LatticeSlide() {
 
       <text
         x="164"
-        y="512"
+        y="500"
+        fill="#c7d2fe"
+        fontSize="42"
+        fontWeight="500"
+        fontFamily="Georgia, 'Times New Roman', serif"
+      >
+        Twenty Seventh Global Conference on Flexible Systems Management
+      </text>
+
+      <text
+        x="164"
+        y="588"
         fill="#a5b4fc"
         fontSize="32"
         letterSpacing="9"
@@ -267,7 +282,7 @@ function LatticeSlide() {
       </text>
       <text
         x="160"
-        y="592"
+        y="668"
         fill="#e0e7ff"
         fontSize="56"
         fontFamily="system-ui, sans-serif"
@@ -277,7 +292,7 @@ function LatticeSlide() {
       </text>
       <text
         x="160"
-        y="656"
+        y="732"
         fill="#a5b4fc"
         fontSize="40"
         fontFamily="system-ui, sans-serif"
@@ -285,11 +300,11 @@ function LatticeSlide() {
         Flexibility, Digitalisation &amp; Decarbonization
       </text>
 
-      <rect x="160" y="730" width="8" height="150" fill="url(#l-accent)" />
-      <text x="200" y="785" fill="#ffffff" fontSize="44" fontWeight="700" fontFamily="system-ui, sans-serif">
+      <rect x="160" y="806" width="8" height="132" fill="url(#l-accent)" />
+      <text x="200" y="861" fill="#ffffff" fontSize="44" fontWeight="700" fontFamily="system-ui, sans-serif">
         25 – 27 February 2027
       </text>
-      <text x="200" y="845" fill="#c7d2fe" fontSize="34" fontFamily="system-ui, sans-serif">
+      <text x="200" y="921" fill="#c7d2fe" fontSize="34" fontFamily="system-ui, sans-serif">
         IIM Sambalpur, Odisha, India · In-Person | Hybrid
       </text>
     </svg>
@@ -338,7 +353,7 @@ function TracksSlide() {
             Call for Submissions
           </p>
           <p className="mt-[1.4cqw] sm:mt-[0.6cqw] text-[2.9cqw] sm:text-[1.3cqw] font-medium text-[#3f3f6b]">
-            Ten tracks &middot; abstracts and full papers invited &middot; GLOGIFT 2027
+            Ten tracks &middot; abstracts and full papers invited &middot; GLOGIFT 27
           </p>
         </div>
 
@@ -451,7 +466,7 @@ export function Banner() {
       className="relative w-full overflow-hidden rounded-2xl shadow-lg"
       role="region"
       aria-roledescription="carousel"
-      aria-label="GLOGIFT 2027 banners"
+      aria-label="GLOGIFT 27 banners"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocusCapture={() => setPaused(true)}

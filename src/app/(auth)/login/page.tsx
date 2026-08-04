@@ -70,7 +70,7 @@ export default function LoginPage() {
 
         <div className="relative">
           <p className="text-4xl xl:text-5xl font-bold uppercase tracking-wider text-gradient-light w-fit">
-            GLOGIFT 2027
+            GLOGIFT 27
           </p>
           <h1
             className="mt-4 max-w-xl font-serif text-2xl font-semibold leading-snug xl:text-3xl"
@@ -111,7 +111,7 @@ export default function LoginPage() {
               Global Institute of Flexible Systems Management
             </p>
             <p className="mt-3 text-3xl font-bold uppercase tracking-wider text-gradient w-fit mx-auto">
-              GLOGIFT 2027
+              GLOGIFT 27
             </p>
             <h1
               className="mt-2 font-serif text-base font-semibold leading-snug text-slate-900"

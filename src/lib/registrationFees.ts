@@ -1,5 +1,5 @@
 /**
- * GLOGIFT 2027 registration fees (per delegate), taken from the conference
+ * GLOGIFT 27 registration fees (per delegate), taken from the conference
  * brochure / landing page. Early-bird applies on or before 20 December 2026;
  * from 21 December 2026 the regular fee applies. GLOGIFT members receive a 15%
  * discount on the fee.

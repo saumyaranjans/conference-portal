@@ -334,7 +334,7 @@ export function SignupForm({
           </div>
           <div className="sm:col-span-2">
             <label className="label" htmlFor="glogiftMember">
-              Do you have GLOGIFT Membership?
+              Do you have GIFT Society Membership?
             </label>
             <select
               id="glogiftMember"
@@ -352,7 +352,7 @@ export function SignupForm({
           {form.glogiftMember === "yes" && (
             <div className="sm:col-span-2">
               <label className="label" htmlFor="glogiftMembershipNo">
-                GLOGIFT Membership number
+                GIFT Society Membership number
               </label>
               <input
                 id="glogiftMembershipNo"

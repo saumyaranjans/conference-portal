@@ -443,7 +443,7 @@ export default async function AuthorSubmissionPage({
               ],
               [
                 sub.declared_consent_publication,
-                "Consented to sharing the submission, if accepted, with the Editorial Offices of associated journals, edited books, and the GLOGIFT 2027 conference proceedings.",
+                "Consented to sharing the submission, if accepted, with the Editorial Offices of associated journals, edited books, and the GLOGIFT 27 conference proceedings.",
               ],
             ].map(([ok, label]) => (
               <p key={label as string} className="text-sm text-slate-700">

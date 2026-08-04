@@ -184,7 +184,7 @@ export async function generateCertificatePdf({
   drawIkatBand(page, PAGE_HEIGHT - 38, 18);
   drawIkatBand(page, 20, 18);
 
-  // Larger GLOGIFT 2027 logo at the top-left (no conference-name text up here).
+  // Larger GLOGIFT 27 logo at the top-left (no conference-name text up here).
   const glogiftSize = fitImage(glogiftLogo, 120, 90);
   page.drawImage(glogiftLogo, {
     x: 48,
@@ -199,7 +199,7 @@ export async function generateCertificatePdf({
   });
 
   const snapshot = certificate.data_snapshot;
-  // Full label for the certificate body: "GLOGIFT 2027 - International Conference
+  // Full label for the certificate body: "GLOGIFT 27 - International Conference
   // on AI-Driven Solutions in Management: Flexibility, Digitalisation & Decarbonization".
   const confLabel = `${snapshot.conferenceAcronym} - ${snapshot.conferenceName.replace(
     / and Decarbonization\b/,
@@ -392,9 +392,9 @@ export async function generateCertificatePdf({
   }
 
   pdf.setTitle(`${certificate.certificate_number} - ${certificate.display_name}`);
-  pdf.setAuthor("GLOGIFT 2027 Editorial Office");
+  pdf.setAuthor("GLOGIFT 27 Editorial Office");
   pdf.setSubject("Conference certificate");
-  pdf.setCreator("GLOGIFT 2027 Conference Portal");
+  pdf.setCreator("GLOGIFT 27 Conference Portal");
   return pdf.save();
 }
 

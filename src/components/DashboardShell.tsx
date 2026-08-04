@@ -137,7 +137,7 @@ export async function DashboardShell({
               className="h-9 w-auto object-contain"
             />
             <span className="text-lg font-bold tracking-tight text-gradient w-fit">
-              GLOGIFT 2027
+              GLOGIFT 27
             </span>
           </Link>
           <div className="flex items-center gap-4">

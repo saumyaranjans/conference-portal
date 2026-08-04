@@ -20,7 +20,7 @@ export function TrackEditorDecline({ token }: { token: string }) {
         <h1 className="text-2xl font-semibold">Thank you!</h1>
         <p className="text-sm text-slate-600 dark:text-slate-300">
           We appreciate your response and look forward to your support with
-          GLOGIFT 2027.
+          GLOGIFT 27.
         </p>
         <Link
           href="/"

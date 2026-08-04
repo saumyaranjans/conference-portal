@@ -353,7 +353,7 @@ export async function CertificateOffice() {
                       </label>
                       <label className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-700">
                         <input type="checkbox" name="glogift_member" defaultChecked={row.glogift_member ?? false} />
-                        GLOGIFT member
+                        GIFT Society member
                       </label>
                       <label className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-700">
                         <input type="checkbox" name="attended_confirmed" defaultChecked={row.attended_confirmed ?? false} />

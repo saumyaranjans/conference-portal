@@ -781,7 +781,7 @@ export function NewSubmissionForm({
             [
               declConsent,
               setDeclConsent,
-              "I consent to my submission, if accepted, being shared with the Editorial Offices of associated journals, edited books, and the GLOGIFT 2027 conference proceedings.",
+              "I consent to my submission, if accepted, being shared with the Editorial Offices of associated journals, edited books, and the GLOGIFT 27 conference proceedings.",
             ],
           ] as [boolean, (v: boolean) => void, string][]
         ).map(([checked, setter, label]) => (

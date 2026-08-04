@@ -199,7 +199,7 @@ export async function updateProfile(formData: FormData): Promise<ActionResult> {
   return {
     ok: true,
     message: mErr
-      ? "Profile updated. GLOGIFT membership could not be saved yet — migration 0039 is pending."
+      ? "Profile updated. GIFT Society membership could not be saved yet — migration 0039 is pending."
       : "Profile updated.",
   };
 }
@@ -590,7 +590,7 @@ export async function submitForReview(formData: FormData): Promise<ActionResult>
             signupUrl: a.is_corresponding
               ? null
               : `${siteUrl()}/co-author-invite/${a.id}`,
-            conferenceName: "GLOGIFT 2027",
+            conferenceName: "GLOGIFT 27",
           });
           await sendEmail({
             to: email,
@@ -1115,7 +1115,7 @@ export async function submitFullPaper(
       title: f?.title ?? "",
       track,
       option: s.full_paper_option,
-      conferenceName: "GLOGIFT 2027",
+      conferenceName: "GLOGIFT 27",
     });
     for (const a of (authors as any[]) ?? []) {
       if (!a.email) continue;
@@ -1150,7 +1150,7 @@ export async function submitFullPaper(
           track,
           reviewLink: `${siteUrl()}/editor/submissions/${id}`,
           minAccepts: FULL_PAPER_ACCEPTS_REQUIRED,
-          conferenceName: "GLOGIFT 2027",
+          conferenceName: "GLOGIFT 27",
         });
         try {
           await sendEmail({
@@ -1178,7 +1178,7 @@ export async function submitFullPaper(
           track,
           assignLink: `${siteUrl()}/chief`,
           minAccepts: FULL_PAPER_ACCEPTS_REQUIRED,
-          conferenceName: "GLOGIFT 2027",
+          conferenceName: "GLOGIFT 27",
         });
         try {
           await sendEmail({
@@ -1310,7 +1310,7 @@ export async function cancelFullPaper(
       paperId: s.paper_id,
       title: s.title,
       track: s.tracks?.name,
-      conferenceName: "GLOGIFT 2027",
+      conferenceName: "GLOGIFT 27",
     });
     for (const a of authorList) {
       if (!a.email) continue;
@@ -1608,7 +1608,7 @@ export async function saveReview(formData: FormData): Promise<ActionResult> {
       const t = sub as any;
       const conf = t?.tracks?.conferences;
       const brand =
-        conf?.acronym && conf?.year ? `${conf.acronym} ${conf.year}` : "GLOGIFT 2027";
+        conf?.acronym && conf?.year ? `${conf.acronym} ${conf.year}` : "GLOGIFT 27";
       // The handling Track Editor signs the thank-you and is CC'd on it.
       let chairName: string | null = null;
       let chairEmail: string | null = null;
@@ -1756,7 +1756,7 @@ export async function prepareReviewerInvite(
   const contextBlock =
     (await reviewHistoryContext(admin, submissionId, s.review_round ?? 1)) ??
     undefined;
-  const conferenceName: string = s.tracks?.conferences?.name ?? "GLOGIFT 2027";
+  const conferenceName: string = s.tracks?.conferences?.name ?? "GLOGIFT 27";
   const shortName: string = shortConf(s.tracks?.conferences);
 
   // Someone picked from the list, or a typed email that already has an account.
@@ -2130,7 +2130,7 @@ export async function reassignReviewer(
       title: s.title,
       stage: s.stage,
       track: s.tracks?.name ?? "",
-      conferenceName: conf?.name ?? "GLOGIFT 2027",
+      conferenceName: conf?.name ?? "GLOGIFT 27",
       shortName: shortConf(conf),
       reviewerName: reviewer.full_name,
       dueDate: dueDate || undefined,
@@ -2197,7 +2197,7 @@ export async function prepareReviewerReminder(
     title: s.title ?? "",
     stage: s.stage ?? null,
     track: s.tracks?.name ?? "",
-    conferenceName: s.tracks?.conferences?.name ?? "GLOGIFT 2027",
+    conferenceName: s.tracks?.conferences?.name ?? "GLOGIFT 27",
     shortName: shortConf(s.tracks?.conferences),
     reviewerName: reviewer.full_name,
     originalDue: row.due_date,
@@ -2412,13 +2412,13 @@ function conflictOfInterest(
 }
 
 /**
- * The short brand — "GLOGIFT 2027". The full conference title is far too long
+ * The short brand — "GLOGIFT 27". The full conference title is far too long
  * for a subject line or a sign-off, so it appears only in the body.
  */
 function shortConf(conference?: { acronym?: string | null; year?: number | null }): string {
   const acronym = conference?.acronym?.trim();
   const year = conference?.year;
-  return acronym && year ? `${acronym} ${year}` : "GLOGIFT 2027";
+  return acronym && year ? `${acronym} ${year}` : "GLOGIFT 27";
 }
 
 /** `n` days from `from`, as a new Date. */
@@ -2456,8 +2456,8 @@ function buildInviteEmail(opts: {
   /** Transparent history for a revision-round / additional-reviewer invite. */
   contextBlock?: string;
 }): { subject: string; body: string } {
-  const conf = opts.conferenceName || "GLOGIFT 2027";
-  const brand = opts.shortName || "GLOGIFT 2027";
+  const conf = opts.conferenceName || "GLOGIFT 27";
+  const brand = opts.shortName || "GLOGIFT 27";
   const item = opts.stage === "full_paper" ? "manuscript" : "abstract";
   const pid = opts.paperId ? opts.paperId : "(to be assigned)";
   const name = opts.fullName?.trim() || "Reviewer";
@@ -2520,7 +2520,7 @@ function chairSignOff(opts: {
   track: string;
   /** Full conference title. */
   conf: string;
-  /** Short brand, e.g. "GLOGIFT 2027". */
+  /** Short brand, e.g. "GLOGIFT 27". */
   brand: string;
   email?: string | null;
 }): string[] {
@@ -2559,8 +2559,8 @@ function buildAssignmentEmail(opts: {
   /** Transparent history for a revision-round / additional-reviewer invite. */
   contextBlock?: string;
 }): { subject: string; body: string } {
-  const conf = opts.conferenceName || "GLOGIFT 2027";
-  const brand = opts.shortName || "GLOGIFT 2027";
+  const conf = opts.conferenceName || "GLOGIFT 27";
+  const brand = opts.shortName || "GLOGIFT 27";
   const item = opts.stage === "full_paper" ? "manuscript" : "abstract";
 
   const subject = `${brand} — Invitation to review ${item}${
@@ -2636,8 +2636,8 @@ function buildReminderEmail(opts: {
   inviterName?: string | null;
   inviterEmail?: string | null;
 }): { subject: string; body: string } {
-  const conf = opts.conferenceName || "GLOGIFT 2027";
-  const brand = opts.shortName || "GLOGIFT 2027";
+  const conf = opts.conferenceName || "GLOGIFT 27";
+  const brand = opts.shortName || "GLOGIFT 27";
   const item = opts.stage === "full_paper" ? "manuscript" : "abstract";
 
   const subject = `${brand} — Gentle reminder: review pending${
@@ -2983,7 +2983,7 @@ export async function updateCoAuthorEmail(
       participationMode: sub.participation_mode,
       authorsLine,
       signupUrl: `${siteUrl()}/co-author-invite/${row.id}`,
-      conferenceName: "GLOGIFT 2027",
+      conferenceName: "GLOGIFT 27",
     });
     const r = await sendEmail({
       to: email,
@@ -3237,7 +3237,7 @@ export async function recordRecommendation(
       const trackName = (meta as any)?.tracks?.name ?? null;
       const conf = (meta as any)?.tracks?.conferences;
       const brand =
-        conf?.acronym && conf?.year ? `${conf.acronym} ${conf.year}` : "GLOGIFT 2027";
+        conf?.acronym && conf?.year ? `${conf.acronym} ${conf.year}` : "GLOGIFT 27";
       const signerRole =
         (sub as any).assigned_editor_id === profile.id ? "Track Editor" : "Convener";
       const cc = await convenerEmails(admin);
@@ -3318,7 +3318,7 @@ export async function recordRecommendation(
     const dTrack = (dmeta as any)?.tracks?.name ?? null;
     const dConf = (dmeta as any)?.tracks?.conferences;
     const dBrand =
-      dConf?.acronym && dConf?.year ? `${dConf.acronym} ${dConf.year}` : "GLOGIFT 2027";
+      dConf?.acronym && dConf?.year ? `${dConf.acronym} ${dConf.year}` : "GLOGIFT 27";
     const dSignerRole =
       (sub as any).assigned_editor_id === profile.id ? "Track Editor" : "Convener";
 
@@ -3559,7 +3559,7 @@ export async function overrideDecision(
       title: s.title,
       track: s.tracks?.name,
       message,
-      conferenceName: "GLOGIFT 2027",
+      conferenceName: "GLOGIFT 27",
     });
     for (const a of authorList) {
       if (!a.email) continue;
@@ -3752,7 +3752,7 @@ export async function reassignTrackEditor(
         rejectLink: `${siteUrl()}/paper-assignment/${assignmentToken}/reject`,
         convenerName: profile.full_name,
         convenerEmail: profile.email,
-        conferenceName: "GLOGIFT 2027",
+        conferenceName: "GLOGIFT 27",
       });
       await sendEmail({
         to: target.email,
@@ -3935,7 +3935,7 @@ export async function prepareChairInvite(
   if (!track) return { ok: false, message: "Track not found." };
 
   const t = track as any;
-  const conferenceName: string = t.conferences?.name ?? "GLOGIFT 2027";
+  const conferenceName: string = t.conferences?.name ?? "GLOGIFT 27";
   const brand = shortConf(t.conferences);
 
   const { count: openCount } = await admin
@@ -4115,7 +4115,7 @@ export async function remindTrackEditor(
     return { ok: false, message: "They have nothing outstanding." };
 
   const conf = open[0]?.tracks?.conferences;
-  const conferenceName: string = conf?.name ?? "GLOGIFT 2027";
+  const conferenceName: string = conf?.name ?? "GLOGIFT 27";
   const brand = shortConf(conf);
 
   const { data: overdue } = await admin

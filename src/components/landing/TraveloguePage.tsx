@@ -152,7 +152,7 @@ export function TraveloguePage() {
       <div className="max-w-5xl mx-auto px-4 py-4 space-y-10">
         <section className="card card-pad">
           <p className="text-xs font-semibold tracking-wide text-slate-500 mb-1">
-            GLOGIFT 2027 &middot; IIM SAMBALPUR
+            GLOGIFT 27 &middot; IIM SAMBALPUR
           </p>
           <h1 className="text-3xl font-bold text-gradient mb-3">
             Sambalpur travelogue
@@ -377,7 +377,7 @@ export function TraveloguePage() {
 
         <footer className="border-t border-slate-200 dark:border-slate-700 pt-5 pb-6 text-center text-xs text-slate-500">
           <span className="font-semibold text-slate-700 dark:text-slate-300">
-            GLOGIFT 2027
+            GLOGIFT 27
           </span>
           <span aria-hidden className="mx-2 text-slate-300 dark:text-slate-600">
             |

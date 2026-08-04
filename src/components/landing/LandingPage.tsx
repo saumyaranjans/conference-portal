@@ -7,7 +7,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { TRACKS } from "@/components/landing/tracks";
 
 /**
- * The GLOGIFT 2027 landing page. Content comes from the conference brochure;
+ * The GLOGIFT 27 landing page. Content comes from the conference brochure;
  * the section order follows the IMPeC-2025 shape the Convener asked for:
  * about → objectives → attractions → call for submission → guidelines →
  * fees → committees → dates → contact.
@@ -118,7 +118,7 @@ const MILESTONES = [
 
 const PUBLICATIONS = [
   {
-    title: "GLOGIFT 2027 Conference Proceedings",
+    title: "GLOGIFT 27 Conference Proceedings",
     badge: "Book with ISBN",
     cover: "/journals/proceedings.svg",
     url: "",
@@ -561,7 +561,7 @@ export function LandingPage() {
 
         {/* ---- 1. About ---- */}
         <section>
-          <Heading id="about">About GLOGIFT 2027</Heading>
+          <Heading id="about">About GLOGIFT 27</Heading>
           <div className="card card-pad space-y-4 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
             <p>
               The{" "}
@@ -585,7 +585,7 @@ export function LandingPage() {
               investment, supply chains and public policy alike.
             </p>
             <p>
-              GLOGIFT 2027 asks how artificial intelligence connects the three:
+              GLOGIFT 27 asks how artificial intelligence connects the three:
               whether AI-enabled management systems can make enterprises more
               flexible and more sustainable at the same time, rather than
               trading one against the other. The conference brings together
@@ -1335,7 +1335,7 @@ export function LandingPage() {
           {/* Separators break onto their own lines on narrow screens rather
               than leaving a bar stranded at the start of a line. */}
           <span className="font-semibold text-slate-700 dark:text-slate-300">
-            GLOGIFT 2027
+            GLOGIFT 27
           </span>
           <span aria-hidden className="mx-2 text-slate-300 dark:text-slate-600">
             |

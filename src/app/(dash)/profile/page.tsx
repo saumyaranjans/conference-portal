@@ -200,7 +200,7 @@ export default async function ProfilePage() {
             </div>
             <div>
               <label className="label" htmlFor="glogift_member">
-                Do you have GLOGIFT Membership?
+                Do you have GIFT Society Membership?
               </label>
               <select
                 id="glogift_member"
@@ -214,7 +214,7 @@ export default async function ProfilePage() {
             </div>
             <div>
               <label className="label" htmlFor="glogift_membership_no">
-                GLOGIFT Membership number
+                GIFT Society Membership number
               </label>
               <input
                 id="glogift_membership_no"

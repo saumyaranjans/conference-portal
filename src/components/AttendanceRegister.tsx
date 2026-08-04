@@ -31,7 +31,7 @@ export async function AttendanceRegister() {
     (r) => r.submissions && r.submissions.status !== "draft"
   );
 
-  // GLOGIFT membership + category live on the person's profile (co-authors who
+  // GIFT Society membership + category live on the person's profile (co-authors who
   // signed up). Look them up so the fee can apply the 15% member discount.
   const profileIds = [...new Set(rows.map((r) => r.profile_id).filter(Boolean))];
   const { data: profs } = profileIds.length
@@ -101,7 +101,7 @@ export async function AttendanceRegister() {
           </div>
           <p className="text-xs text-slate-500 mb-3">
             Early-bird fees apply on or before {formatDate(EARLY_BIRD_CUTOFF)};
-            regular fees apply from 21 Dec 2026. GLOGIFT members receive a 15%
+            regular fees apply from 21 Dec 2026. GIFT Society members receive a 15%
             discount. Fees are per delegate, based on the category chosen at
             sign-up.
           </p>
@@ -109,7 +109,7 @@ export async function AttendanceRegister() {
             headers={[
               "Paper ID",
               "Author",
-              "GLOGIFT member",
+              "GIFT Society member",
               "Participant category",
               "Registration fee",
               "Attended",
@@ -132,11 +132,11 @@ export async function AttendanceRegister() {
                   )}
                 </td>
 
-                {/* GLOGIFT member box */}
+                {/* GIFT Society member box */}
                 <td className="td">
                   {r._member ? (
                     <span className="badge bg-blue-100 text-blue-800">
-                      GLOGIFT member
+                      GIFT Society member
                     </span>
                   ) : (
                     <span className="badge bg-slate-100 text-slate-600">

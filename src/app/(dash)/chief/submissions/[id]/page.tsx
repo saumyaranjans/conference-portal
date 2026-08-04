@@ -87,7 +87,7 @@ export default async function ChiefSubmissionPage({
     }));
   const conf = sub.tracks?.conferences;
   const conferenceBrand =
-    conf?.acronym && conf?.year ? `${conf.acronym} ${conf.year}` : "GLOGIFT 2027";
+    conf?.acronym && conf?.year ? `${conf.acronym} ${conf.year}` : "GLOGIFT 27";
   // The decision that still stands; overridden ones live in the history below.
   const chairDecision = decisionRows.find((d) => !d.superseded_at) ?? null;
   const isFinal = ["accepted", "rejected"].includes(sub.status);

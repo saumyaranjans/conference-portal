@@ -122,7 +122,7 @@ async function buildOne(
 
   let y = A4_H - 60;
 
-  // ---- Standardized letterhead (single image: logos + GLOGIFT 2027 +
+  // ---- Standardized letterhead (single image: logos + GLOGIFT 27 +
   //      conference name + dates + gold/navy rule) ----
   try {
     const lhBytes = await readFile(
@@ -135,7 +135,7 @@ async function buildOne(
     y -= h + 24;
   } catch {
     // Fallback to a text header if the letterhead asset is unavailable.
-    center("GLOGIFT 2027", y, 22, bold, NAVY);
+    center("GLOGIFT 27", y, 22, bold, NAVY);
     y -= 20;
     for (const line of wrap(CONFERENCE_FULL, reg, 10, contentW - 20)) {
       center(line, y, 10, reg, MUTED);
@@ -257,7 +257,7 @@ async function buildOne(
   out.setTitle(
     `${meta.paperId ?? "Manuscript"} — ${includeAuthors ? "Camera-ready" : "Review copy"}`
   );
-  out.setAuthor("GLOGIFT 2027 Conference Portal");
+  out.setAuthor("GLOGIFT 27 Conference Portal");
   // Compiled content pages, excluding the generated cover.
   const contentPages = Math.max(0, out.getPageCount() - 1);
   const bytes = await out.save();

@@ -121,7 +121,7 @@ export async function generateParticipationCertificates(
         .select("name, acronym, year")
         .eq("id", sub.conference_id)
         .maybeSingle();
-      conf = data ?? { name: "GLOGIFT 2027", acronym: "GLOGIFT", year: 2027 };
+      conf = data ?? { name: "GLOGIFT 27", acronym: "GLOGIFT", year: 2027 };
       confCache.set(sub.conference_id, conf);
     }
 
@@ -206,10 +206,10 @@ export async function generateParticipationCertificates(
     try {
       const conf =
         [...confCache.values()][0] ??
-        ({ name: "GLOGIFT 2027", acronym: "GLOGIFT", year: 2027 } as any);
+        ({ name: "GLOGIFT 27", acronym: "GLOGIFT", year: 2027 } as any);
       const brand = conf.acronym
         ? `${conf.acronym} ${conf.year}`
-        : "GLOGIFT 2027";
+        : "GLOGIFT 27";
       const { subject, body } = participationCertificateReadyEmail({
         recipientName: eligible[0]?.full_name ?? undefined,
         paperCount: generated,

@@ -11,7 +11,7 @@ import {
   type ReviewerCertificateSnapshot,
 } from "@/lib/certificates";
 import { sendEmail, emailConfigured } from "@/lib/email";
-import { certificateIssuedEmail } from "@/lib/emailTemplates";
+import { reviewerCertificateThanksEmail } from "@/lib/emailTemplates";
 
 export type ReviewerCertResult = { ok: boolean; message?: string };
 
@@ -151,13 +151,14 @@ export async function generateReviewerCertificate(
       const brand = conference.acronym
         ? `${conference.acronym} ${String(conference.year ?? 2027).slice(-2)}`
         : "GLOGIFT 27";
-      const { subject, body } = certificateIssuedEmail({
+      const base =
+        process.env.NEXT_PUBLIC_SITE_URL || "https://glogift2027.in";
+      const { subject, body } = reviewerCertificateThanksEmail({
         recipientName: displayName,
-        certificateType: "reviewer",
         certificateNumber: certNumber,
         conferenceName: conference.name,
         brand,
-        dashboardUrl: process.env.NEXT_PUBLIC_SITE_URL || "https://glogift2027.in",
+        downloadUrl: `${base.replace(/\/$/, "")}/reviewer`,
       });
       await sendEmail({
         to: reviewer.email,

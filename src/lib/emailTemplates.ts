@@ -1014,3 +1014,42 @@ export function trackEditorOverdueReminderEmail(o: {
   ]);
   return { subject, body };
 }
+
+/**
+ * Warm thank-you sent to a reviewer the moment their Certificate of
+ * Appreciation is generated. Obliged-for-your-support tone, with a link to
+ * sign in and download the certificate from the portal.
+ */
+export function reviewerCertificateThanksEmail(o: {
+  recipientName?: string | null;
+  certificateNumber?: string | null;
+  conferenceName?: string;
+  brand?: string;
+  downloadUrl?: string;
+}): EmailContent {
+  const conf = (o.conferenceName ?? "").trim() || CONF_DEFAULT;
+  const brand = (o.brand ?? "").trim() || CONF_DEFAULT;
+  const url = (o.downloadUrl ?? "").trim() || "https://glogift2027.in/reviewer";
+
+  const subject = `${brand} — Thank you for reviewing · your Certificate of Appreciation`;
+  const body = compose([
+    greeting(o.recipientName ?? undefined, "Reviewer"),
+    "",
+    `Thank you for your generous service as a reviewer for ${conf}. The rigour and care you brought to evaluating submissions directly shaped the quality of the programme, and we are truly obliged for your support.`,
+    "",
+    "In appreciation, your Certificate of Appreciation has now been issued.",
+    o.certificateNumber ? `Certificate no.: ${o.certificateNumber}` : null,
+    "",
+    "You can download it any time from the submission portal:",
+    `• Sign in to your account and open your dashboard: ${url}`,
+    "• Your reviewer certificate appears there with a “Download Reviewer Certificate” button.",
+    "",
+    "We hope to have the pleasure of your continued association with the conference.",
+    "",
+    "This is a system-generated email — please do not reply.",
+    "",
+    "With gratitude,",
+    `Editorial Office, ${conf}`,
+  ]);
+  return { subject, body };
+}

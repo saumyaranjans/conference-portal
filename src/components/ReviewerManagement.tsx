@@ -16,9 +16,22 @@ export type ReviewerAssignment = {
   pathway: "A" | "B";
   status: "invited" | "accepted" | "declined" | "submitted";
   recommendation: string | null;
+  handlingEditor: string | null;
   round: number | null;
   overdue: boolean;
 };
+
+/** Map a reviewer recommendation to a coloured Decision. */
+function decisionOf(rec: string | null): { label: string; cls: string } | null {
+  if (!rec) return null;
+  if (rec === "accept")
+    return { label: "Accept", cls: "bg-emerald-100 text-emerald-800" };
+  if (rec === "reject")
+    return { label: "Reject", cls: "bg-rose-100 text-rose-800" };
+  if (rec.includes("revision"))
+    return { label: "Revision", cls: "bg-blue-100 text-blue-800" };
+  return { label: recLabel(rec), cls: "bg-slate-100 text-slate-700" };
+}
 
 export type ReviewerRow = {
   name: string;
@@ -184,7 +197,12 @@ export function ReviewerManagement({
         r.counts.invited, r.counts.accepted,
         r.counts.completed, r.counts.declined, r.counts.overdue,
         r.assignments
-          .map((a) => `${a.paperId} (Pathway ${a.pathway}, ${STATUS_LABEL[a.status]})`)
+          .map((a) => {
+            const d = decisionOf(a.recommendation);
+            return `${a.paperId} (Pathway ${a.pathway}, ${STATUS_LABEL[a.status]}${
+              d ? ", " + d.label : ""
+            }${a.handlingEditor ? ", ed: " + a.handlingEditor : ""})`;
+          })
           .join("; "),
       ]
         .map(csvCell)
@@ -373,7 +391,7 @@ export function ReviewerManagement({
           <table className="min-w-full divide-y divide-slate-200">
             <thead>
               <tr>
-                {["Reviewer & workload", "Assignments (Paper · Track · Pathway · Status)"].map(
+                {["Reviewer & workload", "Assignments"].map(
                   (h) => (
                     <th key={h} className="th">
                       {h}
@@ -454,32 +472,58 @@ export function ReviewerManagement({
                     {r.assignments.length === 0 ? (
                       <span className="text-xs text-slate-400">No assignments</span>
                     ) : (
-                      <ul className="space-y-1">
-                        {r.assignments.map((a, i) => (
-                          <li key={`${r.email}-${i}`} className="text-xs">
-                            <span className="font-mono text-slate-700 dark:text-slate-300">
-                              {a.paperId}
-                            </span>
-                            <span className="text-slate-400"> · {a.trackCode}</span>
-                            <span className={`badge ml-2 ${PATHWAY_CLASS[a.pathway]}`}>
-                              Pathway {a.pathway}
-                            </span>
-                            <span className={`badge ml-1 ${STATUS_CLASS[a.status]}`}>
-                              {STATUS_LABEL[a.status]}
-                            </span>
-                            {a.overdue && a.status === "accepted" && (
-                              <span className="badge ml-1 bg-rose-100 text-rose-700">
-                                Overdue
-                              </span>
-                            )}
-                            {a.recommendation && (
-                              <span className="ml-1 text-[10px] text-slate-500">
-                                → {recLabel(a.recommendation)}
-                              </span>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
+                      <table className="w-full text-[11px]">
+                        <thead>
+                          <tr className="text-left text-[10px] uppercase tracking-wide text-slate-400">
+                            <th className="pr-3 font-medium">Paper</th>
+                            <th className="pr-3 font-medium">Track</th>
+                            <th className="pr-3 font-medium">Pathway</th>
+                            <th className="pr-3 font-medium">Status</th>
+                            <th className="pr-3 font-medium">Decision</th>
+                            <th className="font-medium">Handling editor</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {r.assignments.map((a, i) => {
+                            const dec = decisionOf(a.recommendation);
+                            return (
+                              <tr key={`${r.email}-${i}`} className="align-top">
+                                <td className="pr-3 py-0.5 font-mono text-slate-700 dark:text-slate-300">
+                                  {a.paperId}
+                                </td>
+                                <td className="pr-3 py-0.5 text-slate-500">
+                                  {a.trackCode}
+                                </td>
+                                <td className="pr-3 py-0.5">
+                                  <span className={`badge ${PATHWAY_CLASS[a.pathway]}`}>
+                                    Pathway {a.pathway}
+                                  </span>
+                                </td>
+                                <td className="pr-3 py-0.5">
+                                  <span className={`badge ${STATUS_CLASS[a.status]}`}>
+                                    {STATUS_LABEL[a.status]}
+                                  </span>
+                                  {a.overdue && a.status === "accepted" && (
+                                    <span className="badge ml-1 bg-rose-100 text-rose-700">
+                                      Overdue
+                                    </span>
+                                  )}
+                                </td>
+                                <td className="pr-3 py-0.5">
+                                  {dec ? (
+                                    <span className={`badge ${dec.cls}`}>{dec.label}</span>
+                                  ) : (
+                                    <span className="text-slate-300">—</span>
+                                  )}
+                                </td>
+                                <td className="py-0.5 whitespace-nowrap text-slate-600 dark:text-slate-300">
+                                  {a.handlingEditor ?? "—"}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
                     )}
                   </td>
                 </tr>

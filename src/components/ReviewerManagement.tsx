@@ -427,11 +427,6 @@ export function ReviewerManagement({
                 <tr key={r.email} className="align-top hover:bg-slate-50">
                   <td className="td whitespace-nowrap">
                     <span className="font-medium text-slate-900">{r.name}</span>
-                    {r.reviewerNo && (
-                      <span className="mt-0.5 block w-fit rounded bg-indigo-100 px-1.5 py-0 text-[11px] font-semibold text-indigo-800 dark:bg-indigo-500/15 dark:text-indigo-300">
-                        Reviewer {r.reviewerNo}
-                      </span>
-                    )}
                     {r.mobile && (
                       <span className="block text-xs text-slate-500">{r.mobile}</span>
                     )}

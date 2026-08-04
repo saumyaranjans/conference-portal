@@ -47,6 +47,14 @@ export type PersonRow = {
   fee: RegistrationFee;
 };
 
+const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+
+/** The alphabet-index bucket for a name: its first A–Z letter, else "#". */
+function initialOf(name: string): string {
+  const c = (name.trim()[0] || "").toUpperCase();
+  return c >= "A" && c <= "Z" ? c : "#";
+}
+
 /**
  * Author Management — one row per PERSON (deduped by email): the papers they are
  * on and their role, whether they have signed up / registered, their declared
@@ -63,14 +71,17 @@ export function AuthorManagement({
   const [track, setTrack] = useState("all");
   const [q, setQ] = useState("");
   const [dir, setDir] = useState<"asc" | "desc">("asc");
+  // Active alphabet-index letter ("all" = every author).
+  const [letter, setLetter] = useState<string>("all");
   // Which paper's title/track popup is open (keyed by email + paper index).
   const [openPaper, setOpenPaper] = useState<string | null>(null);
   // Which person's participation desk is in edit mode (by email).
   const [editEmail, setEditEmail] = useState<string | null>(null);
 
-  const filtered = useMemo(() => {
+  const { list: filtered, available } = useMemo(() => {
     const needle = q.trim().toLowerCase();
-    let r = rows.filter((row) => {
+    // Track + search first; the alphabet index reflects this subset.
+    const base = rows.filter((row) => {
       if (track !== "all" && !row.trackCodes.includes(track)) return false;
       if (!needle) return true;
       return (
@@ -79,12 +90,14 @@ export function AuthorManagement({
         row.papers.some((p) => p.paperId.toLowerCase().includes(needle))
       );
     });
+    const avail = new Set(base.map((row) => initialOf(row.name)));
+    let r = letter === "all" ? base : base.filter((row) => initialOf(row.name) === letter);
     r = [...r].sort((a, b) => {
       const c = a.name.localeCompare(b.name);
       return dir === "asc" ? c : -c;
     });
-    return r;
-  }, [rows, track, q, dir]);
+    return { list: r, available: avail };
+  }, [rows, track, q, dir, letter]);
 
   return (
     <div className="space-y-4 [&_.badge]:rounded-md">
@@ -117,6 +130,56 @@ export function AuthorManagement({
         <span className="text-xs text-slate-500 ml-auto">
           {filtered.length} of {rows.length} authors
         </span>
+      </div>
+
+      {/* A–Z index: jump to authors whose name starts with a letter. */}
+      <div className="flex flex-wrap items-center gap-1">
+        <button
+          type="button"
+          onClick={() => setLetter("all")}
+          className={`rounded-md px-2 py-1 text-xs font-medium transition ${
+            letter === "all"
+              ? "bg-blue-600 text-white"
+              : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
+          }`}
+        >
+          All
+        </button>
+        {ALPHABET.map((L) => {
+          const has = available.has(L);
+          const active = letter === L;
+          return (
+            <button
+              key={L}
+              type="button"
+              disabled={!has}
+              onClick={() => setLetter(active ? "all" : L)}
+              className={`w-7 rounded-md py-1 text-xs font-semibold transition ${
+                active
+                  ? "bg-blue-600 text-white"
+                  : has
+                    ? "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
+                    : "bg-transparent text-slate-300 cursor-not-allowed dark:text-slate-700"
+              }`}
+            >
+              {L}
+            </button>
+          );
+        })}
+        {available.has("#") && (
+          <button
+            type="button"
+            onClick={() => setLetter(letter === "#" ? "all" : "#")}
+            className={`w-7 rounded-md py-1 text-xs font-semibold transition ${
+              letter === "#"
+                ? "bg-blue-600 text-white"
+                : "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
+            }`}
+            title="Names not starting with A–Z"
+          >
+            #
+          </button>
+        )}
       </div>
 
       <div className="card overflow-hidden">

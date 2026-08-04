@@ -225,7 +225,7 @@ const SESSIONS: {
 const GUIDELINES: [string, string, boolean?][] = [
   [
     "Stage 1 — Abstract (mandatory)",
-    "Submit a 500-word abstract through the portal, naming the track it belongs to. State your intended Stage 2 pathway at this point.",
+    "Submit a 500-word abstract through the portal, naming the track it belongs to. State your intended Stage 2 pathway — Pathway A or Pathway B — at this point.",
   ],
   [
     "Stage 2 — Choose your pathway",
@@ -234,7 +234,7 @@ const GUIDELINES: [string, string, boolean?][] = [
   ],
   [
     "Review",
-    "Abstracts are reviewed by the Track Editor, who may seek reviewers or decide directly. Pathway B full papers undergo double-blind peer review by the Scientific Committee.",
+    "The abstract is reviewed by the Track Editor, who may seek reviewers or decide directly — this is the complete review for Pathway A. Pathway B full papers additionally undergo double-blind peer review by the Scientific Committee.",
   ],
   [
     "Notification",
@@ -242,13 +242,36 @@ const GUIDELINES: [string, string, boolean?][] = [
   ],
   [
     "Your place is secured by the abstract",
-    "If a Pathway B full paper is not accepted, you may still register, attend and present on the strength of the accepted abstract.",
+    "If a Pathway B full paper is not accepted, you may still register, attend and present on the strength of the accepted abstract under Pathway A.",
   ],
   [
     "Registration and final formatting",
-    "Accepted authors register. Pathway B authors submit a formatted paper; others submit presentation materials.",
+    "Accepted authors register. Pathway B authors submit their final formatted full paper. Pathway A authors — presenting on the accepted abstract, with no full paper — submit only their presentation materials (slides / poster).",
   ],
 ];
+
+// Pathway A = blue, Pathway B = amber — matching this page's timeline / route
+// diagram, so the reader sees one consistent colour language.
+const PATHWAY_CLASS = {
+  A: "rounded px-1 font-bold text-blue-800 bg-blue-100 dark:bg-blue-500/20 dark:text-blue-200",
+  B: "rounded px-1 font-bold text-amber-800 bg-amber-100 dark:bg-amber-500/20 dark:text-amber-200",
+} as const;
+
+/** Inline bold+highlighted "Pathway A" / "Pathway B" tag, for prose that also
+ *  contains other JSX. */
+function PW({ p }: { p: "A" | "B" }) {
+  return <strong className={PATHWAY_CLASS[p]}>Pathway {p}</strong>;
+}
+
+/** Render plain text with every "Pathway A" / "Pathway B" mention bolded and
+ *  highlighted. */
+function highlightPathways(text: string) {
+  return text.split(/(Pathway [AB])/g).map((part, i) => {
+    if (part === "Pathway A") return <PW key={i} p="A" />;
+    if (part === "Pathway B") return <PW key={i} p="B" />;
+    return <span key={i}>{part}</span>;
+  });
+}
 
 const REGISTRATION_FEES = [
   ["Academicians (Faculty)", "10,000", "11,500", "350", "375"],
@@ -696,8 +719,8 @@ export function LandingPage() {
               and policy-oriented work is welcome.
             </p>
             <p className="mt-3">
-              Authors whose abstracts are accepted for Pathway B should prepare
-              a double-anonymous full paper using the{" "}
+              Authors whose abstracts are accepted for <PW p="B" /> should
+              prepare a double-anonymous full paper using the{" "}
               <Link
                 href="/full-paper-submission-guidelines"
                 className="font-semibold text-blue-700 hover:underline dark:text-blue-300"
@@ -749,17 +772,16 @@ export function LandingPage() {
                   {hash && <span className="text-blue-600">#</span>}
                 </p>
                 <p className="text-xs text-slate-600 mt-1.5 dark:text-slate-400">
-                  {detail}
+                  {highlightPathways(detail)}
                 </p>
               </div>
             ))}
           </div>
           <p className="mt-4 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
-            <span className="text-blue-600">#</span> Choosing Pathway B keeps you
-            in the Pathway A (abstract) phase until your abstract is accepted.
-            Even after acceptance, the corresponding author may still return to
-            Pathway A and present on the accepted abstract, or continue to submit
-            the full manuscript under Pathway B.
+            <span className="text-blue-600">#</span>{" "}
+            {highlightPathways(
+              "Choosing Pathway B keeps you in the Pathway A (abstract) phase until your abstract is accepted. Even after acceptance, the corresponding author may still return to Pathway A and present on the accepted abstract, or continue to submit the full manuscript under Pathway B."
+            )}
           </p>
           <div className="mt-4 flex justify-center">
             <Link href="/login" className="btn-primary px-6 py-3">
@@ -1021,13 +1043,9 @@ export function LandingPage() {
                   </div>
                 ))}
                 <p className="text-[11px] leading-relaxed text-slate-500">
-                  Both pathways run identically through the abstract stage — a
-                  Pathway B author is on Pathway A until the abstract is accepted
-                  (30 Nov 2026). Only then does the faded full-paper stretch begin,
-                  which Pathway A skips; at that point a Pathway B author may
-                  either continue with the full manuscript or return to Pathway A
-                  and present on the accepted abstract. Both pathways rejoin to
-                  register and present.
+                  {highlightPathways(
+                    "Both pathways run identically through the abstract stage — a Pathway B author is on Pathway A until the abstract is accepted (30 Nov 2026). Only then does the faded full-paper stretch begin, which Pathway A skips; at that point a Pathway B author may either continue with the full manuscript or return to Pathway A and present on the accepted abstract. Both pathways rejoin to register and present."
+                  )}
                 </p>
               </div>
             </div>
@@ -1070,10 +1088,9 @@ export function LandingPage() {
           </ol>
 
           <p className="md:hidden mt-4 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
-            A Pathway B author is on Pathway A until the abstract is accepted
-            (30 Nov 2026); only then does the full-paper stage begin. After
-            acceptance, a Pathway B author may continue with the full manuscript
-            or return to Pathway A and present on the accepted abstract.
+            {highlightPathways(
+              "A Pathway B author is on Pathway A until the abstract is accepted (30 Nov 2026); only then does the full-paper stage begin. After acceptance, a Pathway B author may continue with the full manuscript or return to Pathway A and present on the accepted abstract."
+            )}
           </p>
 
           <p className="mt-6 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
@@ -1082,9 +1099,10 @@ export function LandingPage() {
             around <strong>30 days beyond (or even more)</strong> this depending
             on how early the author submits the full paper, reviewer acceptance,
             and the time the Track Editor takes to reach a decision. The
-            organisers make every effort to decide by 15 December 2026. Pathway B
-            authors are therefore advised to submit at the earliest and to begin
-            preparing their full paper as soon as they choose Pathway B.
+            organisers make every effort to decide by 15 December 2026.{" "}
+            <PW p="B" /> authors are therefore advised to submit at the earliest
+            and to begin preparing their full paper as soon as they choose{" "}
+            <PW p="B" />.
           </p>
         </section>
 

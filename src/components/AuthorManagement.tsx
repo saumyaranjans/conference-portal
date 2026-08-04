@@ -125,7 +125,7 @@ export function AuthorManagement({
                 {[
                   "Author",
                   "Papers (Paper ID · Role · Pathway) & participation",
-                  "Role & status",
+                  "Role, Status, and Applicable Participation Fee",
                   "Participation desk",
                 ].map((h) => (
                   <th key={h} className="th">
@@ -187,6 +187,15 @@ export function AuthorManagement({
                       }`}
                     >
                       {r.category ?? "Category not specified"}
+                    </span>
+                    <span
+                      className={`mt-1.5 block w-fit rounded-md border px-2 py-0.5 text-[11px] font-medium ${
+                        r.member
+                          ? "border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-300"
+                          : "border-slate-200 bg-slate-50 text-slate-400 dark:border-slate-700 dark:bg-slate-800"
+                      }`}
+                    >
+                      {r.member ? "★ GLOGIFT member" : "Not a GLOGIFT member"}
                     </span>
                   </td>
 
@@ -312,53 +321,61 @@ export function AuthorManagement({
                         </span>
                       )}
                     </div>
+
+                    {/* Applicable participation fee (timeline-driven, or the
+                        paid tier once recorded on the Participation desk) */}
+                    <div className="mt-2.5 border-t border-slate-100 pt-2 dark:border-slate-800">
+                      <p className="text-[10px] font-medium uppercase tracking-wide text-slate-400">
+                        Participation fee
+                      </p>
+                      {r.intention !== "attending" ? (
+                        <span className="text-xs text-slate-400">
+                          Not applicable
+                        </span>
+                      ) : feeView.known ? (
+                        <div className="mt-0.5">
+                          <span
+                            className={`badge mr-2 ${
+                              feeView.tier === "early"
+                                ? "bg-emerald-100 text-emerald-800"
+                                : "bg-amber-100 text-amber-800"
+                            }`}
+                          >
+                            {feeView.tier === "early" ? "Early bird" : "Regular"}
+                          </span>
+                          <span className="font-semibold text-slate-800">
+                            {formatMoney(feeView.currency, feeView.amount)}
+                          </span>
+                          {feeView.discount > 0 && (
+                            <span className="block text-[10px] text-slate-400">
+                              <span className="line-through">
+                                {formatMoney(feeView.currency, feeView.base)}
+                              </span>{" "}
+                              −15% member ({r.category})
+                            </span>
+                          )}
+                          {feeView.discount === 0 && r.category && (
+                            <span className="block text-[10px] text-slate-400">
+                              {r.category}
+                            </span>
+                          )}
+                          <span className="block text-[10px] text-slate-400">
+                            {feeView.overridden
+                              ? "Paid tier (overrides timeline)"
+                              : "As per timeline"}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-slate-400">
+                          Category not set
+                        </span>
+                      )}
+                    </div>
                   </td>
 
-                  {/* Registration amount + attendance / certificate actions */}
+                  {/* Participation desk — attendance / registration / payment
+                      + certificate */}
                   <td className="td align-top min-w-[13rem]">
-                    {r.intention !== "attending" ? (
-                      <span className="text-xs text-slate-400">
-                        Not applicable
-                      </span>
-                    ) : feeView.known ? (
-                      <div>
-                        <span
-                          className={`badge mr-2 ${
-                            feeView.tier === "early"
-                              ? "bg-emerald-100 text-emerald-800"
-                              : "bg-amber-100 text-amber-800"
-                          }`}
-                        >
-                          {feeView.tier === "early" ? "Early bird" : "Regular"}
-                        </span>
-                        <span className="font-semibold text-slate-800">
-                          {formatMoney(feeView.currency, feeView.amount)}
-                        </span>
-                        {feeView.discount > 0 && (
-                          <span className="block text-[10px] text-slate-400">
-                            <span className="line-through">
-                              {formatMoney(feeView.currency, feeView.base)}
-                            </span>{" "}
-                            −15% member ({r.category})
-                          </span>
-                        )}
-                        {feeView.discount === 0 && r.category && (
-                          <span className="block text-[10px] text-slate-400">
-                            {r.category}
-                          </span>
-                        )}
-                        <span className="block text-[10px] text-slate-400">
-                          {feeView.overridden
-                            ? "Paid tier (overrides timeline)"
-                            : "As per timeline"}
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="text-xs text-slate-400">
-                        Category not set
-                      </span>
-                    )}
-
                     {/* Attendance · Registration · Payment — editable desk */}
                     <div className="mt-2.5 space-y-1.5 border-t border-slate-100 pt-2 dark:border-slate-800">
                       {editEmail === r.email ? (

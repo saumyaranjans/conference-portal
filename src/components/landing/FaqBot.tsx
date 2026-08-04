@@ -5,6 +5,39 @@ import { useEffect, useRef, useState } from "react";
 export type FaqItem = { q: string; a: string };
 type Msg = { role: "bot" | "user"; text: string };
 
+/** Toshi — a cute Indian girl (wheatish skin, black hair, small bindi). */
+function ToshiAvatar({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 48 48" className={className} aria-hidden>
+      {/* hair */}
+      <circle cx="24" cy="23" r="15" fill="#1f1714" />
+      {/* face (wheatish) */}
+      <circle cx="24" cy="27" r="12" fill="#E4B78B" />
+      {/* fringe */}
+      <path
+        d="M11 25 C13 15 18 12 24 12 C30 12 35 15 37 25 C32 19 28 18 24 18 C20 18 16 19 11 25 Z"
+        fill="#1f1714"
+      />
+      {/* bindi */}
+      <circle cx="24" cy="20.5" r="1" fill="#c0392b" />
+      {/* cheeks */}
+      <circle cx="16.8" cy="30" r="1.7" fill="#e88f7a" opacity="0.5" />
+      <circle cx="31.2" cy="30" r="1.7" fill="#e88f7a" opacity="0.5" />
+      {/* eyes */}
+      <circle cx="20" cy="27.5" r="1.6" fill="#20140f" />
+      <circle cx="28" cy="27.5" r="1.6" fill="#20140f" />
+      {/* smile */}
+      <path
+        d="M20.5 32.5 Q24 35.6 27.5 32.5"
+        fill="none"
+        stroke="#8a5433"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 const STOP = new Set([
   "the", "a", "an", "is", "are", "do", "i", "to", "of", "for", "and", "on",
   "in", "at", "my", "me", "you", "your", "how", "what", "when", "where", "who",
@@ -91,11 +124,11 @@ export function FaqBot({ items }: { items: FaqItem[] }) {
     <>
       {/* Panel */}
       {open && (
-        <div className="fixed right-4 top-16 z-50 flex h-[70vh] max-h-[560px] w-[calc(100vw-2rem)] max-w-sm flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900">
+        <div className="fixed bottom-24 right-4 z-[9999] flex h-[70vh] max-h-[560px] w-[calc(100vw-2rem)] max-w-sm flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900">
           <div className="flex items-center justify-between gap-2 bg-gradient-to-r from-[#1e3a8a] to-[#0e7490] px-4 py-3 text-white">
             <div className="flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 text-lg">
-                👧
+              <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-white/15">
+                <ToshiAvatar className="h-8 w-8" />
               </span>
               <div>
                 <p className="text-sm font-semibold leading-tight">Toshi · GLOGIFT 27 Assistant</p>
@@ -178,18 +211,22 @@ export function FaqBot({ items }: { items: FaqItem[] }) {
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-label={open ? "Close assistant" : "Ask Toshi — FAQ assistant"}
-        className={`fixed right-4 top-4 z-50 flex items-center gap-2 rounded-full bg-gradient-to-br from-[#1d4ed8] to-[#0e7490] py-2 pl-2 pr-4 text-sm font-semibold text-white shadow-xl transition-all duration-300 hover:scale-105 ${
+        className={`fixed bottom-20 right-6 z-[9999] flex items-center gap-2 rounded-full bg-gradient-to-br from-[#1d4ed8] to-[#0e7490] py-2 pl-2 pr-4 text-sm font-semibold text-white shadow-xl transition-all duration-300 hover:scale-105 ${
           visible
             ? "translate-y-0 opacity-100"
-            : "pointer-events-none -translate-y-3 opacity-0"
+            : "pointer-events-none translate-y-3 opacity-0"
         }`}
       >
         <span
-          className={`grid h-8 w-8 place-items-center rounded-full bg-white/20 text-lg ${
+          className={`grid h-9 w-9 place-items-center overflow-hidden rounded-full bg-white/20 ${
             open ? "" : "animate-bounce"
           }`}
         >
-          {open ? "✕" : "👧"}
+          {open ? (
+            <span className="text-lg">✕</span>
+          ) : (
+            <ToshiAvatar className="h-8 w-8" />
+          )}
         </span>
         <span>{open ? "Close" : "Ask Toshi"}</span>
       </button>

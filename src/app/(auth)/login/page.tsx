@@ -6,6 +6,10 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { HomeLink } from "@/components/HomeLink";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { ROLE_HOME, type AppRole } from "@/lib/types";
+
+// Landing priority for multi-role users (mirrors the proxy / former home page).
+const ROLE_PRIORITY: AppRole[] = ["chief", "editor", "author", "reviewer", "admin"];
 
 const CONFERENCE =
   "International Conference on AI-Driven Solutions in Management: Flexibility, Digitalisation and Decarbonization";
@@ -23,7 +27,8 @@ export default function LoginPage() {
     setBusy(true);
     setError(null);
 
-    const { error } = await createClient().auth.signInWithPassword({
+    const supabase = createClient();
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -33,7 +38,32 @@ export default function LoginPage() {
       setBusy(false);
       return;
     }
-    router.push("/");
+
+    // Send the user INTO the portal, not to "/" (which is the public landing).
+    // Prefer an explicit ?next= protected path; otherwise their role home.
+    let dest = "/author";
+    try {
+      const uid = data.user?.id;
+      if (uid) {
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("roles")
+          .eq("id", uid)
+          .single();
+        const roles = (prof?.roles ?? []) as string[];
+        const primary =
+          ROLE_PRIORITY.find((r) => roles.includes(r)) ?? "author";
+        dest = ROLE_HOME[primary];
+      }
+    } catch {
+      /* fall back to /author */
+    }
+    const next = new URLSearchParams(window.location.search).get("next");
+    if (next && next.startsWith("/") && !next.startsWith("//") && next !== "/") {
+      dest = next;
+    }
+
+    router.push(dest);
     router.refresh();
   }
 

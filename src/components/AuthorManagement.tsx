@@ -992,19 +992,32 @@ export function AuthorManagement({
                           ✓ Certificate generated
                         </span>
                       ) : r.attended && r.registered && r.paid ? (
-                        // The Generate control appears only once attendance,
-                        // registration AND payment are all recorded.
-                        <ActionForm action={generateParticipationCertificates}>
-                          <input type="hidden" name="email" value={r.email} />
-                          <SubmitButton
-                            variant="primary"
-                            className="w-full justify-center text-[11px] py-0.5 px-2"
+                        // The Preview + Generate controls appear only once
+                        // attendance, registration AND payment are all recorded.
+                        <div className="space-y-1">
+                          <a
+                            href={`/api/participation-certificate/preview?email=${encodeURIComponent(
+                              r.email
+                            )}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="btn-secondary block w-full justify-center text-center text-[11px] py-0.5 px-2"
+                            title="Open the certificate as it will look — nothing is saved or emailed"
                           >
-                            {r.certsGenerated > 0
-                              ? "Generate remaining"
-                              : "Generate certificate"}
-                          </SubmitButton>
-                        </ActionForm>
+                            Preview certificate
+                          </a>
+                          <ActionForm action={generateParticipationCertificates}>
+                            <input type="hidden" name="email" value={r.email} />
+                            <SubmitButton
+                              variant="primary"
+                              className="w-full justify-center text-[11px] py-0.5 px-2"
+                            >
+                              {r.certsGenerated > 0
+                                ? "Generate remaining"
+                                : "Generate certificate"}
+                            </SubmitButton>
+                          </ActionForm>
+                        </div>
                       ) : (
                         <span className="block text-center text-[10px] text-slate-400">
                           Mark attended, registered &amp; paid to generate

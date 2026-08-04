@@ -970,3 +970,47 @@ export function fullPaperCancelledEmail(o: {
   ]);
   return { subject, body };
 }
+
+/**
+ * A system reminder to the handling Track Editor that a review assignment on
+ * one of their papers is overdue and should be brought to completion soon.
+ * Reviewer identities are never named — the editor already knows their track.
+ */
+export function trackEditorOverdueReminderEmail(o: {
+  editorName?: string | null;
+  paperId?: string | null;
+  paperTitle?: string | null;
+  track?: string | null;
+  dueDate?: string | null;
+  reminderNumber?: number;
+  conferenceName?: string;
+  brand?: string;
+}): EmailContent {
+  const conf = (o.conferenceName ?? "").trim() || CONF_DEFAULT;
+  const brand = (o.brand ?? "").trim() || CONF_DEFAULT;
+  const ref = (o.paperId ?? "").trim() || "one of your track papers";
+  const due = (o.dueDate ?? "").trim();
+  const nth =
+    o.reminderNumber && o.reminderNumber > 1
+      ? ` (reminder ${o.reminderNumber})`
+      : "";
+
+  const subject = `${brand} — Action needed: overdue review on ${ref}${nth}`;
+  const body = compose([
+    greeting(o.editorName ?? undefined, "Track Editor"),
+    "",
+    `This is a reminder that the review for paper ${ref}${
+      o.paperTitle ? ` ("${o.paperTitle}")` : ""
+    }${o.track ? ` in the ${o.track} track` : ""} is overdue${
+      due ? `; it was due on ${due}` : ""
+    } and should be completed soon.`,
+    "",
+    "As the handling Track Editor, kindly follow up with the assigned reviewer so the paper can move to a decision without further delay. If a reviewer is unresponsive, please reassign or step in as needed.",
+    "",
+    "This is a system-generated reminder — please do not reply.",
+    "",
+    "With regards,",
+    `Editorial Office, ${conf}`,
+  ]);
+  return { subject, body };
+}

@@ -17,7 +17,7 @@ export async function ReviewerManagementView() {
   const { data } = await admin
     .from("assignments")
     .select(
-      "id, status, due_date, round, reviewer_number, reviewer_id, reviewer:profiles!assignments_reviewer_id_fkey(id, full_name, email, mobile, affiliation, institution), submissions!inner(paper_id, title, submitted_at, created_at, submission_type, editor:profiles!submissions_assigned_editor_id_fkey(full_name), tracks(code, name), submission_authors(full_name, is_corresponding, author_order)), reviews(recommendation, is_submitted)"
+      "id, status, due_date, round, reviewer_number, reviewer_id, editor_reminder_count, reviewer:profiles!assignments_reviewer_id_fkey(id, full_name, email, mobile, affiliation, institution), submissions!inner(paper_id, title, submitted_at, created_at, submission_type, editor:profiles!submissions_assigned_editor_id_fkey(full_name), tracks(code, name), submission_authors(full_name, is_corresponding, author_order)), reviews(recommendation, is_submitted)"
     );
 
   const list = ((data ?? []) as any[]).filter((a) => a.reviewer && a.reviewer.email);
@@ -63,6 +63,8 @@ export async function ReviewerManagementView() {
         .filter((x: any) => !x.is_corresponding)
         .map((x: any) => x.full_name);
       return {
+        assignmentId: a.id as string,
+        editorReminderCount: (a.editor_reminder_count ?? 0) as number,
         paperId: a.submissions?.paper_id ?? "—",
         reviewerNumber: a.reviewer_number ?? null,
         title: a.submissions?.title ?? "",

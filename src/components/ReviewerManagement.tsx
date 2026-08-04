@@ -10,9 +10,14 @@ import {
 } from "@/lib/nameIndex";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { generateReviewerCertificate } from "@/lib/reviewerCertificateActions";
+import { remindTrackEditorOverdue } from "@/lib/reviewerReminderActions";
 import { MAX_REVIEWS_PER_REVIEWER } from "@/lib/types";
 
 export type ReviewerAssignment = {
+  /** assignments.id — used to send an overdue reminder to the handling editor. */
+  assignmentId: string;
+  /** How many overdue reminders have already gone to the handling editor. */
+  editorReminderCount: number;
   paperId: string;
   reviewerNumber: number | null;
   title: string;
@@ -304,6 +309,23 @@ export function ReviewerManagement({
               <span>Revision <b className="text-sm">{c.revision}</b></span>
               <span className="opacity-60">·</span>
               <span>Reject <b className="text-sm">{c.reject}</b></span>
+              {(() => {
+                const total = c.accept + c.revision + c.reject;
+                const pct = (n: number) =>
+                  total ? `${Math.round((n / total) * 100)}%` : "—";
+                return (
+                  <>
+                    <span className="mx-0.5 inline-block h-3 w-px bg-current opacity-30 align-middle" />
+                    <span title="Share of decided reviews recommending Accept">
+                      Accept rate <b className="text-sm">{pct(c.accept)}</b>
+                    </span>
+                    <span className="opacity-60">·</span>
+                    <span title="Share of decided reviews recommending Reject">
+                      Reject rate <b className="text-sm">{pct(c.reject)}</b>
+                    </span>
+                  </>
+                );
+              })()}
             </span>
           ))}
         </div>
@@ -585,7 +607,36 @@ export function ReviewerManagement({
                                   )}
                                 </td>
                                 <td className="py-0.5 whitespace-nowrap text-slate-600 dark:text-slate-300">
-                                  {a.handlingEditor ?? "—"}
+                                  <span className="block">{a.handlingEditor ?? "—"}</span>
+                                  {a.overdue && a.handlingEditor && (
+                                    <ActionForm
+                                      action={remindTrackEditorOverdue}
+                                      className="mt-1 inline-block font-sans"
+                                    >
+                                      <input
+                                        type="hidden"
+                                        name="assignment_id"
+                                        value={a.assignmentId}
+                                      />
+                                      <SubmitButton
+                                        variant="secondary"
+                                        className={`!py-0.5 !px-2 !text-[10px] ${
+                                          a.editorReminderCount > 0
+                                            ? "!bg-amber-100 !text-amber-800 dark:!bg-amber-500/15 dark:!text-amber-300"
+                                            : ""
+                                        }`}
+                                        title={
+                                          a.editorReminderCount > 0
+                                            ? `Overdue reminder emailed ${a.editorReminderCount} time(s). Click to send another.`
+                                            : "Email the handling editor that this review is overdue and should be completed soon"
+                                        }
+                                      >
+                                        {a.editorReminderCount > 0
+                                          ? `🔔 Reminded ${a.editorReminderCount}×`
+                                          : "🔔 Remind editor"}
+                                      </SubmitButton>
+                                    </ActionForm>
+                                  )}
                                 </td>
                               </tr>
                             );
@@ -600,15 +651,28 @@ export function ReviewerManagement({
                         ✓ Certificate generated
                       </span>
                     ) : r.counts.completed > 0 ? (
-                      <ActionForm action={generateReviewerCertificate}>
-                        <input type="hidden" name="email" value={r.email} />
-                        <SubmitButton
-                          variant="primary"
-                          className="w-full justify-center text-[11px] py-0.5 px-2"
+                      <div className="space-y-1">
+                        <a
+                          href={`/api/reviewer-certificate/preview?email=${encodeURIComponent(
+                            r.email
+                          )}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn-secondary block w-full justify-center text-center text-[11px] py-0.5 px-2"
+                          title="Open the certificate as it will look — nothing is saved or emailed"
                         >
-                          Generate certificate
-                        </SubmitButton>
-                      </ActionForm>
+                          Preview certificate
+                        </a>
+                        <ActionForm action={generateReviewerCertificate}>
+                          <input type="hidden" name="email" value={r.email} />
+                          <SubmitButton
+                            variant="primary"
+                            className="w-full justify-center text-[11px] py-0.5 px-2"
+                          >
+                            Generate certificate
+                          </SubmitButton>
+                        </ActionForm>
+                      </div>
                     ) : (
                       <span className="block text-center text-[10px] text-slate-400">
                         No completed review yet

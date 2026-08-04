@@ -89,6 +89,8 @@ export function AuthorManagement({
 }) {
   const [track, setTrack] = useState("all");
   const [q, setQ] = useState("");
+  const [regFilter, setRegFilter] = useState<"all" | "registered" | "not">("all");
+  const [modeFilter, setModeFilter] = useState<"all" | "onsite" | "virtual">("all");
   // Active alphabet-index letter ("all" = every author).
   const [letter, setLetter] = useState<string>("all");
   // Track filter for the Registration analytics panel (independent of the table).
@@ -117,6 +119,87 @@ export function AuthorManagement({
       modeUnset,
     };
   }, [rows, anaTrack]);
+
+  // Download the currently-filtered list as a spreadsheet (CSV, opens in
+  // Excel). Row 1 records the active filters; row 2 is the column header.
+  function downloadExcel() {
+    const esc = (v: unknown) => {
+      const s = String(v ?? "");
+      return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const modeLabel = (m: string | null) =>
+      m === "onsite" ? "On-site" : m === "virtual" ? "Virtual" : "";
+    const filtersSummary = [
+      `Track: ${track === "all" ? "All tracks" : track}`,
+      `Search: ${q.trim() || "—"}`,
+      `Registration: ${
+        regFilter === "all"
+          ? "All"
+          : regFilter === "registered"
+            ? "Registered"
+            : "Not registered"
+      }`,
+      `Mode: ${
+        modeFilter === "all" ? "All" : modeFilter === "onsite" ? "On-site" : "Virtual"
+      }`,
+      `Name starts with: ${letter === "all" ? "All" : letter}`,
+    ].join("   |   ");
+    const headers = [
+      "Author Name", "Mobile", "Email", "Participant Category", "GLOGIFT Member",
+      "Paper IDs", "Tracks", "Role(s)", "Signed up", "Registered", "Fee paid",
+      "Fee amount", "Attendance intention", "Attended", "Reported mode",
+      "Actual mode", "Mode changed", "Certificate generated",
+    ];
+    const dataRows = filtered.map((r) => {
+      const eff = r.modeActual ?? r.mode;
+      const feeInfo = r.paidTier
+        ? feeForTier(r.category, r.member, r.paidTier)
+        : null;
+      return [
+        r.name, r.mobile ?? "", r.email, r.category ?? "",
+        r.member ? "Yes" : "No",
+        r.papers.map((p) => p.paperId).join("; "),
+        r.trackCodes.join("; "),
+        r.roles.join("; "),
+        r.signedUp ? "Yes" : "No",
+        r.registered ? "Yes" : "No",
+        r.paidTier ? (r.paidTier === "early" ? "Early bird" : "Regular") : "Not paid",
+        feeInfo?.known ? formatMoney(feeInfo.currency, feeInfo.amount) : "",
+        r.intention === "attending"
+          ? "Attending"
+          : r.intention === "not"
+            ? "Not attending"
+            : "Undeclared",
+        r.attended ? "Yes" : "No",
+        modeLabel(r.mode),
+        modeLabel(eff),
+        r.modeActual != null && r.mode != null && r.modeActual !== r.mode
+          ? "Yes"
+          : "No",
+        r.certEligiblePapers > 0 && r.certsGenerated >= r.certEligiblePapers
+          ? "Yes"
+          : "No",
+      ]
+        .map(esc)
+        .join(",");
+    });
+    const csv = [
+      esc(`Filters — ${filtersSummary}`),
+      headers.map(esc).join(","),
+      ...dataRows,
+    ].join("\r\n");
+    const blob = new Blob([`﻿${csv}`], {
+      type: "text/csv;charset=utf-8;",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "author-management.csv";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
   // Which paper's title/track popup is open (keyed by email + paper index).
   const [openPaper, setOpenPaper] = useState<string | null>(null);
   // Which person's participation desk is in edit mode (by email).
@@ -127,6 +210,10 @@ export function AuthorManagement({
     // Track + search first; the alphabet index reflects this subset.
     const base = rows.filter((row) => {
       if (track !== "all" && !row.trackCodes.includes(track)) return false;
+      if (regFilter === "registered" && !row.registered) return false;
+      if (regFilter === "not" && row.registered) return false;
+      if (modeFilter !== "all" && (row.modeActual ?? row.mode) !== modeFilter)
+        return false;
       if (!needle) return true;
       return (
         row.name.toLowerCase().includes(needle) ||
@@ -140,7 +227,7 @@ export function AuthorManagement({
       stripSalutation(a.name).localeCompare(stripSalutation(b.name))
     );
     return { list: r, available: avail };
-  }, [rows, track, q, letter]);
+  }, [rows, track, q, letter, regFilter, modeFilter]);
 
   return (
     <div className="space-y-4 [&_.badge]:rounded-md">
@@ -224,9 +311,37 @@ export function AuthorManagement({
           placeholder="Search author, email, paper…"
           className="input max-w-xs"
         />
+        <select
+          value={regFilter}
+          onChange={(e) => setRegFilter(e.target.value as typeof regFilter)}
+          className="input max-w-[12rem] text-sm"
+          aria-label="Registration filter"
+        >
+          <option value="all">All (registration)</option>
+          <option value="registered">Registered</option>
+          <option value="not">Not registered</option>
+        </select>
+        <select
+          value={modeFilter}
+          onChange={(e) => setModeFilter(e.target.value as typeof modeFilter)}
+          className="input max-w-[12rem] text-sm"
+          aria-label="Mode filter"
+        >
+          <option value="all">All (mode)</option>
+          <option value="onsite">On-site</option>
+          <option value="virtual">Virtual</option>
+        </select>
         <span className="text-xs text-slate-500 ml-auto">
           {filtered.length} of {rows.length} authors
         </span>
+        <button
+          type="button"
+          onClick={downloadExcel}
+          className="btn-secondary text-sm"
+          title="Download the filtered list (opens in Excel); the active filters are recorded in the first row"
+        >
+          ⬇ Download Excel
+        </button>
       </div>
 
       {/* Author's Name — A–Z index; jump to authors starting with a letter. */}

@@ -91,10 +91,22 @@ export function ReviewerManagement({
     let completed = 0;
     let inProgress = 0;
     let invites = 0;
+    // Decision breakdown by pathway (from submitted reviews). Scoped by track
+    // only, so both pathways always show — they are the split.
+    const rec = {
+      A: { accept: 0, revision: 0, reject: 0 },
+      B: { accept: 0, revision: 0, reject: 0 },
+    };
     for (const r of rows) {
       let matched = false;
       for (const a of r.assignments) {
         if (anaTrack !== "all" && a.trackCode !== anaTrack) continue;
+        if (a.status === "submitted" && a.recommendation) {
+          const bucket = rec[a.pathway];
+          if (a.recommendation === "accept") bucket.accept += 1;
+          else if (a.recommendation === "reject") bucket.reject += 1;
+          else if (a.recommendation.includes("revision")) bucket.revision += 1;
+        }
         if (anaPathway !== "all" && a.pathway !== anaPathway) continue;
         matched = true;
         if (a.status === "submitted") {
@@ -115,6 +127,7 @@ export function ReviewerManagement({
       completed,
       inProgress,
       invites,
+      rec,
     };
   }, [rows, anaTrack, anaPathway]);
 
@@ -231,6 +244,27 @@ export function ReviewerManagement({
               </p>
               <p className="mt-0.5 text-2xl font-bold">{value}</p>
             </div>
+          ))}
+        </div>
+        {/* Decision breakdown by pathway (from submitted reviews). */}
+        <div className="mt-2 flex flex-wrap gap-2">
+          {(
+            [
+              ["A", analytics.rec.A, "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"],
+              ["B", analytics.rec.B, "border-violet-200 bg-violet-50 text-violet-800 dark:border-violet-500/30 dark:bg-violet-500/10 dark:text-violet-300"],
+            ] as const
+          ).map(([p, c, cls]) => (
+            <span
+              key={p}
+              className={`inline-flex items-center gap-2 rounded-lg border px-2.5 py-1 text-xs font-medium ${cls}`}
+            >
+              <b>Pathway {p}</b>
+              <span>Accept <b className="text-sm">{c.accept}</b></span>
+              <span className="opacity-60">·</span>
+              <span>Revision <b className="text-sm">{c.revision}</b></span>
+              <span className="opacity-60">·</span>
+              <span>Reject <b className="text-sm">{c.reject}</b></span>
+            </span>
           ))}
         </div>
       </div>

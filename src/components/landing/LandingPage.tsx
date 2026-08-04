@@ -899,7 +899,7 @@ export function LandingPage() {
               "Choosing Pathway B keeps you in the Pathway A (abstract) phase until your abstract is accepted. Even after acceptance, the corresponding author may still return to Pathway A and present on the accepted abstract, or continue to submit the full manuscript under Pathway B."
             )}
           </p>
-          <div className="relative mt-6 overflow-hidden rounded-2xl bg-gradient-to-br from-[#1e3a8a] via-[#1d4ed8] to-[#0e7490] px-5 py-4 shadow-lg sm:px-7">
+          <div className="relative mt-6 overflow-hidden rounded-2xl bg-gradient-to-br from-[#1e3a8a] via-[#1d4ed8] to-[#0e7490] px-5 py-2.5 shadow-lg sm:px-6">
             {/* accent rule + soft glow for depth */}
             <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-sky-400 via-fuchsia-400 to-amber-400" />
             <div className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-white/10 blur-2xl" />
@@ -915,7 +915,7 @@ export function LandingPage() {
               {/* CTA — on the right */}
               <Link
                 href="/login"
-                className="shrink-0 rounded-xl border border-white/50 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/20"
+                className="shrink-0 rounded-xl bg-white px-6 py-2.5 text-sm font-bold text-blue-800 shadow transition hover:bg-blue-50"
               >
                 Go to the submission portal →
               </Link>

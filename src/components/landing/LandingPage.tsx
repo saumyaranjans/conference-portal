@@ -116,6 +116,33 @@ const MILESTONES = [
   },
 ];
 
+const FAQ_ITEMS: { q: string; a: string }[] = [
+  {
+    q: "When and where is GLOGIFT 27 held?",
+    a: "GLOGIFT 27 — the International Conference on AI-Driven Solutions in Management — is held from 25 to 27 February 2027 at the Indian Institute of Management (IIM) Sambalpur, Odisha, India. It runs in person with a hybrid (online) option for remote participants.",
+  },
+  {
+    q: "Who can attend and submit papers?",
+    a: "Academicians, PhD scholars, MBA and postgraduate students, research associates and practitioners from prominent Indian and international universities are welcome — across Management, Communication, Engineering, Information Technology and the Social Sciences — along with industry professionals and consultants from AI-focused sectors.",
+  },
+  {
+    q: "What are the two submission pathways (A and B)?",
+    a: "Every submission starts with a 500-word abstract. Pathway A: present on the accepted abstract, with no full paper required. Pathway B: after the abstract is accepted, submit a double-anonymous full paper that undergoes peer review — and present it. Authors declare their intended pathway at the abstract stage.",
+  },
+  {
+    q: "What are the submission requirements and tracks?",
+    a: "Submit a 500-word abstract (350 words minimum) under one of the ten conference tracks, naming the track it belongs to. Full papers (Pathway B) follow the published Full Paper Submission Guidelines and templates.",
+  },
+  {
+    q: "What are the registration fees and deadlines?",
+    a: "Fees depend on the participant category (Faculty / Academician, Industry Professional, Research Scholar / PhD, Student, or Foreign Delegate). Early-bird rates apply on or before 20 December 2026; regular rates apply from 21 December 2026. GIFT Society members receive a 15% discount.",
+  },
+  {
+    q: "Will accepted papers be published?",
+    a: "All accepted and presented papers appear in the GLOGIFT 27 Conference Proceedings (a volume with ISBN). Selected best papers may be fast-tracked, after further peer review, to associated journals and edited volumes.",
+  },
+];
+
 const PUBLICATIONS = [
   {
     title: "GLOGIFT 27 Conference Proceedings",
@@ -594,6 +621,75 @@ export function LandingPage() {
               finance, operations, marketing, governance and public policy — in
               the context of Industry 5.0 and the Sustainable Development Goals.
             </p>
+          </div>
+        </section>
+
+        {/* ---- Who should attend & submit ---- */}
+        <section>
+          <Heading id="who">Who should attend &amp; submit</Heading>
+          <div className="card card-pad space-y-4 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+            <p>
+              GLOGIFT 27 is a global forum for{" "}
+              <strong>
+                academicians, PhD scholars, MBA students, research associates and
+                practitioners
+              </strong>{" "}
+              from prominent Indian and international universities — across{" "}
+              <strong>
+                Management, Communication, Engineering, Information Technology and
+                the Social Sciences
+              </strong>{" "}
+              — together with{" "}
+              <strong>industry professionals and consultants</strong> working in
+              AI-focused sectors. If your research or practice touches AI-driven
+              management, flexibility, digitalisation or decarbonization, this is
+              your venue to present, publish and connect.
+            </p>
+            <div>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Delegates &amp; authors
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  "Academicians & Faculty",
+                  "PhD & Doctoral Scholars",
+                  "MBA / PG Students",
+                  "Research Associates",
+                  "Practitioners",
+                  "Industry Professionals",
+                  "AI Consultants",
+                  "Policymakers",
+                ].map((a) => (
+                  <span
+                    key={a}
+                    className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-800 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300"
+                  >
+                    {a}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Disciplines
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  "Management",
+                  "Communication",
+                  "Engineering",
+                  "Information Technology",
+                  "Social Sciences",
+                ].map((d) => (
+                  <span
+                    key={d}
+                    className="rounded-full border border-teal-200 bg-teal-50 px-3 py-1 text-xs font-medium text-teal-800 dark:border-teal-500/30 dark:bg-teal-500/10 dark:text-teal-300"
+                  >
+                    {d}
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
         </section>
 
@@ -1156,6 +1252,40 @@ export function LandingPage() {
               className="lg:col-span-2"
             />
           </div>
+        </section>
+
+        {/* ---- FAQ ---- */}
+        <section>
+          <Heading id="faq">Frequently asked questions</Heading>
+          <div className="card divide-y divide-slate-100 dark:divide-slate-800">
+            {FAQ_ITEMS.map((f) => (
+              <details key={f.q} className="group px-5 py-4">
+                <summary className="flex cursor-pointer items-center justify-between gap-4 text-sm font-medium text-slate-900 marker:content-none dark:text-slate-100">
+                  {f.q}
+                  <span className="text-blue-600 transition-transform group-open:rotate-45">
+                    +
+                  </span>
+                </summary>
+                <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                  {f.a}
+                </p>
+              </details>
+            ))}
+          </div>
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "FAQPage",
+                mainEntity: FAQ_ITEMS.map((f) => ({
+                  "@type": "Question",
+                  name: f.q,
+                  acceptedAnswer: { "@type": "Answer", text: f.a },
+                })),
+              }),
+            }}
+          />
         </section>
 
         {/* ---- 9. Contact ---- */}

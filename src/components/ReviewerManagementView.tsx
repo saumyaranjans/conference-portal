@@ -17,7 +17,7 @@ export async function ReviewerManagementView() {
   const { data } = await admin
     .from("assignments")
     .select(
-      "id, status, due_date, round, reviewer_number, reviewer_id, reviewer:profiles!assignments_reviewer_id_fkey(id, full_name, email, mobile, affiliation, institution), submissions!inner(paper_id, submission_type, editor:profiles!submissions_assigned_editor_id_fkey(full_name), tracks(code, name)), reviews(recommendation, is_submitted)"
+      "id, status, due_date, round, reviewer_number, reviewer_id, reviewer:profiles!assignments_reviewer_id_fkey(id, full_name, email, mobile, affiliation, institution), submissions!inner(paper_id, title, submitted_at, created_at, submission_type, editor:profiles!submissions_assigned_editor_id_fkey(full_name), tracks(code, name), submission_authors(full_name, is_corresponding, author_order)), reviews(recommendation, is_submitted)"
     );
 
   const list = ((data ?? []) as any[]).filter((a) => a.reviewer && a.reviewer.email);
@@ -40,10 +40,23 @@ export async function ReviewerManagementView() {
         a.status === "accepted" &&
         !!a.due_date &&
         new Date(a.due_date) < today;
+      const authors = [...(a.submissions?.submission_authors ?? [])].sort(
+        (x: any, y: any) => (x.author_order ?? 0) - (y.author_order ?? 0)
+      );
+      const corresponding =
+        authors.find((x: any) => x.is_corresponding)?.full_name ?? null;
+      const coAuthors = authors
+        .filter((x: any) => !x.is_corresponding)
+        .map((x: any) => x.full_name);
       return {
         paperId: a.submissions?.paper_id ?? "—",
+        reviewerNumber: a.reviewer_number ?? null,
+        title: a.submissions?.title ?? "",
         trackCode: a.submissions?.tracks?.code ?? "—",
         trackName: a.submissions?.tracks?.name ?? "—",
+        submittedAt: a.submissions?.submitted_at ?? a.submissions?.created_at ?? null,
+        corresponding,
+        coAuthors,
         pathway: (a.submissions?.submission_type === "full_paper_presentation"
           ? "B"
           : "A") as "A" | "B",

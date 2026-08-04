@@ -11,8 +11,13 @@ import {
 
 export type ReviewerAssignment = {
   paperId: string;
+  reviewerNumber: number | null;
+  title: string;
   trackCode: string;
   trackName: string;
+  submittedAt: string | null;
+  corresponding: string | null;
+  coAuthors: string[];
   pathway: "A" | "B";
   status: "invited" | "accepted" | "declined" | "submitted";
   recommendation: string | null;
@@ -95,6 +100,16 @@ export function ReviewerManagement({
   const [letter, setLetter] = useState("all");
   const [anaTrack, setAnaTrack] = useState("all");
   const [anaPathway, setAnaPathway] = useState<"all" | "A" | "B">("all");
+  // Which paper's detail popup is open (keyed by email + assignment index).
+  const [openPaper, setOpenPaper] = useState<string | null>(null);
+  const fmtDate = (d: string | null) =>
+    d
+      ? new Date(d).toLocaleDateString("en-GB", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        })
+      : "—";
 
   const inTrack = (r: ReviewerRow, code: string) =>
     code === "all" || r.trackCodes.includes(code);
@@ -476,7 +491,7 @@ export function ReviewerManagement({
                         <thead>
                           <tr className="text-left text-[10px] uppercase tracking-wide text-slate-400">
                             <th className="pr-3 font-medium">Paper</th>
-                            <th className="pr-3 font-medium">Track</th>
+                            <th className="pr-3 font-medium">Role</th>
                             <th className="pr-3 font-medium">Pathway</th>
                             <th className="pr-3 font-medium">Status</th>
                             <th className="pr-3 font-medium">Decision</th>
@@ -486,13 +501,70 @@ export function ReviewerManagement({
                         <tbody>
                           {r.assignments.map((a, i) => {
                             const dec = decisionOf(a.recommendation);
+                            const key = `${r.email}-${i}`;
+                            const open = openPaper === key;
                             return (
-                              <tr key={`${r.email}-${i}`} className="align-top">
-                                <td className="pr-3 py-0.5 font-mono text-slate-700 dark:text-slate-300">
-                                  {a.paperId}
+                              <tr key={key} className="align-top">
+                                <td className="relative pr-3 py-0.5 font-mono">
+                                  <button
+                                    type="button"
+                                    onClick={() => setOpenPaper(open ? null : key)}
+                                    className="text-blue-700 hover:underline dark:text-blue-300"
+                                    title="Click for paper details"
+                                  >
+                                    {a.paperId}
+                                  </button>
+                                  {open && (
+                                    <div className="absolute z-30 mt-1 w-72 rounded-lg border border-slate-200 bg-white p-3 text-left font-sans shadow-xl dark:border-slate-700 dark:bg-slate-800">
+                                      <div className="flex items-start justify-between gap-2">
+                                        <span className="font-mono text-[11px] text-slate-500">
+                                          {a.paperId}
+                                        </span>
+                                        <button
+                                          type="button"
+                                          onClick={() => setOpenPaper(null)}
+                                          className="text-sm leading-none text-slate-400 hover:text-slate-600"
+                                          aria-label="Close"
+                                        >
+                                          ✕
+                                        </button>
+                                      </div>
+                                      <p className="mt-1 text-sm font-medium text-slate-900 dark:text-slate-100">
+                                        {a.title || "Untitled"}
+                                      </p>
+                                      <dl className="mt-2 space-y-1 text-xs">
+                                        <div>
+                                          <dt className="inline text-slate-400">Corresponding: </dt>
+                                          <dd className="inline text-slate-700 dark:text-slate-200">
+                                            {a.corresponding ?? "—"}
+                                          </dd>
+                                        </div>
+                                        <div>
+                                          <dt className="inline text-slate-400">Co-authors: </dt>
+                                          <dd className="inline text-slate-700 dark:text-slate-200">
+                                            {a.coAuthors.length ? a.coAuthors.join(", ") : "—"}
+                                          </dd>
+                                        </div>
+                                        <div>
+                                          <dt className="inline text-slate-400">Track: </dt>
+                                          <dd className="inline text-slate-700 dark:text-slate-200">
+                                            {a.trackName}
+                                          </dd>
+                                        </div>
+                                        <div>
+                                          <dt className="inline text-slate-400">Submitted: </dt>
+                                          <dd className="inline text-slate-700 dark:text-slate-200">
+                                            {fmtDate(a.submittedAt)}
+                                          </dd>
+                                        </div>
+                                      </dl>
+                                    </div>
+                                  )}
                                 </td>
-                                <td className="pr-3 py-0.5 text-slate-500">
-                                  {a.trackCode}
+                                <td className="pr-3 py-0.5 whitespace-nowrap text-slate-600 dark:text-slate-300">
+                                  {a.reviewerNumber != null
+                                    ? `Reviewer ${a.reviewerNumber}`
+                                    : "—"}
                                 </td>
                                 <td className="pr-3 py-0.5">
                                   <span className={`badge ${PATHWAY_CLASS[a.pathway]}`}>

@@ -17,7 +17,7 @@ export async function ReviewerManagementView() {
   const { data } = await admin
     .from("assignments")
     .select(
-      "id, status, due_date, round, reviewer_id, reviewer:profiles!assignments_reviewer_id_fkey(id, full_name, email, mobile, affiliation, institution), submissions!inner(paper_id, submission_type, tracks(code, name)), reviews(recommendation, is_submitted)"
+      "id, status, due_date, round, reviewer_number, reviewer_id, reviewer:profiles!assignments_reviewer_id_fkey(id, full_name, email, mobile, affiliation, institution), submissions!inner(paper_id, submission_type, tracks(code, name)), reviews(recommendation, is_submitted)"
     );
 
   const list = ((data ?? []) as any[]).filter((a) => a.reviewer && a.reviewer.email);
@@ -63,11 +63,21 @@ export async function ReviewerManagementView() {
       pathwayA: assignments.filter((x) => x.pathway === "A").length,
       pathwayB: assignments.filter((x) => x.pathway === "B").length,
     };
+    // Reviewer number (stable per submission; in practice the same across a
+    // reviewer's papers). Show the distinct value(s).
+    const reviewerNo = [
+      ...new Set(
+        items.map((a) => a.reviewer_number).filter((n) => n != null)
+      ),
+    ]
+      .sort((a, b) => a - b)
+      .join(" · ");
     return {
       name: p.full_name || p.email,
       mobile: p.mobile || null,
       email: p.email,
       affiliation: p.affiliation || p.institution || null,
+      reviewerNo,
       assignments,
       trackCodes: [...new Set(assignments.map((x) => x.trackCode))].filter(
         (c) => c !== "—"

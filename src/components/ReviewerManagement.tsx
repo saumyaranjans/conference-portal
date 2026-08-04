@@ -25,6 +25,8 @@ export type ReviewerRow = {
   mobile: string | null;
   email: string;
   affiliation: string | null;
+  /** Reviewer number(s) held (e.g. "1"); joined with " · " if more than one. */
+  reviewerNo: string;
   assignments: ReviewerAssignment[];
   trackCodes: string[];
   counts: {
@@ -170,13 +172,13 @@ export function ReviewerManagement({
       `Name starts with: ${letter === "all" ? "All" : letter}`,
     ].join("   |   ");
     const headers = [
-      "Reviewer", "Mobile", "Email", "Affiliation", "Tracks", "Assigned",
-      "Pathway A", "Pathway B", "Invited (pending)", "In progress", "Completed",
-      "Declined", "Overdue", "Papers (pathway, status)",
+      "Reviewer", "Reviewer no.", "Mobile", "Email", "Affiliation", "Tracks",
+      "Assigned", "Pathway A", "Pathway B", "Invited (pending)", "In progress",
+      "Completed", "Declined", "Overdue", "Papers (pathway, status)",
     ];
     const data = filtered.map((r) =>
       [
-        r.name, r.mobile ?? "", r.email, r.affiliation ?? "",
+        r.name, r.reviewerNo, r.mobile ?? "", r.email, r.affiliation ?? "",
         r.trackCodes.join("; "),
         r.counts.assigned, r.counts.pathwayA, r.counts.pathwayB,
         r.counts.invited, r.counts.accepted,
@@ -392,6 +394,11 @@ export function ReviewerManagement({
                 <tr key={r.email} className="align-top hover:bg-slate-50">
                   <td className="td whitespace-nowrap">
                     <span className="font-medium text-slate-900">{r.name}</span>
+                    {r.reviewerNo && (
+                      <span className="mt-0.5 block w-fit rounded bg-indigo-100 px-1.5 py-0 text-[11px] font-semibold text-indigo-800 dark:bg-indigo-500/15 dark:text-indigo-300">
+                        Reviewer {r.reviewerNo}
+                      </span>
+                    )}
                     {r.mobile && (
                       <span className="block text-xs text-slate-500">{r.mobile}</span>
                     )}

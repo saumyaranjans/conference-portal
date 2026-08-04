@@ -89,7 +89,6 @@ export function AuthorManagement({
 }) {
   const [track, setTrack] = useState("all");
   const [q, setQ] = useState("");
-  const [dir, setDir] = useState<"asc" | "desc">("asc");
   // Active alphabet-index letter ("all" = every author).
   const [letter, setLetter] = useState<string>("all");
   // Track filter for the Registration analytics panel (independent of the table).
@@ -137,12 +136,11 @@ export function AuthorManagement({
     });
     const avail = new Set(base.map((row) => initialOf(row.name)));
     let r = letter === "all" ? base : base.filter((row) => initialOf(row.name) === letter);
-    r = [...r].sort((a, b) => {
-      const c = stripSalutation(a.name).localeCompare(stripSalutation(b.name));
-      return dir === "asc" ? c : -c;
-    });
+    r = [...r].sort((a, b) =>
+      stripSalutation(a.name).localeCompare(stripSalutation(b.name))
+    );
     return { list: r, available: avail };
-  }, [rows, track, q, dir, letter]);
+  }, [rows, track, q, letter]);
 
   return (
     <div className="space-y-4 [&_.badge]:rounded-md">
@@ -226,20 +224,17 @@ export function AuthorManagement({
           placeholder="Search author, email, paper…"
           className="input max-w-xs"
         />
-        <button
-          type="button"
-          onClick={() => setDir((d) => (d === "asc" ? "desc" : "asc"))}
-          className="btn-secondary text-sm"
-        >
-          Author name {dir === "asc" ? "A → Z" : "Z → A"}
-        </button>
         <span className="text-xs text-slate-500 ml-auto">
           {filtered.length} of {rows.length} authors
         </span>
       </div>
 
-      {/* A–Z index: jump to authors whose name starts with a letter. */}
-      <div className="flex flex-wrap items-center gap-1">
+      {/* Author's Name — A–Z index; jump to authors starting with a letter. */}
+      <div className="space-y-1.5">
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          Author&apos;s Name
+        </p>
+        <div className="flex flex-wrap items-center gap-1">
         <button
           type="button"
           onClick={() => setLetter("all")}
@@ -286,6 +281,7 @@ export function AuthorManagement({
             #
           </button>
         )}
+        </div>
       </div>
 
       <div className="card overflow-hidden">

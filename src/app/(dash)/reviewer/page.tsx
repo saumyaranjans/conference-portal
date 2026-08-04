@@ -21,6 +21,13 @@ export default async function ReviewerDashboard() {
     ? await listMyCertificates(profile.id)
     : [];
 
+  // Lightweight reviewer certificate (generated from Reviewer Management).
+  const { data: reviewerCert } = await supabase
+    .from("reviewer_certificates")
+    .select("id, certificate_number, generated_at")
+    .eq("recipient_profile_id", profile.id)
+    .maybeSingle();
+
   const { data } = await supabase
     .from("assignments")
     .select(
@@ -64,6 +71,30 @@ export default async function ReviewerDashboard() {
       />
 
       <MyCertificates certificates={certificates} types={["reviewer"]} />
+
+      {reviewerCert && (
+        <Section title="Reviewer certificate">
+          <div className="card card-pad flex flex-wrap items-center justify-between gap-4 bg-emerald-50 border-emerald-200">
+            <div>
+              <p className="text-sm font-medium text-emerald-900">
+                Your reviewer certificate is ready 🎉
+              </p>
+              <p className="text-xs text-emerald-700 mt-0.5">
+                Certificate no. {reviewerCert.certificate_number} · Generated{" "}
+                {formatDate(reviewerCert.generated_at)}
+              </p>
+            </div>
+            <a
+              href={`/api/reviewer-certificate/${reviewerCert.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-primary shrink-0"
+            >
+              Download Reviewer Certificate
+            </a>
+          </div>
+        </Section>
+      )}
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard label="Invitations" value={invited.length} />

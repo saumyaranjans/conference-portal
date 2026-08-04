@@ -8,6 +8,8 @@ import {
   initialOf,
   stripSalutation,
 } from "@/lib/nameIndex";
+import { ActionForm, SubmitButton } from "@/components/ActionForm";
+import { generateReviewerCertificate } from "@/lib/reviewerCertificateActions";
 
 export type ReviewerAssignment = {
   paperId: string;
@@ -45,6 +47,8 @@ export type ReviewerRow = {
   affiliation: string | null;
   /** Reviewer number(s) held (e.g. "1"); joined with " · " if more than one. */
   reviewerNo: string;
+  /** Whether a reviewer certificate has already been generated. */
+  certGenerated: boolean;
   assignments: ReviewerAssignment[];
   trackCodes: string[];
   counts: {
@@ -406,7 +410,7 @@ export function ReviewerManagement({
           <table className="min-w-full divide-y divide-slate-200">
             <thead>
               <tr>
-                {["Reviewer & workload", "Assignments"].map(
+                {["Reviewer & workload", "Assignments", "Certificate"].map(
                   (h) => (
                     <th key={h} className="th">
                       {h}
@@ -418,7 +422,7 @@ export function ReviewerManagement({
             <tbody className="divide-y divide-slate-100">
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={2} className="td py-8 text-center text-slate-400">
+                  <td colSpan={3} className="td py-8 text-center text-slate-400">
                     No reviewers match your filters.
                   </td>
                 </tr>
@@ -567,12 +571,16 @@ export function ReviewerManagement({
                                   </span>
                                 </td>
                                 <td className="pr-3 py-0.5">
-                                  <span className={`badge ${STATUS_CLASS[a.status]}`}>
-                                    {STATUS_LABEL[a.status]}
-                                  </span>
-                                  {a.overdue && a.status === "accepted" && (
-                                    <span className="badge ml-1 bg-rose-100 text-rose-700">
+                                  {a.overdue ? (
+                                    <span
+                                      className="badge bg-rose-100 text-rose-700"
+                                      title="The review deadline has passed"
+                                    >
                                       Overdue
+                                    </span>
+                                  ) : (
+                                    <span className={`badge ${STATUS_CLASS[a.status]}`}>
+                                      {STATUS_LABEL[a.status]}
                                     </span>
                                   )}
                                 </td>
@@ -591,6 +599,27 @@ export function ReviewerManagement({
                           })}
                         </tbody>
                       </table>
+                    )}
+                  </td>
+                  <td className="td align-top">
+                    {r.certGenerated ? (
+                      <span className="block rounded-md bg-emerald-50 px-2 py-1 text-center text-[11px] font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+                        ✓ Certificate generated
+                      </span>
+                    ) : r.counts.completed > 0 ? (
+                      <ActionForm action={generateReviewerCertificate}>
+                        <input type="hidden" name="email" value={r.email} />
+                        <SubmitButton
+                          variant="primary"
+                          className="w-full justify-center text-[11px] py-0.5 px-2"
+                        >
+                          Generate certificate
+                        </SubmitButton>
+                      </ActionForm>
+                    ) : (
+                      <span className="block text-center text-[10px] text-slate-400">
+                        No completed review yet
+                      </span>
                     )}
                   </td>
                 </tr>

@@ -23,6 +23,20 @@ export async function ReviewerManagementView() {
   const list = ((data ?? []) as any[]).filter((a) => a.reviewer && a.reviewer.email);
   const today = new Date();
 
+  // Which reviewers already have a generated certificate.
+  const reviewerIds = [
+    ...new Set(list.map((a) => a.reviewer?.id).filter(Boolean)),
+  ];
+  const { data: certs } = reviewerIds.length
+    ? await admin
+        .from("reviewer_certificates")
+        .select("recipient_profile_id")
+        .in("recipient_profile_id", reviewerIds)
+    : { data: [] as any[] };
+  const certSet = new Set(
+    ((certs ?? []) as any[]).map((c) => c.recipient_profile_id)
+  );
+
   const byReviewer = new Map<string, any[]>();
   for (const a of list) {
     const key = (a.reviewer.email ?? "").trim().toLowerCase();
@@ -92,6 +106,7 @@ export async function ReviewerManagementView() {
       email: p.email,
       affiliation: p.affiliation || p.institution || null,
       reviewerNo,
+      certGenerated: certSet.has(p.id),
       assignments,
       trackCodes: [...new Set(assignments.map((x) => x.trackCode))].filter(
         (c) => c !== "—"

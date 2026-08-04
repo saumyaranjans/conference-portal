@@ -556,6 +556,8 @@ function Avatar({ name, size }: { name: string; size: "lg" | "sm" }) {
       <img
         src={photo}
         alt={name}
+        loading="lazy"
+        decoding="async"
         className={`${dim} rounded-full object-cover ${ring}`}
       />
     );
@@ -760,6 +762,8 @@ export function LandingPage() {
                   <img
                     src={pub.cover}
                     alt=""
+                    loading="lazy"
+                    decoding="async"
                     className="h-24 w-[4.5rem] shrink-0 rounded-md object-cover ring-1 ring-slate-200 bg-white dark:ring-slate-700"
                   />
                   <div className="min-w-0">

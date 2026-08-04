@@ -381,7 +381,13 @@ function TracksSlide() {
                 <div className="relative w-full" style={{ height: "7.2cqw" }}>
                   {/* Decorative: the track name below already says what this
                       is, so the photo carries no alt text. */}
-                  <img src={photo} alt="" className="h-full w-full object-cover" />
+                  <img
+                    src={photo}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    className="h-full w-full object-cover"
+                  />
                   <span
                     className="absolute inset-0"
                     style={{

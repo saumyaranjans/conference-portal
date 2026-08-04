@@ -5263,18 +5263,24 @@ export async function saveParticipationStatus(
   const email = String(formData.get("email") ?? "").trim();
   if (!email) return { ok: false, message: "Missing author email." };
 
-  const attended = String(formData.get("attended")) === "true";
-  const registered = String(formData.get("registered")) === "true";
-  // Payment is recorded as the tier actually paid: "" (unpaid), "early" or
-  // "regular". The displayed fee stays timeline-driven elsewhere.
-  const tierRaw = String(formData.get("paid_tier") ?? "").trim();
+  // The participation desk is a MANUAL-VALIDATION form: every dropdown opens
+  // blank, so an empty value means "not validated this time — leave unchanged".
+  // Only explicitly chosen fields are written; nothing is silently wiped.
+  const attendedRaw = String(formData.get("attended") ?? "").trim(); // "" | "true" | "false"
+  const registeredRaw = String(formData.get("registered") ?? "").trim();
+  const tierRaw = String(formData.get("paid_tier") ?? "").trim(); // "" | "none" | "early" | "regular"
+  const modeRaw = String(formData.get("mode_actual") ?? "").trim(); // "" | "onsite" | "virtual"
+
+  const setAttended = attendedRaw === "true" || attendedRaw === "false";
+  const attended = attendedRaw === "true";
+  const setRegistered = registeredRaw === "true" || registeredRaw === "false";
+  const registered = registeredRaw === "true";
+  const setPaid =
+    tierRaw === "none" || tierRaw === "early" || tierRaw === "regular";
   const tier = tierRaw === "early" || tierRaw === "regular" ? tierRaw : null;
   const paid = tier !== null;
-  // Actual participation mode: "" (keep original), or an "onsite"/"virtual"
-  // override the delegate later requested.
-  const modeRaw = String(formData.get("mode_actual") ?? "").trim();
-  const modeActual =
-    modeRaw === "onsite" || modeRaw === "virtual" ? modeRaw : null;
+  const setMode = modeRaw === "onsite" || modeRaw === "virtual";
+  const modeActual = setMode ? (modeRaw as "onsite" | "virtual") : null;
   const now = new Date().toISOString();
 
   // Snapshot the mode BEFORE this save, so we can tell if this Save switches it
@@ -5300,19 +5306,34 @@ export async function saveParticipationStatus(
     (preList.map((a) => a.full_name).find(Boolean) as string | undefined) ??
     null;
 
-  const patch: Record<string, unknown> = {
-    attended_confirmed: attended,
-    attendance_confirmed_at: attended ? now : null,
-    attendance_confirmed_by: attended ? profile.id : null,
-    registration_confirmed: registered,
-    registration_confirmed_at: registered ? now : null,
-    registration_confirmed_by: registered ? profile.id : null,
-    registration_fee_paid: paid,
-    registration_fee_paid_at: paid ? now : null,
-    registration_fee_paid_by: paid ? profile.id : null,
-    registration_fee_tier: tier,
-    participation_mode_actual: modeActual,
-  };
+  const patch: Record<string, unknown> = {};
+  if (setAttended) {
+    patch.attended_confirmed = attended;
+    patch.attendance_confirmed_at = attended ? now : null;
+    patch.attendance_confirmed_by = attended ? profile.id : null;
+  }
+  if (setRegistered) {
+    patch.registration_confirmed = registered;
+    patch.registration_confirmed_at = registered ? now : null;
+    patch.registration_confirmed_by = registered ? profile.id : null;
+  }
+  if (setPaid) {
+    patch.registration_fee_paid = paid;
+    patch.registration_fee_paid_at = paid ? now : null;
+    patch.registration_fee_paid_by = paid ? profile.id : null;
+    patch.registration_fee_tier = tier;
+  }
+  if (setMode) {
+    patch.participation_mode_actual = modeActual;
+  }
+
+  if (Object.keys(patch).length === 0) {
+    return {
+      ok: false,
+      message:
+        "Nothing selected. Choose at least one field to validate (blank fields are left unchanged).",
+    };
+  }
 
   const { data: rows, error } = await supabase
     .from("submission_authors")
@@ -5324,10 +5345,11 @@ export async function saveParticipationStatus(
 
   await audit(profile.id, "participation.saved", "submission_author", rows?.[0]?.id ?? null, {
     email,
-    attended,
-    registered,
-    paid,
-    tier,
+    fields: Object.keys(patch),
+    attended: setAttended ? attended : undefined,
+    registered: setRegistered ? registered : undefined,
+    paid: setPaid ? paid : undefined,
+    tier: setPaid ? tier : undefined,
     modeSwitched,
     from: modeSwitched ? fromMode : undefined,
     to: modeSwitched ? modeActual : undefined,

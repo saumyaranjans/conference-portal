@@ -836,21 +836,26 @@ export function AuthorManagement({
                           className="space-y-1.5"
                         >
                           <input type="hidden" name="email" value={r.email} />
+                          <p className="text-[10px] leading-tight text-slate-400">
+                            Manual validation — each field opens blank. Set only
+                            what you verify; blank fields are left unchanged.
+                          </p>
                           {(
                             [
-                              ["attended", "Attendance", r.attended, "Attended", "Not attended"],
-                              ["registered", "Registration", r.registered, "Registered", "Not registered"],
+                              ["attended", "Attendance", "Attended", "Not attended"],
+                              ["registered", "Registration", "Registered", "Not registered"],
                             ] as const
-                          ).map(([name, label, current, yes, no]) => (
+                          ).map(([name, label, yes, no]) => (
                             <label key={name} className="block">
                               <span className="block text-[10px] font-medium uppercase tracking-wide text-slate-400">
                                 {label}
                               </span>
                               <select
                                 name={name}
-                                defaultValue={current ? "true" : "false"}
+                                defaultValue=""
                                 className="input text-[11px] py-0.5 h-auto"
                               >
+                                <option value="">— Select to validate —</option>
                                 <option value="true">{yes}</option>
                                 <option value="false">{no}</option>
                               </select>
@@ -865,10 +870,11 @@ export function AuthorManagement({
                             </span>
                             <select
                               name="paid_tier"
-                              defaultValue={r.paidTier ?? ""}
+                              defaultValue=""
                               className="input text-[11px] py-0.5 h-auto"
                             >
-                              <option value="">Not paid</option>
+                              <option value="">— Select to validate —</option>
+                              <option value="none">Not paid</option>
                               <option value="early">
                                 Early Bird Fee
                                 {feeForTier(r.category, r.member, "early").known
@@ -897,9 +903,10 @@ export function AuthorManagement({
                             </span>
                             <select
                               name="mode_actual"
-                              defaultValue={r.modeActual ?? r.mode ?? "onsite"}
+                              defaultValue=""
                               className="input text-[11px] py-0.5 h-auto"
                             >
+                              <option value="">— Select to validate —</option>
                               <option value="onsite">On-site</option>
                               <option value="virtual">Virtual</option>
                             </select>

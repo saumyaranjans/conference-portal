@@ -911,10 +911,8 @@ export function LandingPage() {
                 </h3>
                 <p className="mt-1 text-sm leading-relaxed text-blue-100">
                   Be part of GLOGIFT 27 — submit a 500-word abstract across ten
-                  tracks. Accepted papers appear in the ISBN proceedings, with
-                  selected papers in ABDC-listed journals and a Scopus-indexed
-                  book. We look forward to hosting you on campus, 25–27 February
-                  2027.
+                  tracks. We look forward to hosting you on campus, 25–27
+                  February 2027.
                 </p>
                 <div className="mt-3 flex flex-wrap justify-center gap-2 text-[11px] font-medium text-blue-100 sm:justify-start">
                   {[

@@ -332,66 +332,72 @@ export function AuthorManagement({
         </div>
       </div>
 
-      <div className="flex flex-nowrap items-center gap-2 overflow-x-auto pb-1">
-        <select
-          value={track}
-          onChange={(e) => setTrack(e.target.value)}
-          className="input w-36 shrink-0 text-sm sm:w-44"
-        >
-          <option value="all">All tracks</option>
-          {tracks.map((t) => (
-            <option key={t.code} value={t.code}>
-              {t.code} — {t.name}
-            </option>
-          ))}
-        </select>
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Search author, email, paper…"
-          className="input min-w-[9rem] flex-1 text-sm"
-        />
-        <select
-          value={regFilter}
-          onChange={(e) => setRegFilter(e.target.value as typeof regFilter)}
-          className="input w-40 shrink-0 text-sm"
-          aria-label="Registration filter"
-        >
-          <option value="all">All (registration)</option>
-          <option value="registered">Registered</option>
-          <option value="not">Not registered</option>
-        </select>
-        <select
-          value={modeFilter}
-          onChange={(e) => setModeFilter(e.target.value as typeof modeFilter)}
-          className="input w-32 shrink-0 text-sm"
-          aria-label="Mode filter"
-        >
-          <option value="all">All (mode)</option>
-          <option value="onsite">On-site</option>
-          <option value="virtual">Virtual</option>
-        </select>
-        <select
-          value={pathwayFilter}
-          onChange={(e) => setPathwayFilter(e.target.value as typeof pathwayFilter)}
-          className="input w-36 shrink-0 text-sm"
-          aria-label="Pathway filter"
-        >
-          <option value="all">All (pathway)</option>
-          <option value="A">Pathway A</option>
-          <option value="B">Pathway B</option>
-        </select>
-        <span className="shrink-0 whitespace-nowrap text-xs text-slate-500">
-          {filtered.length} of {rows.length}
-        </span>
-        <button
-          type="button"
-          onClick={downloadExcel}
-          className="btn-secondary shrink-0 whitespace-nowrap text-sm"
-          title="Download the filtered list (opens in Excel); the active filters are recorded in the first row"
-        >
-          ⬇ Download Excel
-        </button>
+      <div className="space-y-2">
+        {/* Line 1 — dropdown filters */}
+        <div className="flex flex-wrap items-center gap-2">
+          <select
+            value={track}
+            onChange={(e) => setTrack(e.target.value)}
+            className="input flex-1 text-sm sm:min-w-[10rem]"
+          >
+            <option value="all">All tracks</option>
+            {tracks.map((t) => (
+              <option key={t.code} value={t.code}>
+                {t.code} — {t.name}
+              </option>
+            ))}
+          </select>
+          <select
+            value={pathwayFilter}
+            onChange={(e) => setPathwayFilter(e.target.value as typeof pathwayFilter)}
+            className="input flex-1 text-sm sm:min-w-[10rem]"
+            aria-label="Pathway filter"
+          >
+            <option value="all">All (pathway)</option>
+            <option value="A">Pathway A</option>
+            <option value="B">Pathway B</option>
+          </select>
+          <select
+            value={regFilter}
+            onChange={(e) => setRegFilter(e.target.value as typeof regFilter)}
+            className="input flex-1 text-sm sm:min-w-[10rem]"
+            aria-label="Registration filter"
+          >
+            <option value="all">All (registration)</option>
+            <option value="registered">Registered</option>
+            <option value="not">Not registered</option>
+          </select>
+          <select
+            value={modeFilter}
+            onChange={(e) => setModeFilter(e.target.value as typeof modeFilter)}
+            className="input flex-1 text-sm sm:min-w-[10rem]"
+            aria-label="Mode filter"
+          >
+            <option value="all">All (mode)</option>
+            <option value="onsite">On-site</option>
+            <option value="virtual">Virtual</option>
+          </select>
+        </div>
+        {/* Line 2 — long search + count + download */}
+        <div className="flex items-center gap-2">
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search author, email, paper…"
+            className="input flex-1 text-sm"
+          />
+          <span className="shrink-0 whitespace-nowrap text-xs text-slate-500">
+            {filtered.length} of {rows.length}
+          </span>
+          <button
+            type="button"
+            onClick={downloadExcel}
+            className="btn-secondary shrink-0 whitespace-nowrap text-sm"
+            title="Download the filtered list (opens in Excel); the active filters are recorded in the first row"
+          >
+            ⬇ Download Excel
+          </button>
+        </div>
       </div>
 
       {/* Author's Name — A–Z index; jump to authors starting with a letter. */}

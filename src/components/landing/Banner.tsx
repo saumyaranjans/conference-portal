@@ -118,7 +118,7 @@ function LatticeSlideMobile() {
         preserveAspectRatio="xMidYMid meet" />
       <text x="500" y="190" textAnchor="middle" fill="#bfdbfe" fontSize="28"
         letterSpacing="4" fontWeight="600" fontFamily="system-ui, sans-serif">
-        IIM SAMBALPUR · GLOGIFT SOCIETY
+        IIM SAMBALPUR · GIFT SOCIETY
       </text>
 
       <text x="500" y="320" textAnchor="middle" fill="#ffffff" fontSize="96"
@@ -234,7 +234,7 @@ function LatticeSlide() {
       </text>
       <Organiser
         logo={GLOGIFT_LOGO}
-        label="GLOGIFT SOCIETY"
+        label="GIFT SOCIETY"
         cx={900}
         top={96}
         size={118}

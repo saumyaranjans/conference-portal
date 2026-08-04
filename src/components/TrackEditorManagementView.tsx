@@ -28,6 +28,17 @@ export async function TrackEditorManagementView() {
   );
   const profileIds = [...new Set(memberships.map((m) => m.profile_id))];
 
+  // Which editors already have a generated track-editor certificate.
+  const { data: teCerts } = profileIds.length
+    ? await admin
+        .from("track_editor_certificates")
+        .select("recipient_profile_id")
+        .in("recipient_profile_id", profileIds)
+    : { data: [] as any[] };
+  const certSet = new Set(
+    ((teCerts ?? []) as any[]).map((c) => c.recipient_profile_id)
+  );
+
   const [{ data: papersData }, { data: decisionsData }] = await Promise.all([
     profileIds.length
       ? admin
@@ -103,6 +114,7 @@ export async function TrackEditorManagementView() {
       mobile: p.mobile || null,
       email: p.email,
       affiliation: p.affiliation || p.institution || null,
+      certGenerated: certSet.has(p.id),
       tracks,
       papers,
       trackCodes: [...new Set(tracks.map((t) => t.code))].filter((c) => c !== "—"),

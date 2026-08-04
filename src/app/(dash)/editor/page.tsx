@@ -25,6 +25,13 @@ export default async function EditorDashboard() {
     : [];
   const supabase = await createClient();
 
+  // Lightweight track-editor certificate (generated from Track Editor Management).
+  const { data: teCert } = await supabase
+    .from("track_editor_certificates")
+    .select("id, certificate_number, generated_at")
+    .eq("recipient_profile_id", profile.id)
+    .maybeSingle();
+
   // The tracks this person chairs define their whole queue.
   const { data: chairRows } = await supabase
     .from("track_editors")
@@ -114,6 +121,30 @@ export default async function EditorDashboard() {
       />
 
       <MyCertificates certificates={certificates} types={["track_editor"]} />
+
+      {teCert && (
+        <Section title="Track editor certificate">
+          <div className="card card-pad flex flex-wrap items-center justify-between gap-4 border-emerald-200 bg-emerald-50">
+            <div>
+              <p className="text-sm font-medium text-emerald-900">
+                Your track editor certificate is ready 🎉
+              </p>
+              <p className="mt-0.5 text-xs text-emerald-700">
+                Certificate no. {teCert.certificate_number} · Generated{" "}
+                {formatDate(teCert.generated_at)}
+              </p>
+            </div>
+            <a
+              href={`/api/track-editor-certificate/${teCert.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-primary shrink-0"
+            >
+              Download Track Editor Certificate
+            </a>
+          </div>
+        </Section>
+      )}
 
       {/* ---- Summary (on top) ---- */}
       <Section title="Summary">

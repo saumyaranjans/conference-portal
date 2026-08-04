@@ -8,6 +8,8 @@ import {
   initialOf,
   stripSalutation,
 } from "@/lib/nameIndex";
+import { ActionForm, SubmitButton } from "@/components/ActionForm";
+import { generateTrackEditorCertificate } from "@/lib/trackEditorCertificateActions";
 
 export type TEChairedTrack = {
   code: string;
@@ -26,6 +28,8 @@ export type TrackEditorRow = {
   mobile: string | null;
   email: string;
   affiliation: string | null;
+  /** Whether a track-editor certificate has already been generated. */
+  certGenerated: boolean;
   tracks: TEChairedTrack[];
   papers: TEPaper[];
   trackCodes: string[];
@@ -44,6 +48,28 @@ function decLabel(d: string | null): string {
   return d.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+/** A single track editor's own Accept/Reject rate across their decided papers. */
+function editorRates(r: TrackEditorRow) {
+  let accept = 0;
+  let reject = 0;
+  let revision = 0;
+  for (const p of r.papers) {
+    if (!p.decided || !p.decision) continue;
+    if (p.decision === "accept") accept += 1;
+    else if (p.decision === "reject") reject += 1;
+    else if (p.decision.includes("revision")) revision += 1;
+  }
+  const total = accept + reject + revision;
+  return {
+    accept,
+    reject,
+    revision,
+    total,
+    acceptPct: total ? Math.round((accept / total) * 100) : 0,
+    rejectPct: total ? Math.round((reject / total) * 100) : 0,
+  };
+}
+
 export function TrackEditorManagement({
   rows,
   tracks,
@@ -56,6 +82,8 @@ export function TrackEditorManagement({
   const [status, setStatus] = useState<"all" | "invited" | "accepted">("all");
   const [letter, setLetter] = useState("all");
   const [anaTrack, setAnaTrack] = useState("all");
+  // Per-editor confirmation gate for the certificate actions (keyed by email).
+  const [certUnlocked, setCertUnlocked] = useState<Record<string, boolean>>({});
 
   const inTrack = (r: TrackEditorRow, code: string) =>
     code === "all" || r.trackCodes.includes(code);
@@ -262,19 +290,23 @@ export function TrackEditorManagement({
           <table className="min-w-full divide-y divide-slate-200">
             <thead>
               <tr>
-                {["Track Editor", "Tracks chaired", "Papers assigned", "Workload"].map(
-                  (h) => (
-                    <th key={h} className="th">
-                      {h}
-                    </th>
-                  )
-                )}
+                {[
+                  "Track Editor",
+                  "Tracks chaired",
+                  "Papers assigned",
+                  "Workload",
+                  "Certificate",
+                ].map((h) => (
+                  <th key={h} className="th">
+                    {h}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="td py-8 text-center text-slate-400">
+                  <td colSpan={5} className="td py-8 text-center text-slate-400">
                     No track editors match your filters.
                   </td>
                 </tr>
@@ -376,6 +408,113 @@ export function TrackEditorManagement({
                         </span>
                       )}
                     </div>
+                  </td>
+                  <td className="td align-top">
+                    {(() => {
+                      const rt = editorRates(r);
+                      const unlocked = !!certUnlocked[r.email];
+                      return (
+                        <div className="space-y-1.5">
+                          {/* This editor's own decision rates */}
+                          {rt.total > 0 ? (
+                            <div className="rounded-md border border-slate-200 bg-slate-50 px-2 py-1 dark:border-slate-700 dark:bg-slate-800/60">
+                              <div className="flex items-center justify-between text-[10px]">
+                                <span className="font-medium text-emerald-700 dark:text-emerald-300">
+                                  Acceptance rate
+                                </span>
+                                <b className="text-emerald-700 dark:text-emerald-300">
+                                  {rt.acceptPct}%
+                                </b>
+                              </div>
+                              <div className="flex items-center justify-between text-[10px]">
+                                <span className="font-medium text-rose-700 dark:text-rose-300">
+                                  Rejection rate
+                                </span>
+                                <b className="text-rose-700 dark:text-rose-300">
+                                  {rt.rejectPct}%
+                                </b>
+                              </div>
+                              <p
+                                className="mt-0.5 text-[9px] text-slate-400"
+                                title={`Accept ${rt.accept} · Revision ${rt.revision} · Reject ${rt.reject}`}
+                              >
+                                of {rt.total} decided paper{rt.total === 1 ? "" : "s"}
+                              </p>
+                            </div>
+                          ) : (
+                            <p className="text-[10px] text-slate-400">
+                              No decisions yet
+                            </p>
+                          )}
+
+                          {/* Certificate actions */}
+                          {r.certGenerated ? (
+                            <span className="block rounded-md bg-emerald-50 px-2 py-1 text-center text-[11px] font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+                              ✓ Certificate generated
+                            </span>
+                          ) : r.counts.decisionsTaken > 0 ? (
+                            <div className="space-y-1">
+                              <label className="flex items-start gap-1.5 rounded-md border border-slate-200 px-2 py-1 text-[10px] leading-tight text-slate-600 dark:border-slate-700 dark:text-slate-300">
+                                <input
+                                  type="checkbox"
+                                  checked={unlocked}
+                                  onChange={(e) =>
+                                    setCertUnlocked((s) => ({
+                                      ...s,
+                                      [r.email]: e.target.checked,
+                                    }))
+                                  }
+                                  className="mt-0.5 shrink-0"
+                                />
+                                <span>
+                                  I&apos;ve verified this editor — enable preview
+                                  &amp; generate
+                                </span>
+                              </label>
+                              <a
+                                href={
+                                  unlocked
+                                    ? `/api/track-editor-certificate/preview?email=${encodeURIComponent(
+                                        r.email
+                                      )}`
+                                    : undefined
+                                }
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-disabled={!unlocked}
+                                tabIndex={unlocked ? 0 : -1}
+                                className={`btn-secondary block w-full justify-center text-center text-[11px] py-0.5 px-2 ${
+                                  unlocked ? "" : "pointer-events-none opacity-40"
+                                }`}
+                                title={
+                                  unlocked
+                                    ? "Open the certificate as it will look — nothing is saved or emailed"
+                                    : "Tick the checkbox above to enable"
+                                }
+                              >
+                                Preview certificate
+                              </a>
+                              <ActionForm action={generateTrackEditorCertificate}>
+                                <input type="hidden" name="email" value={r.email} />
+                                <SubmitButton
+                                  variant="primary"
+                                  disabled={!unlocked}
+                                  className={`w-full justify-center text-[11px] py-0.5 px-2 ${
+                                    unlocked ? "" : "cursor-not-allowed opacity-40"
+                                  }`}
+                                >
+                                  Generate certificate
+                                </SubmitButton>
+                              </ActionForm>
+                            </div>
+                          ) : (
+                            <span className="block text-center text-[10px] text-slate-400">
+                              No decision taken yet
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </td>
                 </tr>
               ))}

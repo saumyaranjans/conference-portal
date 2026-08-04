@@ -6,6 +6,7 @@ import {
   withSalutation,
   type ReviewerCertificateSnapshot,
   type ParticipantCertificateSnapshot,
+  type TrackEditorCertificateSnapshot,
 } from "@/lib/certificates";
 
 /**
@@ -184,4 +185,115 @@ export async function buildParticipationCertificatePreview(
     signatures,
   });
   return { ok: true, pdfBytes, filename: "preview-participation-certificate.pdf" };
+}
+
+export type TrackEditorCertResult =
+  | {
+      ok: true;
+      pdfBytes: Uint8Array;
+      filename: string;
+      profileId: string;
+      recipientEmail: string | null;
+      displayName: string;
+      certNumber: string;
+      conferenceName: string;
+      conferenceAcronym: string;
+      conferenceYear: number;
+    }
+  | { ok: false; message: string };
+
+/**
+ * Build the track-editor Certificate of Appreciation. Gated on the editor
+ * having taken at least one final, active decision. Returns everything the
+ * generate action needs to store + email; the preview route uses only the
+ * pdfBytes/filename. Nothing here is persisted.
+ */
+export async function buildTrackEditorCertificate(
+  admin: Admin,
+  email: string
+): Promise<TrackEditorCertResult> {
+  const { data: prof } = await admin
+    .from("profiles")
+    .select("id, full_name, email, title")
+    .ilike("email", email)
+    .maybeSingle();
+  if (!prof) return { ok: false, message: "Track editor profile not found." };
+
+  // Eligibility: at least one final, active decision by this editor.
+  const { data: dec } = await admin
+    .from("decisions")
+    .select("submission_id, submissions!inner(conference_id)")
+    .eq("decided_by", prof.id)
+    .eq("is_final", true)
+    .is("superseded_at", null)
+    .limit(1)
+    .maybeSingle();
+  if (!dec) {
+    return {
+      ok: false,
+      message: "This track editor has not taken any decision yet.",
+    };
+  }
+
+  // Tracks they chair (accepted) → the certificate's track label.
+  const { data: teRows } = await admin
+    .from("track_editors")
+    .select("status, tracks(name)")
+    .eq("profile_id", prof.id);
+  const trackNames = [
+    ...new Set(
+      ((teRows ?? []) as any[])
+        .filter((t) => t.status === "accepted")
+        .map((t) => t.tracks?.name)
+        .filter(Boolean)
+    ),
+  ];
+  const trackLabel =
+    trackNames.length === 0
+      ? "Conference Track"
+      : trackNames.join(", ");
+
+  const { data: conf } = await admin
+    .from("conferences")
+    .select("name, acronym, year")
+    .eq("id", (dec as any).submissions.conference_id)
+    .maybeSingle();
+  const conference = conf ?? { name: "GLOGIFT 27", acronym: "GLOGIFT", year: 2027 };
+
+  const displayName = withSalutation(prof.full_name, prof.title ?? "");
+  const snapshot: TrackEditorCertificateSnapshot = {
+    certificateType: "track_editor",
+    recipientName: displayName,
+    trackName: trackLabel,
+    conferenceName: conference.name,
+    conferenceAcronym: conference.acronym ?? "GLOGIFT",
+    conferenceYear: conference.year ?? 2027,
+  };
+
+  const signatures = await loadSignatures(admin);
+  const certNumber = `GLOGIFT${conference.year ?? 2027}-TE-${randomBytes(4)
+    .toString("hex")
+    .toUpperCase()}`;
+  const pdfBytes = await generateCertificatePdf({
+    certificate: {
+      certificate_number: certNumber,
+      certificate_type: "track_editor",
+      issued_at: new Date().toISOString(),
+      display_name: displayName,
+      data_snapshot: snapshot,
+    },
+    signatures,
+  });
+  return {
+    ok: true,
+    pdfBytes,
+    filename: "preview-track-editor-certificate.pdf",
+    profileId: prof.id,
+    recipientEmail: prof.email,
+    displayName,
+    certNumber,
+    conferenceName: conference.name,
+    conferenceAcronym: conference.acronym ?? "GLOGIFT",
+    conferenceYear: conference.year ?? 2027,
+  };
 }

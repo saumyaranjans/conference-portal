@@ -5269,6 +5269,11 @@ export async function saveParticipationStatus(
   const tierRaw = String(formData.get("paid_tier") ?? "").trim();
   const tier = tierRaw === "early" || tierRaw === "regular" ? tierRaw : null;
   const paid = tier !== null;
+  // Actual participation mode: "" (keep original), or an "onsite"/"virtual"
+  // override the delegate later requested.
+  const modeRaw = String(formData.get("mode_actual") ?? "").trim();
+  const modeActual =
+    modeRaw === "onsite" || modeRaw === "virtual" ? modeRaw : null;
   const now = new Date().toISOString();
 
   const patch: Record<string, unknown> = {
@@ -5282,6 +5287,7 @@ export async function saveParticipationStatus(
     registration_fee_paid_at: paid ? now : null,
     registration_fee_paid_by: paid ? profile.id : null,
     registration_fee_tier: tier,
+    participation_mode_actual: modeActual,
   };
 
   const { data: rows, error } = await supabase

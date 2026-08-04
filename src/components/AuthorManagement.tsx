@@ -38,8 +38,10 @@ export type PersonRow = {
   certsGenerated: number;
   /** Attendance intention as declared (attending → fee applies). */
   intention: "attending" | "not" | "undeclared";
-  /** The delegate's single participation mode (virtual / onsite). */
+  /** The delegate's originally reported participation mode (virtual / onsite). */
   mode: string | null;
+  /** Staff override when the delegate later switches mode; null if unchanged. */
+  modeActual: "onsite" | "virtual" | null;
   category: string | null;
   member: boolean;
   fee: RegistrationFee;
@@ -289,36 +291,54 @@ export function AuthorManagement({
                     </div>
 
                     {/* Actual, as on today: confirmed attendance (from the
-                        Participation desk) + the mode they are attending in. */}
-                    <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                      <span className="text-[11px] font-medium text-slate-500">
-                        Actual (as on today):
-                      </span>
-                      {r.attended ? (
-                        <span className="badge bg-emerald-100 text-emerald-800">
-                          Attended
-                        </span>
-                      ) : (
-                        <span className="badge bg-slate-100 text-slate-500">
-                          Not attended
-                        </span>
-                      )}
-                      {r.mode && (
-                        <span
-                          className={`badge ${
-                            r.mode === "onsite"
-                              ? "bg-blue-100 text-blue-800"
-                              : "bg-teal-100 text-teal-800"
-                          }`}
-                        >
-                          {r.mode === "onsite"
-                            ? "On-site"
-                            : r.mode === "virtual"
-                              ? "Virtual"
-                              : r.mode}
-                        </span>
-                      )}
-                    </div>
+                        Participation desk) + the mode they are attending in
+                        (the staff override if the delegate switched). */}
+                    {(() => {
+                      const effMode = r.modeActual ?? r.mode;
+                      const modeChanged =
+                        r.modeActual != null &&
+                        r.mode != null &&
+                        r.modeActual !== r.mode;
+                      return (
+                        <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                          <span className="text-[11px] font-medium text-slate-500">
+                            Actual (as on today):
+                          </span>
+                          {r.attended ? (
+                            <span className="badge bg-emerald-100 text-emerald-800">
+                              Attended
+                            </span>
+                          ) : (
+                            <span className="badge bg-slate-100 text-slate-500">
+                              Not attended
+                            </span>
+                          )}
+                          {effMode && (
+                            <span className="inline-flex flex-col items-start">
+                              <span
+                                className={`badge ${
+                                  effMode === "onsite"
+                                    ? "bg-blue-100 text-blue-800"
+                                    : "bg-teal-100 text-teal-800"
+                                }`}
+                              >
+                                {effMode === "onsite"
+                                  ? "On-site"
+                                  : effMode === "virtual"
+                                    ? "Virtual"
+                                    : effMode}
+                              </span>
+                              {modeChanged && (
+                                <span className="text-[10px] font-medium text-amber-600">
+                                  (changed from{" "}
+                                  {r.mode === "onsite" ? "On-site" : "Virtual"})
+                                </span>
+                              )}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </td>
 
                   {/* Role & status (role + sign-up + registration) */}
@@ -469,6 +489,29 @@ export function AuthorManagement({
                                   : ""}
                               </option>
                             </select>
+                          </label>
+                          {/* Participation mode: defaults to the reported value;
+                              change it if the delegate switches On-site<->Virtual. */}
+                          <label className="block">
+                            <span className="block text-[10px] font-medium uppercase tracking-wide text-slate-400">
+                              Participation mode
+                            </span>
+                            <select
+                              name="mode_actual"
+                              defaultValue={r.modeActual ?? r.mode ?? "onsite"}
+                              className="input text-[11px] py-0.5 h-auto"
+                            >
+                              <option value="onsite">On-site</option>
+                              <option value="virtual">Virtual</option>
+                            </select>
+                            {r.modeActual != null &&
+                              r.mode != null &&
+                              r.modeActual !== r.mode && (
+                                <span className="block text-[10px] font-medium text-amber-600">
+                                  (changed from{" "}
+                                  {r.mode === "onsite" ? "On-site" : "Virtual"})
+                                </span>
+                              )}
                           </label>
                           <div className="flex gap-1.5 pt-0.5">
                             <SubmitButton

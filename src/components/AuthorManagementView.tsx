@@ -15,7 +15,7 @@ export async function AuthorManagementView() {
   const { data } = await supabase
     .from("submission_authors")
     .select(
-      "id, full_name, email, mobile, participant_category, profile_id, is_corresponding, attendance, attended_confirmed, registration_confirmed, registration_fee_paid, registration_fee_tier, submissions!inner(paper_id, title, status, submission_type, participation_mode, tracks(code, name))"
+      "id, full_name, email, mobile, participant_category, profile_id, is_corresponding, attendance, attended_confirmed, registration_confirmed, registration_fee_paid, registration_fee_tier, participation_mode_actual, submissions!inner(paper_id, title, status, submission_type, participation_mode, tracks(code, name))"
     );
 
   const authors = ((data ?? []) as any[]).filter(
@@ -92,6 +92,12 @@ export async function AuthorManagementView() {
       list.find((a) => a.is_corresponding) ?? list[0];
     const mode: string | null =
       modeSource?.submissions?.participation_mode || null;
+    // Staff override of the mode (delegate later asked to switch); null unless set.
+    const modeActual: "onsite" | "virtual" | null =
+      (list.map((a) => a.participation_mode_actual).find(Boolean) as
+        | "onsite"
+        | "virtual"
+        | undefined) ?? null;
     // Certificate state: eligible papers (not dropped) and how many already
     // carry a participation certificate.
     const certEligible = list.filter(
@@ -123,6 +129,7 @@ export async function AuthorManagementView() {
       category,
       member,
       mode,
+      modeActual,
       fee: computeRegistrationFee(category, member, now),
     };
   });

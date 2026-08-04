@@ -13,6 +13,7 @@ export type ReviewerAssignment = {
   paperId: string;
   trackCode: string;
   trackName: string;
+  pathway: "A" | "B";
   status: "invited" | "accepted" | "declined" | "submitted";
   recommendation: string | null;
   round: number | null;
@@ -33,7 +34,14 @@ export type ReviewerRow = {
     completed: number;
     declined: number;
     overdue: number;
+    pathwayA: number;
+    pathwayB: number;
   };
+};
+
+const PATHWAY_CLASS: Record<"A" | "B", string> = {
+  A: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300",
+  B: "bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300",
 };
 
 const STATUS_LABEL: Record<ReviewerAssignment["status"], string> = {
@@ -126,17 +134,18 @@ export function ReviewerManagement({
     ].join("   |   ");
     const headers = [
       "Reviewer", "Mobile", "Email", "Affiliation", "Tracks", "Assigned",
-      "Invited (pending)", "In progress", "Completed", "Declined", "Overdue",
-      "Papers (status)",
+      "Pathway A", "Pathway B", "Invited (pending)", "In progress", "Completed",
+      "Declined", "Overdue", "Papers (pathway, status)",
     ];
     const data = filtered.map((r) =>
       [
         r.name, r.mobile ?? "", r.email, r.affiliation ?? "",
         r.trackCodes.join("; "),
-        r.counts.assigned, r.counts.invited, r.counts.accepted,
+        r.counts.assigned, r.counts.pathwayA, r.counts.pathwayB,
+        r.counts.invited, r.counts.accepted,
         r.counts.completed, r.counts.declined, r.counts.overdue,
         r.assignments
-          .map((a) => `${a.paperId} (${STATUS_LABEL[a.status]})`)
+          .map((a) => `${a.paperId} (Pathway ${a.pathway}, ${STATUS_LABEL[a.status]})`)
           .join("; "),
       ]
         .map(csvCell)
@@ -324,7 +333,10 @@ export function ReviewerManagement({
                               {a.paperId}
                             </span>
                             <span className="text-slate-400"> · {a.trackCode}</span>
-                            <span className={`badge ml-2 ${STATUS_CLASS[a.status]}`}>
+                            <span className={`badge ml-2 ${PATHWAY_CLASS[a.pathway]}`}>
+                              Pathway {a.pathway}
+                            </span>
+                            <span className={`badge ml-1 ${STATUS_CLASS[a.status]}`}>
                               {STATUS_LABEL[a.status]}
                             </span>
                             {a.overdue && a.status === "accepted" && (
@@ -346,6 +358,14 @@ export function ReviewerManagement({
                     <div className="flex flex-col items-start gap-1 text-[11px]">
                       <span className="text-slate-600">
                         Assigned: <b>{r.counts.assigned}</b>
+                      </span>
+                      <span className="flex flex-wrap gap-1">
+                        <span className={`badge ${PATHWAY_CLASS.A}`}>
+                          Pathway A: {r.counts.pathwayA}
+                        </span>
+                        <span className={`badge ${PATHWAY_CLASS.B}`}>
+                          Pathway B: {r.counts.pathwayB}
+                        </span>
                       </span>
                       {r.counts.invited > 0 && (
                         <span className="badge bg-amber-100 text-amber-800">

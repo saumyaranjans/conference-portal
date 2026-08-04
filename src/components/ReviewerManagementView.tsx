@@ -17,7 +17,7 @@ export async function ReviewerManagementView() {
   const { data } = await admin
     .from("assignments")
     .select(
-      "id, status, due_date, round, reviewer_id, reviewer:profiles!assignments_reviewer_id_fkey(id, full_name, email, mobile, affiliation, institution), submissions!inner(paper_id, tracks(code, name)), reviews(recommendation, is_submitted)"
+      "id, status, due_date, round, reviewer_id, reviewer:profiles!assignments_reviewer_id_fkey(id, full_name, email, mobile, affiliation, institution), submissions!inner(paper_id, submission_type, tracks(code, name)), reviews(recommendation, is_submitted)"
     );
 
   const list = ((data ?? []) as any[]).filter((a) => a.reviewer && a.reviewer.email);
@@ -44,6 +44,9 @@ export async function ReviewerManagementView() {
         paperId: a.submissions?.paper_id ?? "—",
         trackCode: a.submissions?.tracks?.code ?? "—",
         trackName: a.submissions?.tracks?.name ?? "—",
+        pathway: (a.submissions?.submission_type === "full_paper_presentation"
+          ? "B"
+          : "A") as "A" | "B",
         status: a.status,
         recommendation: rev?.recommendation ?? null,
         round: a.round ?? null,
@@ -57,6 +60,8 @@ export async function ReviewerManagementView() {
       completed: assignments.filter((x) => x.status === "submitted").length,
       declined: assignments.filter((x) => x.status === "declined").length,
       overdue: assignments.filter((x) => x.overdue).length,
+      pathwayA: assignments.filter((x) => x.pathway === "A").length,
+      pathwayB: assignments.filter((x) => x.pathway === "B").length,
     };
     return {
       name: p.full_name || p.email,

@@ -142,7 +142,33 @@ export function AuthorManagement({
                   </td>
                 </tr>
               )}
-              {filtered.map((r) => (
+              {filtered.map((r) => {
+                // Headline fee: timeline-driven by default; once staff record
+                // a paid tier it overrides the display to that tier's amount.
+                const tierPaid = r.paidTier
+                  ? feeForTier(r.category, r.member, r.paidTier)
+                  : null;
+                const feeView =
+                  r.paidTier && tierPaid
+                    ? {
+                        known: tierPaid.known,
+                        tier: r.paidTier,
+                        currency: tierPaid.currency,
+                        base: tierPaid.base,
+                        discount: tierPaid.discount,
+                        amount: tierPaid.amount,
+                        overridden: true,
+                      }
+                    : {
+                        known: r.fee.known,
+                        tier: r.fee.tier,
+                        currency: r.fee.currency,
+                        base: r.fee.base,
+                        discount: r.fee.discount,
+                        amount: r.fee.amount,
+                        overridden: false,
+                      };
+                return (
                 <tr key={r.email} className="hover:bg-slate-50 align-top">
                   {/* Author */}
                   <td className="td whitespace-nowrap">
@@ -294,33 +320,38 @@ export function AuthorManagement({
                       <span className="text-xs text-slate-400">
                         Not applicable
                       </span>
-                    ) : r.fee.known ? (
+                    ) : feeView.known ? (
                       <div>
                         <span
                           className={`badge mr-2 ${
-                            r.fee.tier === "early"
+                            feeView.tier === "early"
                               ? "bg-emerald-100 text-emerald-800"
                               : "bg-amber-100 text-amber-800"
                           }`}
                         >
-                          {r.fee.tier === "early" ? "Early bird" : "Regular"}
+                          {feeView.tier === "early" ? "Early bird" : "Regular"}
                         </span>
                         <span className="font-semibold text-slate-800">
-                          {formatMoney(r.fee.currency, r.fee.amount)}
+                          {formatMoney(feeView.currency, feeView.amount)}
                         </span>
-                        {r.fee.discount > 0 && (
+                        {feeView.discount > 0 && (
                           <span className="block text-[10px] text-slate-400">
                             <span className="line-through">
-                              {formatMoney(r.fee.currency, r.fee.base)}
+                              {formatMoney(feeView.currency, feeView.base)}
                             </span>{" "}
                             −15% member ({r.category})
                           </span>
                         )}
-                        {r.fee.discount === 0 && r.category && (
+                        {feeView.discount === 0 && r.category && (
                           <span className="block text-[10px] text-slate-400">
                             {r.category}
                           </span>
                         )}
+                        <span className="block text-[10px] text-slate-400">
+                          {feeView.overridden
+                            ? "Paid tier (overrides timeline)"
+                            : "As per timeline"}
+                        </span>
                       </div>
                     ) : (
                       <span className="text-xs text-slate-400">
@@ -490,7 +521,8 @@ export function AuthorManagement({
                     </div>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>

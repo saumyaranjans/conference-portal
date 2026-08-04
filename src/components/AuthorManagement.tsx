@@ -295,11 +295,11 @@ export function AuthorManagement({
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-nowrap items-center gap-2 overflow-x-auto pb-1">
         <select
           value={track}
           onChange={(e) => setTrack(e.target.value)}
-          className="input max-w-xs"
+          className="input w-36 shrink-0 text-sm sm:w-44"
         >
           <option value="all">All tracks</option>
           {tracks.map((t) => (
@@ -312,12 +312,12 @@ export function AuthorManagement({
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search author, email, paper…"
-          className="input max-w-xs"
+          className="input min-w-[9rem] flex-1 text-sm"
         />
         <select
           value={regFilter}
           onChange={(e) => setRegFilter(e.target.value as typeof regFilter)}
-          className="input max-w-[12rem] text-sm"
+          className="input w-40 shrink-0 text-sm"
           aria-label="Registration filter"
         >
           <option value="all">All (registration)</option>
@@ -327,20 +327,20 @@ export function AuthorManagement({
         <select
           value={modeFilter}
           onChange={(e) => setModeFilter(e.target.value as typeof modeFilter)}
-          className="input max-w-[12rem] text-sm"
+          className="input w-32 shrink-0 text-sm"
           aria-label="Mode filter"
         >
           <option value="all">All (mode)</option>
           <option value="onsite">On-site</option>
           <option value="virtual">Virtual</option>
         </select>
-        <span className="text-xs text-slate-500 ml-auto">
-          {filtered.length} of {rows.length} authors
+        <span className="shrink-0 whitespace-nowrap text-xs text-slate-500">
+          {filtered.length} of {rows.length}
         </span>
         <button
           type="button"
           onClick={downloadExcel}
-          className="btn-secondary text-sm"
+          className="btn-secondary shrink-0 whitespace-nowrap text-sm"
           title="Download the filtered list (opens in Excel); the active filters are recorded in the first row"
         >
           ⬇ Download Excel

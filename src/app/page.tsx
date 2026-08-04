@@ -38,19 +38,27 @@ const EVENT_JSONLD = {
     },
     { "@type": "Organization", name: "GIFT Society" },
   ],
-  offers: {
-    "@type": "Offer",
-    name: "Conference registration (from — early-bird, domestic student)",
-    url: "https://glogift2027.in/#fees",
-    price: "3000",
-    priceCurrency: "INR",
-    availability: "https://schema.org/InStock",
-    validFrom: "2026-08-01",
-  },
-  performer: {
-    "@type": "Organization",
-    name: "Global speakers, academicians and AI-industry practitioners",
-  },
+  // Google recognises Event `offers` as an array of Offer; each needs
+  // price/priceCurrency/availability/url/validFrom to register.
+  offers: [
+    {
+      "@type": "Offer",
+      name: "Conference registration (early-bird, domestic student)",
+      url: "https://glogift2027.in/#fees",
+      price: "3000",
+      priceCurrency: "INR",
+      availability: "https://schema.org/InStock",
+      validFrom: "2026-08-01",
+    },
+  ],
+  // `performer` must be a Person or PerformingGroup for Google to accept it —
+  // Organization is silently dropped (reported as "missing performer").
+  performer: [
+    {
+      "@type": "PerformingGroup",
+      name: "Global speakers, academicians and AI-industry practitioners",
+    },
+  ],
   audience: {
     "@type": "Audience",
     audienceType:

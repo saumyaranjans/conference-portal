@@ -38,6 +38,22 @@ const EVENT_JSONLD = {
     },
     { "@type": "Organization", name: "GIFT Society" },
   ],
+  audience: {
+    "@type": "Audience",
+    audienceType:
+      "Academicians, PhD scholars, MBA students, research associates and practitioners from prominent Indian and global universities (Management, Communication, Engineering, Information Technology, Social Sciences), and industry professionals and consultants from AI-focused sectors.",
+  },
+  about: [
+    "Artificial Intelligence in Management",
+    "Flexible Systems Management",
+    "Digitalisation",
+    "Decarbonization",
+    "Management",
+    "Communication",
+    "Engineering",
+    "Information Technology",
+    "Social Sciences",
+  ],
 };
 
 /**

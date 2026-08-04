@@ -6,7 +6,7 @@ const SITE_URL = "https://glogift2027.in";
 const SITE_TITLE =
   "GLOGIFT 27 — International Conference on AI-Driven Solutions in Management";
 const SITE_DESC =
-  "GLOGIFT 27 (Twenty Seventh Global Conference on Flexible Systems Management) — International Conference on AI-Driven Solutions in Management: Flexibility, Digitalisation & Decarbonization. 25–27 February 2027 at IIM Sambalpur, India. Call for papers across ten tracks; in-person and hybrid.";
+  "GLOGIFT 27 (Twenty Seventh Global Conference on Flexible Systems Management) — International Conference on AI-Driven Solutions in Management: Flexibility, Digitalisation & Decarbonization. 25–27 February 2027 at IIM Sambalpur, India. A global forum for academicians, PhD scholars, MBA students, research associates and practitioners from prominent Indian and global universities — across Management, Communication, Engineering, Information Technology and Social Sciences — and for industry professionals and consultants from AI-focused sectors. Call for papers across ten tracks; in-person and hybrid.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -28,6 +28,22 @@ export const metadata: Metadata = {
     "digitalisation",
     "decarbonization",
     "GIFT Society",
+    // Target audiences
+    "conference for academicians",
+    "PhD scholars conference",
+    "MBA students conference",
+    "research associates conference",
+    "practitioners management conference",
+    "industry professionals AI conference",
+    "AI consultants conference",
+    "Indian and global universities conference",
+    // Disciplines
+    "management research",
+    "communication studies conference",
+    "engineering conference India",
+    "information technology conference",
+    "social sciences conference",
+    "interdisciplinary AI research",
   ],
   authors: [{ name: "IIM Sambalpur · GIFT Society" }],
   creator: "IIM Sambalpur",

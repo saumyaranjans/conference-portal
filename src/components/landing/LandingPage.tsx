@@ -620,13 +620,11 @@ export function LandingPage() {
       </nav>
 
       <div id="top" className="max-w-6xl mx-auto px-4 py-4 space-y-10">
-        {/* ---- Hero ---- */}
-        <section className="space-y-4">
+        {/* ---- Hero + deadline countdown (kept together, above the fold) ---- */}
+        <section className="space-y-3">
           <Banner />
+          <DeadlineCountdown deadlines={DEADLINES} />
         </section>
-
-        {/* ---- Deadline countdown + call to action ---- */}
-        <DeadlineCountdown deadlines={DEADLINES} />
 
         {/* ---- 1. About ---- */}
         <section>

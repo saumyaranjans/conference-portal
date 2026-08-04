@@ -300,42 +300,47 @@ export function AuthorManagement({
                         r.mode != null &&
                         r.modeActual !== r.mode;
                       return (
-                        <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                          <span className="text-[11px] font-medium text-slate-500">
-                            Actual (as on today):
-                          </span>
-                          {r.attended ? (
-                            <span className="badge bg-emerald-100 text-emerald-800">
-                              Attended
+                        <div className="mt-1">
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <span className="text-[11px] font-medium text-slate-500">
+                              Status:
                             </span>
-                          ) : (
-                            <span className="badge bg-slate-100 text-slate-500">
-                              Not attended
-                            </span>
-                          )}
-                          {effMode && (
-                            <span className="inline-flex flex-col items-start">
-                              <span
-                                className={`badge ${
-                                  effMode === "onsite"
-                                    ? "bg-blue-100 text-blue-800"
-                                    : "bg-teal-100 text-teal-800"
-                                }`}
-                              >
-                                {effMode === "onsite"
-                                  ? "On-site"
-                                  : effMode === "virtual"
-                                    ? "Virtual"
-                                    : effMode}
+                            {r.attended ? (
+                              <span className="badge bg-emerald-100 text-emerald-800">
+                                Attended
                               </span>
-                              {modeChanged && (
-                                <span className="text-[10px] font-medium text-amber-600">
-                                  (changed from{" "}
-                                  {r.mode === "onsite" ? "On-site" : "Virtual"})
+                            ) : (
+                              <span className="badge bg-slate-100 text-slate-500">
+                                Not attended
+                              </span>
+                            )}
+                            {effMode && (
+                              <span className="inline-flex flex-col items-start">
+                                <span
+                                  className={`badge ${
+                                    effMode === "onsite"
+                                      ? "bg-blue-100 text-blue-800"
+                                      : "bg-teal-100 text-teal-800"
+                                  }`}
+                                >
+                                  {effMode === "onsite"
+                                    ? "On-site"
+                                    : effMode === "virtual"
+                                      ? "Virtual"
+                                      : effMode}
                                 </span>
-                              )}
-                            </span>
-                          )}
+                                {modeChanged && (
+                                  <span className="text-[10px] font-medium text-amber-600">
+                                    (changed from{" "}
+                                    {r.mode === "onsite" ? "On-site" : "Virtual"})
+                                  </span>
+                                )}
+                              </span>
+                            )}
+                          </div>
+                          <span className="block text-[10px] text-slate-400">
+                            (as on today)
+                          </span>
                         </div>
                       );
                     })()}

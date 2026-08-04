@@ -288,8 +288,8 @@ const LEADERSHIP = [
   },
   {
     name: "Prof (Dr) Sushil",
-    role: "GLOGIFT President",
-    org: "Founder, GIFT Society · Emeritus Professor, IIT Delhi",
+    role: "GIFT Founder President",
+    org: "GIFT Society · Emeritus Professor, IIT Delhi",
   },
   {
     name: "Prof (Dr) Seema Gupta",

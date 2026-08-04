@@ -482,6 +482,11 @@ export function ReviewerManagement({
                       <span className="block text-xs text-slate-500">{r.mobile}</span>
                     )}
                     <span className="block text-xs text-slate-500">{r.email}</span>
+                    {r.affiliation && (
+                      <span className="mt-0.5 block whitespace-normal text-xs text-slate-600 dark:text-slate-300">
+                        {r.affiliation}
+                      </span>
+                    )}
                     {/* Workload summary */}
                     {(() => {
                       const held = r.counts.assigned - r.counts.declined;

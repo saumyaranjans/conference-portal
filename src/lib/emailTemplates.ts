@@ -688,6 +688,38 @@ export function participationCertificateReadyEmail(o: {
 }
 
 /**
+ * System-generated notice that a delegate's mode of participation has been
+ * switched (On-site <-> Virtual) at their own request, by the Participation
+ * desk. States it is final and points to the Chair / Coordinator.
+ */
+export function participationModeChangedEmail(o: {
+  recipientName?: string | null;
+  fromMode: string; // "On-site" | "Virtual"
+  toMode: string;
+  brand?: string;
+  conferenceName?: string;
+}): EmailContent {
+  const brand = o.brand || CONF_DEFAULT;
+  const conf = o.conferenceName || CONF_DEFAULT;
+  const subject = `${brand} — Change in your mode of participation`;
+  const body = compose([
+    greeting(o.recipientName ?? undefined),
+    "",
+    `Based upon your request, your mode of participation for ${conf} has been changed from ${o.fromMode} to ${o.toMode}.`,
+    "",
+    "Please note: this change is now final and cannot be reversed online. If this is not correct, or you need any further change, kindly contact the conference team:",
+    "  - Chair, GLOGIFT 2027 - glogift27.chair@iimsambalpur.ac.in",
+    "  - Coordinator, GLOGIFT 2027 - glogift27.coordinator@iimsambalpur.ac.in",
+    "",
+    "This is a system-generated email - please do not reply.",
+    "",
+    "With warm regards,",
+    `Editorial Office, ${brand}`,
+  ]);
+  return { subject, body };
+}
+
+/**
  * System-generated acknowledgement to every author (corresponding + co-authors)
  * once the full paper is submitted for review — carries the Manuscript ID. Fires
  * for both packaging options (A and B).

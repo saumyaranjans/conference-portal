@@ -17,6 +17,7 @@ import {
   manuscriptNeedsEditorEmail,
   manuscriptReturnedEmail,
   paperAssignmentEmail,
+  participationModeChangedEmail,
   reviewDecisionNoticeEmail,
   reviewThankYouEmail,
   signOffLine,
@@ -5276,6 +5277,29 @@ export async function saveParticipationStatus(
     modeRaw === "onsite" || modeRaw === "virtual" ? modeRaw : null;
   const now = new Date().toISOString();
 
+  // Snapshot the mode BEFORE this save, so we can tell if this Save switches it
+  // (and email the delegate). fromMode = the effective mode currently in force.
+  const { data: preRows } = await supabase
+    .from("submission_authors")
+    .select(
+      "full_name, is_corresponding, participation_mode_actual, submissions!inner(participation_mode)"
+    )
+    .ilike("email", email);
+  const preList = (preRows ?? []) as any[];
+  const corr = preList.find((a) => a.is_corresponding) ?? preList[0];
+  const originalMode: string | null =
+    corr?.submissions?.participation_mode ?? null;
+  const prevActual: string | null =
+    (preList.map((a) => a.participation_mode_actual).find(Boolean) as
+      | string
+      | undefined) ?? null;
+  const fromMode = prevActual ?? originalMode;
+  const modeSwitched =
+    !!modeActual && !!fromMode && modeActual !== fromMode;
+  const recipientName: string | null =
+    (preList.map((a) => a.full_name).find(Boolean) as string | undefined) ??
+    null;
+
   const patch: Record<string, unknown> = {
     attended_confirmed: attended,
     attendance_confirmed_at: attended ? now : null,
@@ -5304,16 +5328,46 @@ export async function saveParticipationStatus(
     registered,
     paid,
     tier,
+    modeSwitched,
+    from: modeSwitched ? fromMode : undefined,
+    to: modeSwitched ? modeActual : undefined,
     rows: rows?.length ?? 0,
     via: "author-management",
   });
+
+  // Mode switch: notify ONLY this author (the edited delegate), best-effort.
+  let extra = "";
+  if (modeSwitched && emailConfigured()) {
+    const label = (m: string | null) =>
+      m === "onsite" ? "On-site" : m === "virtual" ? "Virtual" : String(m);
+    try {
+      const { subject, body } = participationModeChangedEmail({
+        recipientName,
+        fromMode: label(fromMode),
+        toMode: label(modeActual),
+      });
+      await sendEmail({
+        to: email,
+        subject,
+        text: body,
+        kind: "participation_mode_changed",
+        sentBy: profile.id,
+      });
+      extra = ` Mode change (${label(fromMode)} → ${label(
+        modeActual
+      )}) emailed to the author.`;
+    } catch {
+      // An email failure must never block the saved change.
+    }
+  }
+
   revalidatePath("/chief/authors");
   revalidatePath("/admin/authors");
   return {
     ok: true,
     message: `Saved (${rows?.length ?? 0} record${
       (rows?.length ?? 0) === 1 ? "" : "s"
-    }).`,
+    }).${extra}`,
   };
 }
 

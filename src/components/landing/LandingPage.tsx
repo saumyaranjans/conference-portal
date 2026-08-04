@@ -919,10 +919,48 @@ export function LandingPage() {
               "Choosing Pathway B keeps you in the Pathway A (abstract) phase until your abstract is accepted. Even after acceptance, the corresponding author may still return to Pathway A and present on the accepted abstract, or continue to submit the full manuscript under Pathway B."
             )}
           </p>
-          <div className="mt-4 flex justify-center">
-            <Link href="/login" className="btn-primary px-6 py-3">
-              Go to the submission portal
-            </Link>
+          <div className="relative mt-6 overflow-hidden rounded-2xl bg-gradient-to-br from-[#1e3a8a] via-[#1d4ed8] to-[#0e7490] px-6 py-8 text-center shadow-lg sm:px-10">
+            {/* accent rule + soft glows for depth */}
+            <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-sky-400 via-fuchsia-400 to-amber-400" />
+            <div className="pointer-events-none absolute -right-16 -top-16 h-52 w-52 rounded-full bg-white/10 blur-2xl" />
+            <div className="pointer-events-none absolute -bottom-20 -left-10 h-52 w-52 rounded-full bg-cyan-300/10 blur-2xl" />
+            <h3 className="relative text-xl font-bold text-white sm:text-2xl">
+              Ready to present your research at GLOGIFT 27?
+            </h3>
+            <p className="relative mx-auto mt-2 max-w-2xl text-sm leading-relaxed text-blue-100">
+              Submit a 500-word abstract across ten tracks. Accepted &amp;
+              presented papers appear in the conference proceedings (ISBN), with
+              selected papers fast-tracked to Springer-indexed journals.
+            </p>
+            <div className="relative mt-5 flex flex-wrap items-center justify-center gap-3">
+              <Link
+                href="/signup"
+                className="rounded-xl bg-white px-6 py-3 text-sm font-bold text-blue-800 shadow transition hover:-translate-y-0.5 hover:bg-blue-50"
+              >
+                Submit your abstract →
+              </Link>
+              <Link
+                href="/login"
+                className="rounded-xl border border-white/40 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+              >
+                Go to the submission portal
+              </Link>
+            </div>
+            <div className="relative mt-5 flex flex-wrap items-center justify-center gap-2 text-[11px] font-medium text-blue-100">
+              {[
+                "📚 Proceedings with ISBN",
+                "⭐ Springer-indexed journals",
+                "🗂 Ten tracks",
+                "🌐 In-Person | Hybrid",
+              ].map((chip) => (
+                <span
+                  key={chip}
+                  className="rounded-full bg-white/10 px-3 py-1 ring-1 ring-white/15"
+                >
+                  {chip}
+                </span>
+              ))}
+            </div>
           </div>
         </section>
 

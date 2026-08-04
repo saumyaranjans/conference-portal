@@ -1608,7 +1608,7 @@ export async function saveReview(formData: FormData): Promise<ActionResult> {
       const t = sub as any;
       const conf = t?.tracks?.conferences;
       const brand =
-        conf?.acronym && conf?.year ? `${conf.acronym} ${conf.year}` : "GLOGIFT 27";
+        conf?.acronym && conf?.year ? `${conf.acronym} ${String(conf.year).slice(-2)}` : "GLOGIFT 27";
       // The handling Track Editor signs the thank-you and is CC'd on it.
       let chairName: string | null = null;
       let chairEmail: string | null = null;
@@ -2418,7 +2418,7 @@ function conflictOfInterest(
 function shortConf(conference?: { acronym?: string | null; year?: number | null }): string {
   const acronym = conference?.acronym?.trim();
   const year = conference?.year;
-  return acronym && year ? `${acronym} ${year}` : "GLOGIFT 27";
+  return acronym && year ? `${acronym} ${String(year).slice(-2)}` : "GLOGIFT 27";
 }
 
 /** `n` days from `from`, as a new Date. */
@@ -3237,7 +3237,7 @@ export async function recordRecommendation(
       const trackName = (meta as any)?.tracks?.name ?? null;
       const conf = (meta as any)?.tracks?.conferences;
       const brand =
-        conf?.acronym && conf?.year ? `${conf.acronym} ${conf.year}` : "GLOGIFT 27";
+        conf?.acronym && conf?.year ? `${conf.acronym} ${String(conf.year).slice(-2)}` : "GLOGIFT 27";
       const signerRole =
         (sub as any).assigned_editor_id === profile.id ? "Track Editor" : "Convener";
       const cc = await convenerEmails(admin);
@@ -3318,7 +3318,7 @@ export async function recordRecommendation(
     const dTrack = (dmeta as any)?.tracks?.name ?? null;
     const dConf = (dmeta as any)?.tracks?.conferences;
     const dBrand =
-      dConf?.acronym && dConf?.year ? `${dConf.acronym} ${dConf.year}` : "GLOGIFT 27";
+      dConf?.acronym && dConf?.year ? `${dConf.acronym} ${String(dConf.year).slice(-2)}` : "GLOGIFT 27";
     const dSignerRole =
       (sub as any).assigned_editor_id === profile.id ? "Track Editor" : "Convener";
 

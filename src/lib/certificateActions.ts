@@ -644,7 +644,7 @@ export async function issueCertificate(
 
     if (recipientEmail && emailConfigured()) {
       const brand = conference.acronym
-        ? `${conference.acronym} ${conference.year}`
+        ? `${conference.acronym} ${String(conference.year).slice(-2)}`
         : "GLOGIFT 27";
       const { subject, body } = certificateIssuedEmail({
         recipientName: displayName,

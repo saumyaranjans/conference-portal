@@ -168,7 +168,7 @@ export default async function EditorSubmissionPage({
 
   const conf = sub.tracks?.conferences;
   const conferenceBrand =
-    conf?.acronym && conf?.year ? `${conf.acronym} ${conf.year}` : "GLOGIFT 27";
+    conf?.acronym && conf?.year ? `${conf.acronym} ${String(conf.year).slice(-2)}` : "GLOGIFT 27";
   // Accepting a full paper is gated on two Accept recommendations.
   const acceptsShort =
     sub.stage === "full_paper" && acceptCount < FULL_PAPER_ACCEPTS_REQUIRED;

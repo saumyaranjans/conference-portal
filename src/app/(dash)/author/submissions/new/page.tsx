@@ -93,7 +93,7 @@ export default async function NewSubmissionPage({
         title="New Submission"
         subtitle={
           list.length === 1
-            ? `${list[0].name} (${list[0].acronym} ${list[0].year})`
+            ? `${list[0].name} (${list[0].acronym} ${String(list[0].year).slice(-2)})`
             : "Choose a conference and track to begin."
         }
       />

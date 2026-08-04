@@ -11,6 +11,6 @@ export const TRACKS: [string, string][] = [
   ["Governance, Ethics & Responsible AI", "Responsible and ethical AI, data privacy, AI regulation, corporate governance"],
   ["Analytics, Big Data & Intelligent Systems", "Business and predictive analytics, deep learning, NLP, business intelligence, real-time decision systems"],
   ["Human Capital & Leadership", "AI in HRM, future of work, talent analytics, knowledge management"],
-  ["Strategy, Innovation & Emerging Business Models", "AI in product and technology management, AI startups, platform economies, digital entrepreneurship, venture capital"],
+  ["Strategy, Innovation & Emerging Business Models", "Strategic innovation, firm competitiveness, AI in product and technology management, AI startups, platform economies, digital entrepreneurship, venture capital"],
   ["Inclusive Growth & Global Transformation", "Financial inclusion, smart cities, AI for public policy, healthcare analytics, economic resilience"],
 ];

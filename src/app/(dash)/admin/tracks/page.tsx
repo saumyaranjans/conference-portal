@@ -72,7 +72,7 @@ export default async function AdminTracksPage() {
       {list.map((conference) => (
         <Section
           key={conference.id}
-          title={`${conference.acronym} ${conference.year}${conference.is_open ? "" : " · closed"}`}
+          title={`${conference.acronym} ${String(conference.year).slice(-2)}${conference.is_open ? "" : " · closed"}`}
         >
           <ActionForm
             action={updateConference}

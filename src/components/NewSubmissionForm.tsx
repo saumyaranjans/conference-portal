@@ -271,7 +271,7 @@ export function NewSubmissionForm({
 
         <CameraReadyPreview
           conferenceName={
-            conf ? `${conf.name} (${conf.acronym} ${conf.year})` : ""
+            conf ? `${conf.name} (${conf.acronym} ${String(conf.year).slice(-2)})` : ""
           }
           trackName={track ? `${track.code} — ${track.name}` : ""}
           title={title}

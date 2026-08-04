@@ -208,7 +208,7 @@ export async function generateParticipationCertificates(
         [...confCache.values()][0] ??
         ({ name: "GLOGIFT 27", acronym: "GLOGIFT", year: 2027 } as any);
       const brand = conf.acronym
-        ? `${conf.acronym} ${conf.year}`
+        ? `${conf.acronym} ${String(conf.year).slice(-2)}`
         : "GLOGIFT 27";
       const { subject, body } = participationCertificateReadyEmail({
         recipientName: eligible[0]?.full_name ?? undefined,

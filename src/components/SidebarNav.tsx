@@ -25,6 +25,8 @@ const NAV: Record<AppRole, { href: string; label: string }[]> = {
     { href: "/chief/analytics", label: "Submission Analytics" },
     { href: "/chief/visit-analytics", label: "Visit Analytics" },
     { href: "/chief/authors", label: "Author Management" },
+    { href: "/chief/reviewers", label: "Reviewer Management" },
+    { href: "/chief/track-editors", label: "Track Editor Management" },
   ],
   admin: [
     { href: "/admin", label: "Overview" },
@@ -33,6 +35,8 @@ const NAV: Record<AppRole, { href: string; label: string }[]> = {
     { href: "/admin/tracks", label: "Conference & Tracks" },
     { href: "/admin/publications", label: "Publication Opportunities" },
     { href: "/admin/authors", label: "Author Management" },
+    { href: "/admin/reviewers", label: "Reviewer Management" },
+    { href: "/admin/track-editors", label: "Track Editor Management" },
     { href: "/admin/attendance", label: "Attendance" },
     { href: "/admin/certificates", label: "Certificate Office" },
   ],

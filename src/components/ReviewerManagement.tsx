@@ -94,6 +94,28 @@ function recLabel(r: string | null): string {
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+/** A single reviewer's own Accept/Reject rate across their decided reviews. */
+function reviewerRates(r: ReviewerRow) {
+  let accept = 0;
+  let reject = 0;
+  let revision = 0;
+  for (const a of r.assignments) {
+    if (a.status !== "submitted" || !a.recommendation) continue;
+    if (a.recommendation === "accept") accept += 1;
+    else if (a.recommendation === "reject") reject += 1;
+    else if (a.recommendation.includes("revision")) revision += 1;
+  }
+  const total = accept + reject + revision;
+  return {
+    accept,
+    reject,
+    revision,
+    total,
+    acceptPct: total ? Math.round((accept / total) * 100) : 0,
+    rejectPct: total ? Math.round((reject / total) * 100) : 0,
+  };
+}
+
 export function ReviewerManagement({
   rows,
   tracks,
@@ -112,6 +134,8 @@ export function ReviewerManagement({
   const [anaPathway, setAnaPathway] = useState<"all" | "A" | "B">("all");
   // Which paper's detail popup is open (keyed by email + assignment index).
   const [openPaper, setOpenPaper] = useState<string | null>(null);
+  // Per-reviewer confirmation gate for the certificate actions (keyed by email).
+  const [certUnlocked, setCertUnlocked] = useState<Record<string, boolean>>({});
   const fmtDate = (d: string | null) =>
     d
       ? new Date(d).toLocaleDateString("en-GB", {
@@ -646,38 +670,115 @@ export function ReviewerManagement({
                     )}
                   </td>
                   <td className="td align-top">
-                    {r.certGenerated ? (
-                      <span className="block rounded-md bg-emerald-50 px-2 py-1 text-center text-[11px] font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
-                        ✓ Certificate generated
-                      </span>
-                    ) : r.counts.completed > 0 ? (
-                      <div className="space-y-1">
-                        <a
-                          href={`/api/reviewer-certificate/preview?email=${encodeURIComponent(
-                            r.email
-                          )}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="btn-secondary block w-full justify-center text-center text-[11px] py-0.5 px-2"
-                          title="Open the certificate as it will look — nothing is saved or emailed"
-                        >
-                          Preview certificate
-                        </a>
-                        <ActionForm action={generateReviewerCertificate}>
-                          <input type="hidden" name="email" value={r.email} />
-                          <SubmitButton
-                            variant="primary"
-                            className="w-full justify-center text-[11px] py-0.5 px-2"
-                          >
-                            Generate certificate
-                          </SubmitButton>
-                        </ActionForm>
-                      </div>
-                    ) : (
-                      <span className="block text-center text-[10px] text-slate-400">
-                        No completed review yet
-                      </span>
-                    )}
+                    {(() => {
+                      const rt = reviewerRates(r);
+                      const unlocked = !!certUnlocked[r.email];
+                      return (
+                        <div className="space-y-1.5">
+                          {/* This reviewer's own decision rates */}
+                          {rt.total > 0 ? (
+                            <div className="rounded-md border border-slate-200 bg-slate-50 px-2 py-1 dark:border-slate-700 dark:bg-slate-800/60">
+                              <div className="flex items-center justify-between text-[10px]">
+                                <span className="font-medium text-emerald-700 dark:text-emerald-300">
+                                  Acceptance rate
+                                </span>
+                                <b className="text-emerald-700 dark:text-emerald-300">
+                                  {rt.acceptPct}%
+                                </b>
+                              </div>
+                              <div className="flex items-center justify-between text-[10px]">
+                                <span className="font-medium text-rose-700 dark:text-rose-300">
+                                  Rejection rate
+                                </span>
+                                <b className="text-rose-700 dark:text-rose-300">
+                                  {rt.rejectPct}%
+                                </b>
+                              </div>
+                              <p
+                                className="mt-0.5 text-[9px] text-slate-400"
+                                title={`Accept ${rt.accept} · Revision ${rt.revision} · Reject ${rt.reject}`}
+                              >
+                                of {rt.total} decided review{rt.total === 1 ? "" : "s"}
+                              </p>
+                            </div>
+                          ) : (
+                            <p className="text-[10px] text-slate-400">
+                              No decisions yet
+                            </p>
+                          )}
+
+                          {/* Certificate actions */}
+                          {r.certGenerated ? (
+                            <span className="block rounded-md bg-emerald-50 px-2 py-1 text-center text-[11px] font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+                              ✓ Certificate generated
+                            </span>
+                          ) : r.counts.completed > 0 ? (
+                            <div className="space-y-1">
+                              <label className="flex items-start gap-1.5 rounded-md border border-slate-200 px-2 py-1 text-[10px] leading-tight text-slate-600 dark:border-slate-700 dark:text-slate-300">
+                                <input
+                                  type="checkbox"
+                                  checked={unlocked}
+                                  onChange={(e) =>
+                                    setCertUnlocked((s) => ({
+                                      ...s,
+                                      [r.email]: e.target.checked,
+                                    }))
+                                  }
+                                  className="mt-0.5 shrink-0"
+                                />
+                                <span>
+                                  I&apos;ve verified this reviewer — enable preview
+                                  &amp; generate
+                                </span>
+                              </label>
+                              <a
+                                href={
+                                  unlocked
+                                    ? `/api/reviewer-certificate/preview?email=${encodeURIComponent(
+                                        r.email
+                                      )}`
+                                    : undefined
+                                }
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-disabled={!unlocked}
+                                tabIndex={unlocked ? 0 : -1}
+                                className={`btn-secondary block w-full justify-center text-center text-[11px] py-0.5 px-2 ${
+                                  unlocked
+                                    ? ""
+                                    : "pointer-events-none opacity-40"
+                                }`}
+                                title={
+                                  unlocked
+                                    ? "Open the certificate as it will look — nothing is saved or emailed"
+                                    : "Tick the checkbox above to enable"
+                                }
+                              >
+                                Preview certificate
+                              </a>
+                              <ActionForm action={generateReviewerCertificate}>
+                                <input type="hidden" name="email" value={r.email} />
+                                <SubmitButton
+                                  variant="primary"
+                                  disabled={!unlocked}
+                                  className={`w-full justify-center text-[11px] py-0.5 px-2 ${
+                                    unlocked
+                                      ? ""
+                                      : "cursor-not-allowed opacity-40"
+                                  }`}
+                                >
+                                  Generate certificate
+                                </SubmitButton>
+                              </ActionForm>
+                            </div>
+                          ) : (
+                            <span className="block text-center text-[10px] text-slate-400">
+                              No completed review yet
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </td>
                 </tr>
               ))}

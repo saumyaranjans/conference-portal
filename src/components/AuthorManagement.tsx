@@ -19,6 +19,8 @@ export type PersonRow = {
     trackCode: string;
     role: "Corresponding" | "Co-author";
     pathway: "A" | "B";
+    /** True if this paper was Pathway B and cancelled back to Pathway A. */
+    reverted: boolean;
     title: string;
     trackName: string;
   }[];
@@ -94,6 +96,7 @@ export function AuthorManagement({
   const [q, setQ] = useState("");
   const [regFilter, setRegFilter] = useState<"all" | "registered" | "not">("all");
   const [modeFilter, setModeFilter] = useState<"all" | "onsite" | "virtual">("all");
+  const [pathwayFilter, setPathwayFilter] = useState<"all" | "A" | "B">("all");
   // Active alphabet-index letter ("all" = every author).
   const [letter, setLetter] = useState<string>("all");
   // Track filter for the Registration analytics panel (independent of the table).
@@ -113,6 +116,16 @@ export function AuthorManagement({
       else if (m === "virtual") virtual += 1;
       else modeUnset += 1;
     }
+    // Paper-level pathway counts (distinct papers in the selected track).
+    const paperMap = new Map<string, { pathway: "A" | "B"; reverted: boolean }>();
+    for (const r of rows) {
+      for (const p of r.papers) {
+        if (anaTrack !== "all" && p.trackCode !== anaTrack) continue;
+        if (!paperMap.has(p.paperId))
+          paperMap.set(p.paperId, { pathway: p.pathway, reverted: p.reverted });
+      }
+    }
+    const papers = [...paperMap.values()];
     return {
       total: base.length,
       registered: registered.length,
@@ -120,6 +133,9 @@ export function AuthorManagement({
       onsite,
       virtual,
       modeUnset,
+      pathwayA: papers.filter((p) => p.pathway === "A").length,
+      pathwayB: papers.filter((p) => p.pathway === "B").length,
+      cancelledBtoA: papers.filter((p) => p.reverted).length,
     };
   }, [rows, anaTrack]);
 
@@ -145,13 +161,14 @@ export function AuthorManagement({
       `Mode: ${
         modeFilter === "all" ? "All" : modeFilter === "onsite" ? "On-site" : "Virtual"
       }`,
+      `Pathway: ${pathwayFilter === "all" ? "All" : `Pathway ${pathwayFilter}`}`,
       `Name starts with: ${letter === "all" ? "All" : letter}`,
     ].join("   |   ");
     const headers = [
       "Author Name", "Mobile", "Email", "Participant Category", "GLOGIFT Member",
-      "Paper IDs", "Tracks", "Role(s)", "Signed up", "Registered", "Fee paid",
-      "Fee amount", "Attendance intention", "Attended", "Reported mode",
-      "Actual mode", "Mode changed", "Certificate generated",
+      "Paper IDs", "Papers (pathway)", "Tracks", "Role(s)", "Signed up",
+      "Registered", "Fee paid", "Fee amount", "Attendance intention", "Attended",
+      "Reported mode", "Actual mode", "Mode changed", "Certificate generated",
     ];
     const dataRows = filtered.map((r) => {
       const eff = r.modeActual ?? r.mode;
@@ -162,6 +179,9 @@ export function AuthorManagement({
         r.name, r.mobile ?? "", r.email, r.category ?? "",
         r.member ? "Yes" : "No",
         r.papers.map((p) => p.paperId).join("; "),
+        r.papers
+          .map((p) => `${p.paperId}: Pathway ${p.pathway}${p.reverted ? " (B→A)" : ""}`)
+          .join("; "),
         r.trackCodes.join("; "),
         r.roles.join("; "),
         r.signedUp ? "Yes" : "No",
@@ -217,6 +237,11 @@ export function AuthorManagement({
       if (regFilter === "not" && row.registered) return false;
       if (modeFilter !== "all" && (row.modeActual ?? row.mode) !== modeFilter)
         return false;
+      if (
+        pathwayFilter !== "all" &&
+        !row.papers.some((p) => p.pathway === pathwayFilter)
+      )
+        return false;
       if (!needle) return true;
       return (
         row.name.toLowerCase().includes(needle) ||
@@ -230,7 +255,7 @@ export function AuthorManagement({
       stripSalutation(a.name).localeCompare(stripSalutation(b.name))
     );
     return { list: r, available: avail };
-  }, [rows, track, q, letter, regFilter, modeFilter]);
+  }, [rows, track, q, letter, regFilter, modeFilter, pathwayFilter]);
 
   return (
     <div className="space-y-4 [&_.badge]:rounded-md">
@@ -293,6 +318,18 @@ export function AuthorManagement({
           Registered split by mode: {analytics.onsite} on-site + {analytics.virtual} virtual
           {analytics.modeUnset > 0 && ` + ${analytics.modeUnset} mode not set`}.
         </p>
+        {/* Small boxes: papers by pathway + those cancelled from B back to A. */}
+        <div className="mt-2 flex flex-wrap gap-2">
+          <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
+            Pathway A papers <b className="text-sm">{analytics.pathwayA}</b>
+          </span>
+          <span className="inline-flex items-center gap-1.5 rounded-lg border border-violet-200 bg-violet-50 px-2.5 py-1 text-xs font-medium text-violet-800 dark:border-violet-500/30 dark:bg-violet-500/10 dark:text-violet-300">
+            Pathway B papers <b className="text-sm">{analytics.pathwayB}</b>
+          </span>
+          <span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+            Cancelled B → A <b className="text-sm">{analytics.cancelledBtoA}</b>
+          </span>
+        </div>
       </div>
 
       <div className="flex flex-nowrap items-center gap-2 overflow-x-auto pb-1">
@@ -333,6 +370,16 @@ export function AuthorManagement({
           <option value="all">All (mode)</option>
           <option value="onsite">On-site</option>
           <option value="virtual">Virtual</option>
+        </select>
+        <select
+          value={pathwayFilter}
+          onChange={(e) => setPathwayFilter(e.target.value as typeof pathwayFilter)}
+          className="input w-36 shrink-0 text-sm"
+          aria-label="Pathway filter"
+        >
+          <option value="all">All (pathway)</option>
+          <option value="A">Pathway A</option>
+          <option value="B">Pathway B</option>
         </select>
         <span className="shrink-0 whitespace-nowrap text-xs text-slate-500">
           {filtered.length} of {rows.length}

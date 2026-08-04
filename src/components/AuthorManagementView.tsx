@@ -16,7 +16,7 @@ export async function AuthorManagementView() {
   const { data } = await supabase
     .from("submission_authors")
     .select(
-      "id, full_name, email, mobile, participant_category, profile_id, is_corresponding, attendance, attended_confirmed, registration_confirmed, registration_fee_paid, registration_fee_tier, participation_mode_actual, submissions!inner(paper_id, title, status, submission_type, participation_mode, tracks(code, name))"
+      "id, full_name, email, mobile, participant_category, profile_id, is_corresponding, attendance, attended_confirmed, registration_confirmed, registration_fee_paid, registration_fee_tier, participation_mode_actual, submissions!inner(paper_id, title, status, submission_type, participation_mode, pathway_reverted_at, tracks(code, name))"
     );
 
   const authors = ((data ?? []) as any[]).filter(
@@ -70,6 +70,7 @@ export async function AuthorManagementView() {
       pathway: (a.submissions.submission_type === "full_paper_presentation"
         ? "B"
         : "A") as "A" | "B",
+      reverted: !!a.submissions.pathway_reverted_at,
       title: a.submissions.title ?? "",
       trackName: a.submissions.tracks?.name ?? "—",
     }));

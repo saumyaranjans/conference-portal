@@ -76,6 +76,7 @@ export function ReviewerManagement({
   const [status, setStatus] = useState<
     "all" | "invited" | "accepted" | "completed" | "declined"
   >("all");
+  const [pathway, setPathway] = useState<"all" | "A" | "B">("all");
   const [letter, setLetter] = useState("all");
   const [anaTrack, setAnaTrack] = useState("all");
 
@@ -106,6 +107,8 @@ export function ReviewerManagement({
           status === "completed" ? "completed" : status === "accepted" ? "accepted" : status;
         if ((r.counts as any)[key] <= 0) return false;
       }
+      if (pathway === "A" && r.counts.pathwayA <= 0) return false;
+      if (pathway === "B" && r.counts.pathwayB <= 0) return false;
       if (!needle) return true;
       return (
         r.name.toLowerCase().includes(needle) ||
@@ -121,7 +124,7 @@ export function ReviewerManagement({
       .slice()
       .sort((a, b) => stripSalutation(a.name).localeCompare(stripSalutation(b.name)));
     return { list, available: avail };
-  }, [rows, track, q, status, letter]);
+  }, [rows, track, q, status, pathway, letter]);
 
   function exportExcel() {
     const filters = [
@@ -130,6 +133,7 @@ export function ReviewerManagement({
       `Status: ${status === "all" ? "All" : STATUS_LABEL[
         (status === "completed" ? "submitted" : status) as ReviewerAssignment["status"]
       ] ?? status}`,
+      `Pathway: ${pathway === "all" ? "All" : `Pathway ${pathway}`}`,
       `Name starts with: ${letter === "all" ? "All" : letter}`,
     ].join("   |   ");
     const headers = [
@@ -230,6 +234,16 @@ export function ReviewerManagement({
           <option value="accepted">In progress</option>
           <option value="completed">Completed</option>
           <option value="declined">Declined</option>
+        </select>
+        <select
+          value={pathway}
+          onChange={(e) => setPathway(e.target.value as typeof pathway)}
+          className="input w-36 shrink-0 text-sm"
+          aria-label="Pathway filter"
+        >
+          <option value="all">All (pathway)</option>
+          <option value="A">Pathway A</option>
+          <option value="B">Pathway B</option>
         </select>
         <span className="shrink-0 whitespace-nowrap text-xs text-slate-500">
           {filtered.length} of {rows.length}

@@ -435,11 +435,6 @@ export function ReviewerManagement({
                       <span className="block text-xs text-slate-500">{r.mobile}</span>
                     )}
                     <span className="block text-xs text-slate-500">{r.email}</span>
-                    {r.affiliation && (
-                      <span className="block text-[11px] text-slate-400">
-                        {r.affiliation}
-                      </span>
-                    )}
                     {/* Workload summary */}
                     <div className="mt-2 flex flex-col items-start gap-1 border-t border-slate-100 pt-2 text-[11px] dark:border-slate-800">
                       <span className="text-slate-600">

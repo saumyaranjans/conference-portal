@@ -71,7 +71,7 @@ export function DeadlineCountdown({ deadlines }: { deadlines: Deadline[] }) {
       </div>
       <Link
         href={next.ctaHref}
-        className="shrink-0 rounded-lg bg-white px-4 py-1.5 text-sm font-bold text-blue-800 shadow transition hover:bg-blue-50"
+        className="shrink-0 rounded-lg !bg-white px-4 py-1.5 text-sm font-bold text-blue-800 shadow transition hover:!bg-blue-50"
       >
         {next.ctaLabel} →
       </Link>

@@ -915,7 +915,7 @@ export function LandingPage() {
               {/* CTA — on the right */}
               <Link
                 href="/login"
-                className="shrink-0 rounded-xl bg-white px-6 py-2.5 text-sm font-bold text-blue-800 shadow transition hover:bg-blue-50"
+                className="shrink-0 rounded-xl !bg-white px-6 py-2.5 text-sm font-bold text-blue-800 shadow transition hover:!bg-blue-50"
               >
                 Go to the submission portal →
               </Link>

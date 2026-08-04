@@ -47,7 +47,7 @@ export function BackToTop() {
       }
       aria-label="Back to top"
       title="Back to top"
-      className={`fixed bottom-6 right-6 z-40 grid h-12 w-12 place-items-center rounded-full
+      className={`fixed bottom-20 right-6 z-40 grid h-12 w-12 place-items-center rounded-full
                   bg-blue-700 text-white shadow-lg transition-all duration-300
                   hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-300
                   ${

@@ -1306,46 +1306,6 @@ export function LandingPage() {
           </div>
         </section>
 
-        {/* ---- FAQ ---- */}
-        <section>
-          <Heading id="faq">Frequently asked questions</Heading>
-          <div className="columns-1 gap-4 sm:columns-2 [&>details]:mb-4 [&>details]:break-inside-avoid">
-            {FAQ_ITEMS.map((f) => (
-              <details
-                key={f.q}
-                className="group rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:border-blue-300 hover:shadow-md open:border-blue-300 open:shadow-md dark:border-slate-700 dark:bg-slate-800/60 dark:open:border-blue-500/40"
-              >
-                <summary className="flex cursor-pointer list-none items-start gap-3 text-sm font-semibold text-slate-900 marker:content-none dark:text-slate-100">
-                  <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-700 transition-colors group-open:bg-blue-600 group-open:text-white dark:bg-blue-500/20 dark:text-blue-300">
-                    Q
-                  </span>
-                  <span className="flex-1">{f.q}</span>
-                  <span className="text-xl leading-none text-blue-500 transition-transform duration-200 group-open:rotate-45">
-                    +
-                  </span>
-                </summary>
-                <p className="mt-3 pl-9 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-                  {f.a}
-                </p>
-              </details>
-            ))}
-          </div>
-          <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{
-              __html: JSON.stringify({
-                "@context": "https://schema.org",
-                "@type": "FAQPage",
-                mainEntity: FAQ_ITEMS.map((f) => ({
-                  "@type": "Question",
-                  name: f.q,
-                  acceptedAnswer: { "@type": "Answer", text: f.a },
-                })),
-              }),
-            }}
-          />
-        </section>
-
         {/* ---- 9. Contact ---- */}
         <section className="card card-pad">
           <Heading id="contact">Contact us</Heading>

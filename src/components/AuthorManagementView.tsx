@@ -16,7 +16,7 @@ export async function AuthorManagementView() {
   const { data } = await supabase
     .from("submission_authors")
     .select(
-      "id, full_name, email, mobile, participant_category, profile_id, is_corresponding, attendance, attended_confirmed, registration_confirmed, registration_fee_paid, registration_fee_tier, participation_mode_actual, submissions!inner(paper_id, title, status, submission_type, participation_mode, pathway_reverted_at, tracks(code, name))"
+      "id, full_name, email, mobile, participant_category, profile_id, is_corresponding, attendance, attended_confirmed, registration_confirmed, registration_fee_paid, registration_fee_tier, participation_mode_actual, submissions!inner(paper_id, title, status, submission_type, participation_mode, pathway_reverted_at, tracks(code, name), submission_authors(full_name, is_corresponding, author_order))"
     );
 
   const authors = ((data ?? []) as any[]).filter(
@@ -61,19 +61,33 @@ export async function AuthorManagementView() {
   const now = new Date();
   const rows: PersonRow[] = [...byEmail.entries()].map(([key, list]) => {
     const prof = profByEmail.get(key) ?? null;
-    const papers = list.map((a) => ({
-      paperId: a.submissions.paper_id ?? "—",
-      trackCode: a.submissions.tracks?.code ?? "—",
-      role: (a.is_corresponding ? "Corresponding" : "Co-author") as
-        | "Corresponding"
-        | "Co-author",
-      pathway: (a.submissions.submission_type === "full_paper_presentation"
-        ? "B"
-        : "A") as "A" | "B",
-      reverted: !!a.submissions.pathway_reverted_at,
-      title: a.submissions.title ?? "",
-      trackName: a.submissions.tracks?.name ?? "—",
-    }));
+    const papers = list.map((a) => {
+      // Everyone on this paper (sorted), so the popup can show co-authors.
+      const allAuthors = [...(a.submissions.submission_authors ?? [])].sort(
+        (x: any, y: any) => (x.author_order ?? 0) - (y.author_order ?? 0)
+      );
+      const corresponding =
+        allAuthors.find((x: any) => x.is_corresponding)?.full_name ?? null;
+      const coAuthors = allAuthors
+        .filter((x: any) => !x.is_corresponding)
+        .map((x: any) => x.full_name)
+        .filter(Boolean);
+      return {
+        paperId: a.submissions.paper_id ?? "—",
+        trackCode: a.submissions.tracks?.code ?? "—",
+        role: (a.is_corresponding ? "Corresponding" : "Co-author") as
+          | "Corresponding"
+          | "Co-author",
+        pathway: (a.submissions.submission_type === "full_paper_presentation"
+          ? "B"
+          : "A") as "A" | "B",
+        reverted: !!a.submissions.pathway_reverted_at,
+        title: a.submissions.title ?? "",
+        trackName: a.submissions.tracks?.name ?? "—",
+        corresponding,
+        coAuthors,
+      };
+    });
     const roles = [...new Set(papers.map((p) => p.role))];
     const trackCodes = [...new Set(papers.map((p) => p.trackCode))];
     const intention: PersonRow["intention"] = list.some(

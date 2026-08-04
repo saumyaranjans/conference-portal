@@ -26,6 +26,10 @@ export type PersonRow = {
     reverted: boolean;
     title: string;
     trackName: string;
+    /** Corresponding author of this paper (may be this person). */
+    corresponding: string | null;
+    /** Co-authors of this paper (everyone not marked corresponding). */
+    coAuthors: string[];
   }[];
   trackCodes: string[];
   roles: ("Corresponding" | "Co-author")[];
@@ -603,9 +607,32 @@ export function AuthorManagement({
                                 <p className="mt-1 text-sm font-medium text-slate-900 dark:text-slate-100">
                                   {p.title}
                                 </p>
-                                <p className="mt-1 text-xs text-slate-500">
-                                  Track: {p.trackName}
-                                </p>
+                                <dl className="mt-2 space-y-1 text-xs">
+                                  <div>
+                                    <dt className="inline text-slate-400">Track: </dt>
+                                    <dd className="inline text-slate-700 dark:text-slate-200">
+                                      {p.trackName}
+                                    </dd>
+                                  </div>
+                                  <div>
+                                    <dt className="inline text-slate-400">
+                                      Corresponding:{" "}
+                                    </dt>
+                                    <dd className="inline text-slate-700 dark:text-slate-200">
+                                      {p.corresponding ?? "—"}
+                                    </dd>
+                                  </div>
+                                  <div>
+                                    <dt className="inline text-slate-400">
+                                      Co-authors:{" "}
+                                    </dt>
+                                    <dd className="inline text-slate-700 dark:text-slate-200">
+                                      {p.coAuthors.length
+                                        ? p.coAuthors.join(", ")
+                                        : "—"}
+                                    </dd>
+                                  </div>
+                                </dl>
                               </div>
                             )}
                           </li>

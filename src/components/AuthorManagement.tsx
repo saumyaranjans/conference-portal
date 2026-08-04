@@ -83,9 +83,12 @@ function initialOf(name: string): string {
 export function AuthorManagement({
   rows,
   tracks,
+  usdInr,
 }: {
   rows: PersonRow[];
   tracks: { code: string; name: string }[];
+  /** USD → INR rate for showing the Indian equivalent of Foreign fees. */
+  usdInr: number;
 }) {
   const [track, setTrack] = useState("all");
   const [q, setQ] = useState("");
@@ -683,6 +686,14 @@ export function AuthorManagement({
                           <span className="font-semibold text-slate-800">
                             {formatMoney(feeView.currency, feeView.amount)}
                           </span>
+                          {feeView.currency === "USD" && (
+                            <span className="mt-1 block w-fit rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
+                              ≈ {formatMoney("INR", Math.round(feeView.amount * usdInr))}
+                              <span className="block text-[9px] font-normal text-emerald-600/80">
+                                @ ₹{usdInr.toFixed(2)}/$ (today)
+                              </span>
+                            </span>
+                          )}
                           {feeView.discount > 0 && (
                             <span className="block text-[10px] text-slate-400">
                               <span className="line-through">

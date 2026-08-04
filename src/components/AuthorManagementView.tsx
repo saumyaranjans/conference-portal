@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/ui/Primitives";
 import { AuthorManagement, type PersonRow } from "@/components/AuthorManagement";
 import { computeRegistrationFee } from "@/lib/registrationFees";
+import { getUsdInrRate } from "@/lib/fx";
 
 /**
  * Author Management — a per-PERSON directory (deduped by email): the papers each
@@ -145,13 +146,15 @@ export async function AuthorManagementView() {
     ).values(),
   ].sort((a, b) => a.code.localeCompare(b.code));
 
+  const { rate: usdInr } = await getUsdInrRate();
+
   return (
     <>
       <PageHeader
         title="Author Management"
         subtitle="Every author and co-author across all submissions — their papers and role, sign-up and registration status, intention to attend, and registration amount."
       />
-      <AuthorManagement rows={rows} tracks={tracks} />
+      <AuthorManagement rows={rows} tracks={tracks} usdInr={usdInr} />
     </>
   );
 }

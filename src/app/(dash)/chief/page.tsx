@@ -3,6 +3,7 @@ import { requireRole } from "@/lib/auth";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { removeTrackChair } from "@/lib/actions";
 import { feeForTier, isEarlyBird } from "@/lib/registrationFees";
+import { getUsdInrRate, usdToInr } from "@/lib/fx";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { ChairInviteComposer } from "@/components/ChairInviteComposer";
 import { DeleteSubmissionButton } from "@/components/DeleteSubmissionButton";
@@ -88,22 +89,29 @@ export default async function ChiefDashboard() {
     }
   }
 
+  // Foreign (USD) fees convert to INR at today's rate and fold into a single
+  // INR collections figure.
+  const { rate: usdInr } = await getUsdInrRate();
   const timelineTier: "early" | "regular" = isEarlyBird() ? "early" : "regular";
-  const collectionsByCurrency = new Map<string, number>();
+  let collectedInr = 0;
   let memberCount = 0;
   for (const [key, info] of paidPerPerson) {
     const member = memberByEmail.get(key) ?? false;
     if (member) memberCount += 1;
     const fee = feeForTier(info.category, member, info.tier ?? timelineTier);
     if (!fee.known) continue;
-    collectionsByCurrency.set(
-      fee.currency,
-      (collectionsByCurrency.get(fee.currency) ?? 0) + fee.amount
-    );
+    collectedInr += fee.currency === "USD" ? usdToInr(fee.amount, usdInr) : fee.amount;
   }
-  const collections = [...collectionsByCurrency.entries()]
-    .map(([currency, amount]) => ({ currency, amount, tax: amount * 0.18, total: amount * 1.18 }))
-    .sort((a, b) => a.currency.localeCompare(b.currency));
+  const collections = collectedInr
+    ? [
+        {
+          currency: "INR",
+          amount: collectedInr,
+          tax: collectedInr * 0.18,
+          total: collectedInr * 1.18,
+        },
+      ]
+    : [];
   const money = (cur: string, n: number) =>
     `${cur === "INR" ? "₹" : cur === "USD" ? "$" : cur + " "}${n.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
 

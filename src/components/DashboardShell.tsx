@@ -7,6 +7,7 @@ import {
   type PublicationOpportunity,
 } from "@/lib/types";
 import { feeForTier, isEarlyBird } from "@/lib/registrationFees";
+import { getUsdInrRate, usdToInr } from "@/lib/fx";
 import { SignOutButton } from "@/components/SignOutButton";
 import { NotificationBell } from "@/components/NotificationBell";
 import { RoleSwitcher } from "@/components/RoleSwitcher";
@@ -102,21 +103,21 @@ export async function DashboardShell({
       }
     }
 
+    // Foreign (USD) fees are converted to INR at today's rate and folded into
+    // a single INR revenue figure.
+    const { rate: usdInr } = await getUsdInrRate();
     const timelineTier: "early" | "regular" = isEarlyBird() ? "early" : "regular";
-    const byCurrency = new Map<string, number>();
+    let feesInr = 0;
     for (const [key, info] of perPerson) {
       // Fall back to the timeline tier for any legacy paid row without one.
       const tier = info.tier ?? timelineTier;
       const fee = feeForTier(info.category, memberByEmail.get(key) ?? false, tier);
       if (!fee.known) continue;
-      byCurrency.set(fee.currency, (byCurrency.get(fee.currency) ?? 0) + fee.amount);
+      feesInr += fee.currency === "USD" ? usdToInr(fee.amount, usdInr) : fee.amount;
     }
-    revenueStats = [...byCurrency.entries()].map(([currency, fees]) => ({
-      currency,
-      fees,
-      tax: fees * 0.18,
-      total: fees * 1.18,
-    }));
+    revenueStats = feesInr
+      ? [{ currency: "INR", fees: feesInr, tax: feesInr * 0.18, total: feesInr * 1.18 }]
+      : [];
   }
 
   // Admins get every nav group so they can inspect any part of the portal.

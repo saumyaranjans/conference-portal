@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 520" width="400" height="520" role="img" aria-label="GLOGIFT 2027 Conference Proceedings">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 520" width="400" height="520" role="img" aria-label="GLOGIFT 27 Conference Proceedings">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#0b3f8f"/>
@@ -21,7 +21,7 @@
 
   <rect x="0" y="66" width="332" height="176" fill="#0a3a86" fill-opacity="0.55"/>
   <text x="28" y="116" fill="#ffd54f" font-family="Georgia, serif" font-size="40" font-weight="bold">GLOGIFT</text>
-  <text x="28" y="162" fill="#ffffff" font-family="Georgia, serif" font-size="40" font-weight="bold">2027</text>
+  <text x="28" y="162" fill="#ffffff" font-family="Georgia, serif" font-size="40" font-weight="bold">27</text>
   <text x="28" y="200" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif" font-size="19">Conference</text>
   <text x="28" y="226" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif" font-size="19">Proceedings</text>
 

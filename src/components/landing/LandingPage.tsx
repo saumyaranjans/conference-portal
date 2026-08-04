@@ -3,6 +3,7 @@ import {
   DeadlineCountdown,
   type Deadline,
 } from "@/components/landing/DeadlineCountdown";
+import { FaqBot } from "@/components/landing/FaqBot";
 import { Banner } from "@/components/landing/Banner";
 import { IkatStrip } from "@/components/landing/IkatStrip";
 import { BackToTop } from "@/components/landing/BackToTop";
@@ -203,6 +204,30 @@ const FAQ_ITEMS: { q: string; a: string }[] = [
   {
     q: "Who do I contact for queries?",
     a: "Write to the Conference Chair at glogift27.chair@iimsambalpur.ac.in or the Coordinator at glogift27.coordinator@iimsambalpur.ac.in. GLOGIFT 27 is organised by IIM Sambalpur with the GIFT Society (Global Institute of Flexible Systems Management).",
+  },
+  {
+    q: "What is the abstract word limit?",
+    a: "The abstract should be up to 500 words, with a minimum of 350 words. You submit it under one of the ten conference tracks.",
+  },
+  {
+    q: "Can I submit more than one paper?",
+    a: "Yes — an author may be the corresponding (submitting) author on up to two submissions. You can also be a co-author on additional papers.",
+  },
+  {
+    q: "How does the review process work?",
+    a: "Abstracts are reviewed by the Track Editor, who may seek reviewers or decide directly. Pathway B full papers undergo double-anonymous (double-blind) peer review and require two 'accept' recommendations to be accepted.",
+  },
+  {
+    q: "In what currency are the fees charged?",
+    a: "Domestic delegates are billed in Indian Rupees (INR); Foreign Delegates are billed in US Dollars (USD). Fees vary by participant category, with early-bird rates on or before 20 December 2026.",
+  },
+  {
+    q: "How do I reach IIM Sambalpur?",
+    a: "The conference is at IIM Sambalpur, Odisha, India. Travel details (nearest airport, railway station and campus directions) are on the 'How to reach' page; for anything specific, contact the Coordinator.",
+  },
+  {
+    q: "Is the conference in person or online?",
+    a: "GLOGIFT 27 is held in person at IIM Sambalpur with a hybrid option. You may attend and present on-site or virtually; virtual delegates receive e-certificates and all digital materials.",
   },
 ];
 
@@ -1585,6 +1610,7 @@ export function LandingPage() {
       </div>
       <IkatStrip flip />
       <BackToTop />
+      <FaqBot items={FAQ_ITEMS} />
     </main>
   );
 }

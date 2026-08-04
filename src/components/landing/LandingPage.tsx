@@ -246,7 +246,7 @@ const GUIDELINES: [string, string, boolean?][] = [
   ],
   [
     "Registration and final formatting",
-    "Accepted authors register. Pathway B authors submit their final formatted full paper. Pathway A authors — presenting on the accepted abstract, with no full paper — submit only their presentation materials (slides / poster).",
+    "Accepted authors register. Pathway B authors submit their final formatted full paper. Pathway A authors present on the accepted abstract — no full paper and no presentation materials are submitted.",
   ],
 ];
 

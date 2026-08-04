@@ -906,10 +906,7 @@ export function LandingPage() {
             <div className="relative flex flex-col items-center gap-4 sm:flex-row sm:items-center sm:justify-between">
               {/* Content — centred on mobile, left-aligned on desktop */}
               <div className="text-center sm:text-left">
-                <h3 className="text-lg font-bold text-white sm:text-xl">
-                  We warmly welcome you to IIM Sambalpur 🙏
-                </h3>
-                <p className="mt-1 text-sm leading-relaxed text-blue-100">
+                <p className="text-sm leading-relaxed text-blue-100">
                   Be part of GLOGIFT 27 — submit a 500-word abstract across ten
                   tracks. We look forward to hosting you on campus, 25–27
                   February 2027.

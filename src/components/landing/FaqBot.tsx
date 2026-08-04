@@ -44,6 +44,7 @@ function answerFor(query: string, items: FaqItem[]): string {
  */
 export function FaqBot({ items }: { items: FaqItem[] }) {
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const [input, setInput] = useState("");
   const [msgs, setMsgs] = useState<Msg[]>([
     {
@@ -56,6 +57,24 @@ export function FaqBot({ items }: { items: FaqItem[] }) {
   useEffect(() => {
     bodyRef.current?.scrollTo({ top: bodyRef.current.scrollHeight, behavior: "smooth" });
   }, [msgs, open]);
+
+  // Appear only after the reader scrolls to the About section; hide at the top.
+  useEffect(() => {
+    const onScroll = () => {
+      const about = document.getElementById("about");
+      const trigger = about ? about.offsetTop - 240 : 420;
+      setScrolled(window.scrollY > trigger);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, []);
+
+  const visible = scrolled || open;
 
   function ask(q: string) {
     const query = q.trim();
@@ -72,11 +91,11 @@ export function FaqBot({ items }: { items: FaqItem[] }) {
     <>
       {/* Panel */}
       {open && (
-        <div className="fixed bottom-24 left-4 z-50 flex h-[70vh] max-h-[560px] w-[calc(100vw-2rem)] max-w-sm flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900">
+        <div className="fixed right-4 top-16 z-50 flex h-[70vh] max-h-[560px] w-[calc(100vw-2rem)] max-w-sm flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900">
           <div className="flex items-center justify-between gap-2 bg-gradient-to-r from-[#1e3a8a] to-[#0e7490] px-4 py-3 text-white">
             <div className="flex items-center gap-2">
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 text-lg">
-                🤖
+                👧
               </span>
               <div>
                 <p className="text-sm font-semibold leading-tight">Toshi · GLOGIFT 27 Assistant</p>
@@ -154,15 +173,25 @@ export function FaqBot({ items }: { items: FaqItem[] }) {
         </div>
       )}
 
-      {/* Floating launcher */}
+      {/* Floating launcher — top-right, revealed once you scroll to About */}
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        aria-label={open ? "Close assistant" : "Open FAQ assistant"}
-        className="fixed bottom-5 left-4 z-50 flex items-center gap-2 rounded-full bg-gradient-to-br from-[#1d4ed8] to-[#0e7490] px-4 py-3 text-sm font-semibold text-white shadow-xl transition hover:scale-105"
+        aria-label={open ? "Close assistant" : "Ask Toshi — FAQ assistant"}
+        className={`fixed right-4 top-4 z-50 flex items-center gap-2 rounded-full bg-gradient-to-br from-[#1d4ed8] to-[#0e7490] py-2 pl-2 pr-4 text-sm font-semibold text-white shadow-xl transition-all duration-300 hover:scale-105 ${
+          visible
+            ? "translate-y-0 opacity-100"
+            : "pointer-events-none -translate-y-3 opacity-0"
+        }`}
       >
-        <span className="text-lg">{open ? "✕" : "🤖"}</span>
-        <span className="hidden sm:inline">{open ? "Close" : "Ask Toshi"}</span>
+        <span
+          className={`grid h-8 w-8 place-items-center rounded-full bg-white/20 text-lg ${
+            open ? "" : "animate-bounce"
+          }`}
+        >
+          {open ? "✕" : "👧"}
+        </span>
+        <span>{open ? "Close" : "Ask Toshi"}</span>
       </button>
     </>
   );

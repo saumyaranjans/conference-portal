@@ -31,7 +31,7 @@ export function DeadlineCountdown({ deadlines }: { deadlines: Deadline[] }) {
 
   if (now === null) {
     // Stable placeholder to keep layout height before hydration.
-    return <div className="h-16" aria-hidden />;
+    return <div className="h-12" aria-hidden />;
   }
 
   const next = deadlines.find((d) => endOfDayIST(d.date) > now);
@@ -48,37 +48,33 @@ export function DeadlineCountdown({ deadlines }: { deadlines: Deadline[] }) {
   );
 
   const Unit = ({ v, l }: { v: number; l: string }) => (
-    <div className="flex items-baseline gap-1">
-      <span className="min-w-[2ch] rounded-md bg-white/15 px-1.5 py-0.5 text-lg font-bold tabular-nums text-white sm:text-xl">
+    <span className="inline-flex items-baseline gap-0.5">
+      <span className="min-w-[2ch] rounded bg-white/15 px-1 text-base font-bold tabular-nums text-white sm:text-lg">
         {String(v).padStart(2, "0")}
       </span>
-      <span className="text-[9px] uppercase tracking-wide text-blue-100">
-        {l}
-      </span>
-    </div>
+      <span className="text-[9px] uppercase text-blue-100">{l}</span>
+    </span>
   );
 
   return (
-    <div className="overflow-hidden rounded-xl bg-gradient-to-br from-[#1e3a8a] via-[#1d4ed8] to-[#0e7490] px-4 py-3 shadow-lg">
-      <div className="flex flex-col items-center gap-2 sm:flex-row sm:justify-between sm:gap-4">
-        <div className="text-center sm:text-left">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-blue-200">
-            {next.label} · closes {dateLabel}
-          </p>
-          <div className="mt-1 flex items-center justify-center gap-1.5 sm:justify-start">
-            <Unit v={days} l="d" />
-            <Unit v={hrs} l="h" />
-            <Unit v={mins} l="m" />
-            <Unit v={secs} l="s" />
-          </div>
-        </div>
-        <Link
-          href={next.ctaHref}
-          className="shrink-0 rounded-lg bg-white px-5 py-2 text-sm font-bold text-blue-800 shadow transition hover:bg-blue-50"
-        >
-          {next.ctaLabel} →
-        </Link>
+    <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5 overflow-hidden rounded-xl bg-gradient-to-br from-[#1e3a8a] via-[#1d4ed8] to-[#0e7490] px-4 py-2 shadow-lg">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <span className="text-[10px] font-semibold uppercase tracking-wide text-blue-200">
+          {next.label} · closes {dateLabel}
+        </span>
+        <span className="flex items-center gap-1.5">
+          <Unit v={days} l="d" />
+          <Unit v={hrs} l="h" />
+          <Unit v={mins} l="m" />
+          <Unit v={secs} l="s" />
+        </span>
       </div>
+      <Link
+        href={next.ctaHref}
+        className="shrink-0 rounded-lg bg-white px-4 py-1.5 text-sm font-bold text-blue-800 shadow transition hover:bg-blue-50"
+      >
+        {next.ctaLabel} →
+      </Link>
     </div>
   );
 }

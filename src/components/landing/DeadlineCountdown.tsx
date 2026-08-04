@@ -31,7 +31,7 @@ export function DeadlineCountdown({ deadlines }: { deadlines: Deadline[] }) {
 
   if (now === null) {
     // Stable placeholder to keep layout height before hydration.
-    return <div className="h-[92px]" aria-hidden />;
+    return <div className="h-16" aria-hidden />;
   }
 
   const next = deadlines.find((d) => endOfDayIST(d.date) > now);
@@ -48,36 +48,33 @@ export function DeadlineCountdown({ deadlines }: { deadlines: Deadline[] }) {
   );
 
   const Unit = ({ v, l }: { v: number; l: string }) => (
-    <div className="flex flex-col items-center">
-      <span className="min-w-[2.2ch] rounded-lg bg-white/15 px-2 py-1 text-2xl font-bold tabular-nums text-white sm:text-3xl">
+    <div className="flex items-baseline gap-1">
+      <span className="min-w-[2ch] rounded-md bg-white/15 px-1.5 py-0.5 text-lg font-bold tabular-nums text-white sm:text-xl">
         {String(v).padStart(2, "0")}
       </span>
-      <span className="mt-1 text-[10px] uppercase tracking-wide text-blue-100">
+      <span className="text-[9px] uppercase tracking-wide text-blue-100">
         {l}
       </span>
     </div>
   );
 
   return (
-    <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-[#1e3a8a] via-[#1d4ed8] to-[#0e7490] p-5 shadow-lg sm:p-6">
-      <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
+    <div className="overflow-hidden rounded-xl bg-gradient-to-br from-[#1e3a8a] via-[#1d4ed8] to-[#0e7490] px-4 py-3 shadow-lg">
+      <div className="flex flex-col items-center gap-2 sm:flex-row sm:justify-between sm:gap-4">
         <div className="text-center sm:text-left">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-blue-200">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-blue-200">
             {next.label} · closes {dateLabel}
           </p>
-          <div className="mt-2 flex items-end justify-center gap-2 sm:justify-start">
-            <Unit v={days} l="days" />
-            <span className="pb-6 text-2xl font-bold text-white/60">:</span>
-            <Unit v={hrs} l="hrs" />
-            <span className="pb-6 text-2xl font-bold text-white/60">:</span>
-            <Unit v={mins} l="min" />
-            <span className="pb-6 text-2xl font-bold text-white/60">:</span>
-            <Unit v={secs} l="sec" />
+          <div className="mt-1 flex items-center justify-center gap-1.5 sm:justify-start">
+            <Unit v={days} l="d" />
+            <Unit v={hrs} l="h" />
+            <Unit v={mins} l="m" />
+            <Unit v={secs} l="s" />
           </div>
         </div>
         <Link
           href={next.ctaHref}
-          className="shrink-0 rounded-xl bg-white px-6 py-3 text-sm font-bold text-blue-800 shadow transition hover:bg-blue-50"
+          className="shrink-0 rounded-lg bg-white px-5 py-2 text-sm font-bold text-blue-800 shadow transition hover:bg-blue-50"
         >
           {next.ctaLabel} →
         </Link>

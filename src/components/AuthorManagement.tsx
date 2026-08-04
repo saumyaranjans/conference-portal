@@ -92,6 +92,32 @@ export function AuthorManagement({
   const [dir, setDir] = useState<"asc" | "desc">("asc");
   // Active alphabet-index letter ("all" = every author).
   const [letter, setLetter] = useState<string>("all");
+  // Track filter for the Registration analytics panel (independent of the table).
+  const [anaTrack, setAnaTrack] = useState("all");
+
+  const analytics = useMemo(() => {
+    const base = rows.filter(
+      (r) => anaTrack === "all" || r.trackCodes.includes(anaTrack)
+    );
+    const registered = base.filter((r) => r.registered);
+    let onsite = 0;
+    let virtual = 0;
+    let modeUnset = 0;
+    for (const r of registered) {
+      const m = r.modeActual ?? r.mode;
+      if (m === "onsite") onsite += 1;
+      else if (m === "virtual") virtual += 1;
+      else modeUnset += 1;
+    }
+    return {
+      total: base.length,
+      registered: registered.length,
+      notRegistered: base.length - registered.length,
+      onsite,
+      virtual,
+      modeUnset,
+    };
+  }, [rows, anaTrack]);
   // Which paper's title/track popup is open (keyed by email + paper index).
   const [openPaper, setOpenPaper] = useState<string | null>(null);
   // Which person's participation desk is in edit mode (by email).
@@ -120,6 +146,67 @@ export function AuthorManagement({
 
   return (
     <div className="space-y-4 [&_.badge]:rounded-md">
+      {/* ---- Registration analytics ---- */}
+      <div className="card card-pad">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+            Registration analytics
+          </h3>
+          <select
+            value={anaTrack}
+            onChange={(e) => setAnaTrack(e.target.value)}
+            className="input max-w-xs text-sm"
+          >
+            <option value="all">All tracks</option>
+            {tracks.map((t) => (
+              <option key={t.code} value={t.code}>
+                {t.code} — {t.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-500/30 dark:bg-emerald-500/10">
+            <p className="text-[11px] font-medium uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
+              Registered
+            </p>
+            <p className="mt-0.5 text-2xl font-bold text-emerald-800 dark:text-emerald-200">
+              {analytics.registered}
+            </p>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/60">
+            <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
+              Not registered
+            </p>
+            <p className="mt-0.5 text-2xl font-bold text-slate-700 dark:text-slate-200">
+              {analytics.notRegistered}
+            </p>
+          </div>
+          <div className="rounded-xl border border-blue-200 bg-blue-50 p-3 dark:border-blue-500/30 dark:bg-blue-500/10">
+            <p className="text-[11px] font-medium uppercase tracking-wide text-blue-700 dark:text-blue-300">
+              Registered · On-site
+            </p>
+            <p className="mt-0.5 text-2xl font-bold text-blue-800 dark:text-blue-200">
+              {analytics.onsite}
+            </p>
+          </div>
+          <div className="rounded-xl border border-teal-200 bg-teal-50 p-3 dark:border-teal-500/30 dark:bg-teal-500/10">
+            <p className="text-[11px] font-medium uppercase tracking-wide text-teal-700 dark:text-teal-300">
+              Registered · Virtual
+            </p>
+            <p className="mt-0.5 text-2xl font-bold text-teal-800 dark:text-teal-200">
+              {analytics.virtual}
+            </p>
+          </div>
+        </div>
+        <p className="mt-2 text-[11px] text-slate-500">
+          {analytics.total} author{analytics.total === 1 ? "" : "s"}
+          {anaTrack === "all" ? " across all tracks" : ` in ${anaTrack}`} ·
+          Registered split by mode: {analytics.onsite} on-site + {analytics.virtual} virtual
+          {analytics.modeUnset > 0 && ` + ${analytics.modeUnset} mode not set`}.
+        </p>
+      </div>
+
       <div className="flex flex-wrap items-center gap-3">
         <select
           value={track}

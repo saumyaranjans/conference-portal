@@ -12,17 +12,28 @@ export function CertificatePreviewButton({
   type,
   subjectId,
   conferenceId,
+  number,
 }: {
   type: "participant" | "reviewer" | "track_editor";
   subjectId: string;
   conferenceId: string;
+  /** Fixed number (issued state). When absent, the entered/auto-generated
+   *  number is read from the enclosing form so the preview matches the box. */
+  number?: string;
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function preview() {
+  async function preview(e: React.MouseEvent<HTMLButtonElement>) {
     setBusy(true);
     setError(null);
+
+    const fromForm = (
+      e.currentTarget
+        .closest("form")
+        ?.elements.namedItem("certificate_number") as HTMLInputElement | null
+    )?.value?.trim();
+    const certNumber = (number ?? fromForm ?? "").trim();
 
     // Open the tab NOW — synchronously inside the click's user gesture — so the
     // browser does not treat it as an unsolicited pop-up and block it. (No
@@ -41,6 +52,7 @@ export function CertificatePreviewButton({
     fd.set("certificate_type", type);
     fd.set("subject_id", subjectId);
     fd.set("conference_id", conferenceId);
+    if (certNumber) fd.set("certificate_number", certNumber);
     fd.set("preview", "true");
     const res = await issueCertificate(fd);
     setBusy(false);

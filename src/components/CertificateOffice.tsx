@@ -51,13 +51,16 @@ function CertificateActions({
     // (asks a reason, revokes, and re-opens line 2 to regenerate).
     return (
       <div className={`flex flex-col gap-1.5 ${compact ? "" : "mt-4"}`}>
-        {/* Line 1 — the certificate number */}
-        <div className="flex items-center gap-2">
-          <span className="font-mono text-xs text-slate-800 dark:text-slate-100">
-            {issuance.certificate_number}
+        {/* Line 1 — the assigned certificate number */}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs text-slate-600 dark:text-slate-300">
+            Assigned:{" "}
+            <b className="font-mono text-slate-900 dark:text-slate-100">
+              {issuance.certificate_number}
+            </b>
           </span>
           <span className="badge bg-emerald-100 text-emerald-800 text-[10px]">
-            ✓ Generated · {formatDate(issuance.issued_at)}
+            ✓ {formatDate(issuance.issued_at)}
           </span>
         </div>
         {/* Line 2 — Preview | Download */}
@@ -66,6 +69,7 @@ function CertificateActions({
             type={type}
             subjectId={subjectId}
             conferenceId={conferenceId}
+            number={issuance.certificate_number}
           />
           <Link
             href={`/api/certificates/${issuance.id}`}

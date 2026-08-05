@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import {
+  ROLE_HOME,
   ROLE_LABELS,
   type AppRole,
   type Profile,
@@ -17,6 +18,8 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { SidebarNav } from "@/components/SidebarNav";
 
 const ROLE_ORDER: AppRole[] = ["author", "reviewer", "editor", "chief", "admin"];
+// Which dashboard the header brand links to, by role priority.
+const ROLE_PRIORITY: AppRole[] = ["chief", "editor", "author", "reviewer", "admin"];
 
 export async function DashboardShell({
   profile,
@@ -134,7 +137,13 @@ export async function DashboardShell({
       <header className="app-header backdrop-blur-md backdrop-saturate-150 border-b border-slate-200 sticky top-0 z-20">
         <div className="brand-rule" />
         <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
-          <BrandHomeLink />
+          <BrandHomeLink
+            href={
+              ROLE_HOME[
+                ROLE_PRIORITY.find((r) => profile.roles.includes(r)) ?? "author"
+              ]
+            }
+          />
           <div className="flex items-center gap-4">
             <RoleSwitcher roles={visibleRoles} />
             <ThemeToggle />

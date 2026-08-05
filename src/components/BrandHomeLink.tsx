@@ -1,29 +1,16 @@
-"use client";
-
-import { createClient } from "@/lib/supabase/client";
+import Link from "next/link";
 
 /**
- * The portal header brand. Acts as the "go to public home" control — and, per
- * the security rule, signs the user out of the portal on the way there. Runs
- * the sign-out in the browser first (so it works on a soft navigation too),
- * then does a full navigation to the public landing.
+ * The portal header brand — links to the user's dashboard home. (It does NOT
+ * sign out; the "migrate to public home → sign out" rule applies only to the
+ * explicit "Glogift2027.in" sidebar link and to navigating to "/" directly.)
  */
-export function BrandHomeLink() {
-  async function goHome() {
-    try {
-      await createClient().auth.signOut();
-    } catch {
-      /* navigate regardless — the home route also clears the session */
-    }
-    window.location.href = "/";
-  }
-
+export function BrandHomeLink({ href }: { href: string }) {
   return (
-    <button
-      type="button"
-      onClick={goHome}
+    <Link
+      href={href}
       className="flex items-center gap-2.5 shrink-0"
-      title="Go to the public home — this signs you out of the portal"
+      title="Go to your dashboard home"
     >
       <img
         src="/glogift-logo.png"
@@ -33,6 +20,6 @@ export function BrandHomeLink() {
       <span className="text-lg font-bold tracking-tight text-gradient w-fit">
         GLOGIFT 27
       </span>
-    </button>
+    </Link>
   );
 }

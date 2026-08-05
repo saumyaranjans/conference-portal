@@ -67,12 +67,19 @@ export default async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const isProtected = PROTECTED.some((p) => path === p || path.startsWith(p + "/"));
   const isAuthEntry = path === "/login" || path === "/signup";
+  // The public conference home — the landing at "/" and its "/Home" alias.
+  const isHome = path === "/" || path === "/Home";
+  // Cheap check for a portal session without a network round-trip.
+  const hasAuthCookie = request.cookies
+    .getAll()
+    .some((c) => c.name.startsWith("sb-") && c.name.includes("auth-token"));
 
   // Public pages — the landing and the marketing/info routes — need no session
   // work. Skipping the Supabase auth round-trip here removes a blocking network
   // hop from every public page load (the biggest per-request cost). The session
   // cookie still refreshes the next time the visitor hits a portal route.
-  if (!isProtected && !isAuthEntry) {
+  // EXCEPTION: a signed-in visitor reaching the home page is signed out below.
+  if (!isProtected && !isAuthEntry && !(isHome && hasAuthCookie)) {
     return response;
   }
 
@@ -98,6 +105,15 @@ export default async function proxy(request: NextRequest) {
       },
     }
   );
+
+  // SECURITY RULE: navigating from the portal to the public home page signs the
+  // user out — no portal session may persist once the visitor lands on the
+  // public site. The sign-out clears the auth cookie via the setAll adapter
+  // above, and the landing then renders in its signed-out state.
+  if (isHome) {
+    if (hasAuthCookie) await supabase.auth.signOut();
+    return response;
+  }
 
   // Refreshes the auth cookie so Server Components see a valid session.
   const {

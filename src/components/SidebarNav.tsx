@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import {
   ROLE_HOME,
   ROLE_LABELS,
@@ -98,17 +99,26 @@ export function SidebarNav({
     >
       {/* Two clearly-distinct destinations (moved here from the header): the
           public conference website vs. the submission-portal home. */}
-      <a
-        href="https://www.glogift2027.in/Home"
-        className="flex items-center gap-2 px-3 py-2 mb-2 rounded-lg border border-amber-300 bg-amber-50 text-sm font-medium text-amber-800 transition hover:bg-amber-100 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200"
-        title="Go to the conference home (www.glogift2027.in)"
+      <button
+        type="button"
+        onClick={async () => {
+          // Security rule: leaving the portal for the public home signs you out.
+          try {
+            await createClient().auth.signOut();
+          } catch {
+            /* navigate regardless — the home route also clears the session */
+          }
+          window.location.href = "https://www.glogift2027.in/Home";
+        }}
+        className="flex w-full items-center gap-2 px-3 py-2 mb-2 rounded-lg border border-amber-300 bg-amber-50 text-sm font-medium text-amber-800 transition hover:bg-amber-100 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200"
+        title="Go to the conference home — this signs you out of the portal"
       >
         <svg viewBox="0 0 24 24" className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
           <circle cx="12" cy="12" r="9" />
           <path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18" />
         </svg>
         Glogift2027.in
-      </a>
+      </button>
 
       <Link
         href={ROLE_HOME[current]}

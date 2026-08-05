@@ -31,7 +31,8 @@ type Kind =
   | "plenary"
   | "editor-talk"
   | "onsite-track"
-  | "online-track";
+  | "online-track"
+  | "registration";
 
 type Row =
   | {
@@ -52,11 +53,13 @@ type Day = {
 };
 
 const REGISTRATION: Row = {
-  type: "break",
-  label: "Registration Desk (parallel)",
+  type: "slot",
   time: "All day",
-  icon: "🪪",
-  venue: "Konark Auditorium Lobby Area",
+  full: {
+    title: "Registration Desk",
+    note: "Konark Auditorium Lobby Area · runs in parallel, all day",
+    kind: "registration",
+  },
 };
 const BREAKFAST: Row = {
   type: "break",
@@ -247,6 +250,8 @@ const KIND_CLASS: Record<Kind, string> = {
     "border-emerald-300 bg-emerald-50 text-emerald-900 dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-100",
   "online-track":
     "border-violet-300 bg-violet-50 text-violet-900 dark:border-violet-500/40 dark:bg-violet-500/10 dark:text-violet-100",
+  registration:
+    "border-slate-300 bg-slate-50 text-slate-800 dark:border-slate-600 dark:bg-slate-800/60 dark:text-slate-100",
 };
 
 function BlockCard({ block }: { block: Block }) {

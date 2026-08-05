@@ -91,24 +91,27 @@ export async function DashboardShell({
           <SidebarNav
             roles={visibleRoles}
             opportunities={(opportunities ?? []) as PublicationOpportunity[]}
-          />
-          {/* Convener metrics stream in after the shell has painted. */}
-          {isChief && (
-            <Suspense
-              fallback={
-                <div className="mt-6 space-y-2">
-                  {Array.from({ length: 3 }).map((_, i) => (
-                    <div
-                      key={i}
-                      className="h-12 animate-pulse rounded-lg bg-slate-100 dark:bg-slate-800/60"
-                    />
-                  ))}
-                </div>
-              }
-            >
-              <ConvenerSidebarStats />
-            </Suspense>
-          )}
+          >
+            {/* Convener metrics stream in after the shell has painted. Rendered
+                as children so they sit INSIDE the sticky nav and scroll with it
+                (rather than being overlapped by the sticky container). */}
+            {isChief && (
+              <Suspense
+                fallback={
+                  <div className="mt-6 space-y-2">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="h-12 animate-pulse rounded-lg bg-slate-100 dark:bg-slate-800/60"
+                      />
+                    ))}
+                  </div>
+                }
+              >
+                <ConvenerSidebarStats />
+              </Suspense>
+            )}
+          </SidebarNav>
         </aside>
 
         <main className="flex-1 min-w-0">{children}</main>

@@ -57,9 +57,14 @@ const SHOW_OPPORTUNITIES: AppRole[] = ["author"];
 export function SidebarNav({
   roles,
   opportunities = [],
+  children,
 }: {
   roles: AppRole[];
   opportunities?: PublicationOpportunity[];
+  /** Extra content (e.g. Convener stat cards) rendered INSIDE the sticky,
+   *  scrollable nav container so it scrolls with the nav instead of being
+   *  overlapped by it. */
+  children?: React.ReactNode;
 }) {
   const pathname = usePathname();
 
@@ -222,6 +227,8 @@ export function SidebarNav({
           </ul>
         </section>
       )}
+
+      {children}
     </nav>
   );
 }

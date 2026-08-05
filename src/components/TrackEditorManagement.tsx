@@ -17,12 +17,32 @@ export type TEChairedTrack = {
   name: string;
   status: "invited" | "accepted";
 };
+export type TEReviewerLite = {
+  name: string;
+  number: number | null;
+  status: string;
+  recommendation: string | null;
+};
+export type TEActivity = { label: string; at: string | null };
 export type TEPaper = {
   paperId: string;
   trackCode: string;
+  trackName: string;
+  title: string;
   accepted: boolean;
   decided: boolean;
   decision: string | null;
+  corresponding: string | null;
+  coAuthors: string[];
+  reviewers: TEReviewerLite[];
+  activity: TEActivity[];
+};
+
+const REVIEWER_STATUS_LABEL: Record<string, string> = {
+  invited: "Invited",
+  accepted: "In progress",
+  declined: "Declined",
+  submitted: "Completed",
 };
 export type TrackEditorRow = {
   name: string;
@@ -85,6 +105,16 @@ export function TrackEditorManagement({
   const [anaTrack, setAnaTrack] = useState("all");
   // Per-editor confirmation gate for the certificate actions (keyed by email).
   const [certUnlocked, setCertUnlocked] = useState<Record<string, boolean>>({});
+  // Which paper's detail popup is open (keyed by email + track + index).
+  const [openPaper, setOpenPaper] = useState<string | null>(null);
+  const fmtDate = (d: string | null) =>
+    d
+      ? new Date(d).toLocaleDateString("en-GB", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        })
+      : "—";
 
   const inTrack = (r: TrackEditorRow, code: string) =>
     code === "all" || r.trackCodes.includes(code);
@@ -393,29 +423,78 @@ export function TrackEditorManagement({
                     {r.papers.length === 0 ? (
                       <span className="text-xs text-slate-400">None</span>
                     ) : (
-                      <ul className="space-y-1">
-                        {r.papers.map((p, i) => (
-                          <li key={`${r.email}-p-${i}`} className="text-xs">
-                            <span className="font-mono text-slate-700 dark:text-slate-300">
-                              {p.paperId}
-                            </span>
-                            <span className="text-slate-400"> · {p.trackCode}</span>
-                            {!p.accepted ? (
-                              <span className="badge ml-2 bg-amber-100 text-amber-800">
-                                Awaiting acceptance
-                              </span>
-                            ) : p.decided ? (
-                              <span className="badge ml-2 bg-emerald-100 text-emerald-800">
-                                {decLabel(p.decision) || "Decided"}
-                              </span>
-                            ) : (
-                              <span className="badge ml-2 bg-blue-100 text-blue-800">
-                                Pending decision
-                              </span>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
+                      (() => {
+                        // Group papers by track, tracks A→Z, papers in sequence.
+                        const byTrack = new Map<string, TEPaper[]>();
+                        for (const p of r.papers) {
+                          const arr = byTrack.get(p.trackCode) ?? [];
+                          arr.push(p);
+                          byTrack.set(p.trackCode, arr);
+                        }
+                        const codes = [...byTrack.keys()].sort();
+                        return (
+                          <div className="space-y-2">
+                            {codes.map((code) => {
+                              const list = byTrack
+                                .get(code)!
+                                .slice()
+                                .sort((a, b) =>
+                                  a.paperId.localeCompare(b.paperId)
+                                );
+                              return (
+                                <div key={code}>
+                                  <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                                    {code}
+                                  </p>
+                                  <ul className="space-y-0.5">
+                                    {list.map((p, i) => {
+                                      const key = `${r.email}-${code}-${i}`;
+                                      const open = openPaper === key;
+                                      return (
+                                        <li
+                                          key={key}
+                                          className="relative text-xs"
+                                        >
+                                          <button
+                                            type="button"
+                                            onClick={() =>
+                                              setOpenPaper(open ? null : key)
+                                            }
+                                            className="font-mono text-blue-700 hover:underline dark:text-blue-300"
+                                            title="Click for paper details"
+                                          >
+                                            {p.paperId}
+                                          </button>
+                                          {!p.accepted ? (
+                                            <span className="badge ml-2 bg-amber-100 text-amber-800">
+                                              Awaiting acceptance
+                                            </span>
+                                          ) : p.decided ? (
+                                            <span className="badge ml-2 bg-emerald-100 text-emerald-800">
+                                              {decLabel(p.decision) || "Decided"}
+                                            </span>
+                                          ) : (
+                                            <span className="badge ml-2 bg-blue-100 text-blue-800">
+                                              Pending decision
+                                            </span>
+                                          )}
+                                          {open && (
+                                            <PaperDetail
+                                              p={p}
+                                              fmtDate={fmtDate}
+                                              onClose={() => setOpenPaper(null)}
+                                            />
+                                          )}
+                                        </li>
+                                      );
+                                    })}
+                                  </ul>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      })()
                     )}
                   </td>
                   <td className="td">
@@ -561,6 +640,99 @@ export function TrackEditorManagement({
             </tbody>
           </table>
         </div>
+      </div>
+    </div>
+  );
+}
+
+/** Popup with a paper's details: title, authors, track, reviewers, and the
+ *  decision + activity history. Shown when a Paper ID is clicked. */
+function PaperDetail({
+  p,
+  fmtDate,
+  onClose,
+}: {
+  p: TEPaper;
+  fmtDate: (d: string | null) => string;
+  onClose: () => void;
+}) {
+  return (
+    <div className="absolute z-30 mt-1 w-80 rounded-lg border border-slate-200 bg-white p-3 text-left font-sans shadow-xl dark:border-slate-700 dark:bg-slate-800">
+      <div className="flex items-start justify-between gap-2">
+        <span className="font-mono text-[11px] text-slate-500">{p.paperId}</span>
+        <button
+          type="button"
+          onClick={onClose}
+          className="text-sm leading-none text-slate-400 hover:text-slate-600"
+          aria-label="Close"
+        >
+          ✕
+        </button>
+      </div>
+      <p className="mt-1 text-sm font-medium text-slate-900 dark:text-slate-100">
+        {p.title || "Untitled"}
+      </p>
+      <dl className="mt-2 space-y-1 text-xs">
+        <div>
+          <dt className="inline text-slate-400">Track: </dt>
+          <dd className="inline text-slate-700 dark:text-slate-200">
+            {p.trackName}
+          </dd>
+        </div>
+        <div>
+          <dt className="inline text-slate-400">Corresponding: </dt>
+          <dd className="inline text-slate-700 dark:text-slate-200">
+            {p.corresponding ?? "—"}
+          </dd>
+        </div>
+        <div>
+          <dt className="inline text-slate-400">Co-authors: </dt>
+          <dd className="inline text-slate-700 dark:text-slate-200">
+            {p.coAuthors.length ? p.coAuthors.join(", ") : "—"}
+          </dd>
+        </div>
+      </dl>
+
+      <div className="mt-2 border-t border-slate-100 pt-2 dark:border-slate-700">
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+          Reviewers
+        </p>
+        {p.reviewers.length === 0 ? (
+          <p className="text-xs text-slate-400">None assigned</p>
+        ) : (
+          <ul className="mt-0.5 space-y-0.5 text-xs">
+            {p.reviewers.map((rv, i) => (
+              <li key={i} className="text-slate-700 dark:text-slate-200">
+                {rv.number != null ? `Reviewer ${rv.number}: ` : ""}
+                {rv.name}
+                <span className="text-slate-400">
+                  {" — "}
+                  {rv.recommendation
+                    ? decLabel(rv.recommendation)
+                    : REVIEWER_STATUS_LABEL[rv.status] ?? rv.status}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div className="mt-2 border-t border-slate-100 pt-2 dark:border-slate-700">
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+          Decision &amp; activity history
+        </p>
+        {p.activity.length === 0 ? (
+          <p className="text-xs text-slate-400">No activity yet</p>
+        ) : (
+          <ol className="mt-0.5 space-y-0.5 text-xs">
+            {p.activity.map((a, i) => (
+              <li key={i} className="text-slate-700 dark:text-slate-200">
+                <span className="text-slate-400">{fmtDate(a.at)}</span> —{" "}
+                {a.label}
+              </li>
+            ))}
+          </ol>
+        )}
       </div>
     </div>
   );

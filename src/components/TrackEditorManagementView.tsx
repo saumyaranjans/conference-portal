@@ -9,6 +9,11 @@ import {
 
 const DROPPED = ["draft", "withdrawn"];
 
+function decLabelV(d: string | null): string {
+  if (!d) return "";
+  return d.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 /**
  * Track Editor Management — a per-editor directory: the tracks they chair
  * (invited / accepted), the papers assigned to them (awaiting acceptance /
@@ -44,7 +49,7 @@ export async function TrackEditorManagementView() {
       ? admin
           .from("submissions")
           .select(
-            "id, paper_id, status, assigned_editor_id, editor_accepted_at, tracks(code, name)"
+            "id, paper_id, title, status, submitted_at, created_at, assigned_editor_id, editor_accepted_at, tracks(code, name), submission_authors(full_name, is_corresponding, author_order), assignments(status, reviewer_number, reviewer:profiles!assignments_reviewer_id_fkey(full_name), reviews(recommendation, is_submitted))"
           )
           .in("assigned_editor_id", profileIds)
       : Promise.resolve({ data: [] as any[] }),
@@ -62,6 +67,37 @@ export async function TrackEditorManagementView() {
   const decisionBySub = new Map<string, string>();
   for (const d of (decisionsData ?? []) as any[]) {
     decisionBySub.set(d.submission_id, d.decision);
+  }
+
+  // Full decision + activity history per submission (ALL rows, incl. superseded),
+  // with the decider's name resolved separately (decisions has two FKs to
+  // profiles, so a bare embed would be ambiguous).
+  const submissionIds = ((papersData ?? []) as any[]).map((s) => s.id);
+  const { data: historyData } = submissionIds.length
+    ? await admin
+        .from("decisions")
+        .select(
+          "submission_id, decision, is_final, superseded_at, created_at, decided_by"
+        )
+        .in("submission_id", submissionIds)
+        .order("created_at", { ascending: true })
+    : { data: [] as any[] };
+  const deciderIds = [
+    ...new Set(
+      ((historyData ?? []) as any[]).map((d) => d.decided_by).filter(Boolean)
+    ),
+  ];
+  const { data: deciderProfs } = deciderIds.length
+    ? await admin.from("profiles").select("id, full_name").in("id", deciderIds)
+    : { data: [] as any[] };
+  const deciderName = new Map(
+    ((deciderProfs ?? []) as any[]).map((p) => [p.id, p.full_name])
+  );
+  const historyBySub = new Map<string, any[]>();
+  for (const d of (historyData ?? []) as any[]) {
+    const arr = historyBySub.get(d.submission_id) ?? [];
+    arr.push(d);
+    historyBySub.set(d.submission_id, arr);
   }
 
   // Papers grouped by the editor they are assigned to.
@@ -93,12 +129,63 @@ export async function TrackEditorManagementView() {
     const assigned = papersByEditor.get(p.id) ?? [];
     const papers: TEPaper[] = assigned.map((s) => {
       const decided = decisionBySub.has(s.id);
+      const authors = [...(s.submission_authors ?? [])].sort(
+        (a: any, b: any) => (a.author_order ?? 0) - (b.author_order ?? 0)
+      );
+      const corresponding =
+        authors.find((a: any) => a.is_corresponding)?.full_name ?? null;
+      const coAuthors = authors
+        .filter((a: any) => !a.is_corresponding)
+        .map((a: any) => a.full_name)
+        .filter(Boolean);
+      const reviewers = ((s.assignments ?? []) as any[])
+        .filter((a) => a.reviewer)
+        .map((a) => {
+          const rev = Array.isArray(a.reviews) ? a.reviews[0] : a.reviews;
+          return {
+            name: a.reviewer.full_name as string,
+            number: (a.reviewer_number ?? null) as number | null,
+            status: a.status as string,
+            recommendation: (rev?.is_submitted
+              ? rev.recommendation ?? null
+              : null) as string | null,
+          };
+        });
+      const activity: { label: string; at: string | null }[] = [];
+      if (s.submitted_at || s.created_at)
+        activity.push({ label: "Submitted", at: s.submitted_at ?? s.created_at });
+      if (s.editor_accepted_at)
+        activity.push({
+          label: "Track Editor accepted the paper",
+          at: s.editor_accepted_at,
+        });
+      for (const d of historyBySub.get(s.id) ?? []) {
+        const who = deciderName.get(d.decided_by) ?? "Track Editor";
+        const tag = d.superseded_at
+          ? " (superseded)"
+          : d.is_final
+            ? " (final)"
+            : "";
+        activity.push({
+          label: `Decision — ${decLabelV(d.decision)} by ${who}${tag}`,
+          at: d.created_at,
+        });
+      }
+      activity.sort(
+        (a, b) => new Date(a.at ?? 0).getTime() - new Date(b.at ?? 0).getTime()
+      );
       return {
         paperId: s.paper_id ?? "—",
         trackCode: s.tracks?.code ?? "—",
+        trackName: s.tracks?.name ?? "—",
+        title: s.title ?? "",
         accepted: !!s.editor_accepted_at,
         decided,
         decision: decisionBySub.get(s.id) ?? null,
+        corresponding,
+        coAuthors,
+        reviewers,
+        activity,
       };
     });
     const counts = {

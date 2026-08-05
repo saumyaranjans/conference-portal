@@ -73,15 +73,14 @@ export default async function proxy(request: NextRequest) {
   const hasAuthCookie = request.cookies
     .getAll()
     .some((c) => c.name.startsWith("sb-") && c.name.includes("auth-token"));
-  // Background prefetches must NEVER trigger the sign-out — Next.js prefetches
-  // the home route from portal pages (e.g. right after login), and signing out
-  // on a prefetch would silently kill the session. Only a real navigation counts.
-  const isPrefetch =
-    request.headers.get("next-router-prefetch") === "1" ||
-    request.headers.get("purpose") === "prefetch";
-  // A signed-in visitor performing a REAL navigation to the home page is
-  // signed out (the security rule); prefetches are excluded.
-  const homeSignOut = isHome && hasAuthCookie && !isPrefetch;
+  // Only a REAL top-level navigation to the home page signs the user out.
+  // A full document load sets `Sec-Fetch-Dest: document`; every background
+  // request Next.js makes (prefetch, RSC data fetch) is `empty`. Guarding on
+  // this prevents the prefetch of "/" — fired from portal pages right after
+  // login — from silently clearing the just-created session.
+  const isDocumentNav =
+    request.headers.get("sec-fetch-dest") === "document";
+  const homeSignOut = isHome && hasAuthCookie && isDocumentNav;
 
   // Public pages — the landing and the marketing/info routes — need no session
   // work. Skipping the Supabase auth round-trip here removes a blocking network

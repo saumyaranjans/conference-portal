@@ -62,11 +62,13 @@ const REGISTRATION: Row = {
   },
 };
 const BREAKFAST: Row = {
-  type: "break",
-  label: "Morning Breakfast",
+  type: "slot",
   time: "08:30 – 09:50",
-  icon: "🍳",
-  venue: "Community Centre",
+  full: {
+    title: "Morning Breakfast",
+    note: "Community Centre",
+    kind: "registration",
+  },
 };
 const MORNING_TEA: Row = {
   type: "break",

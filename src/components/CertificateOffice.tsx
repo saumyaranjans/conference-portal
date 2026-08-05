@@ -265,6 +265,18 @@ export async function CertificateOffice() {
   const registeredAuthors = (authors ?? []).filter(
     (a) => a.registration_confirmed || a.registration_fee_paid
   );
+  // All authors on each paper (any registration state), ordered corresponding-
+  // author-first, so a participant row can show its paper's full author list
+  // with roles and who is registered.
+  const authorsBySubmission = new Map<string, any[]>();
+  for (const a of (authors ?? []) as any[]) {
+    const arr = authorsBySubmission.get(a.submission_id) ?? [];
+    arr.push(a);
+    authorsBySubmission.set(a.submission_id, arr);
+  }
+  for (const arr of authorsBySubmission.values()) {
+    arr.sort((a, b) => (a.author_order ?? 99) - (b.author_order ?? 99));
+  }
   const handledEditorIds = new Set(
     (submissions ?? []).map((s) => s.assigned_editor_id).filter(Boolean)
   );
@@ -368,9 +380,10 @@ export async function CertificateOffice() {
             Authors — participant certificates
           </h2>
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-            Only registered authors appear here. Eligibility is individual — each
-            named author must independently have payment, amount, attendance and
-            presentation verified.
+            Only registered authors appear here. Each row shows the paper, its
+            authors (role and who is registered) and the pathway. Generate the
+            certificate on the left; payment/attendance evidence can be recorded
+            under &ldquo;Editorial verification&rdquo; but is not required to issue.
           </p>
         </div>
         <div className="space-y-3">
@@ -393,22 +406,117 @@ export async function CertificateOffice() {
               author.full_name,
               row.salutation_override || personProfile?.title
             );
+            const pathway =
+              submission?.submission_type === "full_paper_presentation" ? "B" : "A";
+            const paperAuthors = authorsBySubmission.get(author.submission_id) ?? [];
             return (
-              <details key={author.id} className="card overflow-hidden">
-                <summary className="cursor-pointer list-none px-5 py-4">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <p className="font-semibold text-slate-900 dark:text-white">{displayName}</p>
-                      <p className="mt-0.5 text-xs text-slate-500">
-                        {submission?.paper_id ?? "Paper"} · {submission?.title} · {track?.name}
-                      </p>
+              <div key={author.id} className="card overflow-hidden">
+                {/* Reviewer-row style: identity + certificate provision on the
+                    left, paper / authors / pathway in the centre. */}
+                <div className="flex flex-wrap items-start gap-x-5 gap-y-4 px-5 py-4">
+                  {/* LEFT — who the certificate is for + generate provision */}
+                  <div className="w-full sm:w-72 shrink-0">
+                    <p className="font-semibold text-slate-900 dark:text-white">
+                      {displayName}
+                    </p>
+                    {author.email && (
+                      <p className="text-xs text-slate-500">{author.email}</p>
+                    )}
+                    {author.affiliation && (
+                      <p className="text-xs text-slate-500">{author.affiliation}</p>
+                    )}
+                    <div className="mt-3">
+                      <CertificateActions
+                        type="participant"
+                        subjectId={author.id}
+                        conferenceId={conference.id}
+                        issuance={participantIssuanceMap.get(author.id)}
+                        eligible
+                        signaturesReady={signaturesReady}
+                        year={conference.year}
+                        compact
+                      />
                     </div>
-                    <span className={`badge ${status.eligible ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>
-                      {status.eligible ? "Eligible" : `Missing ${status.missing.length} item${status.missing.length === 1 ? "" : "s"}`}
-                    </span>
                   </div>
-                </summary>
-                <div className="border-t border-slate-200 px-5 py-5 dark:border-slate-700">
+
+                  {/* CENTRE — paper, its authors (role + registration), pathway */}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-slate-800 dark:text-slate-100">
+                      {submission?.paper_id ?? "Paper"} · {submission?.title}
+                    </p>
+                    <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                      {track?.name && (
+                        <span className="text-xs text-slate-500">{track.name}</span>
+                      )}
+                      <span
+                        className={`badge ${
+                          pathway === "B"
+                            ? "bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300"
+                            : "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
+                        }`}
+                      >
+                        Pathway {pathway}
+                      </span>
+                    </div>
+                    <ul className="mt-2.5 space-y-1">
+                      {paperAuthors.map((pa) => {
+                        const registered =
+                          pa.registration_confirmed || pa.registration_fee_paid;
+                        const role =
+                          pa.author_order === 1 ? "Corresponding author" : "Co-author";
+                        const isSelf = pa.id === author.id;
+                        return (
+                          <li
+                            key={pa.id}
+                            className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs"
+                          >
+                            <span
+                              className={`font-medium ${
+                                isSelf
+                                  ? "text-blue-700 dark:text-blue-300"
+                                  : "text-slate-700 dark:text-slate-200"
+                              }`}
+                            >
+                              {pa.full_name}
+                            </span>
+                            <span className="text-slate-400">·</span>
+                            <span className="text-slate-500">{role}</span>
+                            {registered ? (
+                              <span className="badge bg-emerald-100 text-emerald-700 text-[10px] dark:bg-emerald-500/15 dark:text-emerald-300">
+                                Registered
+                              </span>
+                            ) : (
+                              <span className="badge bg-slate-100 text-slate-500 text-[10px] dark:bg-slate-700 dark:text-slate-300">
+                                Not registered
+                              </span>
+                            )}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Editorial verification & evidence — kept, but tucked away so
+                    it no longer dominates the row. */}
+                <details className="border-t border-slate-200 dark:border-slate-700">
+                  <summary className="cursor-pointer list-none px-5 py-2.5 text-xs font-medium text-slate-600 hover:text-blue-700 dark:text-slate-300">
+                    Editorial verification &amp; evidence{" "}
+                    <span
+                      className={`badge ml-1 ${
+                        status.eligible
+                          ? "bg-emerald-100 text-emerald-800"
+                          : "bg-amber-100 text-amber-800"
+                      }`}
+                    >
+                      {status.eligible
+                        ? "Complete"
+                        : `Missing ${status.missing.length} item${
+                            status.missing.length === 1 ? "" : "s"
+                          }`}
+                    </span>
+                  </summary>
+                  <div className="border-t border-slate-200 px-5 py-5 dark:border-slate-700">
                   <ActionForm action={updateParticipantCertificateEvidence} className="space-y-4">
                     <input type="hidden" name="submission_author_id" value={author.id} />
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -463,17 +571,9 @@ export async function CertificateOffice() {
                   {!status.eligible && (
                     <p className="mt-3 text-xs text-amber-700">Required: {status.missing.join(", ")}.</p>
                   )}
-                  <CertificateActions
-                    type="participant"
-                    subjectId={author.id}
-                    conferenceId={conference.id}
-                    issuance={participantIssuanceMap.get(author.id)}
-                    eligible={status.eligible}
-                    signaturesReady={signaturesReady}
-                    year={conference.year}
-                  />
-                </div>
-              </details>
+                  </div>
+                </details>
+              </div>
             );
           })}
         </div>

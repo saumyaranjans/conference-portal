@@ -92,7 +92,7 @@ export async function buildReviewerCertificatePreview(
   const signatures = await loadSignatures(admin);
   const pdfBytes = await generateCertificatePdf({
     certificate: {
-      certificate_number: `PREVIEW-R-${randomBytes(2).toString("hex").toUpperCase()}`,
+      certificate_number: `RR-PREVIEW-${randomBytes(2).toString("hex").toUpperCase()}`,
       certificate_type: "reviewer",
       issued_at: new Date().toISOString(),
       display_name: displayName,
@@ -176,7 +176,7 @@ export async function buildParticipationCertificatePreview(
   const signatures = await loadSignatures(admin);
   const pdfBytes = await generateCertificatePdf({
     certificate: {
-      certificate_number: `PREVIEW-PC-${randomBytes(2).toString("hex").toUpperCase()}`,
+      certificate_number: `AR-PREVIEW-${randomBytes(2).toString("hex").toUpperCase()}`,
       certificate_type: "participant",
       issued_at: new Date().toISOString(),
       display_name: displayName,
@@ -271,7 +271,7 @@ export async function buildTrackEditorCertificate(
   };
 
   const signatures = await loadSignatures(admin);
-  const certNumber = `GLOGIFT${conference.year ?? 2027}-TE-${randomBytes(4)
+  const certNumber = `TE-${conference.year ?? 2027}-${randomBytes(4)
     .toString("hex")
     .toUpperCase()}`;
   const pdfBytes = await generateCertificatePdf({

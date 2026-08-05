@@ -57,10 +57,12 @@ export const CERTIFICATE_SIGNATORIES = [
   },
 ] as const;
 
+/** Role prefix for an auto-generated certificate number: RR = reviewer,
+ *  TE = track editor, AR = author (participant). */
 export function certificatePrefix(type: CertificateType): string {
-  if (type === "participant") return "P";
-  if (type === "reviewer") return "R";
-  return "TE";
+  if (type === "reviewer") return "RR";
+  if (type === "track_editor") return "TE";
+  return "AR"; // participant = author
 }
 
 /** Join a salutation to a name without repeating an existing prefix. */

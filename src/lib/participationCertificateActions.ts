@@ -158,7 +158,7 @@ export async function generateParticipationCertificates(
       conferenceYear: conf.year ?? 2027,
     };
 
-    const certNumber = `GLOGIFT${conf.year ?? 2027}-PC-${randomBytes(4)
+    const certNumber = `AR-${conf.year ?? 2027}-${randomBytes(4)
       .toString("hex")
       .toUpperCase()}`;
     const pdfBytes = await generateCertificatePdf({

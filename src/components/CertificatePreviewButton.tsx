@@ -23,6 +23,20 @@ export function CertificatePreviewButton({
   async function preview() {
     setBusy(true);
     setError(null);
+
+    // Open the tab NOW — synchronously inside the click's user gesture — so the
+    // browser does not treat it as an unsolicited pop-up and block it. (No
+    // "noopener": that makes window.open return null, and we need the handle to
+    // fill the tab once the PDF is ready.)
+    const win = window.open("", "_blank");
+    if (win) {
+      win.document.write(
+        "<!doctype html><title>Certificate preview</title>" +
+          "<body style='font-family:system-ui,sans-serif;padding:2rem;color:#475569'>" +
+          "Generating certificate preview…</body>"
+      );
+    }
+
     const fd = new FormData();
     fd.set("certificate_type", type);
     fd.set("subject_id", subjectId);
@@ -30,12 +44,27 @@ export function CertificatePreviewButton({
     fd.set("preview", "true");
     const res = await issueCertificate(fd);
     setBusy(false);
+
     if (res.ok && res.previewPdf) {
       const bytes = Uint8Array.from(atob(res.previewPdf), (c) => c.charCodeAt(0));
-      const url = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
-      window.open(url, "_blank", "noopener,noreferrer");
+      const url = URL.createObjectURL(
+        new Blob([bytes], { type: "application/pdf" })
+      );
+      if (win) {
+        win.location.href = url;
+      } else {
+        // The browser blocked the tab despite the synchronous open — fall back
+        // to downloading the preview PDF instead.
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "certificate-preview.pdf";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      }
       setTimeout(() => URL.revokeObjectURL(url), 60_000);
     } else {
+      if (win) win.close();
       setError(res.message ?? "Could not generate a preview.");
     }
   }

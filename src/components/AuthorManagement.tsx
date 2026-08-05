@@ -649,7 +649,7 @@ export function AuthorManagement({
                     </ul>
 
                     {/* Intention to participate + mode, below the papers */}
-                    <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                    <div className="mt-2 flex flex-nowrap items-center gap-1.5 whitespace-nowrap">
                       <span className="text-[11px] font-medium text-slate-500">
                         Intentions:
                       </span>
@@ -694,7 +694,7 @@ export function AuthorManagement({
                         r.modeActual !== r.mode;
                       return (
                         <div className="mt-1">
-                          <div className="flex flex-wrap items-center gap-1.5">
+                          <div className="flex flex-nowrap items-center gap-1.5 whitespace-nowrap">
                             <span className="text-[11px] font-medium text-slate-500">
                               Status:
                             </span>

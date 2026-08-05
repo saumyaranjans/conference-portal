@@ -29,6 +29,7 @@ function CertificateActions({
   issuance,
   eligible,
   signaturesReady,
+  compact = false,
 }: {
   type: "participant" | "reviewer" | "track_editor";
   subjectId: string;
@@ -36,6 +37,8 @@ function CertificateActions({
   issuance?: any;
   eligible: boolean;
   signaturesReady: boolean;
+  /** Slim inline layout (input + Issue + Preview on one row). */
+  compact?: boolean;
 }) {
   if (issuance) {
     return (
@@ -68,20 +71,27 @@ function CertificateActions({
 
   const disabled = !eligible || !signaturesReady;
   return (
-    <div className="mt-4 space-y-2">
-      <ActionForm action={issueCertificate} className="flex flex-wrap items-end gap-3">
+    <div className={compact ? "flex flex-wrap items-end gap-2" : "mt-4 space-y-2"}>
+      <ActionForm
+        action={issueCertificate}
+        className="flex flex-wrap items-end gap-2"
+      >
         <input type="hidden" name="certificate_type" value={type} />
         <input type="hidden" name="subject_id" value={subjectId} />
         <input type="hidden" name="conference_id" value={conferenceId} />
-        <label className="label">
-          Certificate number
+        <label className={compact ? "label text-[11px]" : "label"}>
+          {!compact && "Certificate number"}
           <input
-            className="input mt-1"
+            className={`input ${compact ? "h-8 w-48 text-xs" : "mt-1"}`}
             name="certificate_number"
             placeholder="Leave blank to auto-generate"
           />
         </label>
-        <SubmitButton disabled={disabled} title={disabled ? "Complete eligibility and signatures first" : undefined}>
+        <SubmitButton
+          disabled={disabled}
+          className={compact ? "py-1.5 text-xs" : undefined}
+          title={disabled ? "Complete eligibility and signatures first" : undefined}
+        >
           Issue certificate
         </SubmitButton>
       </ActionForm>
@@ -418,16 +428,25 @@ export async function CertificateOffice() {
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
           Generic appreciation certificates become eligible after at least one submitted review. Attendance and payment are not required.
         </p>
-        <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        <div className="mt-4 space-y-2">
           {reviewers.map((reviewer: any) => (
-            <article key={reviewer.id} className="card card-pad">
-              <p className="font-semibold text-slate-900 dark:text-white">
-                {withSalutation(reviewer.full_name, reviewer.title)}
-              </p>
-              <p className="mt-1 text-sm text-slate-500">{reviewer.affiliation}</p>
-              <span className={`badge mt-3 ${reviewer.title ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>
-                {reviewer.title ? <>Service verified · {reviewCount.get(reviewer.id)} submitted review{reviewCount.get(reviewer.id) === 1 ? "" : "s"}</> : "Salutation required"}
-              </span>
+            <article
+              key={reviewer.id}
+              className="card flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-2.5"
+            >
+              <div className="min-w-0">
+                <p className="font-semibold text-slate-900 dark:text-white">
+                  {withSalutation(reviewer.full_name, reviewer.title)}
+                  {reviewer.affiliation && (
+                    <span className="ml-2 text-xs font-normal text-slate-500">
+                      {reviewer.affiliation}
+                    </span>
+                  )}
+                </p>
+                <span className={`badge mt-1 ${reviewer.title ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>
+                  {reviewer.title ? <>Service verified · {reviewCount.get(reviewer.id)} submitted review{reviewCount.get(reviewer.id) === 1 ? "" : "s"}</> : "Salutation required"}
+                </span>
+              </div>
               <CertificateActions
                 type="reviewer"
                 subjectId={reviewer.id}
@@ -435,6 +454,7 @@ export async function CertificateOffice() {
                 issuance={reviewerIssuanceMap.get(reviewer.id)}
                 eligible={Boolean(reviewer.title)}
                 signaturesReady={signaturesReady}
+                compact
               />
             </article>
           ))}

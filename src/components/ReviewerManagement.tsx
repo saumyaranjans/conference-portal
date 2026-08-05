@@ -46,6 +46,18 @@ function decisionOf(rec: string | null): { label: string; cls: string } | null {
   return { label: recLabel(rec), cls: "bg-slate-100 text-slate-700" };
 }
 
+/** A reviewer assignment's decision bucket for the Decision filter. */
+function assignmentDecisionStatus(
+  a: ReviewerAssignment
+): "pending" | "accept" | "revision" | "reject" {
+  const r = a.recommendation;
+  if (!r) return "pending";
+  if (r === "accept") return "accept";
+  if (r === "reject") return "reject";
+  if (r.includes("revision")) return "revision";
+  return "pending";
+}
+
 export type ReviewerRow = {
   name: string;
   mobile: string | null;
@@ -129,6 +141,9 @@ export function ReviewerManagement({
     "all" | "invited" | "accepted" | "completed" | "declined"
   >("all");
   const [pathway, setPathway] = useState<"all" | "A" | "B">("all");
+  const [decision, setDecision] = useState<
+    "all" | "pending" | "accept" | "revision" | "reject"
+  >("all");
   const [letter, setLetter] = useState("all");
   const [anaTrack, setAnaTrack] = useState("all");
   const [anaPathway, setAnaPathway] = useState<"all" | "A" | "B">("all");
@@ -206,6 +221,11 @@ export function ReviewerManagement({
       }
       if (pathway === "A" && r.counts.pathwayA <= 0) return false;
       if (pathway === "B" && r.counts.pathwayB <= 0) return false;
+      if (
+        decision !== "all" &&
+        !r.assignments.some((a) => assignmentDecisionStatus(a) === decision)
+      )
+        return false;
       if (!needle) return true;
       return (
         r.name.toLowerCase().includes(needle) ||
@@ -221,7 +241,7 @@ export function ReviewerManagement({
       .slice()
       .sort((a, b) => stripSalutation(a.name).localeCompare(stripSalutation(b.name)));
     return { list, available: avail };
-  }, [rows, track, q, status, pathway, letter]);
+  }, [rows, track, q, status, pathway, decision, letter]);
 
   function exportExcel() {
     const filters = [
@@ -231,6 +251,17 @@ export function ReviewerManagement({
         (status === "completed" ? "submitted" : status) as ReviewerAssignment["status"]
       ] ?? status}`,
       `Pathway: ${pathway === "all" ? "All" : `Pathway ${pathway}`}`,
+      `Decision: ${
+        decision === "all"
+          ? "All"
+          : decision === "pending"
+            ? "Pending / awaited"
+            : decision === "accept"
+              ? "Accept"
+              : decision === "revision"
+                ? "Revision"
+                : "Reject"
+      }`,
       `Name starts with: ${letter === "all" ? "All" : letter}`,
     ].join("   |   ");
     const headers = [
@@ -355,7 +386,7 @@ export function ReviewerManagement({
         </div>
       </div>
 
-      {/* Filters */}
+      {/* Filters — line 1: track, status, pathway, decision */}
       <div className="flex flex-nowrap items-center gap-2 overflow-x-auto pb-1">
         <select
           value={track}
@@ -369,12 +400,6 @@ export function ReviewerManagement({
             </option>
           ))}
         </select>
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Search reviewer, email, paper…"
-          className="input min-w-[9rem] flex-1 text-sm"
-        />
         <select
           value={status}
           onChange={(e) => setStatus(e.target.value as typeof status)}
@@ -397,9 +422,31 @@ export function ReviewerManagement({
           <option value="A">Pathway A</option>
           <option value="B">Pathway B</option>
         </select>
+        <select
+          value={decision}
+          onChange={(e) => setDecision(e.target.value as typeof decision)}
+          className="input w-40 shrink-0 text-sm"
+          aria-label="Decision status filter"
+        >
+          <option value="all">All (decision)</option>
+          <option value="pending">Pending / awaited</option>
+          <option value="accept">Accept</option>
+          <option value="revision">Revision</option>
+          <option value="reject">Reject</option>
+        </select>
         <span className="shrink-0 whitespace-nowrap text-xs text-slate-500">
           {filtered.length} of {rows.length}
         </span>
+      </div>
+
+      {/* Filters — line 2: search + Excel */}
+      <div className="flex flex-nowrap items-center gap-2 overflow-x-auto pb-1">
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Search reviewer, email, paper…"
+          className="input min-w-[9rem] flex-1 text-sm"
+        />
         <button
           type="button"
           onClick={exportExcel}
@@ -537,7 +584,9 @@ export function ReviewerManagement({
                         (status === "all" ||
                           (status === "completed"
                             ? a.status === "submitted"
-                            : a.status === status))
+                            : a.status === status)) &&
+                        (decision === "all" ||
+                          assignmentDecisionStatus(a) === decision)
                     );
                     return shown.length === 0 ? (
                       <span className="text-xs text-slate-400">

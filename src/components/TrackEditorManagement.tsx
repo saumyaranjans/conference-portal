@@ -81,6 +81,18 @@ function decLabel(d: string | null): string {
   return d.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+/** A paper's decision-status bucket for the Decision filter. */
+function paperDecisionStatus(
+  p: TEPaper
+): "awaiting" | "pending" | "accept" | "revision" | "reject" {
+  if (!p.accepted) return "awaiting";
+  if (!p.decided || !p.decision) return "pending";
+  if (p.decision === "accept") return "accept";
+  if (p.decision === "reject") return "reject";
+  if (p.decision.includes("revision")) return "revision";
+  return "pending";
+}
+
 /** Colour a decision badge: Accept green, Reject red, Revision blue. */
 function decisionClass(d: string | null): string {
   if (!d) return "bg-slate-100 text-slate-700";
@@ -126,6 +138,9 @@ export function TrackEditorManagement({
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<"all" | "invited" | "accepted">("all");
   const [pathway, setPathway] = useState<"all" | "A" | "B">("all");
+  const [decision, setDecision] = useState<
+    "all" | "awaiting" | "pending" | "accept" | "revision" | "reject"
+  >("all");
   const [letter, setLetter] = useState("all");
   const [anaTrack, setAnaTrack] = useState("all");
   // Per-editor confirmation gate for the certificate actions (keyed by email).
@@ -167,6 +182,11 @@ export function TrackEditorManagement({
       if (status === "invited" && r.counts.tracksInvited <= 0) return false;
       if (pathway !== "all" && !r.papers.some((p) => p.pathway === pathway))
         return false;
+      if (
+        decision !== "all" &&
+        !r.papers.some((p) => paperDecisionStatus(p) === decision)
+      )
+        return false;
       if (!needle) return true;
       return (
         r.name.toLowerCase().includes(needle) ||
@@ -183,7 +203,7 @@ export function TrackEditorManagement({
       .slice()
       .sort((a, b) => stripSalutation(a.name).localeCompare(stripSalutation(b.name)));
     return { list, available: avail };
-  }, [rows, track, q, status, pathway, letter]);
+  }, [rows, track, q, status, pathway, decision, letter]);
 
   function exportExcel() {
     const filters = [
@@ -191,6 +211,19 @@ export function TrackEditorManagement({
       `Search: ${q.trim() || "—"}`,
       `Status: ${status === "all" ? "All" : status === "accepted" ? "Accepted" : "Invited (pending)"}`,
       `Pathway: ${pathway === "all" ? "All" : `Pathway ${pathway}`}`,
+      `Decision: ${
+        decision === "all"
+          ? "All"
+          : decision === "awaiting"
+            ? "Awaiting acceptance"
+            : decision === "pending"
+              ? "Pending decision"
+              : decision === "accept"
+                ? "Accepted"
+                : decision === "revision"
+                  ? "Revision"
+                  : "Rejected"
+      }`,
       `Name starts with: ${letter === "all" ? "All" : letter}`,
     ].join("   |   ");
     const headers = [
@@ -259,7 +292,7 @@ export function TrackEditorManagement({
         </div>
       </div>
 
-      {/* Filters */}
+      {/* Filters — line 1: track, appointment, pathway, decision status */}
       <div className="flex flex-nowrap items-center gap-2 overflow-x-auto pb-1">
         <select
           value={track}
@@ -273,12 +306,6 @@ export function TrackEditorManagement({
             </option>
           ))}
         </select>
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Search editor, email, track, paper…"
-          className="input min-w-[9rem] flex-1 text-sm"
-        />
         <select
           value={status}
           onChange={(e) => setStatus(e.target.value as typeof status)}
@@ -299,9 +326,32 @@ export function TrackEditorManagement({
           <option value="A">Pathway A</option>
           <option value="B">Pathway B</option>
         </select>
+        <select
+          value={decision}
+          onChange={(e) => setDecision(e.target.value as typeof decision)}
+          className="input w-44 shrink-0 text-sm"
+          aria-label="Decision status filter"
+        >
+          <option value="all">All (decision)</option>
+          <option value="awaiting">Awaiting acceptance</option>
+          <option value="pending">Pending decision</option>
+          <option value="accept">Accepted</option>
+          <option value="revision">Revision</option>
+          <option value="reject">Rejected</option>
+        </select>
         <span className="shrink-0 whitespace-nowrap text-xs text-slate-500">
           {filtered.length} of {rows.length}
         </span>
+      </div>
+
+      {/* Filters — line 2: search + Excel */}
+      <div className="flex flex-nowrap items-center gap-2 overflow-x-auto pb-1">
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Search editor, email, track, paper…"
+          className="input min-w-[9rem] flex-1 text-sm"
+        />
         <button
           type="button"
           onClick={exportExcel}
@@ -468,6 +518,11 @@ export function TrackEditorManagement({
                         for (const p of r.papers) {
                           if (track !== "all" && p.trackCode !== track) continue;
                           if (pathway !== "all" && p.pathway !== pathway) continue;
+                          if (
+                            decision !== "all" &&
+                            paperDecisionStatus(p) !== decision
+                          )
+                            continue;
                           const arr = byTrack.get(p.trackCode) ?? [];
                           arr.push(p);
                           byTrack.set(p.trackCode, arr);

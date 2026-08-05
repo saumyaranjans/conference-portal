@@ -642,7 +642,10 @@ export async function issueCertificate(
       }
     }
 
-    if (recipientEmail && emailConfigured()) {
+    // Per the Editorial Office, governed certificates are NOT emailed — they are
+    // generated, previewed and downloaded from this office only. Guard kept off.
+    const SEND_CERTIFICATE_EMAIL = false;
+    if (SEND_CERTIFICATE_EMAIL && recipientEmail && emailConfigured()) {
       const brand = conference.acronym
         ? `${conference.acronym} ${String(conference.year).slice(-2)}`
         : "GLOGIFT 27";

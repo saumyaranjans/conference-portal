@@ -41,27 +41,41 @@ function CertificateActions({
   compact?: boolean;
 }) {
   if (issuance) {
+    // Generated — now Preview and Download. To correct a mistaken number,
+    // Revoke and generate again with the corrected number.
     return (
-      <div className="mt-4 flex flex-wrap items-end gap-3">
+      <div
+        className={
+          compact
+            ? "flex flex-wrap items-center gap-2"
+            : "mt-4 flex flex-wrap items-end gap-3"
+        }
+      >
+        <span className="badge bg-emerald-100 text-emerald-800">
+          ✓ {issuance.certificate_number}
+        </span>
+        <CertificatePreviewButton
+          type={type}
+          subjectId={subjectId}
+          conferenceId={conferenceId}
+        />
         <Link
           href={`/api/certificates/${issuance.id}`}
-          className="btn-primary"
+          className={`btn-primary ${compact ? "py-1.5 text-xs" : ""}`}
           target="_blank"
         >
-          View / Download PDF
+          Download PDF
         </Link>
         <ActionForm action={revokeCertificate} className="flex flex-wrap items-end gap-2">
           <input type="hidden" name="certificate_id" value={issuance.id} />
-          <label className="text-xs text-slate-600">
-            Revocation reason
-            <input
-              className="input mt-1 min-w-56"
-              name="reason"
-              required
-              placeholder="Correction required"
-            />
-          </label>
-          <SubmitButton variant="danger" className="text-xs">
+          <input
+            className={`input ${compact ? "h-8 w-32 text-xs" : "mt-1 min-w-56"}`}
+            name="reason"
+            required
+            placeholder="Reason to revoke"
+            aria-label="Revocation reason"
+          />
+          <SubmitButton variant="danger" className="py-1.5 text-xs">
             Revoke
           </SubmitButton>
         </ActionForm>
@@ -80,11 +94,11 @@ function CertificateActions({
         <input type="hidden" name="subject_id" value={subjectId} />
         <input type="hidden" name="conference_id" value={conferenceId} />
         <label className={compact ? "label text-[11px]" : "label"}>
-          {!compact && "Certificate number"}
+          {!compact && "Certificate number — type one, or leave blank to auto-generate"}
           <input
-            className={`input ${compact ? "h-8 w-48 text-xs" : "mt-1"}`}
+            className={`input ${compact ? "h-8 w-52 text-xs" : "mt-1"}`}
             name="certificate_number"
-            placeholder="Leave blank to auto-generate"
+            placeholder="Enter number, or blank = auto-generate"
           />
         </label>
         <SubmitButton
@@ -92,7 +106,7 @@ function CertificateActions({
           className={compact ? "py-1.5 text-xs" : undefined}
           title={disabled ? "Complete eligibility and signatures first" : undefined}
         >
-          Issue certificate
+          Generate certificate
         </SubmitButton>
       </ActionForm>
       {/* Preview is available any time, with relaxed checks; it never issues. */}
@@ -456,17 +470,20 @@ export async function CertificateOffice() {
                   </p>
                 )}
               </div>
-              {/* Submitted-review breakdown, centred in the row's whitespace. */}
-              <div className="flex flex-1 flex-wrap items-center justify-center gap-1.5">
+              {/* Submitted-review breakdown, centred in the row's whitespace:
+                  Total on the first line, the two pathways on the second. */}
+              <div className="flex flex-1 flex-col items-center justify-center gap-1">
                 <span className="badge bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200">
                   Total {reviewCount.get(reviewer.id) ?? 0}
                 </span>
-                <span className="badge bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
-                  Pathway A {reviewCountA.get(reviewer.id) ?? 0}
-                </span>
-                <span className="badge bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300">
-                  Pathway B {reviewCountB.get(reviewer.id) ?? 0}
-                </span>
+                <div className="flex flex-wrap items-center justify-center gap-1.5">
+                  <span className="badge bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+                    Pathway A {reviewCountA.get(reviewer.id) ?? 0}
+                  </span>
+                  <span className="badge bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300">
+                    Pathway B {reviewCountB.get(reviewer.id) ?? 0}
+                  </span>
+                </div>
               </div>
               <CertificateActions
                 type="reviewer"

@@ -34,7 +34,7 @@ type Kind =
   | "online-track";
 
 type Row =
-  | { type: "break"; label: string; time: string; long?: boolean }
+  | { type: "break"; label: string; time: string; long?: boolean; icon?: string }
   | { type: "slot"; time: string; full?: Block; onsite?: Block; online?: Block };
 
 type Day = {
@@ -44,6 +44,12 @@ type Day = {
   gala?: { time: string; title: string; note: string };
 };
 
+const BREAKFAST: Row = {
+  type: "break",
+  label: "Morning Breakfast",
+  time: "08:30 – 09:50",
+  icon: "🍳",
+};
 const MORNING_TEA: Row = {
   type: "break",
   label: "Morning High Tea",
@@ -237,10 +243,20 @@ function BlockCard({ block }: { block: Block }) {
   );
 }
 
-function BreakRow({ label, time, long }: { label: string; time: string; long?: boolean }) {
+function BreakRow({
+  label,
+  time,
+  long,
+  icon,
+}: {
+  label: string;
+  time: string;
+  long?: boolean;
+  icon?: string;
+}) {
   return (
     <div className="flex items-center justify-center gap-2 rounded-lg border border-dashed border-slate-300 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-500 dark:border-slate-600 dark:bg-slate-800/60 dark:text-slate-400">
-      <span aria-hidden>{long ? "🍽" : "☕"}</span>
+      <span aria-hidden>{icon ?? (long ? "🍽" : "☕")}</span>
       <span>{label}</span>
       <span className="opacity-70">· {time}</span>
     </div>
@@ -327,13 +343,18 @@ export function ConferenceSchedule() {
             </div>
 
             <div className="space-y-2">
-              {day.rows.map((row, i) =>
+              {[BREAKFAST, ...day.rows].map((row, i) =>
                 row.type === "break" ? (
                   <div key={i} className="sm:grid sm:grid-cols-[7.5rem_1fr] sm:gap-2">
                     <div className="hidden items-center text-xs text-slate-500 sm:flex">
                       {row.time}
                     </div>
-                    <BreakRow label={row.label} time={row.time} long={row.long} />
+                    <BreakRow
+                      label={row.label}
+                      time={row.time}
+                      long={row.long}
+                      icon={row.icon}
+                    />
                   </div>
                 ) : (
                   <div

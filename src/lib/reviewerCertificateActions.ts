@@ -57,6 +57,7 @@ export async function generateReviewerCertificate(
 
   const email = String(formData.get("email") ?? "").trim();
   if (!email) return { ok: false, message: "Missing reviewer email." };
+  const regenerate = String(formData.get("regenerate")) === "true";
 
   const { data: reviewer } = await admin
     .from("profiles")
@@ -86,7 +87,7 @@ export async function generateReviewerCertificate(
     .select("id")
     .eq("recipient_profile_id", reviewer.id)
     .maybeSingle();
-  if (existing) {
+  if (existing && !regenerate) {
     return { ok: true, message: "Certificate already generated." };
   }
 
@@ -146,7 +147,7 @@ export async function generateReviewerCertificate(
   );
   if (insErr) return { ok: false, message: insErr.message };
 
-  if (emailConfigured() && reviewer.email) {
+  if (!regenerate && emailConfigured() && reviewer.email) {
     try {
       const brand = conference.acronym
         ? `${conference.acronym} ${String(conference.year ?? 2027).slice(-2)}`
@@ -176,6 +177,8 @@ export async function generateReviewerCertificate(
   revalidatePath("/admin/reviewers");
   return {
     ok: true,
-    message: "Reviewer certificate generated and emailed.",
+    message: regenerate
+      ? "Reviewer certificate regenerated (same download link, new number)."
+      : "Reviewer certificate generated and emailed.",
   };
 }

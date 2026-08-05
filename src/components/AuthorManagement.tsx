@@ -1048,81 +1048,93 @@ export function AuthorManagement({
                         </>
                       )}
 
-                      {r.certEligiblePapers > 0 &&
-                      r.certsGenerated >= r.certEligiblePapers ? (
-                        <span className="block rounded-md bg-emerald-50 px-2 py-1 text-center text-[11px] font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
-                          ✓ Certificate generated
-                        </span>
-                      ) : r.attended && r.registered && r.paid ? (
-                        // The Preview + Generate controls appear only once
-                        // attendance, registration AND payment are all recorded,
-                        // and are unlocked by an explicit verification checkbox.
-                        (() => {
-                          const unlocked = !!certUnlocked[r.email];
+                      {(() => {
+                        const unlocked = !!certUnlocked[r.email];
+                        const allDone =
+                          r.certEligiblePapers > 0 &&
+                          r.certsGenerated >= r.certEligiblePapers;
+                        const canGenerate =
+                          r.attended && r.registered && r.paid;
+                        // Nothing to show until eligible or already done.
+                        if (!allDone && !canGenerate) {
                           return (
-                            <div className="space-y-1">
-                              <label className="flex items-start gap-1.5 rounded-md border border-slate-200 px-2 py-1 text-[10px] leading-tight text-slate-600 dark:border-slate-700 dark:text-slate-300">
-                                <input
-                                  type="checkbox"
-                                  checked={unlocked}
-                                  onChange={(e) =>
-                                    setCertUnlocked((s) => ({
-                                      ...s,
-                                      [r.email]: e.target.checked,
-                                    }))
-                                  }
-                                  className="mt-0.5 shrink-0"
-                                />
-                                <span>
-                                  I&apos;ve verified this author — enable preview
-                                  &amp; generate
-                                </span>
-                              </label>
-                              <a
-                                href={
-                                  unlocked
-                                    ? `/api/participation-certificate/preview?email=${encodeURIComponent(
-                                        r.email
-                                      )}`
-                                    : undefined
-                                }
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                aria-disabled={!unlocked}
-                                tabIndex={unlocked ? 0 : -1}
-                                className={`btn-secondary block w-full justify-center text-center text-[11px] py-0.5 px-2 ${
-                                  unlocked ? "" : "pointer-events-none opacity-40"
-                                }`}
-                                title={
-                                  unlocked
-                                    ? "Open the certificate as it will look — nothing is saved or emailed"
-                                    : "Tick the checkbox above to enable"
-                                }
-                              >
-                                Preview certificate
-                              </a>
-                              <ActionForm action={generateParticipationCertificates}>
-                                <input type="hidden" name="email" value={r.email} />
-                                <SubmitButton
-                                  variant="primary"
-                                  disabled={!unlocked}
-                                  className={`w-full justify-center text-[11px] py-0.5 px-2 ${
-                                    unlocked ? "" : "cursor-not-allowed opacity-40"
-                                  }`}
-                                >
-                                  {r.certsGenerated > 0
-                                    ? "Generate remaining"
-                                    : "Generate certificate"}
-                                </SubmitButton>
-                              </ActionForm>
-                            </div>
+                            <span className="block text-center text-[10px] text-slate-400">
+                              Mark attended, registered &amp; paid to generate
+                            </span>
                           );
-                        })()
-                      ) : (
-                        <span className="block text-center text-[10px] text-slate-400">
-                          Mark attended, registered &amp; paid to generate
-                        </span>
-                      )}
+                        }
+                        const label = allDone
+                          ? "Regenerate certificate"
+                          : r.certsGenerated > 0
+                            ? "Generate remaining"
+                            : "Generate certificate";
+                        return (
+                          <div className="space-y-1">
+                            {allDone && (
+                              <span className="block rounded-md bg-emerald-50 px-2 py-1 text-center text-[11px] font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+                                ✓ Certificate generated
+                              </span>
+                            )}
+                            <label className="flex items-start gap-1.5 rounded-md border border-slate-200 px-2 py-1 text-[10px] leading-tight text-slate-600 dark:border-slate-700 dark:text-slate-300">
+                              <input
+                                type="checkbox"
+                                checked={unlocked}
+                                onChange={(e) =>
+                                  setCertUnlocked((s) => ({
+                                    ...s,
+                                    [r.email]: e.target.checked,
+                                  }))
+                                }
+                                className="mt-0.5 shrink-0"
+                              />
+                              <span>
+                                I&apos;ve verified this author — enable preview
+                                &amp; {allDone ? "regenerate" : "generate"}
+                              </span>
+                            </label>
+                            <a
+                              href={
+                                unlocked
+                                  ? `/api/participation-certificate/preview?email=${encodeURIComponent(
+                                      r.email
+                                    )}`
+                                  : undefined
+                              }
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              aria-disabled={!unlocked}
+                              tabIndex={unlocked ? 0 : -1}
+                              className={`btn-secondary block w-full justify-center text-center text-[11px] py-0.5 px-2 ${
+                                unlocked ? "" : "pointer-events-none opacity-40"
+                              }`}
+                              title={
+                                unlocked
+                                  ? "Open the certificate as it will look — nothing is saved or emailed"
+                                  : "Tick the checkbox above to enable"
+                              }
+                            >
+                              Preview certificate
+                            </a>
+                            <ActionForm action={generateParticipationCertificates}>
+                              <input type="hidden" name="email" value={r.email} />
+                              {allDone && (
+                                <input type="hidden" name="regenerate" value="true" />
+                              )}
+                              <SubmitButton
+                                variant={allDone ? "secondary" : "primary"}
+                                disabled={!unlocked}
+                                className={`w-full justify-center text-[11px] py-0.5 px-2 ${
+                                  allDone
+                                    ? "!bg-amber-500 !text-white hover:!bg-amber-600"
+                                    : ""
+                                } ${unlocked ? "" : "cursor-not-allowed opacity-40"}`}
+                              >
+                                {label}
+                              </SubmitButton>
+                            </ActionForm>
+                          </div>
+                        );
+                      })()}
                     </div>
                   </td>
                 </tr>

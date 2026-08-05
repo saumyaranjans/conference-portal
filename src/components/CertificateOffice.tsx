@@ -443,8 +443,10 @@ export async function CertificateOffice() {
                     </span>
                   )}
                 </p>
-                <span className={`badge mt-1 ${reviewer.title ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>
-                  {reviewer.title ? <>Service verified · {reviewCount.get(reviewer.id)} submitted review{reviewCount.get(reviewer.id) === 1 ? "" : "s"}</> : "Salutation required"}
+                <span className={`badge mt-1 ${reviewer.title ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600"}`}>
+                  {reviewer.title ? "Service verified · " : ""}
+                  {reviewCount.get(reviewer.id)} submitted review
+                  {reviewCount.get(reviewer.id) === 1 ? "" : "s"}
                 </span>
               </div>
               <CertificateActions

@@ -768,12 +768,13 @@ export function TrackEditorManagement({
                           )}
 
                           {/* Certificate actions */}
-                          {r.certGenerated ? (
-                            <span className="block rounded-md bg-emerald-50 px-2 py-1 text-center text-[11px] font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
-                              ✓ Certificate generated
-                            </span>
-                          ) : r.counts.decisionsTaken > 0 ? (
+                          {r.counts.decisionsTaken > 0 ? (
                             <div className="space-y-1">
+                              {r.certGenerated && (
+                                <span className="block rounded-md bg-emerald-50 px-2 py-1 text-center text-[11px] font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+                                  ✓ Certificate generated
+                                </span>
+                              )}
                               <label className="flex items-start gap-1.5 rounded-md border border-slate-200 px-2 py-1 text-[10px] leading-tight text-slate-600 dark:border-slate-700 dark:text-slate-300">
                                 <input
                                   type="checkbox"
@@ -788,7 +789,7 @@ export function TrackEditorManagement({
                                 />
                                 <span>
                                   I&apos;ve verified this editor — enable preview
-                                  &amp; generate
+                                  &amp; {r.certGenerated ? "regenerate" : "generate"}
                                 </span>
                               </label>
                               <a
@@ -816,14 +817,23 @@ export function TrackEditorManagement({
                               </a>
                               <ActionForm action={generateTrackEditorCertificate}>
                                 <input type="hidden" name="email" value={r.email} />
+                                {r.certGenerated && (
+                                  <input type="hidden" name="regenerate" value="true" />
+                                )}
                                 <SubmitButton
-                                  variant="primary"
+                                  variant={r.certGenerated ? "secondary" : "primary"}
                                   disabled={!unlocked}
                                   className={`w-full justify-center text-[11px] py-0.5 px-2 ${
+                                    r.certGenerated
+                                      ? "!bg-amber-500 !text-white hover:!bg-amber-600"
+                                      : ""
+                                  } ${
                                     unlocked ? "" : "cursor-not-allowed opacity-40"
                                   }`}
                                 >
-                                  Generate certificate
+                                  {r.certGenerated
+                                    ? "Regenerate certificate"
+                                    : "Generate certificate"}
                                 </SubmitButton>
                               </ActionForm>
                             </div>

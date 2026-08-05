@@ -69,6 +69,7 @@ export async function generateParticipationCertificates(
 
   const email = String(formData.get("email") ?? "").trim();
   if (!email) return { ok: false, message: "Missing author email." };
+  const regenerate = String(formData.get("regenerate")) === "true";
 
   const { data: rows } = await admin
     .from("submission_authors")
@@ -111,7 +112,7 @@ export async function generateParticipationCertificates(
   let generated = 0;
 
   for (const row of eligible) {
-    if (have.has(row.id)) continue;
+    if (!regenerate && have.has(row.id)) continue;
     const sub = row.submissions;
 
     let conf = confCache.get(sub.conference_id);
@@ -201,8 +202,9 @@ export async function generateParticipationCertificates(
   }
 
   // Notify the author once, best-effort — an email failure never blocks the
-  // certificate that is already saved.
-  if (generated > 0 && emailConfigured()) {
+  // certificate that is already saved. Skipped on regenerate (the download link
+  // is unchanged, so no need to re-notify).
+  if (!regenerate && generated > 0 && emailConfigured()) {
     try {
       const conf =
         [...confCache.values()][0] ??
@@ -236,9 +238,13 @@ export async function generateParticipationCertificates(
     ok: true,
     message:
       generated > 0
-        ? `Participation certificate generated for ${generated} paper${
-            generated === 1 ? "" : "s"
-          }. The author has been emailed and can download it from their dashboard.`
+        ? regenerate
+          ? `Participation certificate regenerated for ${generated} paper${
+              generated === 1 ? "" : "s"
+            } (same download link).`
+          : `Participation certificate generated for ${generated} paper${
+              generated === 1 ? "" : "s"
+            }. The author has been emailed and can download it from their dashboard.`
         : "Certificate already generated for this author.",
     generated,
   };

@@ -24,14 +24,15 @@ export async function generateTrackEditorCertificate(
 
   const email = String(formData.get("email") ?? "").trim();
   if (!email) return { ok: false, message: "Missing track editor email." };
+  const regenerate = String(formData.get("regenerate")) === "true";
 
-  // Short-circuit if already generated.
+  // Short-circuit if already generated (unless regenerating).
   const { data: prof } = await admin
     .from("profiles")
     .select("id")
     .ilike("email", email)
     .maybeSingle();
-  if (prof) {
+  if (prof && !regenerate) {
     const { data: existing } = await admin
       .from("track_editor_certificates")
       .select("id")
@@ -70,7 +71,7 @@ export async function generateTrackEditorCertificate(
     );
   if (insErr) return { ok: false, message: insErr.message };
 
-  if (emailConfigured() && built.recipientEmail) {
+  if (!regenerate && emailConfigured() && built.recipientEmail) {
     try {
       const brand = built.conferenceAcronym
         ? `${built.conferenceAcronym} ${String(built.conferenceYear).slice(-2)}`
@@ -99,6 +100,8 @@ export async function generateTrackEditorCertificate(
   revalidatePath("/admin/track-editors");
   return {
     ok: true,
-    message: "Track editor certificate generated and emailed.",
+    message: regenerate
+      ? "Track editor certificate regenerated (same download link, new number)."
+      : "Track editor certificate generated and emailed.",
   };
 }

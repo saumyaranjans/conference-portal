@@ -557,6 +557,11 @@ export async function CertificateOffice() {
                 b: 0,
               };
             const issuance = editorIssuanceMap.get(membershipId);
+            const trackCodes = [...m.tracks]
+              .map((id) => trackMap.get(id)?.code)
+              .filter(Boolean)
+              .sort()
+              .join(" · ");
             return (
               <article
                 key={profileId}
@@ -585,6 +590,11 @@ export async function CertificateOffice() {
                   <span className="badge bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200">
                     Tracks handled {m.tracks.size}
                   </span>
+                  {trackCodes && (
+                    <span className="text-[10px] font-medium text-slate-500">
+                      {trackCodes}
+                    </span>
+                  )}
                   <div className="flex flex-wrap items-center justify-center gap-1.5">
                     <span className="badge bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
                       Pathway A {m.a}

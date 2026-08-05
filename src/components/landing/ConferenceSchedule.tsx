@@ -57,7 +57,7 @@ const REGISTRATION: Row = {
   time: "All day",
   full: {
     title: "Registration Desk",
-    note: "Konark Auditorium Lobby Area · runs in parallel, all day",
+    note: "Konark auditorium lobby area · runs in parallel, all day",
     kind: "registration",
   },
 };
@@ -123,7 +123,7 @@ const DAYS: Day[] = [
         time: "10:00 – 11:30",
         full: {
           title: "Conference Inaugural",
-          note: "Konark Auditorium",
+          note: "Konark auditorium",
           kind: "inaugural",
         },
       },
@@ -133,7 +133,7 @@ const DAYS: Day[] = [
         time: "12:00 – 13:30",
         onsite: {
           title: "AI & Sustainability Leadership Forum",
-          note: "Konark Seminar Hall · special session",
+          note: "Konark seminar hall · special session",
           kind: "plenary",
         },
         online: ONLINE,
@@ -151,7 +151,7 @@ const DAYS: Day[] = [
         time: "16:30 – 18:00",
         onsite: {
           title: "Industry–Academia Conclave on Digital Finance",
-          note: "Konark Seminar Hall · special session",
+          note: "Konark seminar hall · special session",
           kind: "plenary",
         },
         online: ONLINE,
@@ -160,7 +160,7 @@ const DAYS: Day[] = [
     gala: {
       time: "20:00 – 23:00",
       title: "Gala Dinner",
-      note: "Director's Residence · networking dinner for all delegates",
+      note: "Director's residence · networking dinner for all delegates",
     },
   },
   {
@@ -172,7 +172,7 @@ const DAYS: Day[] = [
         time: "10:00 – 11:30",
         onsite: {
           title: "Policy Roundtable on Decarbonization & Inclusive Growth",
-          note: "Konark Auditorium · special session",
+          note: "Konark auditorium · special session",
           kind: "plenary",
         },
         online: ONLINE,
@@ -183,7 +183,7 @@ const DAYS: Day[] = [
         time: "12:00 – 13:30",
         onsite: {
           title: "Startup Showcase on FinTech & Smart Operations",
-          note: "Konark Seminar Hall · special session",
+          note: "Konark seminar hall · special session",
           kind: "plenary",
         },
         online: ONLINE,
@@ -201,7 +201,7 @@ const DAYS: Day[] = [
         time: "16:30 – 18:00",
         onsite: {
           title: "Doctoral Colloquium for Emerging Researchers",
-          note: "Konark Seminar Hall · special session",
+          note: "Konark seminar hall · special session",
           kind: "plenary",
         },
         online: ONLINE,
@@ -217,7 +217,7 @@ const DAYS: Day[] = [
         time: "10:00 – 11:30",
         onsite: {
           title: "Directors' Panel on Leadership in an AI-Driven Economy",
-          note: "Konark Auditorium · special session",
+          note: "Konark auditorium · special session",
           kind: "plenary",
         },
         online: ONLINE,
@@ -228,7 +228,7 @@ const DAYS: Day[] = [
         time: "12:00 – 13:30",
         onsite: {
           title: "Talk with Editors of Top-Tier Journals",
-          note: "Konark Seminar Hall · special session",
+          note: "Konark seminar hall · special session",
           kind: "editor-talk",
         },
         online: ONLINE,
@@ -246,7 +246,7 @@ const DAYS: Day[] = [
         time: "16:30 – 18:00",
         full: {
           title: "Conference Valedictory",
-          note: "Konark Auditorium",
+          note: "Konark auditorium",
           kind: "valedictory",
         },
       },

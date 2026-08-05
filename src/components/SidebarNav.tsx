@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -67,6 +68,13 @@ export function SidebarNav({
   children?: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const scrollRef = useRef<HTMLElement>(null);
+
+  const scrollNav = (to: "top" | "bottom") => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTo({ top: to === "top" ? 0 : el.scrollHeight, behavior: "smooth" });
+  };
 
   const current: AppRole =
     ROLE_ORDER.find(
@@ -76,13 +84,11 @@ export function SidebarNav({
   if (!current) return null;
 
   return (
-    <nav
-      className={`sticky top-20 ${
-        current === "chief"
-          ? "max-h-[calc(100vh-6rem)] overflow-y-auto pr-1 [scrollbar-width:thin]"
-          : ""
-      }`}
-    >
+    <div className="sticky top-20 flex max-h-[calc(100vh-6rem)] flex-col">
+      <nav
+        ref={scrollRef}
+        className="flex-1 overflow-y-auto pr-1 [scrollbar-width:thin]"
+      >
       {/* Two clearly-distinct destinations (moved here from the header): the
           public conference website vs. the submission-portal home. */}
       <button
@@ -229,6 +235,34 @@ export function SidebarNav({
       )}
 
       {children}
-    </nav>
+      </nav>
+
+      {/* Top ↕ Bottom scroll controls — pinned at the base of the sidebar so
+          the long staff menus (and their stat cards) stay one tap away. */}
+      <div className="mt-1 flex shrink-0 gap-1 border-t border-slate-200 pt-2 dark:border-slate-700">
+        <button
+          type="button"
+          onClick={() => scrollNav("top")}
+          className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-slate-200 bg-white/70 px-2 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-white hover:text-blue-700 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-300 dark:hover:bg-slate-800"
+          title="Scroll navigation to top"
+        >
+          <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M18 15l-6-6-6 6" />
+          </svg>
+          Top
+        </button>
+        <button
+          type="button"
+          onClick={() => scrollNav("bottom")}
+          className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-slate-200 bg-white/70 px-2 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-white hover:text-blue-700 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-300 dark:hover:bg-slate-800"
+          title="Scroll navigation to bottom"
+        >
+          <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+          Bottom
+        </button>
+      </div>
+    </div>
   );
 }

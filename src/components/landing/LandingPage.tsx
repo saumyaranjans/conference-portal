@@ -1310,6 +1310,7 @@ export function LandingPage() {
                 <br />
                 Basantpur, Sambalpur, Odisha, India
               </p>
+              <SocialLinks align="start" className="mt-3" />
             </div>
             <div>
               <p className="font-semibold text-slate-800 dark:text-slate-200">

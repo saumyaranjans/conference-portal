@@ -36,13 +36,30 @@ const SOCIALS: { label: string; href: string; path: string; hover: string }[] = 
   },
 ];
 
-export function SocialLinks({ className = "" }: { className?: string }) {
+export function SocialLinks({
+  className = "",
+  align = "center",
+  label = "Follow IIM Sambalpur",
+}: {
+  className?: string;
+  /** "center" for footers; "start" to sit flush inside a text column. */
+  align?: "center" | "start";
+  /** Heading above the icons; pass null to show icons only. */
+  label?: string | null;
+}) {
+  const start = align === "start";
   return (
-    <div className={`flex flex-col items-center gap-2 ${className}`}>
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
-        Follow IIM Sambalpur
-      </p>
-      <div className="flex items-center justify-center gap-1">
+    <div
+      className={`flex flex-col gap-2 ${start ? "items-start" : "items-center"} ${className}`}
+    >
+      {label && (
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+          {label}
+        </p>
+      )}
+      <div
+        className={`flex items-center gap-1 ${start ? "-ml-2.5 justify-start" : "justify-center"}`}
+      >
         {SOCIALS.map((s) => (
           <a
             key={s.href}

@@ -463,8 +463,10 @@ export function TrackEditorManagement({
                     ) : (
                       (() => {
                         // Group papers by track, tracks A→Z, papers in sequence.
+                        // When a pathway is selected, show only its papers.
                         const byTrack = new Map<string, TEPaper[]>();
                         for (const p of r.papers) {
+                          if (pathway !== "all" && p.pathway !== pathway) continue;
                           const arr = byTrack.get(p.trackCode) ?? [];
                           arr.push(p);
                           byTrack.set(p.trackCode, arr);

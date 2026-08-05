@@ -3,90 +3,46 @@
 import { useState } from "react";
 
 /**
- * Certificate-number chooser for the Certificate Office. Two explicit modes:
- *  • Auto-generate — the number is minted on Generate (submits blank).
- *  • Enter number — type a number, Save it (edit again any time). The saved
- *    value is what gets submitted with the Generate form.
- * Renders a hidden `certificate_number` input so it drops straight into the
- * issue form.
+ * Certificate-number input with an explicit "Auto-generate" button. In auto
+ * mode the field submits blank and the server mints a unique alphanumeric
+ * number on Generate; typing switches to manual entry. Renders the hidden
+ * `certificate_number` the issue form reads.
  */
 export function CertNumberField({ compact = false }: { compact?: boolean }) {
-  const [mode, setMode] = useState<"auto" | "enter">("auto");
   const [value, setValue] = useState("");
-  const [saved, setSaved] = useState(false);
-
-  // Only a saved, typed number is sent; otherwise blank → the server auto-mints.
-  const submitted = mode === "enter" && saved ? value.trim() : "";
-
-  const tab = (active: boolean) =>
-    `rounded-md px-2 py-0.5 text-[10px] font-medium transition ${
-      active
-        ? "bg-blue-600 text-white"
-        : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
-    }`;
+  const [auto, setAuto] = useState(true);
 
   return (
-    <div className={compact ? "flex flex-col gap-1" : "flex flex-col gap-1.5"}>
-      {!compact && (
-        <span className="label">Certificate number</span>
-      )}
-      <div className="flex gap-1">
-        <button
-          type="button"
-          onClick={() => {
-            setMode("auto");
-            setSaved(false);
-          }}
-          className={tab(mode === "auto")}
-        >
-          Auto-generate
-        </button>
-        <button
-          type="button"
-          onClick={() => setMode("enter")}
-          className={tab(mode === "enter")}
-        >
-          Enter number
-        </button>
-      </div>
-
-      {mode === "auto" ? (
-        <span className="text-[10px] text-slate-500">
-          A number is generated automatically on Generate.
-        </span>
-      ) : saved ? (
-        <div className="flex items-center gap-2">
-          <span className="font-mono text-xs text-slate-800 dark:text-slate-100">
-            {value.trim() || "—"}
-          </span>
-          <button
-            type="button"
-            onClick={() => setSaved(false)}
-            className="text-[10px] font-medium text-blue-600 hover:underline"
-          >
-            Edit
-          </button>
-        </div>
-      ) : (
-        <div className="flex items-center gap-1">
-          <input
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            placeholder="Type certificate number"
-            className={`input ${compact ? "h-8 w-44 text-xs" : "w-64"}`}
-          />
-          <button
-            type="button"
-            onClick={() => setSaved(true)}
-            disabled={!value.trim()}
-            className="btn-secondary px-2 py-1 text-[10px] disabled:opacity-40"
-          >
-            Save
-          </button>
-        </div>
-      )}
-
-      <input type="hidden" name="certificate_number" value={submitted} />
+    <div className="flex flex-wrap items-center gap-1.5">
+      <input
+        name="certificate_number"
+        value={auto ? "" : value}
+        onChange={(e) => {
+          setAuto(false);
+          setValue(e.target.value);
+        }}
+        placeholder={
+          auto ? "Auto-generated on Generate" : "Enter certificate number"
+        }
+        className={`input h-8 ${compact ? "w-52" : "w-64"} text-xs ${
+          auto ? "text-slate-400 placeholder:text-slate-400" : ""
+        }`}
+      />
+      <button
+        type="button"
+        onClick={() => {
+          setAuto(true);
+          setValue("");
+        }}
+        className={`shrink-0 rounded-lg border px-2 py-1.5 text-[11px] font-medium transition ${
+          auto
+            ? "border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-500/40 dark:bg-blue-500/10 dark:text-blue-300"
+            : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300"
+        }`}
+        title="A unique number is generated automatically on Generate"
+      >
+        {auto ? "✓ Auto-generate" : "Auto-generate"}
+      </button>
     </div>
   );
 }

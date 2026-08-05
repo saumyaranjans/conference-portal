@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { CertificatePreviewButton } from "@/components/CertificatePreviewButton";
 import { CertificateEditButton } from "@/components/CertificateEditButton";
+import { CertNumberField } from "@/components/CertNumberField";
 import { PageHeader, StatCard, formatDate } from "@/components/ui/Primitives";
 import {
   issueCertificate,
@@ -83,12 +84,8 @@ function CertificateActions({
         <input type="hidden" name="certificate_type" value={type} />
         <input type="hidden" name="subject_id" value={subjectId} />
         <input type="hidden" name="conference_id" value={conferenceId} />
-        {/* Line 1 — certificate number box (blank = auto-generate) */}
-        <input
-          name="certificate_number"
-          placeholder="Enter number, or blank = auto-generate"
-          className="input h-8 w-full max-w-xs text-xs"
-        />
+        {/* Line 1 — certificate number: type one, or Auto-generate */}
+        <CertNumberField compact={compact} />
         <label className="flex items-center gap-1.5 text-[11px] text-slate-500">
           Date of issuance
           <input

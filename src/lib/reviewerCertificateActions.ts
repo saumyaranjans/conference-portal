@@ -3,7 +3,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 
-import { requireRole } from "@/lib/auth";
+import { requireConvenerManage } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/server";
 import { generateCertificatePdf } from "@/lib/certificatePdf";
 import {
@@ -52,7 +52,7 @@ async function loadSignatures(
 export async function generateReviewerCertificate(
   formData: FormData
 ): Promise<ReviewerCertResult> {
-  const profile = await requireRole("chief", "admin");
+  const profile = await requireConvenerManage("chief", "admin");
   const admin = createAdminClient();
 
   const email = String(formData.get("email") ?? "").trim();

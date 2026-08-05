@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { requireRole } from "@/lib/auth";
+import { requireConvenerManage } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/server";
 import { sendEmail, emailConfigured } from "@/lib/email";
 import {
@@ -66,7 +66,7 @@ const BRAND = "GLOGIFT 27";
 export async function remindTrackEditorPending(
   formData: FormData
 ): Promise<ReminderResult> {
-  const profile = await requireRole("chief", "admin");
+  const profile = await requireConvenerManage("chief", "admin");
   const admin = createAdminClient();
 
   const editorId = String(formData.get("editor_id") ?? "").trim();
@@ -134,7 +134,7 @@ export async function remindTrackEditorPending(
 export async function remindConvener(
   formData: FormData
 ): Promise<ReminderResult> {
-  const profile = await requireRole("chief", "admin");
+  const profile = await requireConvenerManage("chief", "admin");
   const admin = createAdminClient();
 
   const editorId = String(formData.get("editor_id") ?? "").trim();

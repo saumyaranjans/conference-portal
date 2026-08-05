@@ -183,6 +183,9 @@ export interface Profile {
   bio: string;
   expertise: string[];
   roles: AppRole[];
+  /** Convener access tier: true = manage/edit rights, false = view-only.
+   *  Only meaningful when `roles` includes "chief". Defaults to true. */
+  convener_manage: boolean;
   is_active: boolean;
   created_at: string;
 }

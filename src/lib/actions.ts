@@ -4,7 +4,11 @@ import { randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
-import { requireProfile, requireRole } from "@/lib/auth";
+import {
+  requireProfile,
+  requireRole,
+  requireConvenerManage,
+} from "@/lib/auth";
 import { emailConfigured, sendEmail } from "@/lib/email";
 import {
   abstractDecisionEmail,
@@ -3494,7 +3498,7 @@ export async function setSuggestedOutlet(
 export async function overrideDecision(
   formData: FormData
 ): Promise<ActionResult> {
-  const profile = await requireRole("chief", "admin");
+  const profile = await requireConvenerManage("chief", "admin");
   const admin = createAdminClient();
   const submissionId = String(formData.get("submission_id"));
   const decision = String(formData.get("decision")) as DecisionKind;
@@ -3599,7 +3603,7 @@ export async function overrideDecision(
 export async function reassignTrackEditor(
   formData: FormData
 ): Promise<ActionResult> {
-  const profile = await requireRole("chief");
+  const profile = await requireConvenerManage("chief");
   const admin = createAdminClient();
 
   const submissionId = String(formData.get("submission_id") ?? "");
@@ -3785,7 +3789,7 @@ export async function reassignTrackEditor(
 
 /** Convener/admin deletes a submitted or withdrawn paper (and its files). */
 export async function deleteSubmission(formData: FormData): Promise<ActionResult> {
-  const profile = await requireRole("chief");
+  const profile = await requireConvenerManage("chief");
   const supabase = await createClient();
   const id = String(formData.get("id"));
 
@@ -3830,7 +3834,7 @@ export async function deleteSubmission(formData: FormData): Promise<ActionResult
 }
 
 export async function addTrackChair(formData: FormData): Promise<ActionResult> {
-  const profile = await requireRole("chief");
+  const profile = await requireConvenerManage("chief");
   const admin = createAdminClient();
 
   const trackId = String(formData.get("track_id"));
@@ -3915,7 +3919,7 @@ export async function addTrackChair(formData: FormData): Promise<ActionResult> {
 export async function prepareChairInvite(
   formData: FormData
 ): Promise<PrepareResult> {
-  const profile = await requireRole("chief");
+  const profile = await requireConvenerManage("chief");
   const admin = createAdminClient();
 
   const trackId = String(formData.get("track_id") ?? "");
@@ -4090,7 +4094,7 @@ export type ReminderResult =
 export async function remindTrackEditor(
   formData: FormData
 ): Promise<ReminderResult> {
-  const profile = await requireRole("chief");
+  const profile = await requireConvenerManage("chief");
   const admin = createAdminClient();
 
   const editorId = String(formData.get("editor_id") ?? "").trim();
@@ -4661,7 +4665,7 @@ export async function declineReviewerInvite(
 export async function sendChairInvite(
   formData: FormData
 ): Promise<ActionResult> {
-  const profile = await requireRole("chief");
+  const profile = await requireConvenerManage("chief");
 
   const to = String(formData.get("to") ?? "").trim();
   const subject = String(formData.get("subject") ?? "");
@@ -4875,7 +4879,7 @@ export async function acceptTrackChairInvite(token: string): Promise<ActionResul
 }
 
 export async function removeTrackChair(formData: FormData): Promise<ActionResult> {
-  const profile = await requireRole("chief");
+  const profile = await requireConvenerManage("chief");
   const supabase = await createClient();
 
   const trackId = String(formData.get("track_id"));
@@ -5008,6 +5012,49 @@ export async function updateUserRoles(formData: FormData): Promise<ActionResult>
   return { ok: true, message: "Roles updated." };
 }
 
+/**
+ * Set a Convener's access tier: manage (edit) vs view-only. ADMIN (Editorial
+ * Office) ONLY — a Convener cannot change their own or another Convener's tier.
+ */
+export async function setConvenerManage(
+  formData: FormData
+): Promise<ActionResult> {
+  const me = await requireRole("admin");
+  const admin = createAdminClient();
+
+  const userId = String(formData.get("user_id") ?? "").trim();
+  const manage = String(formData.get("manage")) === "true";
+  if (!userId) return { ok: false, message: "Missing user." };
+
+  const { data: target } = await admin
+    .from("profiles")
+    .select("roles")
+    .eq("id", userId)
+    .maybeSingle();
+  if (!target) return { ok: false, message: "User not found." };
+  if (!(((target.roles as string[]) ?? []).includes("chief"))) {
+    return {
+      ok: false,
+      message: "This setting applies only to Convener (chief) accounts.",
+    };
+  }
+
+  const { error } = await admin
+    .from("profiles")
+    .update({ convener_manage: manage, updated_at: new Date().toISOString() })
+    .eq("id", userId);
+  if (error) return { ok: false, message: error.message };
+
+  await audit(me.id, "user.convener_manage_set", "profile", userId, { manage });
+  revalidatePath("/admin/users");
+  return {
+    ok: true,
+    message: manage
+      ? "Convener set to Manage (edit) rights."
+      : "Convener set to View-only.",
+  };
+}
+
 export async function setUserActive(formData: FormData): Promise<ActionResult> {
   const profile = await requireRole("admin");
   const admin = createAdminClient();
@@ -5084,7 +5131,7 @@ export async function createConference(formData: FormData): Promise<ActionResult
 export async function confirmAuthorAttendance(
   formData: FormData
 ): Promise<ActionResult> {
-  const profile = await requireRole("chief");
+  const profile = await requireConvenerManage("chief");
   // Staff write: RLS on submission_authors only lets the paper's author update
   // it, so use the admin client after the role check.
   const supabase = createAdminClient();
@@ -5123,7 +5170,7 @@ export async function confirmAuthorAttendance(
 export async function markPersonAttendance(
   formData: FormData
 ): Promise<ActionResult> {
-  const profile = await requireRole("chief", "admin");
+  const profile = await requireConvenerManage("chief", "admin");
   // Staff write across another person's author rows — bypass RLS after the
   // role check, mirroring confirmAuthorAttendance.
   const supabase = createAdminClient();
@@ -5169,7 +5216,7 @@ export async function markPersonAttendance(
 export async function markPersonRegistration(
   formData: FormData
 ): Promise<ActionResult> {
-  const profile = await requireRole("chief", "admin");
+  const profile = await requireConvenerManage("chief", "admin");
   const supabase = createAdminClient();
 
   const email = String(formData.get("email") ?? "").trim();
@@ -5213,7 +5260,7 @@ export async function markPersonRegistration(
 export async function markPersonPaid(
   formData: FormData
 ): Promise<ActionResult> {
-  const profile = await requireRole("chief", "admin");
+  const profile = await requireConvenerManage("chief", "admin");
   const supabase = createAdminClient();
 
   const email = String(formData.get("email") ?? "").trim();
@@ -5257,7 +5304,7 @@ export async function markPersonPaid(
 export async function saveParticipationStatus(
   formData: FormData
 ): Promise<ActionResult> {
-  const profile = await requireRole("chief", "admin");
+  const profile = await requireConvenerManage("chief", "admin");
   const supabase = createAdminClient();
 
   const email = String(formData.get("email") ?? "").trim();
@@ -5401,7 +5448,7 @@ export async function saveParticipationStatus(
 export async function resetParticipationStatus(
   formData: FormData
 ): Promise<ActionResult> {
-  const profile = await requireRole("chief", "admin");
+  const profile = await requireConvenerManage("chief", "admin");
   const supabase = createAdminClient();
 
   const email = String(formData.get("email") ?? "").trim();
@@ -5451,7 +5498,7 @@ export async function resetParticipationStatus(
 export async function markRegistrationFee(
   formData: FormData
 ): Promise<ActionResult> {
-  const profile = await requireRole("chief");
+  const profile = await requireConvenerManage("chief");
   // Staff write (see confirmAuthorAttendance) — use the admin client.
   const supabase = createAdminClient();
 

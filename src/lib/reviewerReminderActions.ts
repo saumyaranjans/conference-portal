@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { requireRole } from "@/lib/auth";
+import { requireConvenerManage } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/server";
 import { sendEmail, emailConfigured } from "@/lib/email";
 import { trackEditorOverdueReminderEmail } from "@/lib/emailTemplates";
@@ -17,7 +17,7 @@ export type ReminderResult = { ok: boolean; message?: string };
 export async function remindTrackEditorOverdue(
   formData: FormData
 ): Promise<ReminderResult> {
-  const profile = await requireRole("chief", "admin");
+  const profile = await requireConvenerManage("chief", "admin");
   const admin = createAdminClient();
 
   const id = String(formData.get("assignment_id") ?? "").trim();

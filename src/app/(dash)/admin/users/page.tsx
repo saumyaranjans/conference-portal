@@ -1,6 +1,10 @@
 import { requireRole } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/server";
-import { setUserActive, updateUserRoles } from "@/lib/actions";
+import {
+  setUserActive,
+  updateUserRoles,
+  setConvenerManage,
+} from "@/lib/actions";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { PageHeader, formatDate } from "@/components/ui/Primitives";
 import { ROLE_LABELS, type AppRole, type Profile } from "@/lib/types";
@@ -92,6 +96,40 @@ export default async function AdminUsersPage() {
                 </SubmitButton>
               </div>
             </ActionForm>
+
+            {/* Convener access tier — Editorial Office (admin) only. */}
+            {u.roles.includes("chief") && (
+              <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3 dark:border-slate-800">
+                <span className="text-xs font-medium text-slate-500">
+                  Convener rights:
+                </span>
+                <span
+                  className={`badge ${
+                    u.convener_manage !== false
+                      ? "bg-emerald-100 text-emerald-800"
+                      : "bg-amber-100 text-amber-800"
+                  }`}
+                >
+                  {u.convener_manage !== false ? "Manage (edit)" : "View-only"}
+                </span>
+                <ActionForm action={setConvenerManage}>
+                  <input type="hidden" name="user_id" value={u.id} />
+                  <input
+                    type="hidden"
+                    name="manage"
+                    value={String(!(u.convener_manage !== false))}
+                  />
+                  <SubmitButton
+                    variant="secondary"
+                    className="text-xs py-1.5 px-3"
+                  >
+                    {u.convener_manage !== false
+                      ? "Set to View-only"
+                      : "Set to Manage"}
+                  </SubmitButton>
+                </ActionForm>
+              </div>
+            )}
           </div>
         ))}
       </div>

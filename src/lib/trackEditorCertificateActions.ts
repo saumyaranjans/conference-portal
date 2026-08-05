@@ -3,7 +3,7 @@
 import { createHash } from "node:crypto";
 import { revalidatePath } from "next/cache";
 
-import { requireRole } from "@/lib/auth";
+import { requireConvenerManage } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/server";
 import { buildTrackEditorCertificate } from "@/lib/certificateBuilders";
 import { sendEmail, emailConfigured } from "@/lib/email";
@@ -19,7 +19,7 @@ export type TrackEditorCertResult = { ok: boolean; message?: string };
 export async function generateTrackEditorCertificate(
   formData: FormData
 ): Promise<TrackEditorCertResult> {
-  const profile = await requireRole("chief", "admin");
+  const profile = await requireConvenerManage("chief", "admin");
   const admin = createAdminClient();
 
   const email = String(formData.get("email") ?? "").trim();

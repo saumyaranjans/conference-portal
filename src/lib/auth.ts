@@ -43,3 +43,30 @@ export function hasRole(profile: Profile | null, role: AppRole): boolean {
   if (!profile) return false;
   return profile.roles.includes(role) || profile.roles.includes("admin");
 }
+
+/** True when this profile may perform Convener manage/edit actions: an admin
+ *  (Editorial Office) always can; a Convener (chief) only if not view-only. */
+export function canManageAsConvener(profile: Profile | null): boolean {
+  if (!profile) return false;
+  if (profile.roles.includes("admin")) return true;
+  if (!profile.roles.includes("chief")) return false;
+  return profile.convener_manage !== false;
+}
+
+/**
+ * Like {@link requireRole}, but additionally blocks a VIEW-ONLY Convener: a
+ * chief whose `convener_manage` is false (and who is not an admin) may see
+ * everything but cannot run manage/edit actions. Use this in Convener write
+ * actions in place of `requireRole("chief", ...)`.
+ */
+export async function requireConvenerManage(
+  ...roles: AppRole[]
+): Promise<Profile> {
+  const profile = await requireRole(...roles);
+  const isAdmin = profile.roles.includes("admin");
+  const isChief = profile.roles.includes("chief");
+  if (isChief && !isAdmin && profile.convener_manage === false) {
+    redirect("/denied");
+  }
+  return profile;
+}

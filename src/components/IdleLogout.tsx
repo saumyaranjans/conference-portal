@@ -30,7 +30,7 @@ const ACTIVITY_EVENTS = [
 ] as const;
 
 export function IdleLogout({
-  timeoutMs = 30 * 60_000, // sign out after 30 minutes idle
+  timeoutMs = 20 * 60_000, // sign out after 20 minutes idle
   warnMs = 60_000, // warn for the final 60 seconds
 }: {
   timeoutMs?: number;

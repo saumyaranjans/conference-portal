@@ -76,7 +76,7 @@ const MORNING_TEA: Row = {
   time: "11:30 – 12:00",
   full: {
     title: "Morning High Tea",
-    note: "Community",
+    note: "Academic block lobby area",
     kind: "registration",
     icon: "☕",
   },
@@ -96,7 +96,7 @@ const EVENING_TEA: Row = {
   time: "16:00 – 16:30",
   full: {
     title: "Evening High Tea",
-    note: "Community",
+    note: "Academic block lobby area",
     kind: "registration",
     icon: "☕",
   },

@@ -92,7 +92,7 @@ export async function buildReviewerCertificatePreview(
   const signatures = await loadSignatures(admin);
   const pdfBytes = await generateCertificatePdf({
     certificate: {
-      certificate_number: `RR-PREVIEW-${randomBytes(2).toString("hex").toUpperCase()}`,
+      certificate_number: "To be assigned",
       certificate_type: "reviewer",
       issued_at: new Date().toISOString(),
       display_name: displayName,
@@ -176,7 +176,7 @@ export async function buildParticipationCertificatePreview(
   const signatures = await loadSignatures(admin);
   const pdfBytes = await generateCertificatePdf({
     certificate: {
-      certificate_number: `AR-PREVIEW-${randomBytes(2).toString("hex").toUpperCase()}`,
+      certificate_number: "To be assigned",
       certificate_type: "participant",
       issued_at: new Date().toISOString(),
       display_name: displayName,
@@ -210,7 +210,9 @@ export type TrackEditorCertResult =
  */
 export async function buildTrackEditorCertificate(
   admin: Admin,
-  email: string
+  email: string,
+  /** When set (preview), the PDF shows this instead of a minted number. */
+  numberOverride?: string
 ): Promise<TrackEditorCertResult> {
   const { data: prof } = await admin
     .from("profiles")
@@ -271,12 +273,12 @@ export async function buildTrackEditorCertificate(
   };
 
   const signatures = await loadSignatures(admin);
-  const certNumber = `TE-${conference.year ?? 2027}-${randomBytes(4)
+  const certNumber = `TE-${conference.year ?? 2027}-${randomBytes(6)
     .toString("hex")
     .toUpperCase()}`;
   const pdfBytes = await generateCertificatePdf({
     certificate: {
-      certificate_number: certNumber,
+      certificate_number: numberOverride ?? certNumber,
       certificate_type: "track_editor",
       issued_at: new Date().toISOString(),
       display_name: displayName,

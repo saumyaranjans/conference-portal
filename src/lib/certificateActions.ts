@@ -485,7 +485,7 @@ export async function issueCertificate(
 
   // Preview: render the PDF and hand it straight back — never saved or emailed.
   if (preview) {
-    const previewNumber = providedNumber || `${prefix}-${conference.year}-PREVIEW`;
+    const previewNumber = providedNumber || "To be assigned";
     const pdfBytes = await generateCertificatePdf({
       certificate: {
         certificate_number: previewNumber,
@@ -516,7 +516,7 @@ export async function issueCertificate(
   for (let attempt = 0; attempt < maxAttempts && !issuedId; attempt += 1) {
     const certificateNumber =
       providedNumber ||
-      `${prefix}-${conference.year}-${randomBytes(4)
+      `${prefix}-${conference.year}-${randomBytes(6)
         .toString("hex")
         .toUpperCase()}`;
     const pdfBytes = await generateCertificatePdf({

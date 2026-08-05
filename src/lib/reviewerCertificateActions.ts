@@ -109,7 +109,7 @@ export async function generateReviewerCertificate(
   };
 
   const signatures = await loadSignatures(admin);
-  const certNumber = `RR-${conference.year ?? 2027}-${randomBytes(4)
+  const certNumber = `RR-${conference.year ?? 2027}-${randomBytes(6)
     .toString("hex")
     .toUpperCase()}`;
   const pdfBytes = await generateCertificatePdf({

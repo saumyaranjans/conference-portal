@@ -19,7 +19,7 @@ export async function GET(request: Request) {
   if (!email) return new NextResponse("Missing email.", { status: 400 });
 
   const admin = createAdminClient();
-  const res = await buildTrackEditorCertificate(admin, email);
+  const res = await buildTrackEditorCertificate(admin, email, "To be assigned");
   if (!res.ok) return new NextResponse(res.message, { status: 409 });
 
   return new NextResponse(Buffer.from(res.pdfBytes), {

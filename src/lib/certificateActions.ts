@@ -528,7 +528,12 @@ export async function issueCertificate(
       .upload(pdfObjectPath, Buffer.from(pdfBytes), {
         contentType: "application/pdf",
         cacheControl: "0",
-        upsert: false,
+        // Overwrite: a prior attempt can leave an orphaned PDF at this path
+        // (uploaded, but the issuance row never landed). upsert:false turned
+        // that orphan into a permanent "The resource already exists" wall,
+        // blocking re-generation. The path is keyed by certificate_number, so
+        // overwriting only ever replaces the same logical certificate's file.
+        upsert: true,
       });
     if (uploadError) {
       insertError = uploadError;
@@ -561,10 +566,19 @@ export async function issueCertificate(
       issuedNumber = certificateNumber;
     }
     if (error) {
-      await admin.storage.from("certificate-assets").remove([pdfObjectPath]);
-      if (error.code === "23505" && String(error.message).includes("certificate_number")) {
+      const isNumberDup =
+        error.code === "23505" && String(error.message).includes("certificate_number");
+      // Only remove the object we just wrote when it does NOT back an existing
+      // issuance. A certificate_number clash reuses this exact path, so its file
+      // belongs to the already-issued certificate — deleting it would strand
+      // that certificate. Every other failure leaves a genuine orphan to clean.
+      if (!isNumberDup) {
+        await admin.storage.from("certificate-assets").remove([pdfObjectPath]);
+      }
+      if (isNumberDup) {
         if (providedNumber)
           return { ok: false, message: `Certificate number "${providedNumber}" is already in use.` };
+        // A random collision — the loop retries with a fresh number.
       } else if (error.code === "23505") {
         return { ok: false, message: "An active certificate already exists for this person." };
       }

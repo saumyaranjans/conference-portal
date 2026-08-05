@@ -10,6 +10,7 @@ import { feeForTier, isEarlyBird } from "@/lib/registrationFees";
 import { getUsdInrRate, usdToInr } from "@/lib/fx";
 import { SignOutButton } from "@/components/SignOutButton";
 import { IdleLogout } from "@/components/IdleLogout";
+import { BrandHomeLink } from "@/components/BrandHomeLink";
 import { NotificationBell } from "@/components/NotificationBell";
 import { RoleSwitcher } from "@/components/RoleSwitcher";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -133,16 +134,7 @@ export async function DashboardShell({
       <header className="app-header backdrop-blur-md backdrop-saturate-150 border-b border-slate-200 sticky top-0 z-20">
         <div className="brand-rule" />
         <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
-          <Link href="/" className="flex items-center gap-2.5 shrink-0">
-            <img
-              src="/glogift-logo.png"
-              alt="GLOGIFT"
-              className="h-9 w-auto object-contain"
-            />
-            <span className="text-lg font-bold tracking-tight text-gradient w-fit">
-              GLOGIFT 27
-            </span>
-          </Link>
+          <BrandHomeLink />
           <div className="flex items-center gap-4">
             <RoleSwitcher roles={visibleRoles} />
             <ThemeToggle />

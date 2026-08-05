@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { BackToTop } from "@/components/landing/BackToTop";
+import { SocialLinks } from "@/components/landing/SocialLinks";
 import { IkatStrip } from "@/components/landing/IkatStrip";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
@@ -232,6 +233,7 @@ export function HowToReachPage() {
         </section>
 
         <footer className="border-t border-slate-200 pt-5 pb-6 text-center text-xs text-slate-500 dark:border-slate-700">
+          <SocialLinks className="mb-4" />
           <span className="font-semibold text-slate-700 dark:text-slate-300">
             GLOGIFT 27
           </span>

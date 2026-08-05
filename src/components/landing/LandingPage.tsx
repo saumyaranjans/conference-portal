@@ -4,6 +4,7 @@ import {
   type Deadline,
 } from "@/components/landing/DeadlineCountdown";
 import { FaqBot } from "@/components/landing/FaqBot";
+import { SocialLinks } from "@/components/landing/SocialLinks";
 import { Banner } from "@/components/landing/Banner";
 import { IkatStrip } from "@/components/landing/IkatStrip";
 import { BackToTop } from "@/components/landing/BackToTop";
@@ -1470,6 +1471,7 @@ export function LandingPage() {
         </section>
 
         <footer className="border-t border-slate-200 dark:border-slate-700 pt-5 pb-6 text-center text-xs text-slate-500">
+          <SocialLinks className="mb-4" />
           {/* Separators break onto their own lines on narrow screens rather
               than leaving a bar stranded at the start of a line. */}
           <span className="font-semibold text-slate-700 dark:text-slate-300">

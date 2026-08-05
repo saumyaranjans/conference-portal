@@ -411,11 +411,11 @@ export async function CertificateOffice() {
             const paperAuthors = authorsBySubmission.get(author.submission_id) ?? [];
             return (
               <div key={author.id} className="card overflow-hidden">
-                {/* Reviewer-row style: identity + certificate provision on the
-                    left, paper / authors / pathway in the centre. */}
+                {/* Reviewer-row style, three columns: identity | paper details
+                    (centre) | certificate provision (right). */}
                 <div className="flex flex-wrap items-start gap-x-5 gap-y-4 px-5 py-4">
-                  {/* LEFT — who the certificate is for + generate provision */}
-                  <div className="w-full sm:w-72 shrink-0">
+                  {/* LEFT — who the certificate is for */}
+                  <div className="w-full sm:w-52 shrink-0">
                     <p className="font-semibold text-slate-900 dark:text-white">
                       {displayName}
                     </p>
@@ -425,24 +425,12 @@ export async function CertificateOffice() {
                     {author.affiliation && (
                       <p className="text-xs text-slate-500">{author.affiliation}</p>
                     )}
-                    <div className="mt-3">
-                      <CertificateActions
-                        type="participant"
-                        subjectId={author.id}
-                        conferenceId={conference.id}
-                        issuance={participantIssuanceMap.get(author.id)}
-                        eligible
-                        signaturesReady={signaturesReady}
-                        year={conference.year}
-                        compact
-                      />
-                    </div>
                   </div>
 
                   {/* CENTRE — paper, its authors (role + registration), pathway.
-                      basis-64 guarantees it wraps below the left column instead
-                      of ever rendering as a narrow sliver beside it. */}
-                  <div className="min-w-0 flex-1 basis-64">
+                      basis-56 guarantees it wraps below the identity column
+                      instead of ever rendering as a narrow sliver beside it. */}
+                  <div className="min-w-0 flex-1 basis-56">
                     <p className="text-sm font-medium text-slate-800 dark:text-slate-100">
                       {submission?.paper_id ?? "Paper"} · {submission?.title}
                     </p>
@@ -496,6 +484,20 @@ export async function CertificateOffice() {
                         );
                       })}
                     </ul>
+                  </div>
+
+                  {/* RIGHT — certificate provision (number, date, actions) */}
+                  <div className="w-full shrink-0 sm:w-64">
+                    <CertificateActions
+                      type="participant"
+                      subjectId={author.id}
+                      conferenceId={conference.id}
+                      issuance={participantIssuanceMap.get(author.id)}
+                      eligible
+                      signaturesReady={signaturesReady}
+                      year={conference.year}
+                      compact
+                    />
                   </div>
                 </div>
 

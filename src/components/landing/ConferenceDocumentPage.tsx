@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { IkatStrip } from "@/components/landing/IkatStrip";
+import { SocialLinks } from "@/components/landing/SocialLinks";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 type ConferenceDocumentPageProps = {
@@ -105,6 +106,7 @@ export function ConferenceDocumentPage({
         </section>
 
         <footer className="border-t border-slate-200 pb-6 pt-5 text-center text-xs text-slate-500 dark:border-slate-700">
+          <SocialLinks className="mb-4" />
           <span className="font-semibold text-slate-700 dark:text-slate-300">
             GLOGIFT 27
           </span>

@@ -2,46 +2,45 @@
 
 import { useState } from "react";
 
+function randomHex(bytes: number) {
+  const arr = new Uint8Array(bytes);
+  crypto.getRandomValues(arr);
+  return Array.from(arr, (b) => b.toString(16).padStart(2, "0"))
+    .join("")
+    .toUpperCase();
+}
+
 /**
- * Certificate-number input with an explicit "Auto-generate" button. In auto
- * mode the field submits blank and the server mints a unique alphanumeric
- * number on Generate; typing switches to manual entry. Renders the hidden
- * `certificate_number` the issue form reads.
+ * Certificate-number field. The Editorial Office may type a number (it is used
+ * as-is on Generate), or click "Auto-generate" to fill the box with a unique
+ * alphanumeric number that stays visible and editable. Left blank, the server
+ * auto-generates on Generate. Uniqueness is guaranteed by a DB constraint.
  */
-export function CertNumberField({ compact = false }: { compact?: boolean }) {
+export function CertNumberField({
+  compact = false,
+  numberPrefix = "CERT",
+}: {
+  compact?: boolean;
+  numberPrefix?: string;
+}) {
   const [value, setValue] = useState("");
-  const [auto, setAuto] = useState(true);
 
   return (
     <div className="flex flex-wrap items-center gap-1.5">
       <input
         name="certificate_number"
-        value={auto ? "" : value}
-        onChange={(e) => {
-          setAuto(false);
-          setValue(e.target.value);
-        }}
-        placeholder={
-          auto ? "Auto-generated on Generate" : "Enter certificate number"
-        }
-        className={`input h-8 ${compact ? "w-52" : "w-64"} text-xs ${
-          auto ? "text-slate-400 placeholder:text-slate-400" : ""
-        }`}
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        placeholder="Enter number, or click Auto-generate"
+        className={`input h-8 ${compact ? "w-56" : "w-64"} font-mono text-xs`}
       />
       <button
         type="button"
-        onClick={() => {
-          setAuto(true);
-          setValue("");
-        }}
-        className={`shrink-0 rounded-lg border px-2 py-1.5 text-[11px] font-medium transition ${
-          auto
-            ? "border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-500/40 dark:bg-blue-500/10 dark:text-blue-300"
-            : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300"
-        }`}
-        title="A unique number is generated automatically on Generate"
+        onClick={() => setValue(`${numberPrefix}-${randomHex(6)}`)}
+        className="shrink-0 rounded-lg border border-blue-300 bg-blue-50 px-2 py-1.5 text-[11px] font-medium text-blue-700 transition hover:bg-blue-100 dark:border-blue-500/40 dark:bg-blue-500/10 dark:text-blue-300"
+        title="Fill a unique auto-generated number (you can still edit it)"
       >
-        {auto ? "✓ Auto-generate" : "Auto-generate"}
+        Auto-generate
       </button>
     </div>
   );

@@ -12,6 +12,7 @@ import {
 } from "@/lib/certificateActions";
 import {
   CERTIFICATE_SIGNATORIES,
+  certificatePrefix,
   participantEligibility,
   withSalutation,
 } from "@/lib/certificates";
@@ -29,6 +30,7 @@ function CertificateActions({
   issuance,
   eligible,
   signaturesReady,
+  year,
   compact = false,
 }: {
   type: "participant" | "reviewer" | "track_editor";
@@ -37,10 +39,12 @@ function CertificateActions({
   issuance?: any;
   eligible: boolean;
   signaturesReady: boolean;
+  year: number;
   /** Slim inline layout (input + Issue + Preview on one row). */
   compact?: boolean;
 }) {
   const today = new Date().toISOString().slice(0, 10);
+  const numberPrefix = `${certificatePrefix(type)}-${year}`;
 
   if (issuance) {
     // Generated. Line 1: the number. Line 2: Preview | Download. Line 3: Edit
@@ -85,7 +89,7 @@ function CertificateActions({
         <input type="hidden" name="subject_id" value={subjectId} />
         <input type="hidden" name="conference_id" value={conferenceId} />
         {/* Line 1 — certificate number: type one, or Auto-generate */}
-        <CertNumberField compact={compact} />
+        <CertNumberField compact={compact} numberPrefix={numberPrefix} />
         <label className="flex items-center gap-1.5 text-[11px] text-slate-500">
           Date of issuance
           <input
@@ -462,6 +466,7 @@ export async function CertificateOffice() {
                     issuance={participantIssuanceMap.get(author.id)}
                     eligible={status.eligible}
                     signaturesReady={signaturesReady}
+                    year={conference.year}
                   />
                 </div>
               </details>
@@ -526,6 +531,7 @@ export async function CertificateOffice() {
                 issuance={reviewerIssuanceMap.get(reviewer.id)}
                 eligible
                 signaturesReady={signaturesReady}
+                    year={conference.year}
                 compact
               />
             </article>
@@ -613,6 +619,7 @@ export async function CertificateOffice() {
                   issuance={issuance}
                   eligible
                   signaturesReady={signaturesReady}
+                    year={conference.year}
                   compact
                 />
               </article>

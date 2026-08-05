@@ -165,13 +165,27 @@ export function TrackEditorManagement({
     let papers = 0;
     let decisions = 0;
     let pending = 0;
+    // Decision breakdown by pathway (from final decisions on assigned papers),
+    // scoped by the analytics track filter.
+    const rec = {
+      A: { accept: 0, revision: 0, reject: 0 },
+      B: { accept: 0, revision: 0, reject: 0 },
+    };
     for (const r of base) {
       if (r.counts.tracksAccepted > 0) accepted += 1;
       papers += r.counts.papersAssigned;
       decisions += r.counts.decisionsTaken;
       pending += r.counts.pendingDecisions;
+      for (const p of r.papers) {
+        if (anaTrack !== "all" && p.trackCode !== anaTrack) continue;
+        if (!p.decided || !p.decision) continue;
+        const bucket = rec[p.pathway];
+        if (p.decision === "accept") bucket.accept += 1;
+        else if (p.decision === "reject") bucket.reject += 1;
+        else if (p.decision.includes("revision")) bucket.revision += 1;
+      }
     }
-    return { editors: base.length, accepted, papers, decisions, pending };
+    return { editors: base.length, accepted, papers, decisions, pending, rec };
   }, [rows, anaTrack]);
 
   const { list: filtered, available } = useMemo(() => {
@@ -289,6 +303,40 @@ export function TrackEditorManagement({
               <p className="mt-0.5 text-2xl font-bold">{value}</p>
             </div>
           ))}
+        </div>
+        {/* Decision breakdown by pathway (from final decisions on papers). */}
+        <div className="mt-2 flex flex-wrap gap-2">
+          {(
+            [
+              ["A", analytics.rec.A, "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"],
+              ["B", analytics.rec.B, "border-violet-200 bg-violet-50 text-violet-800 dark:border-violet-500/30 dark:bg-violet-500/10 dark:text-violet-300"],
+            ] as const
+          ).map(([p, c, cls]) => {
+            const total = c.accept + c.revision + c.reject;
+            const pct = (n: number) =>
+              total ? `${Math.round((n / total) * 100)}%` : "—";
+            return (
+              <span
+                key={p}
+                className={`inline-flex items-center gap-2 rounded-lg border px-2.5 py-1 text-xs font-medium ${cls}`}
+              >
+                <b>Pathway {p}</b>
+                <span>Accept <b className="text-sm">{c.accept}</b></span>
+                <span className="opacity-60">·</span>
+                <span>Revision <b className="text-sm">{c.revision}</b></span>
+                <span className="opacity-60">·</span>
+                <span>Reject <b className="text-sm">{c.reject}</b></span>
+                <span className="mx-0.5 inline-block h-3 w-px bg-current opacity-30 align-middle" />
+                <span title="Share of decided papers recommending Accept">
+                  Accept rate <b className="text-sm">{pct(c.accept)}</b>
+                </span>
+                <span className="opacity-60">·</span>
+                <span title="Share of decided papers recommending Reject">
+                  Reject rate <b className="text-sm">{pct(c.reject)}</b>
+                </span>
+              </span>
+            );
+          })}
         </div>
       </div>
 

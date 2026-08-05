@@ -197,6 +197,7 @@ export async function TrackEditorManagementView() {
       pendingDecisions: papers.filter((x) => x.accepted && !x.decided).length,
     };
     return {
+      profileId: p.id,
       name: p.full_name || p.email,
       mobile: p.mobile || null,
       email: p.email,
@@ -217,13 +218,24 @@ export async function TrackEditorManagementView() {
     ).values(),
   ].sort((a, b) => a.code.localeCompare(b.code));
 
+  // Convener account(s) — the "Handling Convener" and Remind-Convener target.
+  const { data: convData } = await admin
+    .from("profiles")
+    .select("id, full_name")
+    .contains("roles", ["chief"])
+    .order("full_name");
+  const conveners = ((convData ?? []) as any[]).map((c) => ({
+    id: c.id as string,
+    full_name: (c.full_name ?? null) as string | null,
+  }));
+
   return (
     <>
       <PageHeader
         title="Track Editor Management"
         subtitle="Every Track Editor — the tracks they chair, the papers assigned to them, and their decision workload."
       />
-      <TrackEditorManagement rows={rows} tracks={tracks} />
+      <TrackEditorManagement rows={rows} tracks={tracks} conveners={conveners} />
     </>
   );
 }

@@ -10,6 +10,10 @@ import {
 } from "@/lib/nameIndex";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { generateTrackEditorCertificate } from "@/lib/trackEditorCertificateActions";
+import {
+  remindTrackEditorPending,
+  remindConvener,
+} from "@/lib/trackEditorReminderActions";
 import { MAX_TRACKS_PER_CHAIR } from "@/lib/types";
 
 export type TEChairedTrack = {
@@ -45,6 +49,8 @@ const REVIEWER_STATUS_LABEL: Record<string, string> = {
   submitted: "Completed",
 };
 export type TrackEditorRow = {
+  /** The editor's profile id — used to target reminders/notifications. */
+  profileId: string;
   name: string;
   mobile: string | null;
   email: string;
@@ -94,9 +100,12 @@ function editorRates(r: TrackEditorRow) {
 export function TrackEditorManagement({
   rows,
   tracks,
+  conveners,
 }: {
   rows: TrackEditorRow[];
   tracks: { code: string; name: string }[];
+  /** Convener account(s) — the "Handling Convener" and Remind-Convener target. */
+  conveners: { id: string; full_name: string | null }[];
 }) {
   const [track, setTrack] = useState("all");
   const [q, setQ] = useState("");
@@ -527,6 +536,54 @@ export function TrackEditorManagement({
                         </span>
                       )}
                     </div>
+                    {/* Handling Convener + nudges — shown when the editor has
+                        outstanding work (papers to accept or decide). */}
+                    {(r.counts.pendingDecisions > 0 ||
+                      r.counts.awaitingAcceptance > 0) && (
+                      <div className="mt-2 border-t border-slate-100 pt-2 dark:border-slate-800">
+                        <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                          Handling Convener
+                        </p>
+                        <p className="text-[11px] text-slate-600 dark:text-slate-300">
+                          {conveners.length
+                            ? conveners
+                                .map((c) => c.full_name)
+                                .filter(Boolean)
+                                .join(", ") || "Convener"
+                            : "Convener"}
+                        </p>
+                        <div className="mt-1 flex flex-col gap-1">
+                          <ActionForm action={remindTrackEditorPending}>
+                            <input
+                              type="hidden"
+                              name="editor_id"
+                              value={r.profileId}
+                            />
+                            <SubmitButton
+                              variant="secondary"
+                              className="!py-0.5 !px-2 !text-[10px]"
+                              title="Email + notify this Track Editor that they have pending assignments to complete"
+                            >
+                              🔔 Remind editor
+                            </SubmitButton>
+                          </ActionForm>
+                          <ActionForm action={remindConvener}>
+                            <input
+                              type="hidden"
+                              name="editor_id"
+                              value={r.profileId}
+                            />
+                            <SubmitButton
+                              variant="secondary"
+                              className="!py-0.5 !px-2 !text-[10px]"
+                              title="Email + notify the Convener that this editor has pending assignments to follow up"
+                            >
+                              🔔 Remind Convener
+                            </SubmitButton>
+                          </ActionForm>
+                        </div>
+                      </div>
+                    )}
                   </td>
                   <td className="td align-top">
                     {(() => {

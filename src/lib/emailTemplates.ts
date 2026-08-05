@@ -1094,3 +1094,99 @@ export function trackEditorCertificateThanksEmail(o: {
   ]);
   return { subject, body };
 }
+
+/**
+ * System reminder to a Track Editor that they have pending/overdue editorial
+ * assignments (papers awaiting their acceptance and/or decision) to complete.
+ */
+export function trackEditorPendingReminderEmail(o: {
+  editorName?: string | null;
+  awaitingCount: number;
+  pendingCount: number;
+  paperIds?: string[];
+  conferenceName?: string;
+  brand?: string;
+}): EmailContent {
+  const conf = (o.conferenceName ?? "").trim() || CONF_DEFAULT;
+  const brand = (o.brand ?? "").trim() || CONF_DEFAULT;
+  const total = o.awaitingCount + o.pendingCount;
+  const papers = (o.paperIds ?? []).filter(Boolean);
+  const subject = `${brand} — Action needed: ${total} pending editorial assignment${
+    total === 1 ? "" : "s"
+  }`;
+  const body = compose([
+    greeting(o.editorName ?? undefined, "Track Editor"),
+    "",
+    `This is a reminder that you have ${total} editorial assignment${
+      total === 1 ? "" : "s"
+    } that ${total === 1 ? "is" : "are"} pending and should be completed at the earliest:`,
+    o.awaitingCount > 0
+      ? `• ${o.awaitingCount} paper${
+          o.awaitingCount === 1 ? "" : "s"
+        } awaiting your acceptance`
+      : null,
+    o.pendingCount > 0
+      ? `• ${o.pendingCount} paper${
+          o.pendingCount === 1 ? "" : "s"
+        } awaiting your decision`
+      : null,
+    papers.length ? `Papers: ${papers.join(", ")}` : null,
+    "",
+    "Kindly accept any pending papers and record your decisions so the review process can progress without further delay.",
+    "",
+    "This is a system-generated reminder — please do not reply.",
+    "",
+    "With regards,",
+    `Editorial Office, ${conf}`,
+  ]);
+  return { subject, body };
+}
+
+/**
+ * System reminder to the Convener that a Track Editor has pending/overdue
+ * assignments — a nudge to follow up or reassign.
+ */
+export function convenerPendingReminderEmail(o: {
+  convenerName?: string | null;
+  editorName?: string | null;
+  awaitingCount: number;
+  pendingCount: number;
+  paperIds?: string[];
+  conferenceName?: string;
+  brand?: string;
+}): EmailContent {
+  const conf = (o.conferenceName ?? "").trim() || CONF_DEFAULT;
+  const brand = (o.brand ?? "").trim() || CONF_DEFAULT;
+  const total = o.awaitingCount + o.pendingCount;
+  const papers = (o.paperIds ?? []).filter(Boolean);
+  const who = (o.editorName ?? "").trim() || "A Track Editor";
+  const subject = `${brand} — ${who} has ${total} pending assignment${
+    total === 1 ? "" : "s"
+  } needing attention`;
+  const body = compose([
+    greeting(o.convenerName ?? undefined, "Convener"),
+    "",
+    `This is to bring to your attention that ${who} has ${total} pending editorial assignment${
+      total === 1 ? "" : "s"
+    } that ${total === 1 ? "is" : "are"} overdue:`,
+    o.awaitingCount > 0
+      ? `• ${o.awaitingCount} paper${
+          o.awaitingCount === 1 ? "" : "s"
+        } awaiting acceptance`
+      : null,
+    o.pendingCount > 0
+      ? `• ${o.pendingCount} paper${
+          o.pendingCount === 1 ? "" : "s"
+        } awaiting a decision`
+      : null,
+    papers.length ? `Papers: ${papers.join(", ")}` : null,
+    "",
+    "Kindly follow up with the Track Editor, or reassign the paper(s) if needed, so the review process can progress.",
+    "",
+    "This is a system-generated reminder — please do not reply.",
+    "",
+    "With regards,",
+    `Editorial Office, ${conf}`,
+  ]);
+  return { subject, body };
+}

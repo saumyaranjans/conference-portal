@@ -32,6 +32,7 @@ export type TEPaper = {
   paperId: string;
   trackCode: string;
   trackName: string;
+  pathway: "A" | "B";
   title: string;
   accepted: boolean;
   decided: boolean;
@@ -40,6 +41,11 @@ export type TEPaper = {
   coAuthors: string[];
   reviewers: TEReviewerLite[];
   activity: TEActivity[];
+};
+
+const PATHWAY_CLASS: Record<"A" | "B", string> = {
+  A: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300",
+  B: "bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300",
 };
 
 const REVIEWER_STATUS_LABEL: Record<string, string> = {
@@ -483,6 +489,11 @@ export function TrackEditorManagement({
                                           >
                                             {p.paperId}
                                           </button>
+                                          <span
+                                            className={`badge ml-2 ${PATHWAY_CLASS[p.pathway]}`}
+                                          >
+                                            Pathway {p.pathway}
+                                          </span>
                                           {!p.accepted ? (
                                             <span className="badge ml-2 bg-amber-100 text-amber-800">
                                               Awaiting acceptance

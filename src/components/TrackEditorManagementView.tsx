@@ -49,7 +49,7 @@ export async function TrackEditorManagementView() {
       ? admin
           .from("submissions")
           .select(
-            "id, paper_id, title, status, submitted_at, created_at, assigned_editor_id, editor_accepted_at, tracks(code, name), submission_authors(full_name, is_corresponding, author_order), assignments(status, reviewer_number, reviewer:profiles!assignments_reviewer_id_fkey(full_name), reviews(recommendation, is_submitted))"
+            "id, paper_id, title, status, submission_type, submitted_at, created_at, assigned_editor_id, editor_accepted_at, tracks(code, name), submission_authors(full_name, is_corresponding, author_order), assignments(status, reviewer_number, reviewer:profiles!assignments_reviewer_id_fkey(full_name), reviews(recommendation, is_submitted))"
           )
           .in("assigned_editor_id", profileIds)
       : Promise.resolve({ data: [] as any[] }),
@@ -178,6 +178,9 @@ export async function TrackEditorManagementView() {
         paperId: s.paper_id ?? "—",
         trackCode: s.tracks?.code ?? "—",
         trackName: s.tracks?.name ?? "—",
+        pathway: (s.submission_type === "full_paper_presentation"
+          ? "B"
+          : "A") as "A" | "B",
         title: s.title ?? "",
         accepted: !!s.editor_accepted_at,
         decided,

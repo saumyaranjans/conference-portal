@@ -72,23 +72,34 @@ const BREAKFAST: Row = {
   },
 };
 const MORNING_TEA: Row = {
-  type: "break",
-  label: "Morning High Tea",
+  type: "slot",
   time: "11:30 – 12:00",
-  venue: "Community",
+  full: {
+    title: "Morning High Tea",
+    note: "Community",
+    kind: "registration",
+    icon: "☕",
+  },
 };
 const LUNCH: Row = {
-  type: "break",
-  label: "Lunch",
+  type: "slot",
   time: "13:30 – 14:30",
-  long: true,
-  venue: "Community",
+  full: {
+    title: "Lunch",
+    note: "Community",
+    kind: "registration",
+    icon: "🍽",
+  },
 };
 const EVENING_TEA: Row = {
-  type: "break",
-  label: "Evening High Tea",
+  type: "slot",
   time: "16:00 – 16:30",
-  venue: "Community",
+  full: {
+    title: "Evening High Tea",
+    note: "Community",
+    kind: "registration",
+    icon: "☕",
+  },
 };
 
 const ONLINE: Block = {

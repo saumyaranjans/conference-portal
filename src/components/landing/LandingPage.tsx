@@ -912,8 +912,9 @@ export function LandingPage() {
               <div className="text-center sm:text-left">
                 <p className="text-sm leading-relaxed text-blue-100">
                   Be part of GLOGIFT 27 — submit a 500-word abstract across ten
-                  tracks. We look forward to hosting you on campus, 25–27
-                  February 2027.
+                  tracks.
+                  <br />
+                  We look forward to hosting you on campus, 25–27 February 2027.
                 </p>
               </div>
               {/* CTA — on the right */}

@@ -10,6 +10,7 @@ import {
 } from "@/lib/nameIndex";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { generateTrackEditorCertificate } from "@/lib/trackEditorCertificateActions";
+import { MAX_TRACKS_PER_CHAIR } from "@/lib/types";
 
 export type TEChairedTrack = {
   code: string;
@@ -324,6 +325,42 @@ export function TrackEditorManagement({
                         {r.affiliation}
                       </span>
                     )}
+                    {/* Track allotment against the max-tracks-per-editor cap. */}
+                    {(() => {
+                      const remaining = Math.max(
+                        0,
+                        MAX_TRACKS_PER_CHAIR - r.counts.tracksAccepted
+                      );
+                      return (
+                        <div className="mt-2 flex flex-col items-start gap-1 border-t border-slate-100 pt-2 text-[11px] dark:border-slate-800">
+                          <span className="text-slate-600 dark:text-slate-300">
+                            Tracks assigned: <b>{r.counts.tracksAccepted}</b>{" "}
+                            <span className="text-slate-400">
+                              of {MAX_TRACKS_PER_CHAIR} max
+                            </span>
+                          </span>
+                          {r.counts.tracksInvited > 0 && (
+                            <span className="badge bg-amber-100 text-amber-800">
+                              {r.counts.tracksInvited} invited (pending)
+                            </span>
+                          )}
+                          <span
+                            className={`badge ${
+                              remaining > 0
+                                ? "bg-indigo-100 text-indigo-800"
+                                : "bg-slate-200 text-slate-600"
+                            }`}
+                            title={`Each Track Editor may chair up to ${MAX_TRACKS_PER_CHAIR} tracks; invited-but-not-accepted tracks don't count until accepted.`}
+                          >
+                            {remaining > 0
+                              ? `Can take ${remaining} more track${
+                                  remaining === 1 ? "" : "s"
+                                }`
+                              : "At capacity"}
+                          </span>
+                        </div>
+                      );
+                    })()}
                   </td>
                   <td className="td">
                     {r.tracks.length === 0 ? (

@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { IkatStrip } from "@/components/landing/IkatStrip";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { SchedulePdfButton } from "@/components/landing/SchedulePdfButton";
 
 /**
  * The GLOGIFT 27 conference schedule — a 3-day timetable (Gantt-style grid)
@@ -251,7 +252,7 @@ export function ConferenceSchedule() {
     <main className="min-h-screen">
       <IkatStrip />
 
-      <nav className="max-w-6xl mx-auto px-4 pt-3 flex items-center justify-between gap-3">
+      <nav className="no-print max-w-6xl mx-auto px-4 pt-3 flex items-center justify-between gap-3">
         <Link
           href="/"
           className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-white hover:text-blue-700 dark:text-slate-200 dark:hover:bg-slate-800"
@@ -274,12 +275,17 @@ export function ConferenceSchedule() {
 
       <div className="max-w-6xl mx-auto px-4 py-4 space-y-8">
         <section className="card card-pad">
-          <p className="text-xs font-semibold tracking-wide text-slate-500 mb-1">
-            GLOGIFT 27 · IIM SAMBALPUR
-          </p>
-          <h1 className="text-3xl font-bold text-gradient mb-3">
-            Conference Schedule
-          </h1>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold tracking-wide text-slate-500 mb-1">
+                GLOGIFT 27 · IIM SAMBALPUR
+              </p>
+              <h1 className="text-3xl font-bold text-gradient mb-3">
+                Conference Schedule
+              </h1>
+            </div>
+            <SchedulePdfButton />
+          </div>
 
           {/* Legend */}
           <div className="flex flex-wrap gap-2 text-[11px]">

@@ -324,3 +324,15 @@ body {
     animation: none;
   }
 }
+
+/* Print / Save-as-PDF: hide navigation & controls, keep colours, white page.
+   Used by the Conference Schedule "Download PDF" button (window.print()). */
+@media print {
+  .no-print { display: none !important; }
+  html, body { background: #ffffff !important; }
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .card { box-shadow: none !important; border: 1px solid #e2e8f0 !important; }
+}

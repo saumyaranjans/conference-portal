@@ -15,8 +15,6 @@ import {
 import { generateCertificatePdf } from "@/lib/certificatePdf";
 import { requireRole } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/server";
-import { sendEmail, emailConfigured } from "@/lib/email";
-import { certificateIssuedEmail } from "@/lib/emailTemplates";
 
 export type CertificateActionResult = {
   ok: boolean;
@@ -524,7 +522,6 @@ export async function issueCertificate(
   let insertError: any = null;
   let issuedId: string | null = null;
   let issuedNumber = "";
-  let issuedPdf: Uint8Array | null = null;
   const issuedAt = new Date().toISOString();
   const maxAttempts = providedNumber ? 1 : 4;
   for (let attempt = 0; attempt < maxAttempts && !issuedId; attempt += 1) {
@@ -581,7 +578,6 @@ export async function issueCertificate(
     if (data?.id) {
       issuedId = data.id;
       issuedNumber = certificateNumber;
-      issuedPdf = pdfBytes;
     }
     if (error) {
       await admin.storage.from("certificate-assets").remove([pdfObjectPath]);
@@ -600,85 +596,11 @@ export async function issueCertificate(
     subject_id: subjectId,
   });
 
-  // System-generated email to the recipient — best-effort, never blocks issuance.
-  // Only reached inside the generation window, so it cannot be sent early.
-  try {
-    let recipientEmail: string | null = null;
-    if (recipientProfileId) {
-      const { data } = await admin
-        .from("profiles")
-        .select("email")
-        .eq("id", recipientProfileId)
-        .maybeSingle();
-      recipientEmail = (data as any)?.email ?? null;
-    } else if (submissionAuthorId) {
-      const { data } = await admin
-        .from("submission_authors")
-        .select("email, profile_id")
-        .eq("id", submissionAuthorId)
-        .maybeSingle();
-      recipientEmail = (data as any)?.email ?? null;
-      if (!recipientEmail && (data as any)?.profile_id) {
-        const { data: p } = await admin
-          .from("profiles")
-          .select("email")
-          .eq("id", (data as any).profile_id)
-          .maybeSingle();
-        recipientEmail = (p as any)?.email ?? null;
-      }
-    } else if (trackEditorId) {
-      const { data: te } = await admin
-        .from("track_editors")
-        .select("profile_id")
-        .eq("id", trackEditorId)
-        .maybeSingle();
-      if ((te as any)?.profile_id) {
-        const { data: p } = await admin
-          .from("profiles")
-          .select("email")
-          .eq("id", (te as any).profile_id)
-          .maybeSingle();
-        recipientEmail = (p as any)?.email ?? null;
-      }
-    }
-
-    // Per the Editorial Office, governed certificates are NOT emailed — they are
-    // generated, previewed and downloaded from this office only. Guard kept off.
-    const SEND_CERTIFICATE_EMAIL = false;
-    if (SEND_CERTIFICATE_EMAIL && recipientEmail && emailConfigured()) {
-      const brand = conference.acronym
-        ? `${conference.acronym} ${String(conference.year).slice(-2)}`
-        : "GLOGIFT 27";
-      const { subject, body } = certificateIssuedEmail({
-        recipientName: displayName,
-        certificateType: type,
-        certificateNumber: issuedNumber,
-        conferenceName: conference.name,
-        brand,
-        dashboardUrl: process.env.NEXT_PUBLIC_SITE_URL || "https://glogift2027.in",
-      });
-      await sendEmail({
-        to: recipientEmail,
-        subject,
-        text: body,
-        kind: "certificate_issued",
-        sentBy: profile.id,
-        attachments: issuedPdf
-          ? [
-              {
-                filename: `${issuedNumber}.pdf`,
-                content: Buffer.from(issuedPdf).toString("base64"),
-              },
-            ]
-          : undefined,
-      });
-    }
-  } catch {
-    // An email failure must never break certificate issuance.
-  }
+  // The Certificate Office NEVER emails — certificates are generated, previewed
+  // and downloaded here only. No recipient is notified by the system.
 
   revalidatePath(OFFICE_PATH);
-  return { ok: true, message: "Certificate issued. Use View / Download PDF." };
+  return { ok: true, message: "Certificate generated. Preview or Download the PDF." };
 }
 
 export async function revokeCertificate(

@@ -2,11 +2,10 @@ import Link from "next/link";
 
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { CertificatePreviewButton } from "@/components/CertificatePreviewButton";
-import { CertNumberField } from "@/components/CertNumberField";
+import { CertificateEditButton } from "@/components/CertificateEditButton";
 import { PageHeader, StatCard, formatDate } from "@/components/ui/Primitives";
 import {
   issueCertificate,
-  revokeCertificate,
   updateParticipantCertificateEvidence,
   updateTrackEditorServiceEvidence,
   uploadCertificateSignature,
@@ -42,69 +41,75 @@ function CertificateActions({
   compact?: boolean;
 }) {
   if (issuance) {
-    // Generated — now Preview and Download. To correct a mistaken number,
-    // Revoke and generate again with the corrected number.
+    // Generated. Line 1: the number. Line 2: Preview | Download. Line 3: Edit
+    // (asks a reason, revokes, and re-opens line 2 to regenerate).
     return (
-      <div
-        className={
-          compact
-            ? "flex flex-wrap items-center gap-2"
-            : "mt-4 flex flex-wrap items-end gap-3"
-        }
-      >
-        <span className="badge bg-emerald-100 text-emerald-800">
-          ✓ {issuance.certificate_number}
-        </span>
-        <CertificatePreviewButton
-          type={type}
-          subjectId={subjectId}
-          conferenceId={conferenceId}
-        />
-        <Link
-          href={`/api/certificates/${issuance.id}`}
-          className={`btn-primary ${compact ? "py-1.5 text-xs" : ""}`}
-          target="_blank"
-        >
-          Download PDF
-        </Link>
-        <ActionForm action={revokeCertificate} className="flex flex-wrap items-end gap-2">
-          <input type="hidden" name="certificate_id" value={issuance.id} />
-          <input
-            className={`input ${compact ? "h-8 w-32 text-xs" : "mt-1 min-w-56"}`}
-            name="reason"
-            required
-            placeholder="Reason to revoke"
-            aria-label="Revocation reason"
+      <div className={`flex flex-col gap-1.5 ${compact ? "" : "mt-4"}`}>
+        {/* Line 1 — the certificate number */}
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-xs text-slate-800 dark:text-slate-100">
+            {issuance.certificate_number}
+          </span>
+          <span className="badge bg-emerald-100 text-emerald-800 text-[10px]">
+            ✓ Generated
+          </span>
+        </div>
+        {/* Line 2 — Preview | Download */}
+        <div className="flex flex-wrap items-center gap-2">
+          <CertificatePreviewButton
+            type={type}
+            subjectId={subjectId}
+            conferenceId={conferenceId}
           />
-          <SubmitButton variant="danger" className="py-1.5 text-xs">
-            Revoke
-          </SubmitButton>
-        </ActionForm>
+          <Link
+            href={`/api/certificates/${issuance.id}`}
+            className="btn-primary py-1.5 text-xs"
+            target="_blank"
+          >
+            Download
+          </Link>
+        </div>
+        {/* Line 3 — Edit (small): asks a reason, unlocks re-generation */}
+        <CertificateEditButton certificateId={issuance.id} />
       </div>
     );
   }
 
   const disabled = !eligible || !signaturesReady;
   return (
-    <div className={compact ? "flex flex-wrap items-end gap-2" : "mt-4 space-y-2"}>
-      <ActionForm
-        action={issueCertificate}
-        className="flex flex-wrap items-end gap-2"
-      >
+    <div className={`flex flex-col gap-1.5 ${compact ? "" : "mt-4"}`}>
+      <ActionForm action={issueCertificate} className="contents">
         <input type="hidden" name="certificate_type" value={type} />
         <input type="hidden" name="subject_id" value={subjectId} />
         <input type="hidden" name="conference_id" value={conferenceId} />
-        <CertNumberField compact={compact} />
-        <SubmitButton
-          disabled={disabled}
-          className={compact ? "py-1.5 text-xs" : undefined}
-          title={disabled ? "Complete eligibility and signatures first" : undefined}
-        >
-          Generate certificate
-        </SubmitButton>
+        {/* Line 1 — certificate number box (blank = auto-generate) */}
+        <input
+          name="certificate_number"
+          placeholder="Enter number, or blank = auto-generate"
+          className="input h-8 w-full max-w-xs text-xs"
+        />
+        {/* Line 2 — Preview | Generate | Download (download after generating) */}
+        <div className="flex flex-wrap items-center gap-2">
+          <CertificatePreviewButton
+            type={type}
+            subjectId={subjectId}
+            conferenceId={conferenceId}
+          />
+          <SubmitButton
+            disabled={disabled}
+            className="py-1.5 text-xs"
+            title={disabled ? "Complete eligibility and signatures first" : undefined}
+          >
+            Generate
+          </SubmitButton>
+          <span
+            className="btn-secondary py-1.5 text-xs opacity-40 cursor-not-allowed"
+            title="Download becomes available after you Generate"
+          >
+            Download
+          </span>
+        </div>
       </ActionForm>
-      {/* Preview is available any time, with relaxed checks; it never issues. */}
-      <CertificatePreviewButton type={type} subjectId={subjectId} conferenceId={conferenceId} />
     </div>
   );
 }
@@ -478,6 +483,14 @@ export async function CertificateOffice() {
                     Pathway B {reviewCountB.get(reviewer.id) ?? 0}
                   </span>
                 </div>
+                {reviewerIssuanceMap.get(reviewer.id) && (
+                  <span className="text-[10px] text-slate-500">
+                    Issued{" "}
+                    {formatDate(
+                      reviewerIssuanceMap.get(reviewer.id).issued_at
+                    )}
+                  </span>
+                )}
               </div>
               <CertificateActions
                 type="reviewer"

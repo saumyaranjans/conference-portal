@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { CertificatePreviewButton } from "@/components/CertificatePreviewButton";
+import { CertNumberField } from "@/components/CertNumberField";
 import { PageHeader, StatCard, formatDate } from "@/components/ui/Primitives";
 import {
   issueCertificate,
@@ -93,14 +94,7 @@ function CertificateActions({
         <input type="hidden" name="certificate_type" value={type} />
         <input type="hidden" name="subject_id" value={subjectId} />
         <input type="hidden" name="conference_id" value={conferenceId} />
-        <label className={compact ? "label text-[11px]" : "label"}>
-          {!compact && "Certificate number — type one, or leave blank to auto-generate"}
-          <input
-            className={`input ${compact ? "h-8 w-52 text-xs" : "mt-1"}`}
-            name="certificate_number"
-            placeholder="Enter number, or blank = auto-generate"
-          />
-        </label>
+        <CertNumberField compact={compact} />
         <SubmitButton
           disabled={disabled}
           className={compact ? "py-1.5 text-xs" : undefined}

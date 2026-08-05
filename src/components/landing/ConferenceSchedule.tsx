@@ -175,7 +175,7 @@ const DAYS: Day[] = [
         time: "10:00 – 11:30",
         onsite: {
           title: "Directors' Panel on Leadership in an AI-Driven Economy",
-          note: "Konark Seminar Hall · special session",
+          note: "Konark Auditorium · special session",
           kind: "plenary",
         },
         online: ONLINE,

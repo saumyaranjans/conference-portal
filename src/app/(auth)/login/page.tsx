@@ -155,11 +155,13 @@ export default function LoginPage() {
               {CONFERENCE}
             </h1>
             <div className="mt-4 flex items-center justify-center gap-2 text-sm text-slate-500">
-              <span>Hosted by</span>
+              <span className="shrink-0">Hosted by</span>
+              {/* min-w-0 + max-w-full lets the wide wordmark scale down instead
+                  of overflowing a 320px viewport. */}
               <img
                 src="/iim-sambalpur.png"
                 alt="Indian Institute of Management Sambalpur"
-                className="h-10 w-auto object-contain iim-adaptive"
+                className="h-10 w-auto min-w-0 max-w-full object-contain iim-adaptive"
               />
             </div>
           </div>

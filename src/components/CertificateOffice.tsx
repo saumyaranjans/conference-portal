@@ -527,7 +527,7 @@ export async function CertificateOffice() {
                 subjectId={reviewer.id}
                 conferenceId={conference.id}
                 issuance={reviewerIssuanceMap.get(reviewer.id)}
-                eligible={Boolean(reviewer.title)}
+                eligible
                 signaturesReady={signaturesReady}
                 compact
               />
@@ -614,7 +614,7 @@ export async function CertificateOffice() {
                   subjectId={membershipId}
                   conferenceId={conference.id}
                   issuance={issuance}
-                  eligible={Boolean(editor?.title)}
+                  eligible
                   signaturesReady={signaturesReady}
                   compact
                 />

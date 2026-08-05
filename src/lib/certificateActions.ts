@@ -433,9 +433,6 @@ export async function issueCertificate(
     if (!preview && !completed?.length) {
       return { ok: false, message: "A submitted review is required." };
     }
-    if (!preview && !reviewer.title?.trim()) {
-      return { ok: false, message: "Add the reviewer's salutation to their profile first." };
-    }
     displayName = withSalutation(reviewer.full_name, reviewer.title ?? "");
     recipientProfileId = reviewer.id;
     snapshot = {
@@ -454,12 +451,7 @@ export async function issueCertificate(
     if (!membership || membership.status !== "accepted") {
       return { ok: false, message: "An accepted Track Editor appointment is required." };
     }
-    const [{ data: service }, { data: editor }, { data: track }] = await Promise.all([
-      admin
-        .from("track_editor_service_evidence")
-        .select("service_confirmed")
-        .eq("track_editor_id", membership.id)
-        .maybeSingle(),
+    const [{ data: editor }, { data: track }] = await Promise.all([
       admin
         .from("profiles")
         .select("id, full_name, title")
@@ -472,14 +464,7 @@ export async function issueCertificate(
         .eq("conference_id", conferenceId)
         .maybeSingle(),
     ]);
-    if (!preview && !service?.service_confirmed) {
-      return { ok: false, message: "Editorial Office service confirmation is required." };
-    }
     if (!editor || !track) return { ok: false, message: "Track Editor details are incomplete." };
-
-    if (!preview && !editor.title?.trim()) {
-      return { ok: false, message: "Add the Track Editor's salutation to their profile first." };
-    }
     displayName = withSalutation(editor.full_name, editor.title ?? "");
     recipientProfileId = editor.id;
     trackEditorId = membership.id;

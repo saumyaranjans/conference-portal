@@ -36,7 +36,11 @@ const EVENT_JSONLD = {
       name: "Indian Institute of Management Sambalpur",
       url: "https://iimsambalpur.ac.in",
     },
-    { "@type": "Organization", name: "GIFT Society" },
+    {
+      "@type": "Organization",
+      name: "GIFT Society",
+      url: "https://giftsociety.org",
+    },
   ],
   // Google recognises Event `offers` as an array of Offer; each needs
   // price/priceCurrency/availability/url/validFrom to register.

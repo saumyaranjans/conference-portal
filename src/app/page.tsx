@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { LandingPage, FAQ_ITEMS } from "@/components/landing/LandingPage";
+import { LandingPage } from "@/components/landing/LandingPage";
 import {
   REGISTRATION_FEE_BY_CATEGORY,
   EARLY_BIRD_CUTOFF,
@@ -177,13 +177,6 @@ const FAQ_JSONLD = {
         text: "GLOGIFT 27 is the International Conference on AI-Driven Solutions in Management: Flexibility, Digitalisation & Decarbonization, with a call for papers across ten tracks.",
       },
     },
-    // The full visible FAQ (rendered as an accordion on the landing page) —
-    // visible text and structured data stay in lockstep via the shared array.
-    ...FAQ_ITEMS.map((item) => ({
-      "@type": "Question",
-      name: item.q,
-      acceptedAnswer: { "@type": "Answer", text: item.a },
-    })),
   ],
 };
 

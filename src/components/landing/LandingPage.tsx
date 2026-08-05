@@ -1480,37 +1480,6 @@ export function LandingPage() {
           </div>
         </section>
 
-        {/* ---- Frequently asked questions ---- */}
-        {/* Server-rendered so the long-tail Q&A content is crawlable — the
-            FaqBot chat renders the same items but only client-side after a
-            click. The FAQPage JSON-LD in page.tsx mirrors this list. */}
-        <section>
-          <Heading id="faq">Frequently asked questions</Heading>
-          <div className="card card-pad space-y-2">
-            {FAQ_ITEMS.map((item) => (
-              <details
-                key={item.q}
-                className="group rounded-lg border border-slate-200 px-4 py-3 dark:border-slate-700"
-              >
-                <summary className="cursor-pointer list-none text-sm font-medium text-slate-800 dark:text-slate-100 flex items-center justify-between gap-3">
-                  {item.q}
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="h-4 w-4 shrink-0 text-slate-400 transition-transform group-open:rotate-180"
-                    fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                    aria-hidden
-                  >
-                    <path d="M6 9l6 6 6-6" />
-                  </svg>
-                </summary>
-                <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-                  {item.a}
-                </p>
-              </details>
-            ))}
-          </div>
-        </section>
-
         <footer className="border-t border-slate-200 dark:border-slate-700 pt-5 pb-6 text-center text-xs text-slate-500">
           {/* Socials live in the Contact section (under "Co-organised with"),
               so the footer stays a single copyright line. */}

@@ -1472,7 +1472,8 @@ export function LandingPage() {
         </section>
 
         <footer className="border-t border-slate-200 dark:border-slate-700 pt-5 pb-6 text-center text-xs text-slate-500">
-          <SocialLinks className="mb-4" />
+          {/* Socials live in the Contact section (under "Co-organised with"),
+              so the footer stays a single copyright line. */}
           {/* Separators break onto their own lines on narrow screens rather
               than leaving a bar stranded at the start of a line. */}
           <span className="font-semibold text-slate-700 dark:text-slate-300">

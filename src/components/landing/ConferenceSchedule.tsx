@@ -51,6 +51,13 @@ type Day = {
   gala?: { time: string; title: string; note: string };
 };
 
+const REGISTRATION: Row = {
+  type: "break",
+  label: "Registration Desk (parallel)",
+  time: "All day",
+  icon: "🪪",
+  venue: "Konark Auditorium Lobby Area",
+};
 const BREAKFAST: Row = {
   type: "break",
   label: "Morning Breakfast",
@@ -349,12 +356,12 @@ export function ConferenceSchedule() {
             {/* Column headers */}
             <div className="hidden grid-cols-[7.5rem_1fr_1fr] gap-2 px-1 pb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400 sm:grid">
               <span>Time</span>
-              <span>On-site · Main Hall / Classrooms</span>
-              <span>Online · Virtual Rooms</span>
+              <span>On-site</span>
+              <span>Online</span>
             </div>
 
             <div className="space-y-2">
-              {[BREAKFAST, ...day.rows].map((row, i) =>
+              {[REGISTRATION, BREAKFAST, ...day.rows].map((row, i) =>
                 row.type === "break" ? (
                   <div key={i} className="sm:grid sm:grid-cols-[7.5rem_1fr] sm:gap-2">
                     <div className="hidden items-center text-xs text-slate-500 sm:flex">

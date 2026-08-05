@@ -130,7 +130,7 @@ const DAYS: Day[] = [
         time: "10:00 – 11:30",
         onsite: {
           title: "Policy Roundtable on Decarbonization & Inclusive Growth",
-          note: "Konark Seminar Hall · special session",
+          note: "Konark Auditorium · special session",
           kind: "plenary",
         },
         online: ONLINE,

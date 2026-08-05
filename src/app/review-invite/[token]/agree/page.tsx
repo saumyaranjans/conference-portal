@@ -1,6 +1,10 @@
 import { createAdminClient } from "@/lib/supabase/server";
 import { ReviewInviteAgree } from "@/components/ReviewInviteAgree";
 
+import type { Metadata } from "next";
+// Utility/token page — never index, never follow.
+export const metadata: Metadata = { robots: { index: false, follow: false } };
+
 /** Accept landing for a reviewer invitation email (existing reviewer, token-authorised, no sign-in). */
 export default async function ReviewInviteAgreePage({
   params,

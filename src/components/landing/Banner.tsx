@@ -350,7 +350,7 @@ function TracksSlide() {
       <div className="absolute inset-0 flex flex-col px-[2.4cqw] py-[1.9cqw] sm:py-[1.9cqw]">
         <div className="text-center">
           <p className="text-gradient text-[6cqw] sm:text-[3.1cqw] font-extrabold leading-none tracking-tight">
-            Call for Submissions
+            Call for Papers
           </p>
           <p className="mt-[1.4cqw] sm:mt-[0.6cqw] text-[2.9cqw] sm:text-[1.3cqw] font-medium text-[#3f3f6b]">
             Ten tracks &middot; abstracts and full papers invited &middot; GLOGIFT 27

@@ -157,7 +157,7 @@ const DEADLINES: Deadline[] = [
   },
 ];
 
-const FAQ_ITEMS: { q: string; a: string }[] = [
+export const FAQ_ITEMS: { q: string; a: string }[] = [
   {
     q: "When and where is GLOGIFT 27 held?",
     a: "GLOGIFT 27 — the International Conference on AI-Driven Solutions in Management — is held from 25 to 27 February 2027 at the Indian Institute of Management (IIM) Sambalpur, Odisha, India. It runs in person with a hybrid (online) option for remote participants.",
@@ -674,6 +674,14 @@ export function LandingPage() {
       <div id="top" className="max-w-6xl mx-auto px-4 py-4 space-y-10">
         {/* ---- Hero + deadline countdown (kept together, above the fold) ---- */}
         <section className="space-y-3">
+          {/* The hero is an SVG carousel, so the page's primary keywords need
+              a real H1 — screen-reader-only keeps the visual design intact. */}
+          <h1 className="sr-only">
+            GLOGIFT 2027 — 27th Global Conference on Flexible Systems
+            Management: International Conference on AI-Driven Solutions in
+            Management. Call for papers, 25–27 February 2027, IIM Sambalpur,
+            Odisha, India.
+          </h1>
           <Banner />
           <DeadlineCountdown deadlines={DEADLINES} />
         </section>
@@ -688,10 +696,12 @@ export function LandingPage() {
                 International Conference on AI-Driven Solutions in Management:
                 Flexibility, Digitalisation &amp; Decarbonization
               </strong>{" "}
-              is jointly organised by the Indian Institute of Management
-              Sambalpur and the GIFT Society — Global Institute of Flexible
-              Systems Management — at IIM Sambalpur, Odisha, from 25 to 27
-              February 2027.
+              (GLOGIFT 27, also written GLOGIFT 2027) is jointly organised by
+              the Indian Institute of Management Sambalpur and the GIFT Society
+              — Global Institute of Flexible Systems Management — at IIM
+              Sambalpur, Odisha, from 25 to 27 February 2027. GLOGIFT 2027 is
+              an international academic management conference in the GLOGIFT
+              series, hosted in India in hybrid (in-person and online) mode.
             </p>
             <p>
               The theme joins three forces reshaping management at once.{" "}
@@ -753,7 +763,7 @@ export function LandingPage() {
           <Heading id="attractions">Conference attractions</Heading>
 
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-3">
-            Publishing outlets
+            Publishing outlets — Springer journals &amp; Scopus-indexed series
           </p>
           <div className="grid gap-4 sm:grid-cols-2 mb-8">
             {PUBLICATIONS.map((pub) => {
@@ -828,9 +838,9 @@ export function LandingPage() {
           </div>
         </section>
 
-        {/* ---- 4. Call for submission ---- */}
+        {/* ---- 4. Call for papers & submissions ---- */}
         <section>
-          <Heading id="submission">Call for submission</Heading>
+          <Heading id="submission">Call for papers &amp; submissions</Heading>
           <div className="card card-pad mb-6 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
             <p>
               We invite original, unpublished research from academicians,
@@ -1042,7 +1052,7 @@ export function LandingPage() {
 
         {/* ---- 7. Conference timeline ---- */}
         <section>
-          <Heading id="dates">Conference timeline</Heading>
+          <Heading id="dates">Important dates &amp; submission deadlines</Heading>
           {/* Horizontal on wide screens: labels alternate above and below the
               rail so long text never collides with its neighbour. */}
           <div className="hidden md:block overflow-x-auto pb-2">
@@ -1470,13 +1480,44 @@ export function LandingPage() {
           </div>
         </section>
 
+        {/* ---- Frequently asked questions ---- */}
+        {/* Server-rendered so the long-tail Q&A content is crawlable — the
+            FaqBot chat renders the same items but only client-side after a
+            click. The FAQPage JSON-LD in page.tsx mirrors this list. */}
+        <section>
+          <Heading id="faq">Frequently asked questions</Heading>
+          <div className="card card-pad space-y-2">
+            {FAQ_ITEMS.map((item) => (
+              <details
+                key={item.q}
+                className="group rounded-lg border border-slate-200 px-4 py-3 dark:border-slate-700"
+              >
+                <summary className="cursor-pointer list-none text-sm font-medium text-slate-800 dark:text-slate-100 flex items-center justify-between gap-3">
+                  {item.q}
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="h-4 w-4 shrink-0 text-slate-400 transition-transform group-open:rotate-180"
+                    fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                    aria-hidden
+                  >
+                    <path d="M6 9l6 6 6-6" />
+                  </svg>
+                </summary>
+                <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                  {item.a}
+                </p>
+              </details>
+            ))}
+          </div>
+        </section>
+
         <footer className="border-t border-slate-200 dark:border-slate-700 pt-5 pb-6 text-center text-xs text-slate-500">
           {/* Socials live in the Contact section (under "Co-organised with"),
               so the footer stays a single copyright line. */}
           {/* Separators break onto their own lines on narrow screens rather
               than leaving a bar stranded at the start of a line. */}
           <span className="font-semibold text-slate-700 dark:text-slate-300">
-            GLOGIFT 27
+            GLOGIFT 27 (GLOGIFT 2027)
           </span>
           <span aria-hidden className="mx-2 text-slate-300 dark:text-slate-600">
             |

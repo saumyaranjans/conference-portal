@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Security | GLOGIFT2027 - IIM SAMBALPUR",
-  description: "Responsible security reporting for the GLOGIFT 27 website and submission portal.",
-};
+export const metadata: Metadata = pageMetadata({
+  title: "Responsible Security Reporting",
+  description:
+    "Responsible security reporting for the GLOGIFT 2027 website and submission portal.",
+  path: "/security",
+});
 
 export default function SecurityPage() {
   return (

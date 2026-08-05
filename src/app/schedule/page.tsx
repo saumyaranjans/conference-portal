@@ -1,13 +1,25 @@
 import type { Metadata } from "next";
 
 import { ConferenceSchedule } from "@/components/landing/ConferenceSchedule";
+import { pageMetadata, breadcrumbJsonLd } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Conference Schedule — GLOGIFT 27",
+export const metadata: Metadata = pageMetadata({
+  title: "Conference Schedule, 25–27 Feb 2027",
   description:
-    "The GLOGIFT 27 conference schedule: a 3-day timetable (25–27 February 2027) of inaugural, special sessions, on-site and online track sessions, breaks, the Talk with Editors of Top-Tier Journals, gala dinner and valedictory.",
-};
+    "3-day GLOGIFT 2027 programme at IIM Sambalpur, 25–27 Feb 2027: inaugural, on-site & online track sessions, Talk with Editors, gala dinner & valedictory.",
+  path: "/schedule",
+});
+
+const BREADCRUMB = breadcrumbJsonLd("Conference Schedule", "/schedule");
 
 export default function Page() {
-  return <ConferenceSchedule />;
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(BREADCRUMB) }}
+      />
+      <ConferenceSchedule />
+    </>
+  );
 }

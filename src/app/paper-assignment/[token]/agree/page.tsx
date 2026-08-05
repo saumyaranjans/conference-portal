@@ -1,6 +1,10 @@
 import { createAdminClient } from "@/lib/supabase/server";
 import { PaperAssignmentAgree } from "@/components/PaperAssignmentAgree";
 
+import type { Metadata } from "next";
+// Utility/token page — never index, never follow.
+export const metadata: Metadata = { robots: { index: false, follow: false } };
+
 /** Agree landing for a paper-assignment email (token-authorised, no sign-in). */
 export default async function PaperAssignmentAgreePage({
   params,

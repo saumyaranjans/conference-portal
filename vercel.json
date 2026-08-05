@@ -1,4 +1,23 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "regions": ["sin1"]
+  "regions": ["sin1"],
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "www.glogift2027.in" }],
+      "destination": "https://glogift2027.in/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "glogift2027.vercel.app" }],
+      "destination": "https://glogift2027.in/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/conference-document",
+      "destination": "/conference-brochure",
+      "permanent": true
+    }
+  ]
 }

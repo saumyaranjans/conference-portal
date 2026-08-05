@@ -2,6 +2,10 @@ import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/server";
 import { SignupForm } from "@/components/SignupForm";
 
+import type { Metadata } from "next";
+// Utility/token page — never index, never follow.
+export const metadata: Metadata = { robots: { index: false, follow: false } };
+
 /**
  * Landing page for a co-author's personalised sign-up link. The token is the
  * co-author's submission_authors row id. We read it with the service-role

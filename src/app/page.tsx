@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import { LandingPage } from "@/components/landing/LandingPage";
+import { LandingPage, FAQ_ITEMS } from "@/components/landing/LandingPage";
 import {
   REGISTRATION_FEE_BY_CATEGORY,
   EARLY_BIRD_CUTOFF,
+  isEarlyBird,
 } from "@/lib/registrationFees";
 
 export const metadata: Metadata = {
@@ -11,26 +12,32 @@ export const metadata: Metadata = {
 
 // Full registration-fee schedule as schema.org Offers — built from the single
 // source of truth (registrationFees.ts) so prices never drift. Every delegate
-// category is listed at both its Early-Bird and Regular tier.
+// category is listed at its Regular tier; the Early-Bird tier is included only
+// while it is actually purchasable, so an expired offer never lingers in the
+// markup (prices are numbers — Google types offers.price as Number).
 const REGISTRATION_URL = "https://glogift2027.in/#fees";
 const EVENT_OFFERS = Object.entries(REGISTRATION_FEE_BY_CATEGORY).flatMap(
   ([category, fee]) => [
-    {
-      "@type": "Offer",
-      name: `Conference registration — ${category} (Early Bird)`,
-      category: "Conference registration",
-      price: String(fee.earlyBird),
-      priceCurrency: fee.currency,
-      availability: "https://schema.org/InStock",
-      url: REGISTRATION_URL,
-      validFrom: "2026-08-01",
-      validThrough: `${EARLY_BIRD_CUTOFF}T23:59:59+05:30`,
-    },
+    ...(isEarlyBird()
+      ? [
+          {
+            "@type": "Offer",
+            name: `Conference registration — ${category} (Early Bird)`,
+            category: "Conference registration",
+            price: fee.earlyBird,
+            priceCurrency: fee.currency,
+            availability: "https://schema.org/InStock",
+            url: REGISTRATION_URL,
+            validFrom: "2026-08-01",
+            validThrough: `${EARLY_BIRD_CUTOFF}T23:59:59+05:30`,
+          },
+        ]
+      : []),
     {
       "@type": "Offer",
       name: `Conference registration — ${category} (Regular)`,
       category: "Conference registration",
-      price: String(fee.regular),
+      price: fee.regular,
       priceCurrency: fee.currency,
       availability: "https://schema.org/InStock",
       url: REGISTRATION_URL,
@@ -39,17 +46,40 @@ const EVENT_OFFERS = Object.entries(REGISTRATION_FEE_BY_CATEGORY).flatMap(
   ]
 );
 
-// schema.org Event — helps search engines show rich results for the
-// conference (name, dates, venue, organiser).
+// schema.org EducationEvent (the academic-event subtype — Google's Event rich
+// result accepts all Event subtypes) — helps search engines show rich results
+// for the conference (name, dates, venue, organiser).
 const EVENT_JSONLD = {
   "@context": "https://schema.org",
-  "@type": "Event",
+  "@type": "EducationEvent",
   name: "GLOGIFT 27 — International Conference on AI-Driven Solutions in Management",
-  alternateName: "Twenty Seventh Global Conference on Flexible Systems Management",
+  alternateName: [
+    "GLOGIFT 27",
+    "GLOGIFT 2027",
+    "Twenty Seventh Global Conference on Flexible Systems Management",
+    "27th Global Conference on Flexible Systems Management",
+  ],
   description:
     "International Conference on AI-Driven Solutions in Management: Flexibility, Digitalisation & Decarbonization. 25–27 February 2027 at IIM Sambalpur, India.",
-  startDate: "2027-02-25",
-  endDate: "2027-02-27",
+  // Full ISO-8601 with offset so Google never has to guess the timezone; the
+  // times mirror the published schedule (Day 1 opens 10:00, Day 3 ends 18:00,
+  // registration desk from 08:30).
+  startDate: "2027-02-25T10:00:00+05:30",
+  endDate: "2027-02-27T18:00:00+05:30",
+  doorTime: "2027-02-25T08:30:00+05:30",
+  inLanguage: "en",
+  isAccessibleForFree: false,
+  keywords:
+    "Flexible Systems Management, AI in Management, Digitalisation, Decarbonization, GLOGIFT, IIM Sambalpur, academic conference, call for papers",
+  superEvent: {
+    "@type": "EventSeries",
+    name: "GLOGIFT — Global Conference on Flexible Systems Management",
+    organizer: {
+      "@type": "Organization",
+      name: "GIFT Society",
+      url: "https://giftsociety.org",
+    },
+  },
   eventAttendanceMode: "https://schema.org/MixedEventAttendanceMode",
   eventStatus: "https://schema.org/EventScheduled",
   image: ["https://glogift2027.in/og-image.png"],
@@ -147,6 +177,13 @@ const FAQ_JSONLD = {
         text: "GLOGIFT 27 is the International Conference on AI-Driven Solutions in Management: Flexibility, Digitalisation & Decarbonization, with a call for papers across ten tracks.",
       },
     },
+    // The full visible FAQ (rendered as an accordion on the landing page) —
+    // visible text and structured data stay in lockstep via the shared array.
+    ...FAQ_ITEMS.map((item) => ({
+      "@type": "Question",
+      name: item.q,
+      acceptedAnswer: { "@type": "Answer", text: item.a },
+    })),
   ],
 };
 

@@ -1,6 +1,10 @@
 import { createAdminClient } from "@/lib/supabase/server";
 import { ReviewInvite } from "@/components/ReviewInvite";
 
+import type { Metadata } from "next";
+// Utility/token page — never index, never follow.
+export const metadata: Metadata = { robots: { index: false, follow: false } };
+
 /**
  * Combined Accept / Decline landing for a review invitation (existing account),
  * reached from the in-app notification. Token-authorised, no sign-in required.

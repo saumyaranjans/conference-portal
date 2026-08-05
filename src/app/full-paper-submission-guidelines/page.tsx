@@ -3,12 +3,14 @@ import Link from "next/link";
 
 import { IkatStrip } from "@/components/landing/IkatStrip";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Full Paper Submission Guidelines (Pathway B) - GLOGIFT2027",
+export const metadata: Metadata = pageMetadata({
+  title: "Full Paper Submission Guidelines (Pathway B)",
   description:
-    "Read the GLOGIFT 27 Pathway B full-paper guidelines and download the author worksheet and blinded manuscript template.",
-};
+    "GLOGIFT 2027 Pathway B full-paper submission guidelines: manuscript format, blinding rules, author worksheet and template downloads. Deadline 8 Dec 2026.",
+  path: "/full-paper-submission-guidelines",
+});
 
 const downloads = [
   {

@@ -2,6 +2,10 @@ import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/server";
 import { SignupForm } from "@/components/SignupForm";
 
+import type { Metadata } from "next";
+// Utility/token page — never index, never follow.
+export const metadata: Metadata = { robots: { index: false, follow: false } };
+
 /**
  * Landing page for a Track Editor invitation sent to someone with no account.
  * Reads the invitation with the service-role client (the table is never

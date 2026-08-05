@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 
 import { ConferenceDocumentPage } from "@/components/landing/ConferenceDocumentPage";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Conference Flyer - GLOGIFT2027 - IIM SAMBALPUR",
-  description: "View and download the GLOGIFT 27 conference flyer.",
-};
+export const metadata: Metadata = pageMetadata({
+  title: "Conference Flyer",
+  description:
+    "View and download the GLOGIFT 2027 conference flyer — call for papers, tracks, dates and venue for the AI in Management conference at IIM Sambalpur, 25–27 Feb 2027.",
+  path: "/conference-flyer",
+});
 
 export default function ConferenceFlyerPage() {
   return (

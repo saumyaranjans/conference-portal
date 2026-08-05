@@ -4,15 +4,8 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: "*",
-      allow: [
-        "/",
-        "/conference-flyer",
-        "/conference-brochure",
-        "/full-paper-submission-guidelines",
-        "/how-to-reach",
-        "/travelogue",
-        "/security",
-      ],
+      // "/" covers every public page; explicit per-page Allow lines are noise.
+      allow: "/",
       disallow: [
         "/admin/",
         "/author/",
@@ -26,12 +19,18 @@ export default function robots(): MetadataRoute.Robots {
         "/signup",
         "/forgot-password",
         "/reset-password",
+        "/denied",
         "/reviewer-invite/",
         "/track-editor-invite/",
         "/chair-invite/",
+        // Capability-token URLs — must never be crawled.
+        "/paper-assignment/",
+        "/review-invite/",
+        "/co-author-invite/",
       ],
     },
     sitemap: "https://glogift2027.in/sitemap.xml",
-    host: "https://glogift2027.in",
+    // (The non-standard "Host:" directive was dropped — only legacy Yandex
+    // ever read it; canonical URLs + redirects carry that signal now.)
   };
 }

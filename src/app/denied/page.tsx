@@ -1,5 +1,9 @@
 import Link from "next/link";
 
+import type { Metadata } from "next";
+// Utility/token page — never index, never follow.
+export const metadata: Metadata = { robots: { index: false, follow: false } };
+
 export default function DeniedPage() {
   return (
     <main className="min-h-screen flex items-center justify-center px-4">

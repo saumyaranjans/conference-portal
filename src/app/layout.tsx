@@ -3,10 +3,45 @@ import { headers } from "next/headers";
 import "./globals.css";
 
 const SITE_URL = "https://glogift2027.in";
+// ~58 chars — survives SERP truncation and carries the tokens academics
+// actually type: the year form "2027", the field, and the host institute.
 const SITE_TITLE =
-  "GLOGIFT 27 — International Conference on AI-Driven Solutions in Management";
+  "GLOGIFT 2027 | AI in Management Conference | IIM Sambalpur";
+// ~151 chars — front-loads "call for papers" (the highest-intent academic
+// query) and keeps the series name, venue and dates inside the snippet.
 const SITE_DESC =
-  "GLOGIFT 27 (Twenty Seventh Global Conference on Flexible Systems Management) — International Conference on AI-Driven Solutions in Management: Flexibility, Digitalisation & Decarbonization. 25–27 February 2027 at IIM Sambalpur, India. A global forum for academicians, PhD scholars, MBA students, research associates and practitioners from prominent Indian and global universities — across Management, Communication, Engineering, Information Technology and Social Sciences — and for industry professionals and consultants from AI-focused sectors. Call for papers across ten tracks; in-person and hybrid.";
+  "Call for papers — GLOGIFT 2027 (27th Global Conference on Flexible Systems Management): AI in management, IIM Sambalpur, India, 25–27 Feb 2027. Hybrid.";
+
+// Entity signals: who runs this site (with the official social profiles as
+// sameAs) and what the site is called. JSON-LD data blocks are inert script
+// tags, so the CSP script-src does not apply to them.
+const ORG_JSONLD = {
+  "@context": "https://schema.org",
+  "@type": "EducationalOrganization",
+  name: "Indian Institute of Management Sambalpur",
+  alternateName: "IIM Sambalpur",
+  url: "https://www.iimsambalpur.ac.in",
+  logo: `${SITE_URL}/iim-sambalpur.png`,
+  sameAs: [
+    "https://www.facebook.com/IIMSBP/",
+    "https://x.com/iim_sambalpur",
+    "https://www.instagram.com/iim_sambalpur/",
+    "https://www.linkedin.com/school/indian-institute-of-management-sambalpur",
+    "https://youtube.com/@PRMediaCommitteeIIMSambalpur",
+  ],
+};
+const WEBSITE_JSONLD = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "GLOGIFT 27",
+  alternateName: ["GLOGIFT 2027", "27th Global Conference on Flexible Systems Management"],
+  url: SITE_URL,
+  publisher: {
+    "@type": "EducationalOrganization",
+    name: "Indian Institute of Management Sambalpur",
+    url: "https://www.iimsambalpur.ac.in",
+  },
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -111,6 +146,14 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `(function(){try{if(localStorage.getItem('theme')==='dark'){document.documentElement.classList.add('dark');}}catch(e){}})();`,
           }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(ORG_JSONLD) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(WEBSITE_JSONLD) }}
         />
       </head>
       <body className="antialiased">{children}</body>

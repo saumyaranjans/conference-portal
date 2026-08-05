@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/server";
 
+import type { Metadata } from "next";
+// Utility/token page — never index, never follow.
+export const metadata: Metadata = { robots: { index: false, follow: false } };
+
 /**
  * Accept landing for a NEW-person reviewer invitation. Per the flow, Agree
  * shows a brief thank-you and then sends them to the pre-filled sign-up

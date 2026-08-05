@@ -4,6 +4,10 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/auth";
 import { AcceptChairInvite } from "@/components/AcceptChairInvite";
 
+import type { Metadata } from "next";
+// Utility/token page — never index, never follow.
+export const metadata: Metadata = { robots: { index: false, follow: false } };
+
 /**
  * Where an invited Track Editor accepts. Chairing begins only here —
  * and even then the chair sees no papers until the Convener assigns them.

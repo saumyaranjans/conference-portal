@@ -12,6 +12,7 @@ import {
 } from "@/lib/certificates";
 import { sendEmail, emailConfigured } from "@/lib/email";
 import { participationCertificateReadyEmail } from "@/lib/emailTemplates";
+import { certificatesEmailable } from "@/lib/certificateAccess";
 
 export type ParticipationCertResult = {
   ok: boolean;
@@ -203,8 +204,9 @@ export async function generateParticipationCertificates(
 
   // Notify the author once, best-effort — an email failure never blocks the
   // certificate that is already saved. Skipped on regenerate (the download link
-  // is unchanged, so no need to re-notify).
-  if (!regenerate && generated > 0 && emailConfigured()) {
+  // is unchanged, so no need to re-notify). The email is only sent within the
+  // 25 Feb – 30 Mar 2027 window; the certificate is downloadable regardless.
+  if (!regenerate && generated > 0 && certificatesEmailable() && emailConfigured()) {
     try {
       const conf =
         [...confCache.values()][0] ??

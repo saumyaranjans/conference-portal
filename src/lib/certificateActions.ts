@@ -313,18 +313,10 @@ export async function issueCertificate(
     return { ok: false, message: "Unknown certificate type." };
   }
 
-  // Certificates may be generated only in the post-event window (preview aside).
-  if (!preview) {
-    const nowMs = Date.now();
-    const windowStart = Date.parse("2027-02-25T00:00:00+05:30");
-    const windowEnd = Date.parse("2027-03-30T23:59:59+05:30");
-    if (nowMs < windowStart || nowMs > windowEnd) {
-      return {
-        ok: false,
-        message: "Certificates can be generated only between 25 February and 30 March 2027.",
-      };
-    }
-  }
+  // Certificates may be generated (and downloaded) at any time. The date window
+  // now governs only the *thank-you email* to recipients — see
+  // certificatesEmailable() in certificateAccess.ts, applied where the
+  // lightweight cert actions send their emails.
 
   if (!subjectId || !conferenceId) return { ok: false, message: "Certificate subject is missing." };
   // A preview renders with whatever signatures exist (placeholders otherwise);

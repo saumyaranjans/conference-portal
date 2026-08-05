@@ -6,6 +6,21 @@ export function certificatesReleased(): boolean {
   return Date.now() >= Date.parse("2027-02-25T00:00:00+05:30");
 }
 
+/**
+ * Certificates may be *generated and downloaded* at any time, but the
+ * system-generated "thank-you" email to the author / reviewer / track editor is
+ * only sent while the conference email window is open: 25 Feb – 30 Mar 2027.
+ * Outside the window the certificate is still issued and downloadable; only the
+ * notification email is held back.
+ */
+export function certificatesEmailable(): boolean {
+  const now = Date.now();
+  return (
+    now >= Date.parse("2027-02-25T00:00:00+05:30") &&
+    now <= Date.parse("2027-03-30T23:59:59+05:30")
+  );
+}
+
 export type MyCertificate = {
   id: string;
   certificate_number: string;

@@ -24,7 +24,7 @@ import { SchedulePdfButton } from "@/components/landing/SchedulePdfButton";
  * from Event Management in the Convener / Editorial Office dashboards.
  */
 
-type Block = { title: string; note?: string; kind: Kind };
+type Block = { title: string; note?: string; kind: Kind; icon?: string };
 type Kind =
   | "inaugural"
   | "valedictory"
@@ -68,23 +68,27 @@ const BREAKFAST: Row = {
     title: "Morning Breakfast",
     note: "Community Centre",
     kind: "registration",
+    icon: "🍽",
   },
 };
 const MORNING_TEA: Row = {
   type: "break",
   label: "Morning High Tea",
   time: "11:30 – 12:00",
+  venue: "Community",
 };
 const LUNCH: Row = {
   type: "break",
   label: "Lunch",
   time: "13:30 – 14:30",
   long: true,
+  venue: "Community",
 };
 const EVENING_TEA: Row = {
   type: "break",
   label: "Evening High Tea",
   time: "16:00 – 16:30",
+  venue: "Community",
 };
 
 const ONLINE: Block = {
@@ -259,7 +263,10 @@ const KIND_CLASS: Record<Kind, string> = {
 function BlockCard({ block }: { block: Block }) {
   return (
     <div className={`h-full rounded-lg border px-3 py-2 ${KIND_CLASS[block.kind]}`}>
-      <p className="text-sm font-semibold leading-snug">{block.title}</p>
+      <p className="text-sm font-semibold leading-snug">
+        {block.icon && <span aria-hidden className="mr-1">{block.icon}</span>}
+        {block.title}
+      </p>
       {block.note && <p className="mt-0.5 text-[11px] opacity-80">{block.note}</p>}
     </div>
   );

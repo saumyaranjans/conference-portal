@@ -8,6 +8,7 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { buildTrackEditorCertificate } from "@/lib/certificateBuilders";
 import { sendEmail, emailConfigured } from "@/lib/email";
 import { trackEditorCertificateThanksEmail } from "@/lib/emailTemplates";
+import { certificatesEmailable } from "@/lib/certificateAccess";
 
 export type TrackEditorCertResult = { ok: boolean; message?: string };
 
@@ -71,7 +72,9 @@ export async function generateTrackEditorCertificate(
     );
   if (insErr) return { ok: false, message: insErr.message };
 
-  if (!regenerate && emailConfigured() && built.recipientEmail) {
+  // The thank-you email only goes out within the 25 Feb – 30 Mar 2027 window;
+  // the certificate itself is issued and downloadable regardless.
+  if (!regenerate && certificatesEmailable() && emailConfigured() && built.recipientEmail) {
     try {
       const brand = built.conferenceAcronym
         ? `${built.conferenceAcronym} ${String(built.conferenceYear).slice(-2)}`

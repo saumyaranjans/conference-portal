@@ -12,6 +12,7 @@ import {
 } from "@/lib/certificates";
 import { sendEmail, emailConfigured } from "@/lib/email";
 import { reviewerCertificateThanksEmail } from "@/lib/emailTemplates";
+import { certificatesEmailable } from "@/lib/certificateAccess";
 
 export type ReviewerCertResult = { ok: boolean; message?: string };
 
@@ -147,7 +148,9 @@ export async function generateReviewerCertificate(
   );
   if (insErr) return { ok: false, message: insErr.message };
 
-  if (!regenerate && emailConfigured() && reviewer.email) {
+  // The thank-you email only goes out within the 25 Feb – 30 Mar 2027 window;
+  // the certificate itself is issued and downloadable regardless.
+  if (!regenerate && certificatesEmailable() && emailConfigured() && reviewer.email) {
     try {
       const brand = conference.acronym
         ? `${conference.acronym} ${String(conference.year ?? 2027).slice(-2)}`

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -7,11 +8,10 @@ import {
   type Profile,
   type PublicationOpportunity,
 } from "@/lib/types";
-import { feeForTier, isEarlyBird } from "@/lib/registrationFees";
-import { getUsdInrRate, usdToInr } from "@/lib/fx";
 import { SignOutButton } from "@/components/SignOutButton";
 import { IdleLogout } from "@/components/IdleLogout";
 import { BrandHomeLink } from "@/components/BrandHomeLink";
+import { ConvenerSidebarStats } from "@/components/ConvenerSidebarStats";
 import { NotificationBell } from "@/components/NotificationBell";
 import { RoleSwitcher } from "@/components/RoleSwitcher";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -42,88 +42,9 @@ export async function DashboardShell({
     .order("sort_order")
     .limit(6);
 
-  // Email volume + revenue, shown in the Convener's sidebar.
+  // The Convener sidebar metrics (emails / visits / revenue) are heavy, so they
+  // stream in via <Suspense> below rather than blocking the whole shell.
   const isChief = profile.roles.includes("chief") || profile.roles.includes("admin");
-  let emailStats: { today: number; total: number } | undefined;
-  let visitStats: { today: number; total: number } | undefined;
-  let revenueStats:
-    | { currency: string; fees: number; tax: number; total: number }[]
-    | undefined;
-  if (isChief) {
-    const startOfToday = new Date();
-    startOfToday.setHours(0, 0, 0, 0);
-    const [{ count: today }, { count: total }] = await Promise.all([
-      supabase
-        .from("email_log")
-        .select("id", { count: "exact", head: true })
-        .gte("created_at", startOfToday.toISOString()),
-      supabase.from("email_log").select("id", { count: "exact", head: true }),
-    ]);
-    emailStats = { today: today ?? 0, total: total ?? 0 };
-
-    // Website visits (one row per visitor session — see /api/visit).
-    const [{ count: vToday }, { count: vTotal }] = await Promise.all([
-      supabase
-        .from("site_visits")
-        .select("id", { count: "exact", head: true })
-        .gte("visited_at", startOfToday.toISOString()),
-      supabase.from("site_visits").select("id", { count: "exact", head: true }),
-    ]);
-    visitStats = { today: vToday ?? 0, total: vTotal ?? 0 };
-
-    // Registration revenue from the Author Management "Participation desk":
-    // every person marked fee-paid contributes the fee for the tier collected
-    // (Early Bird / Regular) at their category rate, less any GLOGIFT-member
-    // discount. Counted ONCE per person (they pay once, even on several
-    // papers). Tax is 18% on top; total is fees + tax.
-    const { data: paidRows } = await supabase
-      .from("submission_authors")
-      .select("email, participant_category, registration_fee_tier, registration_fee_paid")
-      .eq("registration_fee_paid", true);
-
-    const perPerson = new Map<
-      string,
-      { email: string; category: string | null; tier: "early" | "regular" | null }
-    >();
-    for (const r of (paidRows ?? []) as any[]) {
-      const key = (r.email ?? "").trim().toLowerCase();
-      if (!key || perPerson.has(key)) continue;
-      perPerson.set(key, {
-        email: (r.email ?? "").trim(),
-        category: r.participant_category ?? null,
-        tier: (r.registration_fee_tier as "early" | "regular" | null) ?? null,
-      });
-    }
-
-    // GLOGIFT membership (15% discount) lives on profiles — match by email.
-    const emails = [...perPerson.values()].map((v) => v.email);
-    const memberByEmail = new Map<string, boolean>();
-    if (emails.length) {
-      const { data: profs } = await supabase
-        .from("profiles")
-        .select("email, glogift_member")
-        .in("email", emails);
-      for (const p of (profs ?? []) as any[]) {
-        memberByEmail.set((p.email ?? "").trim().toLowerCase(), Boolean(p.glogift_member));
-      }
-    }
-
-    // Foreign (USD) fees are converted to INR at today's rate and folded into
-    // a single INR revenue figure.
-    const { rate: usdInr } = await getUsdInrRate();
-    const timelineTier: "early" | "regular" = isEarlyBird() ? "early" : "regular";
-    let feesInr = 0;
-    for (const [key, info] of perPerson) {
-      // Fall back to the timeline tier for any legacy paid row without one.
-      const tier = info.tier ?? timelineTier;
-      const fee = feeForTier(info.category, memberByEmail.get(key) ?? false, tier);
-      if (!fee.known) continue;
-      feesInr += fee.currency === "USD" ? usdToInr(fee.amount, usdInr) : fee.amount;
-    }
-    revenueStats = feesInr
-      ? [{ currency: "INR", fees: feesInr, tax: feesInr * 0.18, total: feesInr * 1.18 }]
-      : [];
-  }
 
   // Admins get every nav group so they can inspect any part of the portal.
   const visibleRoles = profile.roles.includes("admin")
@@ -170,10 +91,24 @@ export async function DashboardShell({
           <SidebarNav
             roles={visibleRoles}
             opportunities={(opportunities ?? []) as PublicationOpportunity[]}
-            emailStats={emailStats}
-            visitStats={visitStats}
-            revenueStats={revenueStats}
           />
+          {/* Convener metrics stream in after the shell has painted. */}
+          {isChief && (
+            <Suspense
+              fallback={
+                <div className="mt-6 space-y-2">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="h-12 animate-pulse rounded-lg bg-slate-100 dark:bg-slate-800/60"
+                    />
+                  ))}
+                </div>
+              }
+            >
+              <ConvenerSidebarStats />
+            </Suspense>
+          )}
         </aside>
 
         <main className="flex-1 min-w-0">{children}</main>

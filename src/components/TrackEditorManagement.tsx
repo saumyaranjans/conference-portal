@@ -293,7 +293,6 @@ export function TrackEditorManagement({
               <tr>
                 {[
                   "Track Editor",
-                  "Tracks chaired",
                   "Papers assigned",
                   "Workload",
                   "Certificate",
@@ -307,7 +306,7 @@ export function TrackEditorManagement({
             <tbody className="divide-y divide-slate-100">
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="td py-8 text-center text-slate-400">
+                  <td colSpan={4} className="td py-8 text-center text-slate-400">
                     No track editors match your filters.
                   </td>
                 </tr>
@@ -361,30 +360,34 @@ export function TrackEditorManagement({
                         </div>
                       );
                     })()}
-                  </td>
-                  <td className="td">
-                    {r.tracks.length === 0 ? (
-                      <span className="text-xs text-slate-400">—</span>
-                    ) : (
-                      <ul className="space-y-1">
-                        {r.tracks.map((t, i) => (
-                          <li key={`${r.email}-t-${i}`} className="text-xs">
-                            <span className="font-mono text-slate-700 dark:text-slate-300">
-                              {t.code}
-                            </span>
-                            <span
-                              className={`badge ml-2 ${
-                                t.status === "accepted"
-                                  ? "bg-emerald-100 text-emerald-800"
-                                  : "bg-amber-100 text-amber-800"
-                              }`}
-                            >
-                              {t.status === "accepted" ? "Accepted" : "Invited"}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
+                    {/* Tracks chaired — beneath the allotment badge. */}
+                    <div className="mt-2 border-t border-slate-100 pt-2 dark:border-slate-800">
+                      <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                        Tracks chaired
+                      </p>
+                      {r.tracks.length === 0 ? (
+                        <span className="text-xs text-slate-400">—</span>
+                      ) : (
+                        <ul className="space-y-1">
+                          {r.tracks.map((t, i) => (
+                            <li key={`${r.email}-t-${i}`} className="text-xs">
+                              <span className="font-mono text-slate-700 dark:text-slate-300">
+                                {t.code}
+                              </span>
+                              <span
+                                className={`badge ml-2 ${
+                                  t.status === "accepted"
+                                    ? "bg-emerald-100 text-emerald-800"
+                                    : "bg-amber-100 text-amber-800"
+                                }`}
+                              >
+                                {t.status === "accepted" ? "Accepted" : "Invited"}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
                   </td>
                   <td className="td">
                     {r.papers.length === 0 ? (

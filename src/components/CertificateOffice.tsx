@@ -192,7 +192,7 @@ export async function CertificateOffice() {
       profileIds.length
         ? admin
             .from("profiles")
-            .select("id, full_name, email, title, affiliation")
+            .select("id, full_name, email, title, affiliation, designation")
             .in("id", profileIds)
         : Promise.resolve({ data: [] as any[] }),
     ]);
@@ -437,12 +437,17 @@ export async function CertificateOffice() {
               <div className="min-w-0">
                 <p className="font-semibold text-slate-900 dark:text-white">
                   {withSalutation(reviewer.full_name, reviewer.title)}
-                  {reviewer.affiliation && (
-                    <span className="ml-2 text-xs font-normal text-slate-500">
-                      {reviewer.affiliation}
-                    </span>
-                  )}
                 </p>
+                {reviewer.email && (
+                  <p className="text-xs text-slate-500">{reviewer.email}</p>
+                )}
+                {(reviewer.designation || reviewer.affiliation) && (
+                  <p className="text-xs text-slate-500">
+                    {[reviewer.designation, reviewer.affiliation]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
+                )}
                 <span className={`badge mt-1 ${reviewer.title ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600"}`}>
                   {reviewer.title ? "Service verified · " : ""}
                   {reviewCount.get(reviewer.id)} submitted review

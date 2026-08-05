@@ -491,7 +491,7 @@ export function TrackEditorManagement({
                                       return (
                                         <li
                                           key={key}
-                                          className="relative text-xs"
+                                          className="relative whitespace-nowrap text-xs"
                                         >
                                           <button
                                             type="button"

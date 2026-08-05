@@ -34,7 +34,14 @@ type Kind =
   | "online-track";
 
 type Row =
-  | { type: "break"; label: string; time: string; long?: boolean; icon?: string }
+  | {
+      type: "break";
+      label: string;
+      time: string;
+      long?: boolean;
+      icon?: string;
+      venue?: string;
+    }
   | { type: "slot"; time: string; full?: Block; onsite?: Block; online?: Block };
 
 type Day = {
@@ -49,6 +56,7 @@ const BREAKFAST: Row = {
   label: "Morning Breakfast",
   time: "08:30 – 09:50",
   icon: "🍳",
+  venue: "Community Centre",
 };
 const MORNING_TEA: Row = {
   type: "break",
@@ -125,7 +133,7 @@ const DAYS: Day[] = [
     gala: {
       time: "20:00 – 23:00",
       title: "Gala Dinner",
-      note: "Networking dinner for all delegates",
+      note: "Director's Residence · networking dinner for all delegates",
     },
   },
   {
@@ -248,17 +256,20 @@ function BreakRow({
   time,
   long,
   icon,
+  venue,
 }: {
   label: string;
   time: string;
   long?: boolean;
   icon?: string;
+  venue?: string;
 }) {
   return (
-    <div className="flex items-center justify-center gap-2 rounded-lg border border-dashed border-slate-300 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-500 dark:border-slate-600 dark:bg-slate-800/60 dark:text-slate-400">
+    <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 rounded-lg border border-dashed border-slate-300 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-500 dark:border-slate-600 dark:bg-slate-800/60 dark:text-slate-400">
       <span aria-hidden>{icon ?? (long ? "🍽" : "☕")}</span>
       <span>{label}</span>
       <span className="opacity-70">· {time}</span>
+      {venue && <span className="opacity-70">· {venue}</span>}
     </div>
   );
 }
@@ -354,6 +365,7 @@ export function ConferenceSchedule() {
                       time={row.time}
                       long={row.long}
                       icon={row.icon}
+                      venue={row.venue}
                     />
                   </div>
                 ) : (

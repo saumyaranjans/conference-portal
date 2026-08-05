@@ -1310,7 +1310,6 @@ export function LandingPage() {
                 <br />
                 Basantpur, Sambalpur, Odisha, India
               </p>
-              <SocialLinks align="start" className="mt-3" />
             </div>
             <div>
               <p className="font-semibold text-slate-800 dark:text-slate-200">
@@ -1322,6 +1321,7 @@ export function LandingPage() {
                 <br />
                 B-51 (Basement), Sarvodaya Enclave, New Delhi 110017
               </p>
+              <SocialLinks align="start" className="mt-3" />
             </div>
           </div>
           {/* Directions sit above the email addresses: most people asking

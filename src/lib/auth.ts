@@ -1,9 +1,16 @@
+import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { AppRole, Profile } from "@/lib/types";
 
-/** The signed-in user's profile, or null if there is no session. */
-export async function getProfile(): Promise<Profile | null> {
+/**
+ * The signed-in user's profile, or null if there is no session.
+ *
+ * Wrapped in React.cache so the layout and the page (which each call
+ * requireProfile/requireRole during the same request) share ONE
+ * getUser + profiles lookup instead of paying the two round trips twice.
+ */
+export const getProfile = cache(async (): Promise<Profile | null> => {
   const supabase = await createClient();
   const {
     data: { user },
@@ -17,7 +24,7 @@ export async function getProfile(): Promise<Profile | null> {
     .single();
 
   return (data as Profile) ?? null;
-}
+});
 
 /** Require a session; bounce to /login otherwise. */
 export async function requireProfile(): Promise<Profile> {

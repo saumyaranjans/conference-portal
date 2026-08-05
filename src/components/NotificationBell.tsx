@@ -78,7 +78,10 @@ export function NotificationBell({ unread }: { unread: number }) {
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-80 card z-30 max-h-96 overflow-y-auto">
+        // Phones: a viewport-pinned sheet under the sticky header (a right-
+        // anchored fixed-width popover would extend past the LEFT screen edge,
+        // clipping titles and delete buttons). sm+ restores the popover.
+        <div className="fixed inset-x-3 top-16 w-auto sm:absolute sm:inset-x-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-80 card z-30 max-h-96 overflow-y-auto">
           <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100">
             <p className="text-sm font-semibold">Notifications</p>
             {items.length > 0 && (
@@ -108,7 +111,7 @@ export function NotificationBell({ unread }: { unread: number }) {
                 <li key={n.id} className="relative group">
                   <a
                     href={n.link ?? "#"}
-                    className={`block px-4 py-3 pr-9 hover:bg-slate-50 ${
+                    className={`block px-4 py-3 pr-12 hover:bg-slate-50 ${
                       n.is_read ? "" : "bg-blue-50/50"
                     }`}
                   >
@@ -128,7 +131,7 @@ export function NotificationBell({ unread }: { unread: number }) {
                     onClick={(e) => deleteOne(e, n)}
                     aria-label="Delete notification"
                     title="Delete"
-                    className="absolute top-2.5 right-2 w-6 h-6 rounded-md text-slate-400
+                    className="absolute top-1.5 right-1 w-9 h-9 rounded-md text-slate-400
                                hover:bg-slate-200 hover:text-slate-700 flex items-center
                                justify-center leading-none"
                   >

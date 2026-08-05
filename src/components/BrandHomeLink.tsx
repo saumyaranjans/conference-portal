@@ -17,7 +17,9 @@ export function BrandHomeLink({ href }: { href: string }) {
         alt="GLOGIFT"
         className="h-9 w-auto object-contain"
       />
-      <span className="text-lg font-bold tracking-tight text-gradient w-fit">
+      {/* The wordmark yields on the very smallest screens so the header row
+          (role switcher + bell + sign-out) never overflows the viewport. */}
+      <span className="hidden min-[420px]:inline text-lg font-bold tracking-tight text-gradient w-fit">
         GLOGIFT 27
       </span>
     </Link>

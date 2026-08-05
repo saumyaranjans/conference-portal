@@ -94,7 +94,7 @@ function CertificateActions({
         <input type="hidden" name="conference_id" value={conferenceId} />
         {/* Line 1 — certificate number: type one, or Auto-generate */}
         <CertNumberField compact={compact} numberPrefix={numberPrefix} />
-        <label className="flex items-center gap-1.5 text-[11px] text-slate-500">
+        <label className="flex flex-wrap items-center gap-1.5 text-[11px] text-slate-500">
           Date of issuance
           <input
             type="date"
@@ -439,8 +439,10 @@ export async function CertificateOffice() {
                     </div>
                   </div>
 
-                  {/* CENTRE — paper, its authors (role + registration), pathway */}
-                  <div className="min-w-0 flex-1">
+                  {/* CENTRE — paper, its authors (role + registration), pathway.
+                      basis-64 guarantees it wraps below the left column instead
+                      of ever rendering as a narrow sliver beside it. */}
+                  <div className="min-w-0 flex-1 basis-64">
                     <p className="text-sm font-medium text-slate-800 dark:text-slate-100">
                       {submission?.paper_id ?? "Paper"} · {submission?.title}
                     </p>

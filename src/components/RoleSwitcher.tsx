@@ -33,7 +33,7 @@ export function RoleSwitcher({ roles }: { roles: AppRole[] }) {
       <select
         value={matched ?? ""}
         onChange={(e) => go(e.target.value)}
-        className="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm
+        className="max-w-32 sm:max-w-none rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm
                    font-medium text-slate-700 outline-none focus:border-blue-500
                    focus:ring-2 focus:ring-blue-100"
         aria-label="Switch role"

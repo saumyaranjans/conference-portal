@@ -40,7 +40,15 @@ export function SignOutButton() {
         disabled={pending}
         className="rounded-lg bg-red-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-red-700 disabled:opacity-60 whitespace-nowrap"
       >
-        {pending ? "Signing out…" : "Confirm sign out"}
+        {pending ? (
+          "Signing out…"
+        ) : (
+          <>
+            {/* Shorter label on phones — the header row is already tight. */}
+            <span className="sm:hidden">Confirm</span>
+            <span className="hidden sm:inline">Confirm sign out</span>
+          </>
+        )}
       </button>
       <button
         onClick={() => setConfirming(false)}

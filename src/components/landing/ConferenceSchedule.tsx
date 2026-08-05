@@ -276,6 +276,16 @@ function BlockCard({ block }: { block: Block }) {
     <div className={`h-full rounded-lg border px-3 py-2 ${KIND_CLASS[block.kind]}`}>
       <p className="text-sm font-semibold leading-snug">
         {block.icon && <span aria-hidden className="mr-1">{block.icon}</span>}
+        {/* Below sm the On-site/Online column headers are hidden and the two
+            channels stack — tag the on-site cards so a phone reader can tell
+            them apart (the online card already says "Online" in its title). */}
+        {(block.kind === "plenary" ||
+          block.kind === "editor-talk" ||
+          block.kind === "onsite-track") && (
+          <span className="sm:hidden mr-1.5 text-[9px] font-bold uppercase tracking-wide opacity-70 align-middle">
+            On-site
+          </span>
+        )}
         {block.title}
       </p>
       {block.note && <p className="mt-0.5 text-[11px] opacity-80">{block.note}</p>}
@@ -314,19 +324,21 @@ export function ConferenceSchedule() {
       <nav className="no-print max-w-6xl mx-auto px-4 pt-3 flex items-center justify-between gap-3">
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-white hover:text-blue-700 dark:text-slate-200 dark:hover:bg-slate-800"
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-white hover:text-blue-700 dark:text-slate-200 dark:hover:bg-slate-800"
         >
           <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
             <path d="M3 11l9-8 9 8M6 10v10h12V10" />
           </svg>
           Home
         </Link>
+        {/* px-3 below sm keeps the whole row within a 320px viewport;
+            whitespace-nowrap stops the "Sign up" label wrapping to two lines. */}
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          <Link href="/login" className="btn-secondary px-4 py-1.5 text-sm">
+          <Link href="/login" className="btn-secondary min-h-11 whitespace-nowrap px-3 py-1.5 text-sm sm:px-4">
             Login
           </Link>
-          <Link href="/signup" className="btn-primary px-4 py-1.5 text-sm">
+          <Link href="/signup" className="btn-primary min-h-11 whitespace-nowrap px-3 py-1.5 text-sm sm:px-4">
             Sign up
           </Link>
         </div>
@@ -417,12 +429,12 @@ export function ConferenceSchedule() {
                         {row.onsite ? (
                           <BlockCard block={row.onsite} />
                         ) : (
-                          <div className="rounded-lg border border-dashed border-slate-200 dark:border-slate-700" />
+                          <div className="hidden rounded-lg border border-dashed border-slate-200 sm:block dark:border-slate-700" />
                         )}
                         {row.online ? (
                           <BlockCard block={row.online} />
                         ) : (
-                          <div className="rounded-lg border border-dashed border-slate-200 dark:border-slate-700" />
+                          <div className="hidden rounded-lg border border-dashed border-slate-200 sm:block dark:border-slate-700" />
                         )}
                       </>
                     )}

@@ -31,24 +31,47 @@ export default async function ChiefDashboard() {
   await requireRole("chief");
   const supabase = await createClient();
 
-  const [{ data: subs }, { data: tracks }, { data: staff }, { data: confStats }] =
-    await Promise.all([
-      supabase
-        .from("submissions")
-        .select("*, tracks(name, code), submission_authors(full_name, email, affiliation), author:profiles!submissions_author_id_fkey(full_name, email, affiliation)")
-        .neq("status", "draft")
-        .order("updated_at", { ascending: false }),
-      supabase
-        .from("tracks")
-        .select(
-          // track_editors points at profiles twice (profile_id, invited_by),
-          // so the chair embed must name its foreign key or PostgREST refuses.
-          "*, track_editors(profile_id, status, profiles!track_editors_profile_id_fkey(id, full_name, email, affiliation))"
-        )
-        .order("name"),
-      supabase.from("profiles").select("*").eq("is_active", true),
-      supabase.from("conference_stats").select("*"),
-    ]);
+  const admin = createAdminClient();
+
+  // WAVE 1 — every query that only needs the session: run together. (This page
+  // previously stacked ~6 sequential round trips; two waves keep post-login
+  // latency flat even if the function ever runs far from the database again.)
+  const [
+    { data: subs },
+    { data: tracks },
+    { data: staff },
+    { data: confStats },
+    { data: paidRows },
+    { data: overdueRows },
+    { rate: usdInr },
+  ] = await Promise.all([
+    supabase
+      .from("submissions")
+      .select("*, tracks(name, code), submission_authors(full_name, email, affiliation), author:profiles!submissions_author_id_fkey(full_name, email, affiliation)")
+      .neq("status", "draft")
+      .order("updated_at", { ascending: false }),
+    supabase
+      .from("tracks")
+      .select(
+        // track_editors points at profiles twice (profile_id, invited_by),
+        // so the chair embed must name its foreign key or PostgREST refuses.
+        "*, track_editors(profile_id, status, profiles!track_editors_profile_id_fkey(id, full_name, email, affiliation))"
+      )
+      .order("name"),
+    supabase.from("profiles").select("*").eq("is_active", true),
+    supabase.from("conference_stats").select("*"),
+    admin
+      .from("submission_authors")
+      .select("email, participant_category, registration_fee_tier, registration_fee_paid")
+      .eq("registration_fee_paid", true),
+    supabase
+      .from("assignments")
+      .select("submission_id, due_date, status")
+      .not("due_date", "is", null)
+      .lt("due_date", new Date().toISOString())
+      .neq("status", "submitted"),
+    getUsdInrRate(),
+  ]);
 
   const submissions = (subs ?? []) as (Submission & { tracks: any })[];
 
@@ -57,11 +80,6 @@ export default async function ChiefDashboard() {
   // (Early Bird / Regular) at their category rate, less any GLOGIFT-member
   // discount. Counted ONCE per person (they pay once, even across papers). Tax
   // is 18% on top; total is fees + tax.
-  const admin = createAdminClient();
-  const { data: paidRows } = await admin
-    .from("submission_authors")
-    .select("email, participant_category, registration_fee_tier, registration_fee_paid")
-    .eq("registration_fee_paid", true);
 
   const paidPerPerson = new Map<
     string,
@@ -78,20 +96,31 @@ export default async function ChiefDashboard() {
   }
 
   const paidEmails = [...paidPerPerson.values()].map((v) => v.email);
+
+  // WAVE 2 — the only queries that depend on wave-1 results: the member lookup
+  // (needs the paid emails) and the review stats (needs the submission ids).
+  const [{ data: profs }, { data: statsRows }] = await Promise.all([
+    paidEmails.length
+      ? admin
+          .from("profiles")
+          .select("email, glogift_member")
+          .in("email", paidEmails)
+      : Promise.resolve({ data: [] as any[] }),
+    submissions.length
+      ? supabase
+          .from("submission_review_stats")
+          .select("*")
+          .in("submission_id", submissions.map((s) => s.id))
+      : Promise.resolve({ data: [] as any[] }),
+  ]);
+
   const memberByEmail = new Map<string, boolean>();
-  if (paidEmails.length) {
-    const { data: profs } = await admin
-      .from("profiles")
-      .select("email, glogift_member")
-      .in("email", paidEmails);
-    for (const p of (profs ?? []) as any[]) {
-      memberByEmail.set((p.email ?? "").trim().toLowerCase(), Boolean(p.glogift_member));
-    }
+  for (const p of (profs ?? []) as any[]) {
+    memberByEmail.set((p.email ?? "").trim().toLowerCase(), Boolean(p.glogift_member));
   }
 
-  // Foreign (USD) fees convert to INR at today's rate and fold into a single
-  // INR collections figure.
-  const { rate: usdInr } = await getUsdInrRate();
+  // Foreign (USD) fees convert to INR at today's rate (fetched in wave 1) and
+  // fold into a single INR collections figure.
   const timelineTier: "early" | "regular" = isEarlyBird() ? "early" : "regular";
   let collectedInr = 0;
   let memberCount = 0;
@@ -142,22 +171,6 @@ export default async function ChiefDashboard() {
   for (const p of ((staff ?? []) as Profile[])) {
     editorNames.set(p.id, p.full_name || p.email);
   }
-
-  const [{ data: statsRows }] = await Promise.all([
-    submissions.length
-      ? supabase
-          .from("submission_review_stats")
-          .select("*")
-          .in("submission_id", submissions.map((s) => s.id))
-      : Promise.resolve({ data: [] }),
-  ]);
-
-  const { data: overdueRows } = await supabase
-    .from("assignments")
-    .select("submission_id, due_date, status")
-    .not("due_date", "is", null)
-    .lt("due_date", new Date().toISOString())
-    .neq("status", "submitted");
 
   const stats = new Map<string, ReviewStats>(
     ((statsRows ?? []) as ReviewStats[]).map((r) => [r.submission_id, r])

@@ -311,7 +311,9 @@ export function ReviewerManagement({
           <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
             Review analytics
           </h3>
-          <div className="flex flex-nowrap items-center gap-2">
+          {/* Wrap on phones — the fixed w-40+w-36 pair is wider than a 360px
+              card and would otherwise force page-body horizontal scroll. */}
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap">
             <select
               value={anaTrack}
               onChange={(e) => setAnaTrack(e.target.value)}
@@ -356,7 +358,7 @@ export function ReviewerManagement({
           ).map(([p, c, cls]) => (
             <span
               key={p}
-              className={`inline-flex items-center gap-2 rounded-lg border px-2.5 py-1 text-xs font-medium ${cls}`}
+              className={`inline-flex max-w-full flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border px-2.5 py-1 text-xs font-medium ${cls}`}
             >
               <b>Pathway {p}</b>
               <span>Accept <b className="text-sm">{c.accept}</b></span>
@@ -439,8 +441,9 @@ export function ReviewerManagement({
         </span>
       </div>
 
-      {/* Filters — line 2: search + Excel */}
-      <div className="flex flex-nowrap items-center gap-2 overflow-x-auto pb-1">
+      {/* Filters — line 2: search + Excel. Wraps on phones so the Excel
+          button is never clipped off-screen. */}
+      <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap sm:overflow-x-auto sm:pb-1">
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
@@ -483,7 +486,7 @@ export function ReviewerManagement({
                 type="button"
                 disabled={!has}
                 onClick={() => setLetter(active ? "all" : L)}
-                className={`w-7 rounded-md py-1 text-xs font-semibold transition ${
+                className={`min-w-9 rounded-md py-2 text-xs font-semibold transition sm:min-w-0 sm:w-7 sm:py-1 ${
                   active
                     ? "bg-blue-600 text-white"
                     : has
@@ -623,7 +626,7 @@ export function ReviewerManagement({
                                     {a.paperId}
                                   </button>
                                   {open && (
-                                    <div className="absolute z-30 mt-1 w-72 rounded-lg border border-slate-200 bg-white p-3 text-left font-sans shadow-xl dark:border-slate-700 dark:bg-slate-800">
+                                    <div className="fixed inset-x-3 top-24 z-50 mx-auto max-h-[70vh] w-auto max-w-sm overflow-y-auto rounded-lg border border-slate-200 bg-white p-3 text-left font-sans shadow-xl sm:absolute sm:inset-auto sm:top-auto sm:z-30 sm:mx-0 sm:mt-1 sm:max-h-none sm:w-72 dark:border-slate-700 dark:bg-slate-800">
                                       <div className="flex items-start justify-between gap-2">
                                         <span className="font-mono text-[11px] text-slate-500">
                                           {a.paperId}
@@ -714,7 +717,7 @@ export function ReviewerManagement({
                                       />
                                       <SubmitButton
                                         variant="secondary"
-                                        className={`!py-0.5 !px-2 !text-[10px] ${
+                                        className={`!py-1.5 !px-2.5 !text-[10px] sm:!py-0.5 sm:!px-2 ${
                                           a.editorReminderCount > 0
                                             ? "!bg-amber-100 !text-amber-800 dark:!bg-amber-500/15 dark:!text-amber-300"
                                             : ""

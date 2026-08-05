@@ -167,16 +167,26 @@ export default async function AuthorDashboard({
   const { folder, pw } = await searchParams;
   const profile = await requireProfile();
   const supabase = await createClient();
-  const certificates = certificatesReleased()
-    ? await listMyCertificates(profile.id)
-    : [];
+  const admin = createAdminClient();
 
-  // The author's own (corresponding) submissions — these drive the folders.
-  const { data } = await supabase
-    .from("submissions")
-    .select("*, tracks(name)")
-    .eq("author_id", profile.id)
-    .order("updated_at", { ascending: false });
+  // One parallel wave: the certificates box, the author's own submissions and
+  // their co-author links only need profile.id — serializing them (the old
+  // code) made post-login landing 3 round trips deeper than necessary.
+  const [certificates, { data }, { data: coRows }] = await Promise.all([
+    certificatesReleased()
+      ? listMyCertificates(profile.id)
+      : Promise.resolve([]),
+    supabase
+      .from("submissions")
+      .select("*, tracks(name)")
+      .eq("author_id", profile.id)
+      .order("updated_at", { ascending: false }),
+    admin
+      .from("submission_authors")
+      .select("submission_id")
+      .eq("profile_id", profile.id)
+      .eq("is_corresponding", false),
+  ]);
 
   const submissions = (data ?? []) as Row[];
 
@@ -234,14 +244,9 @@ export default async function AuthorDashboard({
 
   // Submissions where the signed-in user is a linked co-author (view only).
   // The submission_authors read policy doesn't cover co-authors, so we look up
-  // the user's OWN co-author rows with the admin client, strictly scoped to
-  // their profile_id, then read the linked submissions.
-  const admin = createAdminClient();
-  const { data: coRows } = await admin
-    .from("submission_authors")
-    .select("submission_id")
-    .eq("profile_id", profile.id)
-    .eq("is_corresponding", false);
+  // the user's OWN co-author rows with the admin client (fetched in the wave
+  // above), strictly scoped to their profile_id, then read the linked
+  // submissions.
   const coIds = Array.from(
     new Set((coRows ?? []).map((r) => r.submission_id as string))
   ).filter((sid) => !submissions.some((s) => s.id === sid));

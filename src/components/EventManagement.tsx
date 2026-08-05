@@ -108,7 +108,7 @@ function SessionForm({
         <select
           name="session_date"
           defaultValue={initial?.sessionDate ?? ""}
-          className="input w-auto text-sm"
+          className="input w-auto max-w-full text-sm"
           aria-label="Day"
         >
           <option value="">Day…</option>
@@ -121,7 +121,7 @@ function SessionForm({
         <select
           name="time_slot"
           defaultValue={initial?.timeSlot ?? ""}
-          className="input w-auto text-sm"
+          className="input w-auto max-w-full text-sm"
           aria-label="Time slot"
         >
           <option value="">Time slot…</option>
@@ -134,7 +134,7 @@ function SessionForm({
         <select
           name="track_id"
           defaultValue={initial?.trackId ?? ""}
-          className="input w-auto text-sm"
+          className="input w-auto max-w-full text-sm"
           aria-label="Track"
         >
           <option value="">Track (optional)…</option>
@@ -291,7 +291,7 @@ function SessionCard({
                       <input type="hidden" name="id" value={p.id} />
                       <SubmitButton
                         variant="secondary"
-                        className="!py-0.5 !px-1.5 !text-[10px]"
+                        className="!py-1.5 !px-2.5 !text-[10px] sm:!py-0.5 sm:!px-1.5"
                       >
                         Remove
                       </SubmitButton>

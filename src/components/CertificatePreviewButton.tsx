@@ -87,7 +87,7 @@ export function CertificatePreviewButton({
         type="button"
         onClick={preview}
         disabled={busy}
-        className="btn-secondary"
+        className="btn-secondary py-1.5 text-xs"
       >
         {busy ? "Preparing…" : "Preview"}
       </button>

@@ -598,7 +598,7 @@ export function AuthorManagement({
                               {p.pathway === "A" ? "Pathway A · Abstract" : "Pathway B · Full paper"}
                             </span>
                             {open && (
-                              <div className="absolute z-30 mt-1 w-72 rounded-lg border border-slate-200 bg-white p-3 shadow-xl dark:border-slate-700 dark:bg-slate-800">
+                              <div className="fixed inset-x-3 top-24 z-50 mx-auto max-h-[70vh] w-auto max-w-sm overflow-y-auto rounded-lg border border-slate-200 bg-white p-3 shadow-xl sm:absolute sm:inset-auto sm:top-auto sm:z-30 sm:mx-0 sm:mt-1 sm:max-h-none sm:w-72 dark:border-slate-700 dark:bg-slate-800">
                                 <div className="flex items-start justify-between gap-2">
                                   <span className="font-mono text-[11px] text-slate-500">
                                     {p.paperId}

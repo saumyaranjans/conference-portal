@@ -84,10 +84,13 @@ export function SidebarNav({
   if (!current) return null;
 
   return (
-    <div className="sticky top-20 flex max-h-[calc(100vh-6rem)] flex-col">
+    // Sticky + height-capped + internally scrollable ONLY on md+ (the desktop
+    // aside). Inside the mobile Menu disclosure the nav must flow and scroll
+    // with the page — a nested scroll box is a touch-scrolling trap.
+    <div className="flex flex-col md:sticky md:top-20 md:max-h-[calc(100vh-6rem)]">
       <nav
         ref={scrollRef}
-        className="flex-1 overflow-y-auto pr-1 [scrollbar-width:thin]"
+        className="flex-1 pr-1 md:overflow-y-auto [scrollbar-width:thin]"
       >
       {/* Two clearly-distinct destinations (moved here from the header): the
           public conference website vs. the submission-portal home. */}
@@ -238,8 +241,9 @@ export function SidebarNav({
       </nav>
 
       {/* Top ↕ Bottom scroll controls — pinned at the base of the sidebar so
-          the long staff menus (and their stat cards) stay one tap away. */}
-      <div className="mt-1 flex shrink-0 gap-1 border-t border-slate-200 pt-2 dark:border-slate-700">
+          the long staff menus (and their stat cards) stay one tap away. Only
+          rendered on md+, where the nav actually has its own scrollbar. */}
+      <div className="mt-1 hidden shrink-0 gap-1 border-t border-slate-200 pt-2 md:flex dark:border-slate-700">
         <button
           type="button"
           onClick={() => scrollNav("top")}

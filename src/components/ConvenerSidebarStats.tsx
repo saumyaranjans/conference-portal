@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { feeForTier, isEarlyBird } from "@/lib/registrationFees";
 import { getUsdInrRate, usdToInr } from "@/lib/fx";
@@ -16,12 +17,12 @@ function money(currency: string, amount: number) {
 }
 
 /**
- * Convener sidebar metrics — emails sent, website visits and registration
- * revenue. These are the heaviest part of the shell (several counts + a live
- * FX lookup), so they are rendered inside a <Suspense> boundary and STREAM in
- * after the dashboard has already painted.
+ * All the data behind the Convener sidebar metrics, computed once per request.
+ * React.cache matters here: the shell renders this component TWICE (mobile
+ * Menu disclosure + desktop aside), and without the cache every count, the
+ * revenue scan and the FX lookup would run twice.
  */
-export async function ConvenerSidebarStats() {
+const getConvenerStats = cache(async () => {
   const supabase = await createClient();
   const startOfToday = new Date();
   startOfToday.setHours(0, 0, 0, 0);
@@ -86,6 +87,25 @@ export async function ConvenerSidebarStats() {
     feesInr += fee.currency === "USD" ? usdToInr(fee.amount, usdInr) : fee.amount;
   }
   const revenue = { fees: feesInr, tax: feesInr * 0.18, total: feesInr * 1.18 };
+
+  return {
+    emailToday: emailToday ?? 0,
+    emailTotal: emailTotal ?? 0,
+    vToday: vToday ?? 0,
+    vTotal: vTotal ?? 0,
+    revenue,
+  };
+});
+
+/**
+ * Convener sidebar metrics — emails sent, website visits and registration
+ * revenue. These are the heaviest part of the shell (several counts + a live
+ * FX lookup), so they are rendered inside a <Suspense> boundary and STREAM in
+ * after the dashboard has already painted.
+ */
+export async function ConvenerSidebarStats() {
+  const { emailToday, emailTotal, vToday, vTotal, revenue } =
+    await getConvenerStats();
 
   const twoStat = (label: string, today: number, total: number) => (
     <section className="mt-6">

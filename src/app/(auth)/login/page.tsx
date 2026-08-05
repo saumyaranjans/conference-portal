@@ -41,30 +41,36 @@ export default function LoginPage() {
 
     // Send the user INTO the portal, not to "/" (which is the public landing).
     // Prefer an explicit ?next= protected path; otherwise their role home.
+    // The roles lookup only runs when no ?next= exists (next wins anyway), so
+    // the common deep-link login skips a whole browser→DB round trip.
     let dest = "/author";
-    try {
-      const uid = data.user?.id;
-      if (uid) {
-        const { data: prof } = await supabase
-          .from("profiles")
-          .select("roles")
-          .eq("id", uid)
-          .single();
-        const roles = (prof?.roles ?? []) as string[];
-        const primary =
-          ROLE_PRIORITY.find((r) => roles.includes(r)) ?? "author";
-        dest = ROLE_HOME[primary];
-      }
-    } catch {
-      /* fall back to /author */
-    }
     const next = new URLSearchParams(window.location.search).get("next");
     if (next && next.startsWith("/") && !next.startsWith("//") && next !== "/") {
       dest = next;
+    } else {
+      try {
+        const uid = data.user?.id;
+        if (uid) {
+          const { data: prof } = await supabase
+            .from("profiles")
+            .select("roles")
+            .eq("id", uid)
+            .single();
+          const roles = (prof?.roles ?? []) as string[];
+          const primary =
+            ROLE_PRIORITY.find((r) => roles.includes(r)) ?? "author";
+          dest = ROLE_HOME[primary];
+        }
+      } catch {
+        /* fall back to /author */
+      }
     }
 
+    // A single push is enough: dashboard routes are fully dynamic (no-store),
+    // so the navigation's RSC fetch already renders with the fresh session.
+    // The previous `router.refresh()` here re-ran the ENTIRE proxy → layout →
+    // page waterfall a second time, doubling perceived login latency.
     router.push(dest);
-    router.refresh();
   }
 
   return (

@@ -22,7 +22,7 @@ export function CertificateEditButton({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="self-start text-[10px] font-medium text-blue-600 hover:underline dark:text-blue-400"
+        className="self-start inline-flex min-h-8 items-center px-2 -ml-2 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400"
         title="Edit — revokes the current certificate so you can change the number and regenerate"
       >
         ✎ Edit
@@ -44,13 +44,13 @@ export function CertificateEditButton({
         className="input h-7 w-40 text-[11px]"
         aria-label="Reason for edit"
       />
-      <SubmitButton variant="danger" className="px-2 py-1 text-[10px]">
+      <SubmitButton variant="danger" className="px-2.5 py-1.5 text-xs">
         Confirm edit
       </SubmitButton>
       <button
         type="button"
         onClick={() => setOpen(false)}
-        className="text-[10px] text-slate-500 hover:underline"
+        className="min-h-8 px-2 text-xs text-slate-500 hover:underline"
       >
         Cancel
       </button>

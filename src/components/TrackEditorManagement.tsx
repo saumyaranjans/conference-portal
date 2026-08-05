@@ -125,6 +125,7 @@ export function TrackEditorManagement({
   const [track, setTrack] = useState("all");
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<"all" | "invited" | "accepted">("all");
+  const [pathway, setPathway] = useState<"all" | "A" | "B">("all");
   const [letter, setLetter] = useState("all");
   const [anaTrack, setAnaTrack] = useState("all");
   // Per-editor confirmation gate for the certificate actions (keyed by email).
@@ -164,6 +165,8 @@ export function TrackEditorManagement({
       if (!inTrack(r, track)) return false;
       if (status === "accepted" && r.counts.tracksAccepted <= 0) return false;
       if (status === "invited" && r.counts.tracksInvited <= 0) return false;
+      if (pathway !== "all" && !r.papers.some((p) => p.pathway === pathway))
+        return false;
       if (!needle) return true;
       return (
         r.name.toLowerCase().includes(needle) ||
@@ -180,13 +183,14 @@ export function TrackEditorManagement({
       .slice()
       .sort((a, b) => stripSalutation(a.name).localeCompare(stripSalutation(b.name)));
     return { list, available: avail };
-  }, [rows, track, q, status, letter]);
+  }, [rows, track, q, status, pathway, letter]);
 
   function exportExcel() {
     const filters = [
       `Track: ${track === "all" ? "All tracks" : track}`,
       `Search: ${q.trim() || "—"}`,
       `Status: ${status === "all" ? "All" : status === "accepted" ? "Accepted" : "Invited (pending)"}`,
+      `Pathway: ${pathway === "all" ? "All" : `Pathway ${pathway}`}`,
       `Name starts with: ${letter === "all" ? "All" : letter}`,
     ].join("   |   ");
     const headers = [
@@ -284,6 +288,16 @@ export function TrackEditorManagement({
           <option value="all">All (appointment)</option>
           <option value="accepted">Accepted</option>
           <option value="invited">Invited (pending)</option>
+        </select>
+        <select
+          value={pathway}
+          onChange={(e) => setPathway(e.target.value as typeof pathway)}
+          className="input w-36 shrink-0 text-sm"
+          aria-label="Pathway filter"
+        >
+          <option value="all">All (pathway)</option>
+          <option value="A">Pathway A</option>
+          <option value="B">Pathway B</option>
         </select>
         <span className="shrink-0 whitespace-nowrap text-xs text-slate-500">
           {filtered.length} of {rows.length}

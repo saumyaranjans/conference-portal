@@ -584,7 +584,7 @@ function Heading({ id, children }: { id?: string; children: React.ReactNode }) {
 
 const NAV_LINKS: { href: string; label: string; accent?: boolean }[] = [
   { href: "#submission", label: "Conference tracks" },
-  { href: "#guidelines", label: "Submit abstract/full paper" },
+  { href: "/schedule", label: "Conference Schedule" },
   { href: "#fees", label: "Register for conference" },
   { href: "#dates", label: "Important dates" },
   // The one link that leaves the page, so it carries the colour and pulse

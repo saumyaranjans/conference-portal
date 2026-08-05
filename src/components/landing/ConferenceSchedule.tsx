@@ -46,18 +46,18 @@ type Day = {
 const MORNING_TEA: Row = {
   type: "break",
   label: "Morning High Tea",
-  time: "11:30 – 11:45",
+  time: "11:30 – 12:00",
 };
 const LUNCH: Row = {
   type: "break",
   label: "Lunch",
-  time: "13:15 – 14:15",
+  time: "13:30 – 14:30",
   long: true,
 };
 const EVENING_TEA: Row = {
   type: "break",
   label: "Evening High Tea",
-  time: "15:45 – 16:00",
+  time: "16:00 – 16:30",
 };
 
 const ONLINE: Block = {
@@ -84,7 +84,7 @@ const DAYS: Day[] = [
       MORNING_TEA,
       {
         type: "slot",
-        time: "11:45 – 13:15",
+        time: "12:00 – 13:30",
         onsite: {
           title: "AI & Sustainability Leadership Forum",
           note: "Main Hall · special session",
@@ -95,14 +95,14 @@ const DAYS: Day[] = [
       LUNCH,
       {
         type: "slot",
-        time: "14:15 – 15:45",
+        time: "14:30 – 16:00",
         onsite: ONSITE_TRACK,
         online: ONLINE,
       },
       EVENING_TEA,
       {
         type: "slot",
-        time: "16:00 – 17:30",
+        time: "16:30 – 18:00",
         onsite: {
           title: "Industry–Academia Conclave on Digital Finance",
           note: "Main Hall · special session",
@@ -134,7 +134,7 @@ const DAYS: Day[] = [
       MORNING_TEA,
       {
         type: "slot",
-        time: "11:45 – 13:15",
+        time: "12:00 – 13:30",
         onsite: {
           title: "Startup Showcase on FinTech & Smart Operations",
           note: "Main Hall · special session",
@@ -145,14 +145,14 @@ const DAYS: Day[] = [
       LUNCH,
       {
         type: "slot",
-        time: "14:15 – 15:45",
+        time: "14:30 – 16:00",
         onsite: ONSITE_TRACK,
         online: ONLINE,
       },
       EVENING_TEA,
       {
         type: "slot",
-        time: "16:00 – 17:30",
+        time: "16:30 – 18:00",
         onsite: {
           title: "Doctoral Colloquium for Emerging Researchers",
           note: "Main Hall · special session",
@@ -179,7 +179,7 @@ const DAYS: Day[] = [
       MORNING_TEA,
       {
         type: "slot",
-        time: "11:45 – 13:15",
+        time: "12:00 – 13:30",
         onsite: {
           title: "Talk with Editors of Top-Tier Journals",
           note: "Main Hall · special session",
@@ -190,14 +190,14 @@ const DAYS: Day[] = [
       LUNCH,
       {
         type: "slot",
-        time: "14:15 – 15:45",
+        time: "14:30 – 16:00",
         onsite: ONSITE_TRACK,
         online: ONLINE,
       },
       EVENING_TEA,
       {
         type: "slot",
-        time: "16:00 – 17:30",
+        time: "16:30 – 18:00",
         full: { title: "Conference Valedictory", kind: "valedictory" },
       },
     ],
@@ -272,16 +272,9 @@ export function ConferenceSchedule() {
           <h1 className="text-3xl font-bold text-gradient mb-3">
             Conference Schedule
           </h1>
-          <p className="max-w-3xl text-sm text-slate-600 dark:text-slate-300">
-            Three days, 25–27 February 2027, 10:00–18:00 each day. Every session
-            runs for 90 minutes. On-site special sessions are held in the Main
-            Hall; <b>On-site Track Sessions</b> are scheduled so on-site
-            delegates never miss a special session, while{" "}
-            <b>Online Track Sessions</b> run in parallel for virtual delegates.
-          </p>
 
           {/* Legend */}
-          <div className="mt-4 flex flex-wrap gap-2 text-[11px]">
+          <div className="flex flex-wrap gap-2 text-[11px]">
             {(
               [
                 ["inaugural", "Inaugural / Valedictory"],
@@ -303,14 +296,13 @@ export function ConferenceSchedule() {
 
         {DAYS.map((day) => (
           <section key={day.date} className="card card-pad">
-            <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+            <div className="mb-3">
               <h2 className="text-xl font-bold text-slate-900 dark:text-white">
                 {day.weekday}
                 <span className="ml-2 text-sm font-medium text-slate-500">
                   {day.date}
                 </span>
               </h2>
-              <span className="text-xs text-slate-500">Working hours 10:00 – 18:00</span>
             </div>
 
             {/* Column headers */}

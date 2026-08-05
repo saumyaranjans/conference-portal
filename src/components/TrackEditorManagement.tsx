@@ -75,6 +75,15 @@ function decLabel(d: string | null): string {
   return d.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+/** Colour a decision badge: Accept green, Reject red, Revision blue. */
+function decisionClass(d: string | null): string {
+  if (!d) return "bg-slate-100 text-slate-700";
+  if (d === "accept") return "bg-emerald-100 text-emerald-800";
+  if (d === "reject") return "bg-rose-100 text-rose-800";
+  if (d.includes("revision")) return "bg-blue-100 text-blue-800";
+  return "bg-slate-100 text-slate-700";
+}
+
 /** A single track editor's own Accept/Reject rate across their decided papers. */
 function editorRates(r: TrackEditorRow) {
   let accept = 0;
@@ -479,7 +488,11 @@ export function TrackEditorManagement({
                                               Awaiting acceptance
                                             </span>
                                           ) : p.decided ? (
-                                            <span className="badge ml-2 bg-emerald-100 text-emerald-800">
+                                            <span
+                                              className={`badge ml-2 ${decisionClass(
+                                                p.decision
+                                              )}`}
+                                            >
                                               {decLabel(p.decision) || "Decided"}
                                             </span>
                                           ) : (

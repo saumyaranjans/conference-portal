@@ -563,10 +563,18 @@ export function AuthorManagement({
                     </span>
                   </td>
 
-                  {/* Papers + per-paper role */}
+                  {/* Papers + per-paper role — scoped to the active track /
+                      pathway filters so the list reflects what you filtered. */}
                   <td className="td">
                     <ul className="space-y-0.5">
-                      {r.papers.map((p, i) => {
+                      {r.papers
+                        .filter(
+                          (p) =>
+                            (track === "all" || p.trackCode === track) &&
+                            (pathwayFilter === "all" ||
+                              p.pathway === pathwayFilter)
+                        )
+                        .map((p, i) => {
                         const key = `${r.email}-${i}`;
                         const open = openPaper === key;
                         return (

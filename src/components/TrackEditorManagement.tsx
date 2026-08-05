@@ -466,6 +466,7 @@ export function TrackEditorManagement({
                         // When a pathway is selected, show only its papers.
                         const byTrack = new Map<string, TEPaper[]>();
                         for (const p of r.papers) {
+                          if (track !== "all" && p.trackCode !== track) continue;
                           if (pathway !== "all" && p.pathway !== pathway) continue;
                           const arr = byTrack.get(p.trackCode) ?? [];
                           arr.push(p);

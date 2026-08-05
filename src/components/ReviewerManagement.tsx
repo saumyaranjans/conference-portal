@@ -527,8 +527,24 @@ export function ReviewerManagement({
                     })()}
                   </td>
                   <td className="td">
-                    {r.assignments.length === 0 ? (
-                      <span className="text-xs text-slate-400">No assignments</span>
+                    {(() => {
+                    // Scope the assignments to the active track / pathway /
+                    // status filters so the list reflects what you filtered.
+                    const shown = r.assignments.filter(
+                      (a) =>
+                        (track === "all" || a.trackCode === track) &&
+                        (pathway === "all" || a.pathway === pathway) &&
+                        (status === "all" ||
+                          (status === "completed"
+                            ? a.status === "submitted"
+                            : a.status === status))
+                    );
+                    return shown.length === 0 ? (
+                      <span className="text-xs text-slate-400">
+                        {r.assignments.length === 0
+                          ? "No assignments"
+                          : "No matching assignments"}
+                      </span>
                     ) : (
                       <table className="w-full text-[11px]">
                         <thead>
@@ -542,7 +558,7 @@ export function ReviewerManagement({
                           </tr>
                         </thead>
                         <tbody>
-                          {r.assignments.map((a, i) => {
+                          {shown.map((a, i) => {
                             const dec = decisionOf(a.recommendation);
                             const key = `${r.email}-${i}`;
                             const open = openPaper === key;
@@ -672,7 +688,8 @@ export function ReviewerManagement({
                           })}
                         </tbody>
                       </table>
-                    )}
+                    );
+                    })()}
                   </td>
                   <td className="td align-top">
                     {(() => {

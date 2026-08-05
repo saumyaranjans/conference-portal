@@ -1,9 +1,43 @@
 import type { Metadata } from "next";
 import { LandingPage } from "@/components/landing/LandingPage";
+import {
+  REGISTRATION_FEE_BY_CATEGORY,
+  EARLY_BIRD_CUTOFF,
+} from "@/lib/registrationFees";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
+
+// Full registration-fee schedule as schema.org Offers — built from the single
+// source of truth (registrationFees.ts) so prices never drift. Every delegate
+// category is listed at both its Early-Bird and Regular tier.
+const REGISTRATION_URL = "https://glogift2027.in/#fees";
+const EVENT_OFFERS = Object.entries(REGISTRATION_FEE_BY_CATEGORY).flatMap(
+  ([category, fee]) => [
+    {
+      "@type": "Offer",
+      name: `Conference registration — ${category} (Early Bird)`,
+      category: "Conference registration",
+      price: String(fee.earlyBird),
+      priceCurrency: fee.currency,
+      availability: "https://schema.org/InStock",
+      url: REGISTRATION_URL,
+      validFrom: "2026-08-01",
+      validThrough: `${EARLY_BIRD_CUTOFF}T23:59:59+05:30`,
+    },
+    {
+      "@type": "Offer",
+      name: `Conference registration — ${category} (Regular)`,
+      category: "Conference registration",
+      price: String(fee.regular),
+      priceCurrency: fee.currency,
+      availability: "https://schema.org/InStock",
+      url: REGISTRATION_URL,
+      validFrom: "2026-12-21",
+    },
+  ]
+);
 
 // schema.org Event — helps search engines show rich results for the
 // conference (name, dates, venue, organiser).
@@ -43,18 +77,9 @@ const EVENT_JSONLD = {
     },
   ],
   // Google recognises Event `offers` as an array of Offer; each needs
-  // price/priceCurrency/availability/url/validFrom to register.
-  offers: [
-    {
-      "@type": "Offer",
-      name: "Conference registration (early-bird, domestic student)",
-      url: "https://glogift2027.in/#fees",
-      price: "3000",
-      priceCurrency: "INR",
-      availability: "https://schema.org/InStock",
-      validFrom: "2026-08-01",
-    },
-  ],
+  // price/priceCurrency/availability/url/validFrom to register. Generated from
+  // the live fee table so every delegate tier is represented accurately.
+  offers: EVENT_OFFERS,
   // `performer` must be a Person or PerformingGroup for Google to accept it —
   // Organization is silently dropped (reported as "missing performer").
   performer: [

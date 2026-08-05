@@ -522,7 +522,11 @@ export async function issueCertificate(
   let insertError: any = null;
   let issuedId: string | null = null;
   let issuedNumber = "";
-  const issuedAt = new Date().toISOString();
+  // The Editorial Office may pick the date of issuance (defaults to today).
+  const issueDateRaw = stringValue(formData, "issue_date", 10).trim();
+  const issuedAt = /^\d{4}-\d{2}-\d{2}$/.test(issueDateRaw)
+    ? new Date(`${issueDateRaw}T12:00:00Z`).toISOString()
+    : new Date().toISOString();
   const maxAttempts = providedNumber ? 1 : 4;
   for (let attempt = 0; attempt < maxAttempts && !issuedId; attempt += 1) {
     const certificateNumber =

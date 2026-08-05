@@ -7,7 +7,6 @@ import { PageHeader, StatCard, formatDate } from "@/components/ui/Primitives";
 import {
   issueCertificate,
   updateParticipantCertificateEvidence,
-  updateTrackEditorServiceEvidence,
   uploadCertificateSignature,
 } from "@/lib/certificateActions";
 import {
@@ -40,6 +39,8 @@ function CertificateActions({
   /** Slim inline layout (input + Issue + Preview on one row). */
   compact?: boolean;
 }) {
+  const today = new Date().toISOString().slice(0, 10);
+
   if (issuance) {
     // Generated. Line 1: the number. Line 2: Preview | Download. Line 3: Edit
     // (asks a reason, revokes, and re-opens line 2 to regenerate).
@@ -51,7 +52,7 @@ function CertificateActions({
             {issuance.certificate_number}
           </span>
           <span className="badge bg-emerald-100 text-emerald-800 text-[10px]">
-            ✓ Generated
+            ✓ Generated · {formatDate(issuance.issued_at)}
           </span>
         </div>
         {/* Line 2 — Preview | Download */}
@@ -88,6 +89,15 @@ function CertificateActions({
           placeholder="Enter number, or blank = auto-generate"
           className="input h-8 w-full max-w-xs text-xs"
         />
+        <label className="flex items-center gap-1.5 text-[11px] text-slate-500">
+          Date of issuance
+          <input
+            type="date"
+            name="issue_date"
+            defaultValue={today}
+            className="input h-8 w-40 text-xs"
+          />
+        </label>
         {/* Line 2 — Preview | Generate | Download (download after generating) */}
         <div className="flex flex-wrap items-center gap-2">
           <CertificatePreviewButton
@@ -136,7 +146,7 @@ export async function CertificateOffice() {
     await Promise.all([
       admin
         .from("submissions")
-        .select("id, paper_id, title, status, track_id, assigned_editor_id")
+        .select("id, paper_id, title, status, track_id, submission_type, assigned_editor_id")
         .eq("conference_id", conference.id)
         .neq("status", "draft")
         .neq("status", "rejected")
@@ -213,7 +223,6 @@ export async function CertificateOffice() {
   const submissionMap = asMap(submissions, "id");
   const trackMap = asMap(tracks, "id");
   const evidenceMap = asMap(evidence, "submission_author_id");
-  const serviceMap = asMap(serviceEvidence, "track_editor_id");
   const profileMap = asMap(profiles, "id");
   const signatureMap = asMap(signatures, "signatory_key");
   const activeIssuances = (issuances ?? []).filter((item) => !item.revoked_at);
@@ -258,6 +267,30 @@ export async function CertificateOffice() {
     handledEditorIds.has(te.profile_id)
   );
 
+  // Per-editor metrics: distinct tracks handled, and papers handled by pathway.
+  const editorMetrics = new Map<
+    string,
+    { tracks: Set<string>; a: number; b: number }
+  >();
+  for (const s of (submissions ?? []) as any[]) {
+    const eid = s.assigned_editor_id;
+    if (!eid) continue;
+    const m =
+      editorMetrics.get(eid) ?? { tracks: new Set<string>(), a: 0, b: 0 };
+    if (s.track_id) m.tracks.add(s.track_id);
+    if (s.submission_type === "full_paper_presentation") m.b += 1;
+    else m.a += 1;
+    editorMetrics.set(eid, m);
+  }
+
+  // One row per Track Editor PERSON (keep their first membership for issuance).
+  const editorByProfile = new Map<string, { membershipId: string }>();
+  for (const m of handlingTrackEditors) {
+    if (!editorByProfile.has(m.profile_id)) {
+      editorByProfile.set(m.profile_id, { membershipId: m.id });
+    }
+  }
+
   const eligibleParticipants = registeredAuthors.filter((item) => {
     const row = evidenceMap.get(item.id);
     const personProfile = item.profile_id ? profileMap.get(item.profile_id) : null;
@@ -266,9 +299,6 @@ export async function CertificateOffice() {
       Boolean((row?.salutation_override || personProfile?.title)?.trim())
     );
   }).length;
-  const confirmedEditors = handlingTrackEditors.filter(
-    (item) => serviceMap.get(item.id)?.service_confirmed
-  ).length;
 
   return (
     <>
@@ -280,7 +310,7 @@ export async function CertificateOffice() {
       <div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard label="Eligible presenters" value={eligibleParticipants} />
         <StatCard label="Completed reviewers" value={reviewers.length} />
-        <StatCard label="Confirmed Track Editors" value={confirmedEditors} />
+        <StatCard label="Track Editors" value={editorByProfile.size} />
         <StatCard label="Active certificates" value={activeIssuances.length} />
       </div>
 
@@ -510,48 +540,73 @@ export async function CertificateOffice() {
         <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Track Editor certificates</h2>
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
           Only Track Editors who have handled a submission appear here. Attendance
-          and payment are not required — the Editorial Office confirms the
-          appointed Track Editor served the track.
+          and payment are not required.
         </p>
-        <div className="mt-4 grid gap-4 lg:grid-cols-2">
-          {handlingTrackEditors.length === 0 && (
+        <div className="mt-4 space-y-2">
+          {editorByProfile.size === 0 && (
             <p className="text-sm text-slate-400">
               No Track Editors have handled a submission yet.
             </p>
           )}
-          {handlingTrackEditors.map((membership) => {
-            const editor = profileMap.get(membership.profile_id);
-            const track = trackMap.get(membership.track_id);
-            const service = serviceMap.get(membership.id) ?? {};
+          {[...editorByProfile.entries()].map(([profileId, { membershipId }]) => {
+            const editor = profileMap.get(profileId);
+            const m =
+              editorMetrics.get(profileId) ?? {
+                tracks: new Set<string>(),
+                a: 0,
+                b: 0,
+              };
+            const issuance = editorIssuanceMap.get(membershipId);
             return (
-              <article key={membership.id} className="card card-pad">
-                <p className="font-semibold text-slate-900 dark:text-white">
-                  {withSalutation(editor?.full_name ?? "Track Editor", editor?.title)}
-                </p>
-                <p className="mt-1 text-sm text-slate-500">{track?.name}</p>
-                <ActionForm action={updateTrackEditorServiceEvidence} className="mt-4 space-y-3">
-                  <input type="hidden" name="track_editor_id" value={membership.id} />
-                  <label className="flex items-center gap-2 text-sm">
-                    <input type="checkbox" name="service_confirmed" defaultChecked={service.service_confirmed ?? false} />
-                    Editorial Office confirms track handling
-                  </label>
-                  <label className="label">
-                    Confirmation date
-                    <input className="input mt-1" type="date" name="service_date" defaultValue={service.service_date ?? ""} />
-                  </label>
-                  <label className="label">
-                    Editorial note
-                    <textarea className="input mt-1" name="notes" rows={2} defaultValue={service.notes ?? ""} />
-                  </label>
-                  <SubmitButton variant="secondary">Save service confirmation</SubmitButton>
-                </ActionForm>
+              <article
+                key={profileId}
+                className="card flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2.5"
+              >
+                <div className="min-w-0">
+                  <p className="font-semibold text-slate-900 dark:text-white">
+                    {withSalutation(
+                      editor?.full_name ?? "Track Editor",
+                      editor?.title
+                    )}
+                  </p>
+                  {editor?.email && (
+                    <p className="text-xs text-slate-500">{editor.email}</p>
+                  )}
+                  {(editor?.designation || editor?.affiliation) && (
+                    <p className="text-xs text-slate-500">
+                      {[editor?.designation, editor?.affiliation]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </p>
+                  )}
+                </div>
+                {/* Metrics: Tracks handled / Pathway A / Pathway B */}
+                <div className="flex flex-1 flex-col items-center justify-center gap-1">
+                  <span className="badge bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200">
+                    Tracks handled {m.tracks.size}
+                  </span>
+                  <div className="flex flex-wrap items-center justify-center gap-1.5">
+                    <span className="badge bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+                      Pathway A {m.a}
+                    </span>
+                    <span className="badge bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300">
+                      Pathway B {m.b}
+                    </span>
+                  </div>
+                  {issuance && (
+                    <span className="text-[10px] text-slate-500">
+                      Issued {formatDate(issuance.issued_at)}
+                    </span>
+                  )}
+                </div>
                 <CertificateActions
                   type="track_editor"
-                  subjectId={membership.id}
+                  subjectId={membershipId}
                   conferenceId={conference.id}
-                  issuance={editorIssuanceMap.get(membership.id)}
-                  eligible={Boolean(service.service_confirmed && editor?.title)}
+                  issuance={issuance}
+                  eligible={Boolean(editor?.title)}
                   signaturesReady={signaturesReady}
+                  compact
                 />
               </article>
             );

@@ -152,7 +152,7 @@ export async function CertificateOffice() {
         : Promise.resolve({ data: [] as any[] }),
       admin
         .from("reviews")
-        .select("id, reviewer_id, assignments!inner(status), submissions!inner(conference_id)")
+        .select("id, reviewer_id, assignments!inner(status), submissions!inner(conference_id, submission_type)")
         .eq("is_submitted", true)
         .eq("assignments.status", "submitted")
         .eq("submissions.conference_id", conference.id),
@@ -219,8 +219,15 @@ export async function CertificateOffice() {
   const signaturesReady = CERTIFICATE_SIGNATORIES.every((item) => signatureMap.has(item.key));
 
   const reviewCount = new Map<string, number>();
+  const reviewCountA = new Map<string, number>();
+  const reviewCountB = new Map<string, number>();
   for (const review of completedReviews ?? []) {
-    reviewCount.set(review.reviewer_id, (reviewCount.get(review.reviewer_id) ?? 0) + 1);
+    const id = review.reviewer_id;
+    reviewCount.set(id, (reviewCount.get(id) ?? 0) + 1);
+    const isB =
+      (review as any).submissions?.submission_type === "full_paper_presentation";
+    if (isB) reviewCountB.set(id, (reviewCountB.get(id) ?? 0) + 1);
+    else reviewCountA.set(id, (reviewCountA.get(id) ?? 0) + 1);
   }
   const reviewers = reviewerIds.map((id) => profileMap.get(id)).filter(Boolean);
 
@@ -432,7 +439,7 @@ export async function CertificateOffice() {
           {reviewers.map((reviewer: any) => (
             <article
               key={reviewer.id}
-              className="card flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-2.5"
+              className="card flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2.5"
             >
               <div className="min-w-0">
                 <p className="font-semibold text-slate-900 dark:text-white">
@@ -448,10 +455,17 @@ export async function CertificateOffice() {
                       .join(" · ")}
                   </p>
                 )}
-                <span className={`badge mt-1 ${reviewer.title ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600"}`}>
-                  {reviewer.title ? "Service verified · " : ""}
-                  {reviewCount.get(reviewer.id)} submitted review
-                  {reviewCount.get(reviewer.id) === 1 ? "" : "s"}
+              </div>
+              {/* Submitted-review breakdown, centred in the row's whitespace. */}
+              <div className="flex flex-1 flex-wrap items-center justify-center gap-1.5">
+                <span className="badge bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200">
+                  Total {reviewCount.get(reviewer.id) ?? 0}
+                </span>
+                <span className="badge bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+                  Pathway A {reviewCountA.get(reviewer.id) ?? 0}
+                </span>
+                <span className="badge bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300">
+                  Pathway B {reviewCountB.get(reviewer.id) ?? 0}
                 </span>
               </div>
               <CertificateActions

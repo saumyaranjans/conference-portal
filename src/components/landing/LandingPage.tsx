@@ -1280,11 +1280,7 @@ export function LandingPage() {
             ))}
           </div>
 
-          <AdvisoryReveal
-            count={
-              FACULTY.people.length + POST_DOC.people.length + STAFF.people.length
-            }
-          >
+          <AdvisoryReveal>
             <div className="grid gap-4 lg:grid-cols-6">
               <CommitteePanel
                 group={FACULTY}

@@ -14,6 +14,8 @@ import { PaperDownload } from "@/components/PaperUpload";
 import { StatusBadge, RecommendationBadge } from "@/components/ui/StatusBadge";
 import { PageHeader, Section, formatDate } from "@/components/ui/Primitives";
 import { ReviewPanel } from "@/components/ReviewPanel";
+import { IntegrityCheck } from "@/components/IntegrityCheck";
+import { integrityReportUrl } from "@/lib/integrityActions";
 import {
   FULL_PAPER_ACCEPTS_REQUIRED,
   MIN_REVIEWS_PER_SUBMISSION,
@@ -73,6 +75,20 @@ export default async function EditorSubmissionPage({
         .eq("submission_id", id)
         .order("author_order"),
     ]);
+
+  // Who recorded the integrity check, and a short-lived link to its report.
+  const [{ data: integrityChecker }, integrityReport] = await Promise.all([
+    sub.integrity_checked_by
+      ? supabase
+          .from("profiles")
+          .select("full_name, email")
+          .eq("id", sub.integrity_checked_by)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    sub.integrity_report_path ? integrityReportUrl(id) : Promise.resolve(null),
+  ]);
+  const integrityCheckedByName =
+    (integrityChecker as any)?.full_name ?? (integrityChecker as any)?.email ?? null;
 
   const { data: outlets } =
     sub.status === "accepted"
@@ -356,6 +372,13 @@ export default async function EditorSubmissionPage({
           )}
         </div>
       </Section>
+
+      {/* ---- Research integrity: similarity + AI writing scores ---- */}
+      <IntegrityCheck
+        submission={sub}
+        checkedByName={integrityCheckedByName}
+        reportUrl={integrityReport}
+      />
 
       {/* ---- How this abstract is judged (gates the decision form) ---- */}
       {isAbstract && !isFinal && (

@@ -50,6 +50,35 @@ export const GUIDELINES_URL = "https://glogift2027.in/full-paper-submission-guid
 export const MANUSCRIPT_MIN_SIMILARITY = 0.7;
 
 /**
+ * Research-integrity thresholds for a submitted manuscript, as percentages.
+ * These FLAG a paper for the Track Editor's attention — they are deliberately
+ * not an automatic rejection. A high similarity index is often quotation or
+ * boilerplate, and every AI-writing detector on the market (Turnitin included)
+ * produces false positives, disproportionately so for authors writing in a
+ * second language. The decision stays with a human.
+ */
+export const SIMILARITY_FLAG_PERCENT = 15;
+export const AI_FLAG_PERCENT = 20;
+
+/** Tools whose scores the Editorial Office may record against a manuscript. */
+export const INTEGRITY_PROVIDERS = [
+  "manual",
+  "turnitin",
+  "ithenticate",
+  "copyleaks",
+  "originality-ai",
+] as const;
+export type IntegrityProvider = (typeof INTEGRITY_PROVIDERS)[number];
+
+export const INTEGRITY_PROVIDER_LABELS: Record<string, string> = {
+  manual: "Recorded manually",
+  turnitin: "Turnitin",
+  ithenticate: "iThenticate",
+  copyleaks: "Copyleaks",
+  "originality-ai": "Originality.AI",
+};
+
+/**
  * Word-overlap (Jaccard) similarity of two texts, 0..1: shared words over the
  * union of words, case- and punctuation-insensitive. Used to keep a revised
  * manuscript Title+Abstract close to what was accepted in Stage 1.
@@ -372,6 +401,10 @@ export interface Submission {
   similarity_index: number | null;
   ai_percentage: number | null;
   integrity_checked_at: string | null;
+  integrity_report_path: string | null;
+  integrity_checked_by: string | null;
+  integrity_notes: string | null;
+  integrity_provider: string;
   declared_original: boolean;
   declared_ai_assistance: boolean;
   declared_consent_publication: boolean;

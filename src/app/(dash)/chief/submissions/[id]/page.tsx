@@ -9,6 +9,8 @@ import { DocumentViewer } from "@/components/DocumentViewer";
 import { ManuscriptFilesView } from "@/components/ManuscriptFilesView";
 import { DeleteSubmissionButton } from "@/components/DeleteSubmissionButton";
 import { ReviewPanel } from "@/components/ReviewPanel";
+import { IntegrityCheck } from "@/components/IntegrityCheck";
+import { integrityReportUrl } from "@/lib/integrityActions";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { PageHeader, Section, formatDate } from "@/components/ui/Primitives";
 import {
@@ -91,6 +93,20 @@ export default async function ChiefSubmissionPage({
   // The decision that still stands; overridden ones live in the history below.
   const chairDecision = decisionRows.find((d) => !d.superseded_at) ?? null;
   const isFinal = ["accepted", "rejected"].includes(sub.status);
+
+  // Who recorded the integrity check, and a short-lived link to its report.
+  const [{ data: integrityChecker }, integrityReport] = await Promise.all([
+    sub.integrity_checked_by
+      ? supabase
+          .from("profiles")
+          .select("full_name, email")
+          .eq("id", sub.integrity_checked_by)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    sub.integrity_report_path ? integrityReportUrl(id) : Promise.resolve(null),
+  ]);
+  const integrityCheckedByName =
+    (integrityChecker as any)?.full_name ?? (integrityChecker as any)?.email ?? null;
 
   return (
     <>
@@ -207,6 +223,12 @@ export default async function ChiefSubmissionPage({
           )}
         </div>
       </Section>
+
+      <IntegrityCheck
+        submission={sub}
+        checkedByName={integrityCheckedByName}
+        reportUrl={integrityReport}
+      />
 
       <Section title="Reviews">
         <ReviewPanel assignments={rows} showConfidential />

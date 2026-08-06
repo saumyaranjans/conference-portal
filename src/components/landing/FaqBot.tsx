@@ -168,17 +168,32 @@ function smallTalk(query: string): string | null {
   // A short message containing any greeting-ish word (in any casing or
   // spelling — "HYE", "hlo", "good morning") is a greeting.
   if (words.length <= 4 && words.some((w) => GREETINGS.has(w)))
-    return "Hello! 😊 I'm Toshi. Ask me anything about GLOGIFT 27 — dates, submissions, fees, publication, travel or registration.";
-  if (/thank|thanks|thx|tysm|dhanyavad/.test(q))
-    return "You're most welcome! Happy to help — and we look forward to seeing you at IIM Sambalpur, 25–27 February 2027. 🎉";
-  if (/^(bye+|goodbye|good night|see you|see ya|cya|tata|ok bye)\b/.test(q))
-    return "Goodbye! Do come back if anything else comes to mind. 👋";
-  if (/(who are you|your name|about you|what are you)/.test(q))
-    return "I'm Toshi, the GLOGIFT 27 assistant. I answer from the official conference FAQ — dates, venue, submission pathways, fees, publication opportunities and more.";
-  if (/(help|what can you)/.test(q) && q.length < 40)
-    return "I can answer questions about GLOGIFT 27 — try asking about dates, the venue, how to submit, fees, deadlines, publication or how to reach IIM Sambalpur. You can phrase it your own way!";
-  if (/(how are you|how r u|hows it going|how is it going)/.test(q))
-    return "I'm doing great, thank you for asking! 😊 How can I help you with GLOGIFT 27 today?";
+    return "Hello! 😊 I'm Toshi — how can I help? Please choose a question from the suggestions above, or just type your own in any words: dates, submissions, fees, publication, travel or registration.";
+  // "Greetings of the day", "very good morning to you" and similar openings.
+  if (/(greetings of the day|greetings for the day|compliments of the day)/.test(q))
+    return "Greetings of the day to you too! 🙏 I'm Toshi, your GLOGIFT 27 assistant — how can I help? Please choose a question from the suggestions above, or type your own.";
+  if (/(how are you|how r u|how do you do|hows it going|how is it going|how have you been|kaise ho)/.test(q))
+    return "I'm doing very well, thank you for asking! 😊 How can I help you with GLOGIFT 27 today? You can pick a question from the suggestions above or ask in your own words.";
+  if (/(thank|thanks|thx|tysm|dhanyavad|shukriya|grateful|appreciate)/.test(q))
+    return "You're most welcome! 😊 Happy to help — and we look forward to seeing you at IIM Sambalpur, 25–27 February 2027. 🎉 Anything else you'd like to know?";
+  if (/(enjoy your day|have a (nice|good|great|lovely) (day|one|evening)|good day to you|take care|stay safe)/.test(q))
+    return "Thank you — you too, have a wonderful day! ☀️ I'm here whenever you need anything about GLOGIFT 27.";
+  if (/^(good night|gn|sweet dreams)\b/.test(q))
+    return "Good night! 🌙 Do come back any time — I'll be right here.";
+  if (/^(bye+|goodbye|see you|see ya|cya|tata|ok bye|alvida)\b/.test(q))
+    return "Goodbye! 👋 Do come back if anything else comes to mind — and all the best with your submission.";
+  if (/(nice to meet|pleasure to meet|glad to meet)/.test(q))
+    return "Lovely to meet you too! 😊 Ask me anything about GLOGIFT 27, or tap one of the suggested questions above.";
+  if (/(who are you|your name|about you|what are you|are you (a )?(bot|robot|human|real|ai))/.test(q))
+    return "I'm Toshi, the GLOGIFT 27 assistant — a friendly helper here on the conference website. 🙂 I answer from the official conference information: dates, venue, submission pathways, fees, publication opportunities, travel and more.";
+  if (/(help|what can you|what do you do|how does this work)/.test(q) && q.length < 45)
+    return "I can answer questions about GLOGIFT 27 — dates, the venue, how to submit, fees, deadlines, publication, travel to IIM Sambalpur and more. Please choose a question from the suggestions above, or just ask in your own words!";
+  if (/(sorry|my mistake|oops|nevermind|never mind)/.test(q) && q.length < 30)
+    return "No problem at all! 😊 What would you like to know about GLOGIFT 27?";
+  if (/(good|great|awesome|nice|perfect|excellent|super|ok thanks|okay thanks)$/.test(q) && q.length < 25)
+    return "Glad that helped! 😊 Anything else about GLOGIFT 27 — submissions, fees, schedule or travel?";
+  if (/(see you (at|in) (the )?(conference|sambalpur|glogift)|looking forward)/.test(q))
+    return "We look forward to welcoming you at IIM Sambalpur, 25–27 February 2027! 🎉 Let me know if you need anything before then.";
   return null;
 }
 

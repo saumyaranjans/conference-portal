@@ -27,6 +27,11 @@
       "permanent": true
     },
     {
+      "source": "/advisory",
+      "destination": "/#committee",
+      "permanent": true
+    },
+    {
       "source": "/conference-document",
       "destination": "/conference-brochure",
       "permanent": true

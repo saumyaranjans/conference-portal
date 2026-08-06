@@ -1310,15 +1310,6 @@ export function LandingPage() {
                 className="lg:col-span-2"
               />
             </div>
-
-            <div className="mt-4 text-center">
-              <Link
-                href="/advisory"
-                className="text-sm font-medium text-blue-700 hover:underline dark:text-blue-300"
-              >
-                Open the advisory on its own page →
-              </Link>
-            </div>
           </AdvisoryReveal>
         </section>
 

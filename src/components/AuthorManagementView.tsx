@@ -121,6 +121,10 @@ export async function AuthorManagementView() {
       (a) => !CERT_ELIGIBLE_EXCLUDE.includes(a.submissions?.status)
     );
     const certsGenerated = certEligible.filter((a) => certSet.has(a.id)).length;
+    // Any one of the person's certified rows anchors the merged download — the
+    // route resolves the rest from the shared email.
+    const certAnchorId =
+      certEligible.find((a) => certSet.has(a.id))?.id ?? null;
     return {
       name: list.map((a) => a.full_name).find(Boolean) || key,
       mobile:
@@ -142,6 +146,7 @@ export async function AuthorManagementView() {
       attended: list.some((a) => a.attended_confirmed),
       certEligiblePapers: certEligible.length,
       certsGenerated,
+      certAnchorId,
       intention,
       category,
       member,

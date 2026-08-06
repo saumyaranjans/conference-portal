@@ -64,6 +64,9 @@ export type PersonRow = {
   /** Papers that can earn a participation certificate, and how many already have one. */
   certEligiblePapers: number;
   certsGenerated: number;
+  /** A submission_authors id that carries a certificate; anchors the merged
+   *  download, which resolves the person's other certificates from the email. */
+  certAnchorId: string | null;
   /** Attendance intention as declared (attending → fee applies). */
   intention: "attending" | "not" | "undeclared";
   /** The delegate's originally reported participation mode (virtual / onsite). */
@@ -1140,6 +1143,19 @@ export function AuthorManagement({
                                   one per eligible paper
                                 </span>
                               </span>
+                            )}
+                            {/* All of this author's certificates arrive as one
+                                file, a page each — an author on two accepted
+                                papers should not collect two downloads. */}
+                            {r.certsGenerated > 0 && r.certAnchorId && (
+                              <a
+                                href={`/api/participation-certificate/bundle/${r.certAnchorId}`}
+                                className="btn-secondary block w-full py-1.5 text-center text-xs"
+                                title={`Download ${r.certsGenerated} certificate${plural} as one PDF`}
+                              >
+                                ⬇ Download certificate{plural}
+                                {r.certsGenerated > 1 ? ` (${r.certsGenerated} pages)` : ""}
+                              </a>
                             )}
                             <label className="flex items-start gap-1.5 rounded-md border border-slate-200 px-2 py-1 text-[10px] leading-tight text-slate-600 dark:border-slate-700 dark:text-slate-300">
                               <input

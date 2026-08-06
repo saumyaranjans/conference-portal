@@ -4,6 +4,7 @@ import {
   type Deadline,
 } from "@/components/landing/DeadlineCountdown";
 import { FaqBot } from "@/components/landing/FaqBot";
+import { TOSHI_KNOWLEDGE } from "@/components/landing/toshiKnowledge";
 import { SocialLinks } from "@/components/landing/SocialLinks";
 import { Banner } from "@/components/landing/Banner";
 import { IkatStrip } from "@/components/landing/IkatStrip";
@@ -1501,7 +1502,7 @@ export function LandingPage() {
       </div>
       <IkatStrip flip />
       <BackToTop />
-      <FaqBot items={FAQ_ITEMS} />
+      <FaqBot items={[...FAQ_ITEMS, ...TOSHI_KNOWLEDGE]} />
     </main>
   );
 }

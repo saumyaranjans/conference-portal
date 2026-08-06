@@ -42,9 +42,21 @@ const DEADLINES = [
 
 const b64 = (p, mime) =>
   `data:${mime};base64,` + fs.readFileSync(p).toString("base64");
-const SK = b64(SKETCH, "image/jpeg");
 const IIM = b64(path.join(REPO, "public/iim-crest.png"), "image/png");
 const GIFT = b64(path.join(REPO, "public/glogift-logo.png"), "image/png");
+
+/* Resample the drawing to the pixels it will actually occupy at this scale.
+   Left to librsvg it would be scaled with a cheap filter at raster time; doing
+   it here with lanczos plus a light sharpen keeps the pen lines from going
+   soft when the banner is rendered at 2x or 3x. */
+async function sketchDataUri(scale) {
+  const buf = await sharp(SKETCH)
+    .resize(Math.round(IW * scale), Math.round(IH * scale), { kernel: "lanczos3" })
+    .sharpen({ sigma: 0.7 })
+    .jpeg({ quality: 94, chromaSubsampling: "4:4:4" })
+    .toBuffer();
+  return "data:image/jpeg;base64," + buf.toString("base64");
+}
 
 const SERIF = "Georgia, 'Times New Roman', Times, serif";
 const SANS = "'Segoe UI', 'Helvetica Neue', Arial, sans-serif";
@@ -67,7 +79,7 @@ function pipeJoin(items, { fill, weight, gap, pipeFill = MAROON }) {
     .join("");
 }
 
-const svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+const buildSvg = (SK) => `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
   <defs>
     <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0%" stop-color="#7c2d12"/>
@@ -132,9 +144,25 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.
   </text>
 </svg>`;
 
-fs.writeFileSync(path.join(OUT, "glogift-27-banner-1920x673-campus.svg"), svg, "utf8");
-sharp(Buffer.from(svg))
-  .png({ quality: 100 })
-  .toFile(path.join(OUT, "glogift-27-banner-1920x673-campus.png"))
-  .then((i) => console.log("PNG:", i.width + "x" + i.height, i.size + " bytes"))
-  .catch((e) => { console.error("FAILED:", e.message); process.exit(1); });
+(async () => {
+  // The editable SVG keeps the drawing at its native size — small file, and
+  // any downstream editor can re-scale it freely.
+  fs.writeFileSync(
+    path.join(OUT, "glogift-27-banner-1920x673-campus.svg"),
+    buildSvg(b64(SKETCH, "image/jpeg")),
+    "utf8"
+  );
+
+  for (const [scale, name] of [
+    [1, "glogift-27-banner-1920x673-campus"],
+    [2, "glogift-27-banner-campus-2x-3840x1346"],
+    [3, "glogift-27-banner-campus-3x-5760x2019"],
+  ]) {
+    const svg = buildSvg(await sketchDataUri(scale));
+    const info = await sharp(Buffer.from(svg), { density: 72 * scale })
+      .png({ quality: 100, compressionLevel: 9 })
+      .toFile(path.join(OUT, `${name}.png`));
+    console.log(`${name}.png:`, info.width + "x" + info.height,
+                Math.round(info.size / 1024) + "KB");
+  }
+})().catch((e) => { console.error("FAILED:", e.message); process.exit(1); });

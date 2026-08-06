@@ -57,3 +57,20 @@ Outputs: `glogift-27-banner-campus.png` (1920x1240, full drawing) and
 the right and bottom edges (1180x606) and its left edge is dissolved into the
 paper with a gradient mask, so the halves read as one sheet instead of a picture
 pasted beside a caption. Output: `glogift-27-banner-1920x673-campus.{svg,png}`.
+
+### HD renders
+
+`make-banner-673.js` writes the banner at three scales. Type, rules and the
+gradient masks are vector, so they rasterise natively at each size; the drawing
+is resampled to the pixels it will actually occupy (lanczos + light sharpen)
+rather than being left to librsvg's raster-time scaling, which keeps the pen
+lines from softening at 2x/3x.
+
+| File | Pixels | Use |
+| --- | --- | --- |
+| `glogift-27-banner-1920x673-campus.png` | 1920x673 | web header |
+| `glogift-27-banner-campus-2x-3840x1346.png` | 3840x1346 | retina / large screens |
+| `glogift-27-banner-campus-3x-5760x2019.png` | 5760x2019 | print, standees, backdrops |
+
+The SVG keeps the drawing at native size and stays fully editable — all text is
+live, so wording can be changed without re-rendering.

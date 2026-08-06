@@ -397,7 +397,7 @@ const REGISTRATION_FEES = [
   ["Students (UG/PG, full-time)", "3,000", "3,500", "90", "100"],
 ];
 
-const LEADERSHIP = [
+export const LEADERSHIP = [
   {
     name: "Prof (Dr) Mahadeo Jaiswal",
     role: "Conference Patron",
@@ -500,13 +500,13 @@ const PORTRAITS: Record<string, string> = {
   "Ms Sunita Sahu": "/people/sunita-sahu.jpg",
 };
 
-const [FACULTY, POST_DOC, STAFF] = COMMITTEE;
+export const [FACULTY, POST_DOC, STAFF] = COMMITTEE;
 
 /**
  * One membership type on its own coloured surface. `wide` lays the cards out
  * across a full row; the narrow panels sit two-abreast beside each other.
  */
-function CommitteePanel({
+export function CommitteePanel({
   group,
   people,
   className,
@@ -549,7 +549,7 @@ function CommitteePanel({
   );
 }
 
-function Avatar({ name, size }: { name: string; size: "lg" | "sm" }) {
+export function Avatar({ name, size }: { name: string; size: "lg" | "sm" }) {
   const dim = size === "lg" ? "h-32 w-32 text-3xl" : "h-24 w-24 text-xl";
   const ring = "ring-4 ring-white shadow-md dark:ring-slate-800";
   const photo = PORTRAITS[name];
@@ -584,14 +584,18 @@ function Heading({ id, children }: { id?: string; children: React.ReactNode }) {
   );
 }
 
+// Labels are deliberately terse: a seventh entry only fits on one line if
+// every label earns its width. "Conference X" reads as noise when the whole
+// bar is the conference.
 const NAV_LINKS: { href: string; label: string; accent?: boolean }[] = [
-  { href: "#submission", label: "Conference tracks" },
-  { href: "/schedule", label: "Conference Schedule" },
-  { href: "#fees", label: "Register for conference" },
-  { href: "#dates", label: "Important dates" },
-  // The one link that leaves the page, so it carries the colour and pulse
-  // that mark it out from the section jumps.
-  { href: "/travelogue", label: "Sambalpur travelogue", accent: true },
+  { href: "#submission", label: "Tracks" },
+  { href: "/schedule", label: "Schedule" },
+  { href: "#fees", label: "Register" },
+  { href: "#dates", label: "Dates" },
+  { href: "/advisory", label: "Advisory" },
+  // The one link that leaves the page for something to read rather than do, so
+  // it carries the colour that marks it out from the section jumps.
+  { href: "/travelogue", label: "Travelogue", accent: true },
 ];
 
 function NavLinks({ className }: { className: string }) {
@@ -1256,55 +1260,27 @@ export function LandingPage() {
           </p>
         </section>
 
-        {/* ---- 8. Conference advisory committee ---- */}
-        <section>
-          <Heading id="committee">Conference advisory committee</Heading>
-
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-            {LEADERSHIP.map((p) => (
-              <div
-                key={p.name}
-                className="card card-pad text-center card-hover"
-              >
-                <div className="flex justify-center mb-4">
-                  <Avatar name={p.name} size="lg" />
-                </div>
-                <p className="badge bg-blue-100 text-blue-800">{p.role}</p>
-                <p className="text-base font-semibold text-slate-900 mt-2 dark:text-slate-100">
-                  {p.name}
-                </p>
-                <p className="text-xs text-slate-500 mt-1">{p.org}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Each membership type gets its own tinted surface. The faculty
-              list runs a full row wide and its overflow sits beside the other
-              two panels, so the row never ends in empty space. */}
-          <div className="grid gap-4 lg:grid-cols-6">
-            <CommitteePanel
-              group={FACULTY}
-              people={FACULTY.people.slice(0, 6)}
-              className="-mb-4 pb-2 rounded-b-none border-b-0
-                         lg:col-span-6 lg:mb-0 lg:pb-4 lg:rounded-2xl lg:border-b"
-              wide
-            />
-            <CommitteePanel
-              group={FACULTY}
-              people={FACULTY.people.slice(6)}
-              className="pt-2 rounded-t-none lg:col-span-2 lg:pt-4 lg:rounded-2xl"
-              hideLabel
-            />
-            <CommitteePanel
-              group={POST_DOC}
-              people={POST_DOC.people}
-              className="lg:col-span-2"
-            />
-            <CommitteePanel
-              group={STAFF}
-              people={STAFF.people}
-              className="lg:col-span-2"
-            />
+        {/* ---- 8. Conference advisory (lives on its own page) ---- */}
+        <section className="card card-pad">
+          <Heading id="committee">Conference advisory</Heading>
+          <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+            GLOGIFT 27 is guided by its patrons, advisory leadership and a
+            conference committee drawn from the faculty, post-doctoral fellows
+            and staff of IIM Sambalpur.
+          </p>
+          <div className="mt-4">
+            <Link
+              href="/advisory"
+              className="inline-flex items-center gap-2 rounded-full border-2
+                         border-blue-600 bg-white px-5 py-2.5 text-sm font-semibold
+                         transition hover:bg-blue-50
+                         dark:bg-slate-900 dark:hover:bg-slate-800"
+            >
+              <span className="text-gradient">See the conference advisory</span>
+              <svg viewBox="0 0 24 24" className="h-4 w-4 text-blue-700 dark:text-blue-300" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </Link>
           </div>
         </section>
 

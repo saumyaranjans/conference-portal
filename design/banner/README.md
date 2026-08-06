@@ -25,3 +25,13 @@ paper tooth and grain. Two variants:
 - `glogift-27-banner-pencil.{svg,png}` — pure graphite.
 - `glogift-27-banner-pencil-tinted.{svg,png}` — graphite with the tricolour
   hand-tinted, so the flag is the single point of colour.
+
+## Sketch-background banner
+
+`make-banner-sketchbg.js` composes the full banner (1920x860): sketch A is
+scaled into a taller canvas with a sketched paved forecourt, given a turbulence
+"hand wobble" so no line is machine-straight, and the brick fills are deepened
+element-by-element (the drawing was authored as a pale wash). The conference
+text sits in the clear sky at the left, where the drawing is masked to fade out.
+
+Output: `glogift-27-banner-sketch.{svg,png}`.

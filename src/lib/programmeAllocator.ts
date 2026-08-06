@@ -142,6 +142,79 @@ function chunkEvenly(papers: AllocPaper[], maxPerSession: number): AllocPaper[][
   return out;
 }
 
+/* --------------------------------------------------------- thin tracks --- */
+
+type TrackGroup = {
+  trackIds: string[];
+  trackCodes: string[];
+  trackNames: string[];
+  mode: "onsite" | "online";
+  papers: AllocPaper[];
+};
+
+/** How alike two groups of papers are, by their combined topic text. */
+function groupSimilarity(a: TrackGroup, b: TrackGroup): number {
+  const text = (g: TrackGroup) =>
+    `${g.trackNames.join(" ")} ${g.papers.map(topicText).join(" ")}`;
+  return textSimilarity(text(a), text(b));
+}
+
+/**
+ * Join tracks too thin to fill a session with their closest topical neighbour.
+ *
+ * A track that attracts two papers cannot form a session on its own, and an
+ * audience is better served by one coherent session of five than by two of two.
+ * Merging is deliberately conservative: only groups BELOW the minimum look for
+ * a partner, the partner must be in the same mode, and the pair must still fit
+ * one session — so a healthy track is never dragged into someone else's.
+ *
+ * Repeats while it can, so three thin tracks can converge into one session.
+ */
+function mergeThinTrackGroups(
+  groups: TrackGroup[],
+  maxPerSession: number
+): TrackGroup[] {
+  const out = [...groups];
+
+  for (;;) {
+    const thin = out
+      .map((g, i) => ({ g, i }))
+      .filter(({ g }) => g.papers.length < MIN_PAPERS_PER_SESSION);
+    if (thin.length === 0) break;
+
+    let best: { a: number; b: number; score: number } | null = null;
+    for (const { g: ga, i: ia } of thin) {
+      for (let ib = 0; ib < out.length; ib++) {
+        if (ib === ia) continue;
+        const gb = out[ib];
+        if (gb.mode !== ga.mode) continue; // on-site and online never merge
+        if (ga.papers.length + gb.papers.length > maxPerSession) continue;
+        const score = groupSimilarity(ga, gb);
+        if (!best || score > best.score) best = { a: ia, b: ib, score };
+      }
+    }
+    if (!best) break;
+
+    const a = out[best.a];
+    const b = out[best.b];
+    const merged: TrackGroup = {
+      trackIds: [...new Set([...a.trackIds, ...b.trackIds])],
+      trackCodes: [...new Set([...a.trackCodes, ...b.trackCodes])],
+      trackNames: [...new Set([...a.trackNames, ...b.trackNames])],
+      mode: a.mode,
+      papers: [...a.papers, ...b.papers],
+    };
+    // Remove both, append the merger.
+    const drop = new Set([best.a, best.b]);
+    const next = out.filter((_, i) => !drop.has(i));
+    next.push(merged);
+    out.length = 0;
+    out.push(...next);
+  }
+
+  return out;
+}
+
 /* ------------------------------------------------------------ scheduling --- */
 
 type SlotKey = string;
@@ -229,38 +302,68 @@ function sessionPeople(s: PlannedSession): Set<string> {
  */
 export function buildProgramme(
   papers: AllocPaper[],
-  opts: { maxPerSession?: number } = {}
+  opts: { maxPerSession?: number; mergeThinTracks?: boolean } = {}
 ): ProgrammePlan {
   const maxPerSession = Math.min(
     Math.max(opts.maxPerSession ?? MAX_PAPERS_PER_SESSION, MIN_PAPERS_PER_SESSION),
     ABSOLUTE_MAX_PAPERS
   );
+  const mergeThin = opts.mergeThinTracks ?? true;
   const notes: string[] = [];
 
-  // Group by track + mode.
-  const groups = new Map<string, AllocPaper[]>();
+  // Group by track + mode. On-site and online never merge: they are different
+  // rooms, and a delegate attending one cannot step into the other.
+  const groups = new Map<string, TrackGroup>();
   for (const p of papers) {
     const key = `${p.trackId}|${p.mode}`;
-    const arr = groups.get(key) ?? [];
-    arr.push(p);
-    groups.set(key, arr);
+    const g = groups.get(key) ?? {
+      trackIds: [p.trackId],
+      trackCodes: [p.trackCode],
+      trackNames: [p.trackName],
+      mode: p.mode,
+      papers: [],
+    };
+    g.papers.push(p);
+    groups.set(key, g);
+  }
+
+  let working = [...groups.values()];
+  if (mergeThin) {
+    const before = working.length;
+    working = mergeThinTrackGroups(working, maxPerSession);
+    const merged = before - working.length;
+    if (merged > 0) {
+      notes.push(
+        `${merged} thin track${merged === 1 ? "" : "s"} joined with their closest neighbour to reach a workable session size.`
+      );
+    }
   }
 
   const draft: PlannedSession[] = [];
-  for (const [, group] of groups) {
-    const ordered = orderByTopic(group);
+  for (const group of working) {
+    const ordered = orderByTopic(group.papers);
     const chunks = chunkEvenly(ordered, maxPerSession);
-    const first = group[0];
+    const modeLabel = group.mode === "onsite" ? "On-site" : "Online";
+    const joint = group.trackNames.length > 1;
+    // Track names already contain ampersands ("Analytics, Big Data &
+    // Intelligent Systems"), so joining them with another one produces an
+    // unreadable run-on. A joint session is billed by its track codes and
+    // carries the full names underneath.
+    const label = joint
+      ? `Joint Session · ${group.trackCodes.join(" · ")}`
+      : group.trackNames[0];
+    const codeLabel = group.trackCodes.join("+");
 
     chunks.forEach((chunk, i) => {
-      const modeLabel = first.mode === "onsite" ? "On-site" : "Online";
       draft.push({
-        key: `${first.trackId}|${first.mode}|${i + 1}`,
-        title: `${first.trackName} — ${modeLabel} Session ${i + 1}`,
-        trackId: first.trackId,
-        trackCode: first.trackCode,
-        trackName: first.trackName,
-        mode: first.mode,
+        key: `${group.trackIds.join("+")}|${group.mode}|${i + 1}`,
+        title: `${label} — ${modeLabel} Session ${i + 1}`,
+        // The first track owns the session for filing purposes; the title
+        // carries the joint billing.
+        trackId: group.trackIds[0],
+        trackCode: codeLabel,
+        trackName: label,
+        mode: group.mode,
         sessionDate: null,
         timeSlot: null,
         papers: chunk,
@@ -268,9 +371,9 @@ export function buildProgramme(
 
       if (chunk.length < MIN_PAPERS_PER_SESSION) {
         notes.push(
-          `${first.trackCode} ${modeLabel} Session ${i + 1} holds only ${chunk.length} paper${
+          `${codeLabel} ${modeLabel} Session ${i + 1} holds only ${chunk.length} paper${
             chunk.length === 1 ? "" : "s"
-          } — below the ${MIN_PAPERS_PER_SESSION}-paper minimum, because that is all the track has.`
+          } — below the ${MIN_PAPERS_PER_SESSION}-paper minimum, and there is nothing close enough left to join it with.`
         );
       }
     });

@@ -16,7 +16,7 @@ const W = 1920, H = 673;
 // Sketch 1280x658 -> 1080 wide, lifted clear of the footer band (which starts
 // at y=590) while staying whole and flush to the right edge.
 const IW = 1080, IH = 555, IX = W - IW, IY = 26;
-const FOOT = 590;
+const FOOT = 584;
 
 /* Display forms of the ten official tracks. The full titles run to ~460
    characters with separators — three times what fits on one line at a legible
@@ -99,15 +99,15 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.
 
   <!-- footer: deadlines, then the track list -->
   <path d="M90 ${FOOT} H${W - 90}" stroke="#c2410c" stroke-width="1" opacity="0.28"/>
-  <text x="${W / 2}" y="${FOOT + 30}" text-anchor="middle" font-family="${SANS}" font-size="17">
-    <tspan fill="#7c2d12" font-weight="700">Abstract submission closes 23 November 2026</tspan><tspan fill="#94a3b8" dx="18">|</tspan><tspan fill="#7c2d12" font-weight="700" dx="18">Registration closes 24 January 2027</tspan><tspan fill="#475569" dx="10">(early bird 20 December 2026)</tspan>
+  <text x="${W / 2}" y="${FOOT + 32}" text-anchor="middle" font-family="${SANS}" font-size="21">
+    <tspan fill="#7c2d12" font-weight="700">Abstract submission closes 23 November 2026</tspan><tspan fill="#7c2d12" opacity="0.45" dx="16">|</tspan><tspan fill="#7c2d12" font-weight="700" dx="16">Early bird registration closes 20 December 2026</tspan><tspan fill="#7c2d12" opacity="0.45" dx="16">|</tspan><tspan fill="#7c2d12" font-weight="700" dx="16">Regular registration closes 24 January 2027</tspan>
   </text>
-  <text x="${W / 2}" y="${FOOT + 58}" text-anchor="middle" font-family="${SANS}" font-size="13" fill="#475569">
+  <text x="${W / 2}" y="${FOOT + 62}" text-anchor="middle" font-family="${SANS}" font-size="14" fill="#475569">
     ${TRACKS.map((t, i) =>
       i === 0
         ? `<tspan>${t.replace(/&/g, "&amp;")}</tspan>`
-        : `<tspan fill="#c2410c" opacity="0.5" dx="7">|</tspan>` +
-          `<tspan fill="#475569" dx="7">${t.replace(/&/g, "&amp;")}</tspan>`
+        : `<tspan fill="#c2410c" opacity="0.5" dx="6">|</tspan>` +
+          `<tspan fill="#475569" dx="6">${t.replace(/&/g, "&amp;")}</tspan>`
     ).join("")}
   </text>
 </svg>`;

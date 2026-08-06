@@ -257,7 +257,9 @@ export async function generateParticipationCertificates(
           : `Participation certificate generated for ${generated} paper${
               generated === 1 ? "" : "s"
             }. The author has been emailed and can download it from their dashboard.`
-        : "Certificate already generated for this author.",
+        : `Nothing to do — all ${eligible.length} eligible paper${
+            eligible.length === 1 ? "" : "s"
+          } already hold a certificate (one per paper).`,
     generated,
   };
 }

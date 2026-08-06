@@ -1118,16 +1118,27 @@ export function AuthorManagement({
                             </span>
                           );
                         }
+                        // One certificate per eligible paper, so the counts
+                        // carry into the labels — an author on two accepted
+                        // papers holds two certificates, not one.
+                        const plural = r.certsGenerated === 1 ? "" : "s";
                         const label = allDone
-                          ? "Regenerate certificate"
+                          ? `Regenerate certificate${plural}`
                           : r.certsGenerated > 0
-                            ? "Generate remaining"
-                            : "Generate certificate";
+                            ? `Generate remaining (${
+                                r.certEligiblePapers - r.certsGenerated
+                              })`
+                            : `Generate certificate${
+                                r.certEligiblePapers === 1 ? "" : "s"
+                              }`;
                         return (
                           <div className="space-y-1">
                             {allDone && (
                               <span className="block rounded-md bg-emerald-50 px-2 py-1 text-center text-[11px] font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
-                                ✓ Certificate generated
+                                ✓ {r.certsGenerated} certificate{plural} generated
+                                <span className="block font-normal opacity-80">
+                                  one per eligible paper
+                                </span>
                               </span>
                             )}
                             <label className="flex items-start gap-1.5 rounded-md border border-slate-200 px-2 py-1 text-[10px] leading-tight text-slate-600 dark:border-slate-700 dark:text-slate-300">

@@ -584,18 +584,15 @@ function Heading({ id, children }: { id?: string; children: React.ReactNode }) {
   );
 }
 
-// Labels are deliberately terse: a seventh entry only fits on one line if
-// every label earns its width. "Conference X" reads as noise when the whole
-// bar is the conference.
 const NAV_LINKS: { href: string; label: string; accent?: boolean }[] = [
-  { href: "#submission", label: "Tracks" },
-  { href: "/schedule", label: "Schedule" },
-  { href: "#fees", label: "Register" },
-  { href: "#dates", label: "Dates" },
-  { href: "/advisory", label: "Advisory" },
-  // The one link that leaves the page for something to read rather than do, so
-  // it carries the colour that marks it out from the section jumps.
-  { href: "/travelogue", label: "Travelogue", accent: true },
+  { href: "#submission", label: "Conference tracks" },
+  { href: "/schedule", label: "Conference Schedule" },
+  { href: "#fees", label: "Register for conference" },
+  { href: "#dates", label: "Important dates" },
+  { href: "/advisory", label: "Conference advisory" },
+  // The one link that leaves the page, so it carries the colour and pulse
+  // that mark it out from the section jumps.
+  { href: "/travelogue", label: "Sambalpur travelogue", accent: true },
 ];
 
 function NavLinks({ className }: { className: string }) {
@@ -1260,15 +1257,28 @@ export function LandingPage() {
           </p>
         </section>
 
-        {/* ---- 8. Conference advisory (lives on its own page) ---- */}
-        <section className="card card-pad">
+        {/* ---- 8. Conference advisory — the four leaders, full list elsewhere ---- */}
+        <section>
           <Heading id="committee">Conference advisory</Heading>
-          <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
-            GLOGIFT 27 is guided by its patrons, advisory leadership and a
-            conference committee drawn from the faculty, post-doctoral fellows
-            and staff of IIM Sambalpur.
-          </p>
-          <div className="mt-4">
+          {/* Only the patrons and chairs appear here. The full committee runs
+              to dozens of names, which pushed the tracks, dates and fees below
+              the fold — it lives on /advisory instead. */}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {LEADERSHIP.slice(0, 4).map((p) => (
+              <div key={p.name} className="card card-pad text-center card-hover">
+                <div className="flex justify-center mb-4">
+                  <Avatar name={p.name} size="lg" />
+                </div>
+                <p className="badge bg-blue-100 text-blue-800">{p.role}</p>
+                <p className="text-base font-semibold text-slate-900 mt-2 dark:text-slate-100">
+                  {p.name}
+                </p>
+                <p className="text-xs text-slate-500 mt-1">{p.org}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-5 text-center">
             <Link
               href="/advisory"
               className="inline-flex items-center gap-2 rounded-full border-2
@@ -1276,7 +1286,9 @@ export function LandingPage() {
                          transition hover:bg-blue-50
                          dark:bg-slate-900 dark:hover:bg-slate-800"
             >
-              <span className="text-gradient">See the conference advisory</span>
+              <span className="text-gradient">
+                See the full conference advisory &amp; committee
+              </span>
               <svg viewBox="0 0 24 24" className="h-4 w-4 text-blue-700 dark:text-blue-300" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                 <path d="M5 12h14M13 6l6 6-6 6" />
               </svg>

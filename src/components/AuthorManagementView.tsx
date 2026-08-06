@@ -82,6 +82,7 @@ export async function AuthorManagementView() {
           ? "B"
           : "A") as "A" | "B",
         reverted: !!a.submissions.pathway_reverted_at,
+        status: a.submissions.status as string,
         title: a.submissions.title ?? "",
         trackName: a.submissions.tracks?.name ?? "—",
         corresponding,

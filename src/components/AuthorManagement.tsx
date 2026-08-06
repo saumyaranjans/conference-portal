@@ -12,6 +12,21 @@ import {
   resetParticipationStatus,
 } from "@/lib/actions";
 import { generateParticipationCertificates } from "@/lib/participationCertificateActions";
+import { STATUS_LABELS, type SubmissionStatus } from "@/lib/types";
+
+/** Statuses that can never earn a participation certificate — mirrors
+ *  NON_ELIGIBLE in participationCertificateActions.ts. */
+const CERT_BLOCKING_STATUSES = ["draft", "rejected", "withdrawn"];
+
+const PAPER_STATUS_CLASS: Record<string, string> = {
+  submitted: "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300",
+  under_review: "bg-blue-100 text-blue-800 dark:bg-blue-500/15 dark:text-blue-300",
+  revisions_requested: "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300",
+  abstract_accepted: "bg-teal-100 text-teal-800 dark:bg-teal-500/15 dark:text-teal-300",
+  accepted: "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300",
+  rejected: "bg-rose-100 text-rose-800 dark:bg-rose-500/15 dark:text-rose-300",
+  withdrawn: "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300",
+};
 
 export type PersonRow = {
   name: string;
@@ -24,6 +39,10 @@ export type PersonRow = {
     pathway: "A" | "B";
     /** True if this paper was Pathway B and cancelled back to Pathway A. */
     reverted: boolean;
+    /** Decision status of the paper. A rejected or withdrawn paper can never
+     *  earn a participation certificate, so it is shown on the row rather than
+     *  discovered by pressing Generate. */
+    status: string;
     title: string;
     trackName: string;
     /** Corresponding author of this paper (may be this person). */
@@ -596,6 +615,22 @@ export function AuthorManagement({
                               }`}
                             >
                               {p.pathway === "A" ? "Pathway A · Abstract" : "Pathway B · Full paper"}
+                            </span>
+                            {/* Decision status. A rejected or withdrawn paper
+                                cannot earn a participation certificate, so say
+                                so here rather than only on pressing Generate. */}
+                            <span
+                              className={`ml-1.5 inline-block rounded-md px-1.5 py-0 text-[10px] font-medium ${
+                                PAPER_STATUS_CLASS[p.status] ??
+                                "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
+                              }`}
+                              title={
+                                CERT_BLOCKING_STATUSES.includes(p.status)
+                                  ? "No participation certificate for this paper"
+                                  : undefined
+                              }
+                            >
+                              {STATUS_LABELS[p.status as SubmissionStatus] ?? p.status}
                             </span>
                             {open && (
                               <div className="fixed inset-x-3 top-24 z-50 mx-auto max-h-[70vh] w-auto max-w-sm overflow-y-auto rounded-lg border border-slate-200 bg-white p-3 shadow-xl sm:absolute sm:inset-auto sm:top-auto sm:z-30 sm:mx-0 sm:mt-1 sm:max-h-none sm:w-72 dark:border-slate-700 dark:bg-slate-800">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import {
   createSession,
@@ -80,94 +80,29 @@ function SessionForm({
   action,
   initial,
   tracks,
-  sessions,
   submitLabel,
   onDone,
 }: {
   action: (fd: FormData) => Promise<{ ok: boolean; message?: string }>;
   initial?: EventSession;
   tracks: TrackOpt[];
-  /** Existing sessions, to number the next one within its track and mode. */
-  sessions: EventSession[];
   submitLabel: string;
   onDone?: () => void;
 }) {
   const [mode, setMode] = useState<"onsite" | "online">(
     initial?.mode ?? "onsite"
   );
-  const [trackId, setTrackId] = useState(initial?.trackId ?? "");
-  const [title, setTitle] = useState(initial?.title ?? "");
-  // Once the title is typed over, stop rewriting it underneath the user.
-  const [titleEdited, setTitleEdited] = useState(Boolean(initial?.title));
-
-  /**
-   * The title is the track's name plus how the session runs and where it falls
-   * in that track's order — the only two things that actually vary between one
-   * session and the next. It stays editable: this is a starting point, not a
-   * constraint.
-   */
-  const suggestedTitle = useMemo(() => {
-    const track = tracks.find((t) => t.id === trackId);
-    if (!track) return "";
-    const nth =
-      sessions.filter(
-        (s) => s.trackId === trackId && s.mode === mode && s.id !== initial?.id
-      ).length + 1;
-    return `${track.name} — ${mode === "onsite" ? "On-site" : "Online"} Session ${nth}`;
-  }, [trackId, mode, tracks, sessions, initial?.id]);
-
-  useEffect(() => {
-    if (!titleEdited && suggestedTitle) setTitle(suggestedTitle);
-  }, [suggestedTitle, titleEdited]);
-
   return (
     <ActionForm action={action} onDone={onDone} className="space-y-2">
       {initial && <input type="hidden" name="id" value={initial.id} />}
       <input type="hidden" name="mode" value={mode} />
-
-      {/* Track first: it is what names the session. */}
-      <select
-        name="track_id"
-        value={trackId}
-        onChange={(e) => setTrackId(e.target.value)}
+      <input
+        name="title"
+        defaultValue={initial?.title ?? ""}
+        placeholder="Session title (e.g., Finance & FinTech — Session A)"
         className="input text-sm"
-        aria-label="Track"
-      >
-        <option value="">Track (optional)…</option>
-        {tracks.map((t) => (
-          <option key={t.id} value={t.id}>
-            {t.code} — {t.name}
-          </option>
-        ))}
-      </select>
-
-      <div className="flex items-center gap-2">
-        <input
-          name="title"
-          value={title}
-          onChange={(e) => {
-            setTitle(e.target.value);
-            setTitleEdited(true);
-          }}
-          placeholder="Pick a track above, or type a session title"
-          className="input text-sm"
-          required
-        />
-        {titleEdited && suggestedTitle && title !== suggestedTitle && (
-          <button
-            type="button"
-            onClick={() => {
-              setTitle(suggestedTitle);
-              setTitleEdited(false);
-            }}
-            className="btn-secondary shrink-0 whitespace-nowrap py-1.5 text-xs"
-            title={`Reset to "${suggestedTitle}"`}
-          >
-            Auto
-          </button>
-        )}
-      </div>
-
+        required
+      />
       <div className="flex flex-wrap items-center gap-2">
         <ModeToggle mode={mode} onChange={setMode} />
         <select
@@ -193,6 +128,19 @@ function SessionForm({
           {SLOTS.map((s) => (
             <option key={s} value={s}>
               {s}
+            </option>
+          ))}
+        </select>
+        <select
+          name="track_id"
+          defaultValue={initial?.trackId ?? ""}
+          className="input w-auto max-w-full text-sm"
+          aria-label="Track"
+        >
+          <option value="">Track (optional)…</option>
+          {tracks.map((t) => (
+            <option key={t.id} value={t.id}>
+              {t.code} — {t.name}
             </option>
           ))}
         </select>
@@ -234,12 +182,10 @@ function SessionCard({
   s,
   papers,
   tracks,
-  sessions,
 }: {
   s: EventSession;
   papers: PickPaper[];
   tracks: TrackOpt[];
-  sessions: EventSession[];
 }) {
   const [editing, setEditing] = useState(false);
   const inSession = new Set(s.papers.map((p) => p.paperId));
@@ -252,7 +198,6 @@ function SessionCard({
           action={updateSession}
           initial={s}
           tracks={tracks}
-          sessions={sessions}
           submitLabel="Save changes"
           onDone={() => setEditing(false)}
         />
@@ -414,7 +359,6 @@ export function EventManagement({
         <SessionForm
           action={createSession}
           tracks={tracks}
-          sessions={sessions}
           submitLabel="Create session"
         />
       </div>
@@ -436,13 +380,7 @@ export function EventManagement({
             <p className="text-sm text-slate-400">None yet.</p>
           ) : (
             list.map((s) => (
-              <SessionCard
-                key={s.id}
-                s={s}
-                papers={papers}
-                tracks={tracks}
-                sessions={sessions}
-              />
+              <SessionCard key={s.id} s={s} papers={papers} tracks={tracks} />
             ))
           )}
         </section>

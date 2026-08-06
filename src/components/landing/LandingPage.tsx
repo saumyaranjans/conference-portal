@@ -6,6 +6,7 @@ import {
 import { FaqBot } from "@/components/landing/FaqBot";
 import { TOSHI_KNOWLEDGE } from "@/components/landing/toshiKnowledge";
 import { SocialLinks } from "@/components/landing/SocialLinks";
+import { AdvisoryReveal } from "@/components/landing/AdvisoryReveal";
 import { Banner } from "@/components/landing/Banner";
 import { IkatStrip } from "@/components/landing/IkatStrip";
 import { BackToTop } from "@/components/landing/BackToTop";
@@ -1259,12 +1260,11 @@ export function LandingPage() {
           </p>
         </section>
 
-        {/* ---- 8. Conference advisory — the four leaders, full list elsewhere ---- */}
+        {/* ---- 8. Conference advisory ---- */}
         <section>
           <Heading id="committee">Conference advisory</Heading>
-          {/* Only the patrons and chairs appear here. The full committee runs
-              to dozens of names, which pushed the tracks, dates and fees below
-              the fold — it lives on /advisory instead. */}
+          {/* The four leaders always show; the rest of the committee unfolds on
+              request, so the list cannot bury the sections beneath it. */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {LEADERSHIP.slice(0, 4).map((p) => (
               <div key={p.name} className="card card-pad text-center card-hover">
@@ -1280,22 +1280,46 @@ export function LandingPage() {
             ))}
           </div>
 
-          <div className="mt-5 text-center">
-            <Link
-              href="/advisory"
-              className="inline-flex items-center gap-2 rounded-full border-2
-                         border-blue-600 bg-white px-5 py-2.5 text-sm font-semibold
-                         transition hover:bg-blue-50
-                         dark:bg-slate-900 dark:hover:bg-slate-800"
-            >
-              <span className="text-gradient">
-                See the full conference advisory &amp; committee
-              </span>
-              <svg viewBox="0 0 24 24" className="h-4 w-4 text-blue-700 dark:text-blue-300" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                <path d="M5 12h14M13 6l6 6-6 6" />
-              </svg>
-            </Link>
-          </div>
+          <AdvisoryReveal
+            count={
+              FACULTY.people.length + POST_DOC.people.length + STAFF.people.length
+            }
+          >
+            <div className="grid gap-4 lg:grid-cols-6">
+              <CommitteePanel
+                group={FACULTY}
+                people={FACULTY.people.slice(0, 6)}
+                className="-mb-4 pb-2 rounded-b-none border-b-0
+                           lg:col-span-6 lg:mb-0 lg:pb-4 lg:rounded-2xl lg:border-b"
+                wide
+              />
+              <CommitteePanel
+                group={FACULTY}
+                people={FACULTY.people.slice(6)}
+                className="pt-2 rounded-t-none lg:col-span-2 lg:pt-4 lg:rounded-2xl"
+                hideLabel
+              />
+              <CommitteePanel
+                group={POST_DOC}
+                people={POST_DOC.people}
+                className="lg:col-span-2"
+              />
+              <CommitteePanel
+                group={STAFF}
+                people={STAFF.people}
+                className="lg:col-span-2"
+              />
+            </div>
+
+            <div className="mt-4 text-center">
+              <Link
+                href="/advisory"
+                className="text-sm font-medium text-blue-700 hover:underline dark:text-blue-300"
+              >
+                Open the advisory on its own page →
+              </Link>
+            </div>
+          </AdvisoryReveal>
         </section>
 
         {/* ---- 9. Contact ---- */}

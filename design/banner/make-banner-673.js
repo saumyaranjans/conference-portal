@@ -13,8 +13,26 @@ const SKETCH = path.join(REPO, "design/banner/campus-sketch.jpg");
 
 const W = 1920, H = 673;
 
-// Sketch 1280x658 -> 1180 wide keeps it whole and flush to the right/bottom.
-const IW = 1180, IH = 606, IX = W - IW, IY = H - IH;
+// Sketch 1280x658 -> 1080 wide, lifted clear of the footer band (which starts
+// at y=590) while staying whole and flush to the right edge.
+const IW = 1080, IH = 555, IX = W - IW, IY = 26;
+const FOOT = 590;
+
+/* Display forms of the ten official tracks. The full titles run to ~460
+   characters with separators — three times what fits on one line at a legible
+   size — so each is cut to its distinguishing phrase. */
+const TRACKS = [
+  "AI in Finance & FinTech",
+  "Operations, Supply Chain & Industry 5.0",
+  "Digital Transformation",
+  "Sustainable Finance & Decarbonization",
+  "AI in Marketing",
+  "Governance, Ethics & Responsible AI",
+  "Analytics & Big Data",
+  "Human Capital & Leadership",
+  "Strategy & Innovation",
+  "Inclusive Growth",
+];
 
 const b64 = (p, mime) =>
   `data:${mime};base64,` + fs.readFileSync(p).toString("base64");
@@ -34,7 +52,7 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.
       <stop offset="100%" stop-color="#eab308"/>
     </linearGradient>
     <!-- dissolve the drawing's left edge into the paper -->
-    <linearGradient id="fade" gradientUnits="userSpaceOnUse" x1="${IX}" y1="0" x2="${IX + 300}" y2="0">
+    <linearGradient id="fade" gradientUnits="userSpaceOnUse" x1="${IX}" y1="0" x2="${IX + 280}" y2="0">
       <stop offset="0%" stop-color="#fff" stop-opacity="0"/>
       <stop offset="55%" stop-color="#fff" stop-opacity="0.75"/>
       <stop offset="100%" stop-color="#fff" stop-opacity="1"/>
@@ -58,6 +76,13 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.
   <text x="186" y="122" text-anchor="middle" fill="#7c2d12" font-size="15" letter-spacing="4" font-weight="600" font-family="${SANS}">IIM SAMBALPUR</text>
   <text x="418" y="122" text-anchor="middle" fill="#7c2d12" font-size="15" letter-spacing="4" font-weight="600" font-family="${SANS}">GIFT SOCIETY</text>
 
+  <!-- call to action, in the clear sky left of the flag -->
+  <text x="1010" y="104" text-anchor="middle" fill="#c2410c" font-size="34" font-weight="800"
+        letter-spacing="7" font-family="${SANS}">CALL FOR SUBMISSIONS</text>
+  <path d="M810 128 H1210" stroke="#c2410c" stroke-width="1.6" opacity="0.45"/>
+  <text x="1010" y="156" text-anchor="middle" fill="#7c2d12" font-size="17" font-weight="500"
+        font-family="${SANS}">Ten tracks&#160;·&#160;Pathway A (abstract) &amp; Pathway B (full paper)</text>
+
   <!-- headline -->
   <text x="90" y="226" fill="#1e3a8a" font-size="72" font-weight="800" font-family="${SERIF}" letter-spacing="1">GLOGIFT 27</text>
   <text x="93" y="258" fill="#7c2d12" font-size="17" font-weight="500" font-family="${SERIF}">Twenty Seventh Global Conference on Flexible Systems Management</text>
@@ -71,6 +96,20 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.
   <text x="115" y="484" fill="#1e3a8a" font-size="27" font-weight="800" font-family="${SANS}">25 – 27 February 2027</text>
   <text x="115" y="518" fill="#7c2d12" font-size="18" font-weight="500" font-family="${SANS}">IIM Sambalpur, Odisha, India · In-Person | Hybrid</text>
   <text x="115" y="548" fill="#475569" font-size="17" font-family="${SANS}">glogift2027.in</text>
+
+  <!-- footer: deadlines, then the track list -->
+  <path d="M90 ${FOOT} H${W - 90}" stroke="#c2410c" stroke-width="1" opacity="0.28"/>
+  <text x="${W / 2}" y="${FOOT + 30}" text-anchor="middle" font-family="${SANS}" font-size="17">
+    <tspan fill="#7c2d12" font-weight="700">Abstract submission closes 23 November 2026</tspan><tspan fill="#94a3b8" dx="18">|</tspan><tspan fill="#7c2d12" font-weight="700" dx="18">Registration closes 24 January 2027</tspan><tspan fill="#475569" dx="10">(early bird 20 December 2026)</tspan>
+  </text>
+  <text x="${W / 2}" y="${FOOT + 58}" text-anchor="middle" font-family="${SANS}" font-size="13" fill="#475569">
+    ${TRACKS.map((t, i) =>
+      i === 0
+        ? `<tspan>${t.replace(/&/g, "&amp;")}</tspan>`
+        : `<tspan fill="#c2410c" opacity="0.5" dx="7">|</tspan>` +
+          `<tspan fill="#475569" dx="7">${t.replace(/&/g, "&amp;")}</tspan>`
+    ).join("")}
+  </text>
 </svg>`;
 
 fs.writeFileSync(path.join(OUT, "glogift-27-banner-1920x673-campus.svg"), svg, "utf8");

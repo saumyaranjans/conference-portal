@@ -597,7 +597,7 @@ export function AuthorManagement({
                         const key = `${r.email}-${i}`;
                         const open = openPaper === key;
                         return (
-                          <li key={key} className="text-xs relative">
+                          <li key={key} className="text-xs relative whitespace-nowrap">
                             <button
                               type="button"
                               onClick={() => setOpenPaper(open ? null : key)}
@@ -614,7 +614,10 @@ export function AuthorManagement({
                                   : "bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300"
                               }`}
                             >
-                              {p.pathway === "A" ? "Pathway A · Abstract" : "Pathway B · Full paper"}
+                              {/* Short form so the paper, role, pathway and
+                                  status all fit one line. The long form is in
+                                  the paper popup. */}
+                              Pathway {p.pathway}
                             </span>
                             {/* Decision status. A rejected or withdrawn paper
                                 cannot earn a participation certificate, so say
@@ -655,6 +658,23 @@ export function AuthorManagement({
                                     <dt className="inline text-slate-400">Track: </dt>
                                     <dd className="inline text-slate-700 dark:text-slate-200">
                                       {p.trackName}
+                                    </dd>
+                                  </div>
+                                  {/* Long form of the pathway lives here, since
+                                      the row badge is shortened to fit. */}
+                                  <div>
+                                    <dt className="inline text-slate-400">Pathway: </dt>
+                                    <dd className="inline text-slate-700 dark:text-slate-200">
+                                      {p.pathway === "A"
+                                        ? "A · Abstract only"
+                                        : "B · Full paper"}
+                                      {p.reverted ? " (reverted from B)" : ""}
+                                    </dd>
+                                  </div>
+                                  <div>
+                                    <dt className="inline text-slate-400">Status: </dt>
+                                    <dd className="inline text-slate-700 dark:text-slate-200">
+                                      {STATUS_LABELS[p.status as SubmissionStatus] ?? p.status}
                                     </dd>
                                   </div>
                                   <div>

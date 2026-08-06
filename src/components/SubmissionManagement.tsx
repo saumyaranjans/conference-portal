@@ -410,9 +410,13 @@ export function SubmissionManagement({
                         // Editorial Office types the two numbers straight into
                         // the row. The tool, report PDF and note stay in the
                         // fuller form in the detail panel below.
+                        // One score per line, each labelled — "Sim"/"AI" in a
+                        // placeholder vanishes the moment a number is typed,
+                        // leaving two bare boxes with nothing to say which is
+                        // which.
                         <ActionForm
                           action={recordIntegrityCheck}
-                          className="flex items-center gap-1"
+                          className="space-y-1"
                         >
                           <input type="hidden" name="submission_id" value={r.id} />
                           <input
@@ -420,42 +424,46 @@ export function SubmissionManagement({
                             name="integrity_provider"
                             value={r.integrityProvider || "manual"}
                           />
-                          <input
-                            name="similarity_index"
-                            type="number"
-                            min="0"
-                            max="100"
-                            defaultValue={r.similarity ?? ""}
-                            placeholder="Sim"
-                            title="Similarity index %"
-                            aria-label={`Similarity index for ${r.paperId}`}
-                            className="input w-16 px-1.5 py-1 text-center text-xs"
-                          />
-                          <input
-                            name="ai_percentage"
-                            type="number"
-                            min="0"
-                            max="100"
-                            defaultValue={r.aiPercent ?? ""}
-                            placeholder="AI"
-                            title="AI writing %"
-                            aria-label={`AI writing percentage for ${r.paperId}`}
-                            className="input w-16 px-1.5 py-1 text-center text-xs"
-                          />
-                          <SubmitButton
-                            variant="secondary"
-                            className="!px-2 !py-1 !text-[11px]"
-                          >
-                            Save
-                          </SubmitButton>
-                          {flagged && (
-                            <span
-                              className="text-[11px] font-medium text-rose-700"
-                              title={`At or above ${SIMILARITY_FLAG_PERCENT}% similarity or ${AI_FLAG_PERCENT}% AI`}
+                          <label className="flex items-center gap-1.5 whitespace-nowrap text-[11px] text-slate-500">
+                            <span className="w-24 shrink-0">Similarity index %</span>
+                            <input
+                              name="similarity_index"
+                              type="number"
+                              min="0"
+                              max="100"
+                              defaultValue={r.similarity ?? ""}
+                              aria-label={`Similarity index for ${r.paperId}`}
+                              className="input w-16 px-1.5 py-1 text-center text-xs"
+                            />
+                          </label>
+                          <label className="flex items-center gap-1.5 whitespace-nowrap text-[11px] text-slate-500">
+                            <span className="w-24 shrink-0">Detected AI %</span>
+                            <input
+                              name="ai_percentage"
+                              type="number"
+                              min="0"
+                              max="100"
+                              defaultValue={r.aiPercent ?? ""}
+                              aria-label={`Detected AI percentage for ${r.paperId}`}
+                              className="input w-16 px-1.5 py-1 text-center text-xs"
+                            />
+                          </label>
+                          <div className="flex items-center gap-2 pt-0.5">
+                            <SubmitButton
+                              variant="secondary"
+                              className="!px-2 !py-1 !text-[11px]"
                             >
-                              flagged
-                            </span>
-                          )}
+                              Save
+                            </SubmitButton>
+                            {flagged && (
+                              <span
+                                className="text-[11px] font-medium text-rose-700"
+                                title={`At or above ${SIMILARITY_FLAG_PERCENT}% similarity or ${AI_FLAG_PERCENT}% AI`}
+                              >
+                                flagged
+                              </span>
+                            )}
+                          </div>
                         </ActionForm>
                       ) : r.integrityCheckedAt ? (
                         <span

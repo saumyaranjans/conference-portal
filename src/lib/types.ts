@@ -57,8 +57,8 @@ export const MANUSCRIPT_MIN_SIMILARITY = 0.7;
  * produces false positives, disproportionately so for authors writing in a
  * second language. The decision stays with a human.
  */
-export const SIMILARITY_FLAG_PERCENT = 15;
-export const AI_FLAG_PERCENT = 20;
+export const SIMILARITY_FLAG_PERCENT = 20;
+export const AI_FLAG_PERCENT = 30;
 
 /** Tools whose scores the Editorial Office may record against a manuscript. */
 export const INTEGRITY_PROVIDERS = [

@@ -160,69 +160,12 @@ function LatticeSlideMobile() {
 }
 
 /** Slide 1 — the original navy panel: lattice backdrop, left-aligned text. */
-/**
- * A line-drawn sketch of the IIM Sambalpur campus — the long colonnaded
- * academic block with its stepped central tower, drawn as architectural
- * linework so it sits behind the type without competing with it.
- * Coordinates are in the 1920×673 banner space; the ground line is y=673.
- */
-function CampusSketch() {
-  const fins = Array.from({ length: 26 }, (_, i) => 1010 + i * 34);
-  const towerFins = Array.from({ length: 7 }, (_, i) => 1408 + i * 30);
-  return (
-    <g
-      stroke="#bfdbfe"
-      fill="none"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      opacity="0.34"
-    >
-      {/* podium / plinth the whole block sits on */}
-      <path d="M965 612 H1900 M965 612 V596 H1900 V612" />
-
-      {/* long academic block: roof slab with a thin overhang */}
-      <path d="M978 470 H1888 M968 462 H1898 M968 462 V470 M1898 462 V470" />
-      {/* block body + floor bands */}
-      <path d="M990 470 V596 M1880 470 V596 M990 512 H1880 M990 554 H1880" />
-      {/* vertical fins (the campus's signature louvred façade) */}
-      {fins.map((x) => (
-        <path key={x} d={`M${x} 474 V592`} strokeWidth="1.5" opacity="0.75" />
-      ))}
-
-      {/* stepped central tower */}
-      <path d="M1380 470 V330 H1590 V470" />
-      <path d="M1368 322 H1602 M1368 322 V330 M1602 322 V330" />
-      <path d="M1408 330 V470 M1562 330 V470 M1380 372 H1590 M1380 414 H1590" />
-      {towerFins.map((x) => (
-        <path key={x} d={`M${x} 334 V466`} strokeWidth="1.5" opacity="0.7" />
-      ))}
-      {/* small crown / flag mast */}
-      <path d="M1485 322 V292 M1485 292 H1526 V308 H1485" strokeWidth="1.8" />
-
-      {/* entrance portal and approach steps */}
-      <path d="M1452 596 V536 H1518 V596" />
-      <path d="M1424 622 H1546 M1408 634 H1562 M1392 646 H1578 M1376 658 H1594" />
-
-      {/* side wings, lower and set back */}
-      <path d="M902 596 V508 H990 M902 508 H896 M902 552 H990" />
-      <path d="M1880 596 V508 H1962 M1962 508 H1968 M1880 552 H1962" />
-
-      {/* a few campus trees, sketched */}
-      <g strokeWidth="1.8" opacity="0.8">
-        <path d="M868 596 V556 M868 566 l-16 -14 M868 574 l16 -14 M868 556 l-13 -18 M868 556 l13 -18" />
-        <path d="M1935 596 V560 M1935 570 l-14 -13 M1935 578 l14 -13" />
-      </g>
-    </g>
-  );
-}
-
 function LatticeSlide() {
   return (
     <>
     <LatticeSlideMobile />
     <svg
-      viewBox="0 0 1920 673"
+      viewBox="0 0 2400 1000"
       className="w-full h-auto hidden sm:block"
       role="img"
       aria-label="GLOGIFT 27 — International Conference on AI-Driven Solutions in Management, 25 to 27 February 2027, IIM Sambalpur"
@@ -243,66 +186,51 @@ function LatticeSlide() {
           <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.55" />
           <stop offset="100%" stopColor="#60a5fa" stopOpacity="0" />
         </radialGradient>
-        {/* Fades the sketch out towards the type on the left. */}
-        <linearGradient id="l-sketch-fade" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="#000" stopOpacity="0" />
-          <stop offset="26%" stopColor="#000" stopOpacity="0.55" />
-          <stop offset="55%" stopColor="#000" stopOpacity="1" />
-          <stop offset="100%" stopColor="#000" stopOpacity="1" />
-        </linearGradient>
-        <mask id="l-sketch-mask">
-          <rect width="1920" height="673" fill="url(#l-sketch-fade)" />
-        </mask>
       </defs>
 
-      <rect width="1920" height="673" fill="url(#l-sky)" />
-      <circle cx="1560" cy="170" r="380" fill="url(#l-glow)" />
-      <circle cx="300" cy="600" r="300" fill="url(#l-glow)" opacity="0.6" />
+      <rect width="2400" height="1000" fill="url(#l-sky)" />
+      <circle cx="1950" cy="240" r="520" fill="url(#l-glow)" />
+      <circle cx="380" cy="880" r="420" fill="url(#l-glow)" opacity="0.6" />
 
       {/* A light network lattice — AI without the clichés. */}
-      <g stroke="#93c5fd" strokeOpacity="0.18" strokeWidth="2" fill="none">
+      <g stroke="#93c5fd" strokeOpacity="0.22" strokeWidth="2" fill="none">
         {Array.from({ length: 9 }).map((_, i) => (
           <path
             key={i}
-            d={`M ${96 + i * 208} 673 C ${240 + i * 208} ${470 - i * 27}, ${
-              48 + i * 208
-            } ${256 + i * 20}, ${192 + i * 208} 0`}
+            d={`M ${120 + i * 260} 1000 C ${300 + i * 260} ${700 - i * 40}, ${
+              60 + i * 260
+            } ${380 + i * 30}, ${240 + i * 260} 0`}
           />
         ))}
       </g>
-
-      {/* IIM Sambalpur campus, sketched into the skyline */}
-      <g mask="url(#l-sketch-mask)">
-        <CampusSketch />
-      </g>
-
-      <g fill="#bfdbfe" fillOpacity="0.45">
+      <g fill="#bfdbfe" fillOpacity="0.5">
         {[
-          [240, 202], [512, 121], [784, 229], [1056, 135],
-          [1600, 115], [368, 418], [688, 472], [1750, 250],
+          [300, 300], [640, 180], [980, 340], [1320, 200], [1660, 300],
+          [2000, 170], [460, 620], [860, 700], [1240, 620], [1620, 720],
+          [1980, 640], [2200, 420],
         ].map(([cx, cy], i) => (
-          <circle key={i} cx={cx} cy={cy} r={i % 3 === 0 ? 6 : 3.5} />
+          <circle key={i} cx={cx} cy={cy} r={i % 3 === 0 ? 7 : 4} />
         ))}
       </g>
 
-      <rect y="0" width="1920" height="7" fill="url(#l-accent)" />
+      <rect y="0" width="2400" height="10" fill="url(#l-accent)" />
 
       <Organiser
         logo={IIM_CREST}
         label="IIM SAMBALPUR"
-        cx={266}
-        top={54}
-        size={84}
-        baseline={178}
+        cx={360}
+        top={96}
+        size={118}
+        baseline={278}
         fill="#bfdbfe"
         invert
       />
       <text
-        x="474"
-        y="178"
+        x="630"
+        y="278"
         textAnchor="middle"
         fill="#bfdbfe"
-        fontSize="26"
+        fontSize="34"
         fontWeight="600"
         fontFamily="system-ui, sans-serif"
       >
@@ -311,18 +239,18 @@ function LatticeSlide() {
       <Organiser
         logo={GLOGIFT_LOGO}
         label="GIFT SOCIETY"
-        cx={682}
-        top={54}
-        size={84}
-        baseline={178}
+        cx={900}
+        top={96}
+        size={118}
+        baseline={278}
         fill="#bfdbfe"
       />
 
       <text
-        x="118"
-        y="300"
+        x="160"
+        y="440"
         fill="#ffffff"
-        fontSize="96"
+        fontSize="132"
         fontWeight="800"
         fontFamily="Georgia, 'Times New Roman', serif"
         letterSpacing="2"
@@ -331,10 +259,10 @@ function LatticeSlide() {
       </text>
 
       <text
-        x="122"
-        y="344"
+        x="164"
+        y="500"
         fill="#c7d2fe"
-        fontSize="30"
+        fontSize="42"
         fontWeight="500"
         fontFamily="Georgia, 'Times New Roman', serif"
       >
@@ -342,41 +270,41 @@ function LatticeSlide() {
       </text>
 
       <text
-        x="122"
-        y="406"
+        x="164"
+        y="588"
         fill="#a5b4fc"
-        fontSize="23"
-        letterSpacing="7"
+        fontSize="32"
+        letterSpacing="9"
         fontWeight="600"
         fontFamily="system-ui, sans-serif"
       >
         INTERNATIONAL CONFERENCE ON
       </text>
       <text
-        x="118"
-        y="464"
+        x="160"
+        y="668"
         fill="#e0e7ff"
-        fontSize="41"
+        fontSize="56"
         fontFamily="system-ui, sans-serif"
         fontWeight="600"
       >
         AI-Driven Solutions in Management
       </text>
       <text
-        x="118"
-        y="510"
+        x="160"
+        y="732"
         fill="#a5b4fc"
-        fontSize="29"
+        fontSize="40"
         fontFamily="system-ui, sans-serif"
       >
         Flexibility, Digitalisation &amp; Decarbonization
       </text>
 
-      <rect x="118" y="556" width="6" height="94" fill="url(#l-accent)" />
-      <text x="148" y="596" fill="#ffffff" fontSize="32" fontWeight="700" fontFamily="system-ui, sans-serif">
+      <rect x="160" y="806" width="8" height="132" fill="url(#l-accent)" />
+      <text x="200" y="861" fill="#ffffff" fontSize="44" fontWeight="700" fontFamily="system-ui, sans-serif">
         25 – 27 February 2027
       </text>
-      <text x="148" y="638" fill="#c7d2fe" fontSize="25" fontFamily="system-ui, sans-serif">
+      <text x="200" y="921" fill="#c7d2fe" fontSize="34" fontFamily="system-ui, sans-serif">
         IIM Sambalpur, Odisha, India · In-Person | Hybrid
       </text>
     </svg>

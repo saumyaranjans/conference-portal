@@ -589,7 +589,9 @@ const NAV_LINKS: { href: string; label: string; accent?: boolean }[] = [
   { href: "/schedule", label: "Conference Schedule" },
   { href: "#fees", label: "Register for conference" },
   { href: "#dates", label: "Important dates" },
-  { href: "/advisory", label: "Conference advisory" },
+  // No nav entry for the advisory: the section on this page carries the four
+  // leaders and a link through to the full committee, which keeps the bar to
+  // one line at its original wording.
   // The one link that leaves the page, so it carries the colour and pulse
   // that mark it out from the section jumps.
   { href: "/travelogue", label: "Sambalpur travelogue", accent: true },

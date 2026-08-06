@@ -2,17 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 
-/** Height of the peek when collapsed — enough to show the list has begun. */
-const PEEK_PX = 132;
-
 /**
  * Reveals the rest of the conference committee beneath the four leaders.
  *
- * Collapsed, the list is not hidden but *cut off* behind a fade, with the
- * control sitting on the fade itself. A reader can see there is more and how it
- * looks, which is a stronger invitation than a button under a closed box — and
- * it makes the expansion feel like the page continuing rather than new content
- * appearing from nowhere.
+ * Collapsed, the list is fully closed rather than peeking: a half-shown row of
+ * faded portraits reads as a rendering fault, not an invitation.
  *
  * The control fades out once the section leaves the viewport: an offer to
  * expand something no longer on screen is clutter, and a reader who has scrolled
@@ -52,26 +46,14 @@ export function AdvisoryReveal({ children }: { children: React.ReactNode }) {
     <div ref={sectionRef} className="relative mt-4">
       <div
         className="relative overflow-hidden transition-[height] duration-500 ease-out"
-        style={{ height: expanded ? fullHeight || undefined : PEEK_PX }}
+        style={{ height: expanded ? fullHeight || undefined : 0 }}
       >
         <div ref={contentRef}>{children}</div>
 
-        {/* The fade only exists while there is something behind it. */}
-        <div
-          aria-hidden
-          className={`pointer-events-none absolute inset-x-0 bottom-0 transition-opacity duration-500 ${
-            expanded ? "opacity-0" : "opacity-100"
-          }`}
-          style={{
-            height: PEEK_PX,
-            backgroundImage:
-              "linear-gradient(to bottom, rgba(248,250,252,0) 0%, rgba(248,250,252,0.85) 55%, rgb(248,250,252) 100%)",
-          }}
-        />
       </div>
 
       <div
-        className={`-mt-5 flex justify-center transition-opacity duration-300 ${
+        className={`mt-5 flex justify-center transition-opacity duration-300 ${
           inView ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
       >

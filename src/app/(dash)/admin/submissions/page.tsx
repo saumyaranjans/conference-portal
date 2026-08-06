@@ -5,5 +5,6 @@ export const metadata = { title: "Submission Management" };
 
 export default async function AdminSubmissionManagementPage() {
   await requireRole("admin");
-  return <SubmissionManagementView />;
+  // Only the Editorial Office runs the integrity checks and enters the scores.
+  return <SubmissionManagementView canRecordIntegrity />;
 }

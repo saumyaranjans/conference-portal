@@ -1,9 +1,6 @@
-import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { formatDate } from "@/components/ui/Primitives";
-import { recordIntegrityCheck, clearIntegrityCheck } from "@/lib/integrityActions";
 import {
   AI_FLAG_PERCENT,
-  INTEGRITY_PROVIDERS,
   INTEGRITY_PROVIDER_LABELS,
   SIMILARITY_FLAG_PERCENT,
   type Submission,
@@ -50,6 +47,11 @@ function Score({
  * Research-integrity record for a manuscript: the similarity index and AI
  * writing percentage, the tool they came from, and the provider's report.
  *
+ * READ-ONLY here. The Editorial Office runs the check and enters the scores in
+ * Submission Management; the Track Editor and Convener see the result while
+ * they judge the paper, but cannot alter it — the number and the judgement it
+ * informs should not come from the same hand.
+ *
  * The scores are advisory. They flag a paper for the Track Editor to look at;
  * they never decide it. Similarity is frequently quotation or method
  * boilerplate, and AI-writing detectors are unreliable enough — especially for
@@ -76,9 +78,8 @@ export function IntegrityCheck({
             Research integrity check
           </h2>
           <p className="mt-0.5 text-xs text-slate-500">
-            Similarity and AI-writing scores from Turnitin, iThenticate or an
-            equivalent tool. Advisory — they flag a paper for your attention,
-            they do not decide it.
+            Recorded by the Editorial Office. Advisory — these flag a paper for
+            your attention, they do not decide it.
           </p>
         </div>
         {checked && (
@@ -126,92 +127,6 @@ export function IntegrityCheck({
         </div>
       )}
 
-      <details className="border-t border-slate-200 pt-3 dark:border-slate-700">
-        <summary className="cursor-pointer list-none text-sm font-medium text-slate-700 hover:text-blue-700 dark:text-slate-200">
-          {checked ? "Update the record" : "Record a check"}
-        </summary>
-
-        <ActionForm action={recordIntegrityCheck} className="mt-3 space-y-3">
-          <input type="hidden" name="submission_id" value={submission.id} />
-
-          <div className="grid gap-3 sm:grid-cols-3">
-            <label className="label">
-              Similarity index (%)
-              <input
-                className="input mt-1"
-                name="similarity_index"
-                type="number"
-                min="0"
-                max="100"
-                defaultValue={submission.similarity_index ?? ""}
-                placeholder="e.g. 12"
-              />
-            </label>
-            <label className="label">
-              AI writing (%)
-              <input
-                className="input mt-1"
-                name="ai_percentage"
-                type="number"
-                min="0"
-                max="100"
-                defaultValue={submission.ai_percentage ?? ""}
-                placeholder="e.g. 4"
-              />
-            </label>
-            <label className="label">
-              Tool used
-              <select
-                className="input mt-1"
-                name="integrity_provider"
-                defaultValue={submission.integrity_provider || "manual"}
-              >
-                {INTEGRITY_PROVIDERS.map((p) => (
-                  <option key={p} value={p}>
-                    {INTEGRITY_PROVIDER_LABELS[p]}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-
-          <label className="label">
-            Provider report (PDF, optional)
-            <input
-              className="input mt-1"
-              name="report"
-              type="file"
-              accept="application/pdf"
-            />
-          </label>
-
-          <label className="label">
-            Note (optional)
-            <textarea
-              className="input mt-1"
-              name="integrity_notes"
-              rows={2}
-              defaultValue={submission.integrity_notes ?? ""}
-              placeholder="e.g. matches are the authors' own prior conference paper, cited."
-            />
-          </label>
-
-          <SubmitButton variant="secondary">Save integrity check</SubmitButton>
-        </ActionForm>
-
-        {checked && (
-          <ActionForm
-            action={clearIntegrityCheck}
-            className="mt-3"
-            confirm="Clear the recorded similarity and AI scores for this paper?"
-          >
-            <input type="hidden" name="submission_id" value={submission.id} />
-            <SubmitButton variant="danger" className="px-2.5 py-1.5 text-xs">
-              Clear record
-            </SubmitButton>
-          </ActionForm>
-        )}
-      </details>
     </section>
   );
 }

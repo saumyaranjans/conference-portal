@@ -3,8 +3,12 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { csvCell, downloadCsv } from "@/lib/nameIndex";
+import { ActionForm, SubmitButton } from "@/components/ActionForm";
+import { recordIntegrityCheck, clearIntegrityCheck } from "@/lib/integrityActions";
 import {
   AI_FLAG_PERCENT,
+  INTEGRITY_PROVIDERS,
+  INTEGRITY_PROVIDER_LABELS,
   SIMILARITY_FLAG_PERCENT,
   STATUS_LABELS,
   RECOMMENDATION_LABELS,
@@ -116,11 +120,16 @@ export function SubmissionManagement({
   rows,
   tracks,
   detailBase,
+  canRecordIntegrity = false,
 }: {
   rows: SubmissionRow[];
   tracks: { code: string; name: string }[];
   /** Route prefix for a single paper, e.g. "/chief/submissions". */
   detailBase: string;
+  /** Editorial Office only: enter the integrity scores. The Convener and Track
+   *  Editors read them but never set them — the number and the judgement it
+   *  informs should not come from the same hand. */
+  canRecordIntegrity?: boolean;
 }) {
   const [track, setTrack] = useState("all");
   const [pathway, setPathway] = useState<"all" | "A" | "B">("all");
@@ -394,7 +403,9 @@ export function SubmissionManagement({
                       )}
                     </td>
                     <td className="px-3 py-2 text-xs">
-                      {r.integrityCheckedAt ? (
+                      {r.pathway === "A" ? (
+                        <span className="text-slate-400">n/a</span>
+                      ) : r.integrityCheckedAt ? (
                         <span
                           className={`badge ${
                             flagged
@@ -560,6 +571,94 @@ export function SubmissionManagement({
                     {r.hasCameraReady ? " · camera-ready ✓" : ""}
                   </p>
                 </div>
+
+                {/* Editorial Office enters the scores here. Pathway A has no
+                    manuscript to check, so the form is simply not offered. */}
+                {canRecordIntegrity && r.pathway === "B" && (
+                  <details className="mt-3 rounded-lg border border-slate-200 p-2 dark:border-slate-700">
+                    <summary className="cursor-pointer list-none text-xs font-medium text-blue-700 dark:text-blue-300">
+                      {r.integrityCheckedAt
+                        ? "Update integrity scores"
+                        : "Enter integrity scores"}
+                    </summary>
+
+                    <ActionForm action={recordIntegrityCheck} className="mt-2 space-y-2">
+                      <input type="hidden" name="submission_id" value={r.id} />
+                      <div className="grid grid-cols-2 gap-2">
+                        <label className="label text-[11px]">
+                          Similarity %
+                          <input
+                            className="input mt-1 text-xs"
+                            name="similarity_index"
+                            type="number"
+                            min="0"
+                            max="100"
+                            defaultValue={r.similarity ?? ""}
+                          />
+                        </label>
+                        <label className="label text-[11px]">
+                          AI writing %
+                          <input
+                            className="input mt-1 text-xs"
+                            name="ai_percentage"
+                            type="number"
+                            min="0"
+                            max="100"
+                            defaultValue={r.aiPercent ?? ""}
+                          />
+                        </label>
+                      </div>
+                      <label className="label text-[11px]">
+                        Tool used
+                        <select
+                          className="input mt-1 text-xs"
+                          name="integrity_provider"
+                          defaultValue={r.integrityProvider || "manual"}
+                        >
+                          {INTEGRITY_PROVIDERS.map((prov) => (
+                            <option key={prov} value={prov}>
+                              {INTEGRITY_PROVIDER_LABELS[prov]}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="label text-[11px]">
+                        Provider report (PDF, optional)
+                        <input
+                          className="input mt-1 text-xs"
+                          name="report"
+                          type="file"
+                          accept="application/pdf"
+                        />
+                      </label>
+                      <label className="label text-[11px]">
+                        Note (optional)
+                        <textarea
+                          className="input mt-1 text-xs"
+                          name="integrity_notes"
+                          rows={2}
+                          defaultValue=""
+                        />
+                      </label>
+                      <SubmitButton variant="secondary" className="py-1.5 text-xs">
+                        Save scores
+                      </SubmitButton>
+                    </ActionForm>
+
+                    {r.integrityCheckedAt && (
+                      <ActionForm
+                        action={clearIntegrityCheck}
+                        className="mt-2"
+                        confirm="Clear the recorded similarity and AI scores for this paper?"
+                      >
+                        <input type="hidden" name="submission_id" value={r.id} />
+                        <SubmitButton variant="danger" className="px-2 py-1 text-[11px]">
+                          Clear
+                        </SubmitButton>
+                      </ActionForm>
+                    )}
+                  </details>
+                )}
               </div>
             </div>
           </section>

@@ -224,11 +224,14 @@ export default async function ChiefSubmissionPage({
         </div>
       </Section>
 
-      <IntegrityCheck
-        submission={sub}
-        checkedByName={integrityCheckedByName}
-        reportUrl={integrityReport}
-      />
+      {/* Pathway B only — a Pathway A abstract has no manuscript to check. */}
+      {sub.submission_type === "full_paper_presentation" && (
+        <IntegrityCheck
+          submission={sub}
+          checkedByName={integrityCheckedByName}
+          reportUrl={integrityReport}
+        />
+      )}
 
       <Section title="Reviews">
         <ReviewPanel assignments={rows} showConfidential />

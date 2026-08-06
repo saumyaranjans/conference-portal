@@ -374,11 +374,14 @@ export default async function EditorSubmissionPage({
       </Section>
 
       {/* ---- Research integrity: similarity + AI writing scores ---- */}
-      <IntegrityCheck
-        submission={sub}
-        checkedByName={integrityCheckedByName}
-        reportUrl={integrityReport}
-      />
+      {/* Pathway B only — a Pathway A abstract has no manuscript to check. */}
+      {sub.submission_type === "full_paper_presentation" && (
+        <IntegrityCheck
+          submission={sub}
+          checkedByName={integrityCheckedByName}
+          reportUrl={integrityReport}
+        />
+      )}
 
       {/* ---- How this abstract is judged (gates the decision form) ---- */}
       {isAbstract && !isFinal && (

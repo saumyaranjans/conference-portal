@@ -32,7 +32,7 @@ function percent(form: FormData, key: string): number | null | "invalid" {
 export async function recordIntegrityCheck(
   formData: FormData
 ): Promise<IntegrityResult> {
-  const profile = await requireRole("editor", "chief", "admin");
+  const profile = await requireRole("admin");
   const submissionId = String(formData.get("submission_id") ?? "").trim();
   if (!submissionId) return { ok: false, message: "Submission is missing." };
 
@@ -56,6 +56,21 @@ export async function recordIntegrityCheck(
   const notes = String(formData.get("integrity_notes") ?? "").trim().slice(0, 1000);
 
   const admin = createAdminClient();
+
+  // Only Pathway B submits a full manuscript; a Pathway A abstract has nothing
+  // to run through a similarity tool.
+  const { data: target } = await admin
+    .from("submissions")
+    .select("submission_type")
+    .eq("id", submissionId)
+    .maybeSingle();
+  if (!target) return { ok: false, message: "Submission was not found." };
+  if ((target as any).submission_type !== "full_paper_presentation") {
+    return {
+      ok: false,
+      message: "Integrity checks apply to Pathway B full papers only.",
+    };
+  }
 
   // The provider's own report is the evidence behind the numbers; keep it in
   // the same private bucket as the manuscripts.
@@ -101,6 +116,8 @@ export async function recordIntegrityCheck(
 
   revalidatePath(`/editor/submissions/${submissionId}`);
   revalidatePath(`/chief/submissions/${submissionId}`);
+  revalidatePath("/chief/submissions");
+  revalidatePath("/admin/submissions");
   return { ok: true, message: "Integrity check recorded." };
 }
 
@@ -108,7 +125,7 @@ export async function recordIntegrityCheck(
 export async function clearIntegrityCheck(
   formData: FormData
 ): Promise<IntegrityResult> {
-  const profile = await requireRole("editor", "chief", "admin");
+  const profile = await requireRole("admin");
   const submissionId = String(formData.get("submission_id") ?? "").trim();
   if (!submissionId) return { ok: false, message: "Submission is missing." };
 
@@ -144,6 +161,8 @@ export async function clearIntegrityCheck(
 
   revalidatePath(`/editor/submissions/${submissionId}`);
   revalidatePath(`/chief/submissions/${submissionId}`);
+  revalidatePath("/chief/submissions");
+  revalidatePath("/admin/submissions");
   return { ok: true, message: "Integrity check cleared." };
 }
 

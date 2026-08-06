@@ -16,10 +16,13 @@ import {
  */
 export async function SubmissionManagementView({
   detailBase = "/chief/submissions",
+  canRecordIntegrity = false,
 }: {
   /** Where a paper row links to. Admins pass every role check, so the
    *  Convener's paper page serves both. */
   detailBase?: string;
+  /** Editorial Office only: enter the integrity scores. */
+  canRecordIntegrity?: boolean;
 } = {}) {
   const admin = createAdminClient();
 
@@ -126,7 +129,12 @@ export async function SubmissionManagementView({
         title="Submission Management"
         subtitle="Every paper in the conference — authors, track, pathway, reviewers, decision and integrity scores."
       />
-      <SubmissionManagement rows={rows} tracks={tracks} detailBase={detailBase} />
+      <SubmissionManagement
+        rows={rows}
+        tracks={tracks}
+        detailBase={detailBase}
+        canRecordIntegrity={canRecordIntegrity}
+      />
     </>
   );
 }

@@ -1,0 +1,397 @@
+<g id="CkoutilyaSketch" stroke="#9a3412" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <defs>
+    <!-- jali lattice panel template, 28 x 44 -->
+    <g id="CjaliP" stroke="#9a3412" stroke-width="0.65" opacity="0.8">
+      <rect x="0.6" y="0.6" width="26.8" height="42.8" stroke-width="1" fill="#c2410c" fill-opacity="0.10"/>
+      <path d="M0 7 L7 0 M0 14 L14 0 M0 21 L21 0 M0 28 L28 0 M0 35 L28 7 M0 42 L28 14 M5 44 L28 21 M12 44 L28 28 M19 44 L28 35 M26 44 L28 42"/>
+      <path d="M21 0 L28 7 M14 0 L28 14 M7 0 L28 21 M0 0 L28 28 M0 7 L28 35 M0 14 L28 42 M0 21 L23 44 M0 28 L16 44 M0 35 L9 44 M0 42 L2 44"/>
+      <path d="M0 22 h28" stroke-width="0.5" opacity="0.7"/>
+    </g>
+    <!-- small window template 16 x 22 -->
+    <g id="Cwin">
+      <rect x="0" y="0" width="16" height="22" fill="#ffffff" fill-opacity="0.5" stroke="none"/>
+      <rect x="0" y="0" width="16" height="22" stroke="#9a3412" stroke-width="1"/>
+      <rect x="1.7" y="1.7" width="12.6" height="18.6" stroke="#475569" stroke-width="0.7"/>
+      <path d="M8 1.7 V20.3" stroke="#475569" stroke-width="0.55"/>
+      <path d="M2.2 19 l5 -6.4 M4.8 20.6 l6.8 -8.6" stroke="#475569" stroke-width="0.5" opacity="0.5"/>
+    </g>
+    <!-- ground shadow hatch strip -->
+    <g id="Chatch" stroke="#9a3412" stroke-width="0.9">
+      <path d="M0 0 l15 -5 M9 0.5 l15 -5 M18 1 l15 -5 M27 0.3 l15 -5 M36 0.8 l15 -5 M45 0.2 l15 -5 M54 0.9 l15 -5 M63 0.4 l15 -5"/>
+    </g>
+    <!-- lawn tuft -->
+    <g id="Ctuft" stroke="#9a3412" stroke-width="0.7">
+      <path d="M0 0 l2 -5.5 l2 5.2 m-1.2 -2.6 l2.3 -3.8 l1.8 4.4"/>
+    </g>
+    <!-- bird -->
+    <g id="Cbird" stroke="#9a3412" stroke-width="1.1">
+      <path d="M0 0 q4.5 -4 9 -0.5 q4.5 -3.5 9 0.5"/>
+    </g>
+    <!-- diamond ikat motif -->
+    <g id="Cdiam">
+      <path d="M0 -9 L9 0 L0 9 L-9 0 Z" stroke="#9a3412" stroke-width="1.1" fill="#ffffff" fill-opacity="0.55"/>
+      <path d="M0 -4.5 L4.5 0 L0 4.5 L-4.5 0 Z" stroke="#9a3412" stroke-width="0.6" fill="#c2410c" fill-opacity="0.35"/>
+    </g>
+  </defs>
+
+  <!-- ============ trees behind building (loose scribbles) ============ -->
+  <g stroke-width="1" opacity="0.42">
+    <path d="M1016 506 q4 -12 13 -12 q3 -8 12 -6 q8 -6 13 2 q7 1 5 9 q4 6 -4 9 q-6 6 -12 2 q-8 5 -14 0 q-9 3 -13 -4"/>
+    <path d="M1614 522 q3 -11 11 -11 q3 -7 11 -5 q8 -5 12 2 q7 1 5 8 q3 6 -4 8 l-35 0"/>
+    <path d="M1750 522 q3 -9 10 -9 q3 -6 10 -4 q7 -4 10 2 q6 1 4 7 q2 5 -4 6 l-30 0"/>
+    <path d="M1858 512 q3 -16 15 -17 q4 -11 15 -8 q10 -8 17 2 q9 2 7 12 q5 8 -5 12 l-49 1"/>
+  </g>
+
+  <!-- ============ brick washes ============ -->
+  <g stroke="none" fill="#c2410c">
+    <rect x="1039" y="511" width="94" height="86" fill-opacity="0.13"/>
+    <rect x="1140" y="492" width="220" height="105" fill-opacity="0.10"/>
+    <rect x="1141" y="491" width="43" height="106" fill-opacity="0.11"/>
+    <rect x="1316" y="491" width="44" height="106" fill-opacity="0.11"/>
+    <rect x="1361" y="505" width="74" height="92" fill-opacity="0.15"/>
+    <rect x="1437" y="530" width="398" height="67" fill-opacity="0.12"/>
+    <rect x="1836" y="515" width="70" height="82" fill-opacity="0.17"/>
+    <rect x="1048" y="520" width="36" height="46" fill-opacity="0.10"/>
+    <rect x="1090" y="520" width="36" height="46" fill-opacity="0.10"/>
+  </g>
+
+  <!-- ============ glazing fills ============ -->
+  <g stroke="none" fill="#ffffff">
+    <!-- pavilion entry -->
+    <rect x="1204" y="562" width="92" height="34" fill-opacity="0.5"/>
+    <!-- tower slits -->
+    <rect x="1156" y="508" width="9" height="72" fill-opacity="0.5"/>
+    <rect x="1334" y="508" width="9" height="72" fill-opacity="0.5"/>
+    <!-- wing ribbon windows -->
+    <rect x="1444" y="538" width="56" height="18" fill-opacity="0.5"/>
+    <rect x="1512" y="538" width="68" height="18" fill-opacity="0.5"/>
+    <rect x="1592" y="538" width="68" height="18" fill-opacity="0.5"/>
+    <rect x="1672" y="538" width="68" height="18" fill-opacity="0.5"/>
+    <rect x="1752" y="538" width="68" height="18" fill-opacity="0.5"/>
+    <!-- end block slits -->
+    <rect x="1852" y="528" width="10" height="56" fill-opacity="0.5"/>
+    <rect x="1876" y="528" width="10" height="56" fill-opacity="0.5"/>
+    <!-- kautilya block windows -->
+    <rect x="1374" y="540" width="16" height="20" fill-opacity="0.5"/>
+    <rect x="1404" y="540" width="16" height="20" fill-opacity="0.5"/>
+  </g>
+
+  <!-- ============ steel fills: fascias, fins, slab, piers ============ -->
+  <g stroke="none" fill="#475569">
+    <rect x="1034" y="504" width="104" height="7" fill-opacity="0.8"/>
+    <rect x="1358" y="499" width="82" height="6.5" fill-opacity="0.8"/>
+    <rect x="1434" y="523.5" width="404" height="6.5" fill-opacity="0.8"/>
+    <rect x="1833" y="508" width="76" height="7" fill-opacity="0.8"/>
+    <!-- dark fins flanking entry -->
+    <rect x="1188" y="434" width="11" height="162" fill-opacity="0.72"/>
+    <rect x="1301" y="434" width="11" height="162" fill-opacity="0.72"/>
+    <!-- canopy slab -->
+    <rect x="1124" y="410.5" width="252" height="17" fill-opacity="0.82"/>
+    <!-- wing grey piers -->
+    <rect x="1502" y="530" width="8" height="67" fill-opacity="0.45"/>
+    <rect x="1582" y="530" width="8" height="67" fill-opacity="0.45"/>
+    <rect x="1662" y="530" width="8" height="67" fill-opacity="0.45"/>
+    <rect x="1742" y="530" width="8" height="67" fill-opacity="0.45"/>
+    <rect x="1822" y="530" width="8" height="67" fill-opacity="0.45"/>
+  </g>
+
+  <!-- slab top highlight -->
+  <path d="M1128 413.5 h244" stroke="#ffffff" stroke-width="0.8" opacity="0.5"/>
+  <!-- slab underside reveal -->
+  <path d="M1128 424.5 h244" stroke="#334155" stroke-width="0.7" opacity="0.6"/>
+
+  <!-- ============ canopy shadow on wall behind ============ -->
+  <g stroke-width="0.8" opacity="0.42">
+    <path d="M1152 431 l8.5 13 M1165 431 l8.5 13 M1178 431 l8.5 13 M1191 431 l8.5 13 M1204 431 l8.5 13 M1217 431 l8.5 13 M1230 431 l8.5 13 M1243 431 l8.5 13 M1256 431 l8.5 13 M1269 431 l8.5 13 M1282 431 l8.5 13 M1295 431 l8.5 13 M1308 431 l8.5 13 M1321 431 l8.5 13 M1334 431 l8.5 13 M1345 431 l8 12"/>
+  </g>
+
+  <!-- ============ columns under slab ============ -->
+  <g>
+    <rect x="1146" y="428" width="4.6" height="166" fill="#475569" fill-opacity="0.9" stroke="none"/>
+    <rect x="1349" y="428" width="4.6" height="166" fill="#475569" fill-opacity="0.9" stroke="none"/>
+    <rect x="1209" y="428" width="3.6" height="166" fill="#475569" fill-opacity="0.85" stroke="none"/>
+    <rect x="1290.5" y="428" width="3.6" height="166" fill="#475569" fill-opacity="0.85" stroke="none"/>
+    <path d="M1146 428.5 v165 M1150.7 428.5 v165 M1349 428.5 v165 M1353.7 428.5 v165" stroke="#334155" stroke-width="0.5" opacity="0.7"/>
+    <rect x="1143.5" y="592" width="10" height="4.5" stroke="#9a3412" stroke-width="0.9" fill="#ffffff" fill-opacity="0.4"/>
+    <rect x="1346.5" y="592" width="10" height="4.5" stroke="#9a3412" stroke-width="0.9" fill="#ffffff" fill-opacity="0.4"/>
+    <rect x="1207" y="592" width="8" height="4.5" stroke="#9a3412" stroke-width="0.8" fill="#ffffff" fill-opacity="0.4"/>
+    <rect x="1288.5" y="592" width="8" height="4.5" stroke="#9a3412" stroke-width="0.8" fill="#ffffff" fill-opacity="0.4"/>
+  </g>
+
+  <!-- ============ pavilion centre details ============ -->
+  <!-- upper terrace beam + balusters -->
+  <g stroke-width="0.7" opacity="0.65">
+    <path d="M1200 468 q30 -1 58 0 t 56 0.6"/>
+    <path d="M1206 468 v9 M1215 468 v9 M1224 468.4 v9 M1233 468.4 v9 M1242 468.2 v9 M1251 468.2 v9 M1260 468.4 v9 M1269 468.4 v9 M1278 468.6 v9 M1287 468.6 v9 M1296 468.6 v9" stroke-width="0.5"/>
+    <path d="M1200 478 h100" stroke-width="0.8"/>
+  </g>
+  <!-- diamond ikat band -->
+  <path d="M1198 502 q26 -1 52 -0.4 t 50 0.6 M1198 524.5 q26 1 52 0.4 t 50 -0.6" stroke-width="0.6" opacity="0.7"/>
+  <use href="#Cdiam" x="1216" y="513"/>
+  <use href="#Cdiam" x="1250" y="513"/>
+  <use href="#Cdiam" x="1284" y="513"/>
+  <!-- IIM lettering -->
+  <g stroke="#ffffff" stroke-width="2.1" opacity="0.92">
+    <path d="M1233 534 v14 M1242 534 v14"/>
+    <path d="M1251 548 v-14 l7.5 11 l7.5 -11 v14"/>
+  </g>
+  <path d="M1229 553 h18 M1252 553 h19" stroke="#ffffff" stroke-width="1" opacity="0.75"/>
+  <!-- entrance canopy strip -->
+  <rect x="1196" y="556" width="108" height="6" fill="#ffffff" fill-opacity="0.85" stroke="#9a3412" stroke-width="1.2"/>
+  <g stroke-width="0.6" opacity="0.4">
+    <path d="M1202 564 l7 6 M1214 564 l7 6 M1226 564 l7 6 M1238 564 l7 6 M1250 564 l7 6 M1262 564 l7 6 M1274 564 l7 6 M1286 564 l7 6"/>
+  </g>
+  <!-- glazed entry: recess frames, mullions, doors, reflections -->
+  <g>
+    <rect x="1204" y="562" width="92" height="34" stroke="#9a3412" stroke-width="1.2"/>
+    <rect x="1207" y="565" width="86" height="29" stroke="#475569" stroke-width="0.9"/>
+    <path d="M1219 565 v29 M1234 565 v29 M1266 565 v29 M1281 565 v29" stroke="#475569" stroke-width="0.6" opacity="0.8"/>
+    <path d="M1242 565 v29 M1258 565 v29" stroke="#475569" stroke-width="1.1"/>
+    <circle cx="1245.5" cy="581" r="0.9" fill="#475569" stroke="none"/>
+    <circle cx="1254.5" cy="581" r="0.9" fill="#475569" stroke="none"/>
+    <path d="M1210 590 l9 -12 M1222 592 l12 -16 M1270 592 l11 -15 M1284 590 l8 -11" stroke="#475569" stroke-width="0.5" opacity="0.45"/>
+  </g>
+  <!-- tower slit frames -->
+  <g>
+    <rect x="1156" y="508" width="9" height="72" stroke="#9a3412" stroke-width="1"/>
+    <rect x="1157.5" y="509.5" width="6" height="69" stroke="#475569" stroke-width="0.6"/>
+    <rect x="1334" y="508" width="9" height="72" stroke="#9a3412" stroke-width="1"/>
+    <rect x="1335.5" y="509.5" width="6" height="69" stroke="#475569" stroke-width="0.6"/>
+    <path d="M1156 528 h9 M1156 548 h9 M1156 568 h9 M1334 528 h9 M1334 548 h9 M1334 568 h9" stroke="#475569" stroke-width="0.5" opacity="0.7"/>
+  </g>
+  <!-- tower coping + parapet reveals -->
+  <path d="M1140 493 h44 M1316 493 h44" stroke="#475569" stroke-width="1.4" opacity="0.85"/>
+  <path d="M1184 497.5 h132" stroke="#475569" stroke-width="1.2" opacity="0.85"/>
+  <path d="M1143 500.5 h38 M1319 500.5 h38" stroke-width="0.5" opacity="0.45"/>
+
+  <!-- ============ pavilion contours (heavy, wavy) ============ -->
+  <g stroke-width="2.2">
+    <path d="M1140.6 597.5 q-1.4 -52 -0.3 -105.6"/>
+    <path d="M1138.5 491.2 q23 -1.4 46.5 -0.2"/>
+    <path d="M1184.3 491 q0.6 2.6 0.2 5.4"/>
+    <path d="M1184.5 496.4 q66 -1.8 131.5 0.2" stroke-width="1.6"/>
+    <path d="M1315.9 496.6 q-0.4 -2.8 0.2 -5.6"/>
+    <path d="M1315.6 490.8 q22.5 -1 45 0.4"/>
+    <path d="M1360.4 491.2 q1 53 0.3 106.3"/>
+  </g>
+  <!-- canopy slab contour -->
+  <g stroke-width="2.5">
+    <path d="M1122.8 410.8 q63 -1.8 126.5 -0.6 t 127.5 0.8"/>
+    <path d="M1376.6 410.9 q0.5 8.4 -0.3 16.8"/>
+    <path d="M1376.2 427.6 q-63.5 1.6 -126.5 0.5 t -126.4 -0.7"/>
+    <path d="M1123.4 427.5 q-0.9 -8.3 -0.6 -16.7"/>
+  </g>
+  <!-- fin outlines -->
+  <g stroke-width="1.2">
+    <rect x="1188" y="434" width="11" height="162"/>
+    <rect x="1301" y="434" width="11" height="162"/>
+    <path d="M1189.5 436 v158 M1302.5 436 v158" stroke="#94a3b8" stroke-width="0.5" opacity="0.6"/>
+  </g>
+
+  <!-- ============ left block ============ -->
+  <g stroke-width="2.1">
+    <path d="M1039.5 597.5 q-1.3 -43 -0.3 -86.3"/>
+    <path d="M1133.5 511.4 q1 43 0.3 86.2"/>
+  </g>
+  <path d="M1033.4 504 q26 -1.4 52 -0.6 t 53 0.9" stroke-width="1.8"/>
+  <path d="M1034 511 q30 1 60 0.3 t 44 -0.5" stroke-width="1"/>
+  <!-- decorated jali bays -->
+  <use href="#CjaliP" transform="translate(1048,520) scale(1.285,1.045)"/>
+  <use href="#CjaliP" transform="translate(1090,520) scale(1.285,1.045)"/>
+  <rect x="1047" y="519" width="38" height="48" stroke-width="1.4"/>
+  <rect x="1089" y="519" width="38" height="48" stroke-width="1.4"/>
+  <path d="M1040 571 q28 1 46 0.4 t 46 -0.6" stroke-width="0.7" opacity="0.6"/>
+  <!-- left block ground floor -->
+  <rect x="1079" y="574" width="15" height="23" fill="#ffffff" fill-opacity="0.5" stroke="#9a3412" stroke-width="1.1"/>
+  <path d="M1081 576 v19 h11" stroke="#475569" stroke-width="0.6"/>
+  <use href="#Cwin" transform="translate(1050,576) scale(0.9,0.8)"/>
+  <use href="#Cwin" transform="translate(1104,576) scale(0.9,0.8)"/>
+
+  <!-- ============ kautilya block ============ -->
+  <g stroke-width="2">
+    <path d="M1435.6 597.4 q0.9 -46 0.2 -91.8"/>
+    <path d="M1361 505.5 q-0.7 46 -0.2 92"/>
+  </g>
+  <path d="M1357.4 499 q21 -1.2 41.5 -0.4 t 41.5 0.8" stroke-width="1.7"/>
+  <path d="M1358 505.4 q26 0.9 41 0.3 t 41 -0.5" stroke-width="0.9"/>
+  <!-- building name hint (tiny lettering marks) -->
+  <g stroke="#ffffff" stroke-width="1" opacity="0.85">
+    <path d="M1381 516 v5 M1385.5 516 l2 5 m0 -5 l-2 5 M1391 516 v5 m-1.8 0 h3.6 M1396.5 516 l1.6 5 l1.6 -5 M1402.5 516 v5 M1406 516 v5 m0 -5 h2.4 M1411.5 516 v5 m0 -5 l2.6 5 m0 -5 v5"/>
+  </g>
+  <use href="#Cwin" transform="translate(1374,540) scale(1,0.9)"/>
+  <use href="#Cwin" transform="translate(1404,540) scale(1,0.9)"/>
+
+  <!-- ============ right wing ============ -->
+  <path d="M1436 523.3 q50 -1.6 100 -0.6 t 100 0.9 t 100 -0.8 t 100 0.7" stroke-width="1.8"/>
+  <path d="M1436 530 q50 1.2 100 0.4 t 100 -0.6 t 100 0.7 t 98 -0.4" stroke-width="0.9"/>
+  <path d="M1436.6 523.5 q-0.8 37.4 -0.3 74.2" stroke-width="1.6"/>
+  <!-- ribbon window frames + mullions + reflections -->
+  <g stroke-width="0.9">
+    <rect x="1444" y="538" width="56" height="18"/>
+    <rect x="1512" y="538" width="68" height="18"/>
+    <rect x="1592" y="538" width="68" height="18"/>
+    <rect x="1672" y="538" width="68" height="18"/>
+    <rect x="1752" y="538" width="68" height="18"/>
+  </g>
+  <g stroke="#475569" stroke-width="0.55" opacity="0.8">
+    <path d="M1458 538 v18 M1472 538 v18 M1486 538 v18"/>
+    <path d="M1526 538 v18 M1540 538 v18 M1554 538 v18 M1568 538 v18"/>
+    <path d="M1606 538 v18 M1620 538 v18 M1634 538 v18 M1648 538 v18"/>
+    <path d="M1686 538 v18 M1700 538 v18 M1714 538 v18 M1728 538 v18"/>
+    <path d="M1766 538 v18 M1780 538 v18 M1794 538 v18 M1808 538 v18"/>
+    <path d="M1444 539.5 h56 M1512 539.5 h68 M1592 539.5 h68 M1672 539.5 h68 M1752 539.5 h68" stroke-width="0.7"/>
+  </g>
+  <g stroke="#475569" stroke-width="0.5" opacity="0.42">
+    <path d="M1448 553 l8 -11 M1461 554 l9 -12 M1519 553 l8 -11 M1545 554 l9 -12 M1599 553 l8 -11 M1627 554 l9 -12 M1679 553 l8 -11 M1707 554 l9 -12 M1759 553 l8 -11 M1787 554 l9 -12"/>
+  </g>
+  <path d="M1440 560 h392" stroke-width="0.55" opacity="0.5"/>
+  <!-- lower windows in visible bays -->
+  <use href="#Cwin" transform="translate(1452,568)"/>
+  <use href="#Cwin" transform="translate(1474,568)"/>
+  <use href="#Cwin" transform="translate(1606,568)"/>
+  <use href="#Cwin" transform="translate(1630,568)"/>
+  <rect x="1676" y="572" width="14" height="25" fill="#ffffff" fill-opacity="0.5" stroke="#9a3412" stroke-width="1"/>
+  <!-- end block -->
+  <path d="M1832.4 508.2 q19.5 -1.2 38.5 -0.4 t 38.5 0.9" stroke-width="1.8"/>
+  <path d="M1833 515 q22 0.9 38 0.3 t 38 -0.5" stroke-width="0.9"/>
+  <path d="M1836 523 q-0.5 -4 -0.2 -8" stroke-width="1.5"/>
+  <path d="M1905.8 515.4 q1 41 0.4 82.2" stroke-width="2.3"/>
+  <rect x="1852" y="528" width="10" height="56" stroke-width="1"/>
+  <rect x="1876" y="528" width="10" height="56" stroke-width="1"/>
+  <path d="M1853.5 529.5 v53 M1877.5 529.5 v53" stroke="#475569" stroke-width="0.55" opacity="0.8"/>
+  <path d="M1852 546 h10 M1852 564 h10 M1876 546 h10 M1876 564 h10" stroke="#475569" stroke-width="0.5" opacity="0.7"/>
+
+  <!-- ============ brick coursing hints ============ -->
+  <g stroke-width="0.55" opacity="0.4">
+    <path d="M1043 522 h18 M1064 530 h24 M1044 548 h14 M1100 534 h22 M1046 580 h16 M1112 585 h16"/>
+    <path d="M1144 505 h20 M1146 530 h16 M1168 556 h13 M1144 574 h20 M1322 508 h20 M1344 532 h13 M1320 560 h18 M1340 580 h16"/>
+    <path d="M1366 512 h20 M1394 530 h24 M1366 566 h18 M1410 574 h18"/>
+    <path d="M1444 534 h20 M1456 562 h18 M1520 534 h22 M1596 534 h20 M1614 564 h20 M1676 534 h22 M1754 534 h20 M1770 564 h18"/>
+    <path d="M1840 520 h18 M1864 540 h9 M1842 570 h9 M1866 588 h16"/>
+    <path d="M1190 545 h8 M1303 545 h8" stroke="#94a3b8"/>
+  </g>
+
+  <!-- ============ freestanding jali screens, left of building ============ -->
+  <g>
+    <use href="#CjaliP" transform="translate(948,536) scale(1.5,1.41)"/>
+    <rect x="946.5" y="534.5" width="45" height="64" stroke-width="2"/>
+    <rect x="943" y="597" width="52" height="6.5" fill="#ffffff" fill-opacity="0.4" stroke-width="1.2"/>
+    <use href="#Chatch" transform="translate(950,610) scale(0.68,1)" opacity="0.35"/>
+    <use href="#CjaliP" transform="translate(998,542) scale(1.22,1.27)"/>
+    <rect x="996.5" y="540.5" width="37" height="58" stroke-width="1.8"/>
+    <rect x="994" y="597" width="42" height="6" fill="#ffffff" fill-opacity="0.4" stroke-width="1.1"/>
+    <use href="#Chatch" transform="translate(1000,609) scale(0.55,1)" opacity="0.35"/>
+  </g>
+
+  <!-- ============ jali screen run A (front of wing) ============ -->
+  <g>
+    <path d="M1486.5 551 q29 -1.2 58 -0.4 t 58 0.8" stroke-width="1.8"/>
+    <use href="#CjaliP" transform="translate(1494,552)"/>
+    <use href="#CjaliP" transform="translate(1530,552)"/>
+    <use href="#CjaliP" transform="translate(1566,552)"/>
+    <rect x="1488" y="552" width="6" height="44" fill="#c2410c" fill-opacity="0.25" stroke-width="1.1"/>
+    <rect x="1522" y="552" width="8" height="44" fill="#c2410c" fill-opacity="0.25" stroke-width="1.1"/>
+    <rect x="1558" y="552" width="8" height="44" fill="#c2410c" fill-opacity="0.25" stroke-width="1.1"/>
+    <rect x="1594" y="552" width="7" height="44" fill="#c2410c" fill-opacity="0.25" stroke-width="1.1"/>
+    <rect x="1486" y="596" width="117" height="6" fill="#ffffff" fill-opacity="0.35" stroke-width="1.1"/>
+    <use href="#Chatch" transform="translate(1492,609) scale(1.45,1)" opacity="0.3"/>
+  </g>
+
+  <!-- ============ jali screen run B ============ -->
+  <g>
+    <path d="M1699.5 548.6 q30 -1.3 60 -0.3 t 60 0.7" stroke-width="1.8"/>
+    <use href="#CjaliP" transform="translate(1706,549) scale(1,1.07)"/>
+    <use href="#CjaliP" transform="translate(1742,549) scale(1,1.07)"/>
+    <use href="#CjaliP" transform="translate(1778,549) scale(1,1.07)"/>
+    <rect x="1700" y="549" width="6" height="47" fill="#c2410c" fill-opacity="0.25" stroke-width="1.1"/>
+    <rect x="1734" y="549" width="8" height="47" fill="#c2410c" fill-opacity="0.25" stroke-width="1.1"/>
+    <rect x="1770" y="549" width="8" height="47" fill="#c2410c" fill-opacity="0.25" stroke-width="1.1"/>
+    <rect x="1806" y="549" width="8" height="47" fill="#c2410c" fill-opacity="0.25" stroke-width="1.1"/>
+    <rect x="1698" y="596" width="124" height="6" fill="#ffffff" fill-opacity="0.35" stroke-width="1.1"/>
+    <use href="#Chatch" transform="translate(1706,609) scale(1.5,1)" opacity="0.3"/>
+  </g>
+
+  <!-- ============ shrubs ============ -->
+  <g stroke-width="0.9" opacity="0.5">
+    <path d="M1448 598 q2 -9 8 -9 q2 -5 7 -3 q5 -2 6 4 q4 2 1 8"/>
+    <path d="M1611 598 q2 -7 6 -7 q2 -4 6 -2 q4 -1 4 4 q3 2 0 5"/>
+    <path d="M1840 598 q2 -8 7 -8 q2 -4 6 -2 q4 -1 4 4 q3 3 0 6"/>
+  </g>
+
+  <!-- ============ ground ============ -->
+  <path d="M926 600 q40 -1.8 80 -0.6 t 80 1.2 t 80 -0.9 t 80 0.6 t 80 -1 t 80 0.8 t 80 -0.7 t 80 0.9 t 80 -0.8 t 80 0.5 t 80 -0.6 t 80 0.7 t 30 -0.3" stroke-width="2.2"/>
+  <g stroke-width="0.7" opacity="0.45">
+    <path d="M1004 604.5 q22 0.8 46 0.3"/>
+    <path d="M1240 605 q24 0.7 50 0.2"/>
+    <path d="M1502 604.6 q24 0.8 48 0.3"/>
+    <path d="M1748 605 q26 0.7 50 0.2"/>
+  </g>
+  <!-- ground shadow under building masses -->
+  <use href="#Chatch" transform="translate(1046,610) scale(1.1,1)" opacity="0.3"/>
+  <use href="#Chatch" transform="translate(1150,611) scale(1.3,1.1)" opacity="0.32"/>
+  <use href="#Chatch" transform="translate(1256,611) scale(1.3,1.1)" opacity="0.32"/>
+  <use href="#Chatch" transform="translate(1368,610) scale(1.1,1)" opacity="0.3"/>
+  <use href="#Chatch" transform="translate(1620,610) scale(0.9,1)" opacity="0.28"/>
+  <use href="#Chatch" transform="translate(1836,610) scale(0.95,1)" opacity="0.3"/>
+
+  <!-- lawn tufts -->
+  <use href="#Ctuft" transform="translate(954,634)"/>
+  <use href="#Ctuft" transform="translate(988,652) scale(0.85)"/>
+  <use href="#Ctuft" transform="translate(1016,622) scale(1.1)"/>
+  <use href="#Ctuft" transform="translate(1052,644)"/>
+  <use href="#Ctuft" transform="translate(1092,628) scale(0.8)"/>
+  <use href="#Ctuft" transform="translate(1132,656) scale(1.2)"/>
+  <use href="#Ctuft" transform="translate(1176,634) scale(0.9)"/>
+  <use href="#Ctuft" transform="translate(1222,650)"/>
+  <use href="#Ctuft" transform="translate(1262,624) scale(0.8)"/>
+  <use href="#Ctuft" transform="translate(1306,646) scale(1.1)"/>
+  <use href="#Ctuft" transform="translate(1352,630)"/>
+  <use href="#Ctuft" transform="translate(1396,654) scale(0.85)"/>
+  <use href="#Ctuft" transform="translate(1440,626) scale(1.15)"/>
+  <use href="#Ctuft" transform="translate(1488,648)"/>
+  <use href="#Ctuft" transform="translate(1532,632) scale(0.8)"/>
+  <use href="#Ctuft" transform="translate(1578,656) scale(1.1)"/>
+  <use href="#Ctuft" transform="translate(1626,628) scale(0.9)"/>
+  <use href="#Ctuft" transform="translate(1672,646)"/>
+  <use href="#Ctuft" transform="translate(1718,624) scale(0.85)"/>
+  <use href="#Ctuft" transform="translate(1764,652) scale(1.2)"/>
+  <use href="#Ctuft" transform="translate(1812,632)"/>
+  <use href="#Ctuft" transform="translate(1858,648) scale(0.9)"/>
+  <use href="#Ctuft" transform="translate(1896,626) scale(0.8)"/>
+  <g opacity="0.35">
+    <use href="#Ctuft" transform="translate(1148,640) scale(0.7)"/>
+    <use href="#Ctuft" transform="translate(1414,638) scale(0.7)"/>
+    <use href="#Ctuft" transform="translate(1698,636) scale(0.7)"/>
+  </g>
+
+  <!-- ============ flag mast + tricolour ============ -->
+  <g>
+    <rect x="1465.2" y="196" width="3.4" height="386" fill="#ffffff" fill-opacity="0.65" stroke="none"/>
+    <path d="M1465.2 582 q-0.5 -193 0.3 -386" stroke-width="1"/>
+    <path d="M1468.6 582 q0.7 -193 0 -386" stroke-width="1"/>
+    <circle cx="1466.9" cy="191.5" r="3" fill="#f97316" fill-opacity="0.9" stroke-width="0.9"/>
+    <!-- base plinth -->
+    <rect x="1455" y="580" width="24" height="18" fill="#ffffff" fill-opacity="0.7" stroke-width="1.3"/>
+    <path d="M1457.5 588.5 h19" stroke-width="0.7" opacity="0.6"/>
+    <path d="M1471 583 l5 4 M1470 590 l6 4.5" stroke-width="0.5" opacity="0.5"/>
+    <use href="#Chatch" transform="translate(1458,606) scale(0.42,0.8)" opacity="0.35"/>
+    <!-- tricolour flying left -->
+    <path d="M1466 197 C1440 190 1420 205 1400 197 C1382 191 1376 201 1370 201 L1370 212.5 C1376 212.5 1382 202.5 1400 208.5 C1420 216.5 1440 201.5 1466 208.5 Z" fill="#f97316" fill-opacity="0.92" stroke="none"/>
+    <path d="M1466 208.5 C1440 201.5 1420 216.5 1400 208.5 C1382 202.5 1376 212.5 1370 212.5 L1370 224 C1376 224 1382 214 1400 220 C1420 228 1440 213 1466 220 Z" fill="#ffffff" fill-opacity="0.95" stroke="none"/>
+    <path d="M1466 220 C1440 213 1420 228 1400 220 C1382 214 1376 224 1370 224 L1370 235.5 C1376 235.5 1382 225.5 1400 231.5 C1420 239.5 1440 224.5 1466 231.5 Z" fill="#16a34a" fill-opacity="0.9" stroke="none"/>
+    <path d="M1466 197 C1440 190 1420 205 1400 197 C1382 191 1376 201 1370 201 L1370 235.5 C1376 235.5 1382 225.5 1400 231.5 C1420 239.5 1440 224.5 1466 231.5 L1466 197" stroke-width="1.1"/>
+    <path d="M1466 208.5 C1440 201.5 1420 216.5 1400 208.5 C1382 202.5 1376 212.5 1370 212.5 M1466 220 C1440 213 1420 228 1400 220 C1382 214 1376 224 1370 224" stroke-width="0.55" opacity="0.6"/>
+    <!-- chakra -->
+    <g stroke="#1e3a8a">
+      <circle cx="1420" cy="218" r="4.2" stroke-width="1"/>
+      <path d="M1420 214.2 v7.6 M1416.2 218 h7.6 M1417.3 215.3 l5.4 5.4 M1422.7 215.3 l-5.4 5.4" stroke-width="0.4"/>
+    </g>
+  </g>
+
+  <!-- ============ birds ============ -->
+  <g opacity="0.5">
+    <use href="#Cbird" transform="translate(1050,240)"/>
+    <use href="#Cbird" transform="translate(1084,254) scale(0.8)"/>
+    <use href="#Cbird" transform="translate(1110,230) scale(0.62)"/>
+  </g>
+</g>

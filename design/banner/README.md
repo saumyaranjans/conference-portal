@@ -35,3 +35,18 @@ element-by-element (the drawing was authored as a pale wash). The conference
 text sits in the clear sky at the left, where the drawing is masked to fade out.
 
 Output: `glogift-27-banner-sketch.{svg,png}`.
+
+## Campus-sketch banner (supplied artwork)
+
+`campus-sketch.jpg` is the hand-drawn campus illustration supplied by the
+organiser. `make-banner-user.js` composes the banner on it:
+
+- the drawing is used WHOLE (nothing cropped), upscaled 1280x658 -> 1920x987;
+- the canvas is extended 253px upward and that band is built by stretching the
+  drawing's own top rows, so the join is seamless — a flat fill leaves a
+  hairline seam no matter how closely the colour is matched;
+- the text sits in the resulting sky, left of the flag and clear of the
+  building's tallest point.
+
+Outputs: `glogift-27-banner-campus.png` (1920x1240, full drawing) and
+`glogift-27-banner-campus-wide.png` (1920x860 strip for web headers).

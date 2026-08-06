@@ -53,6 +53,10 @@ export async function recordIntegrityCheck(
     return { ok: false, message: "Unknown integrity tool." };
   }
 
+  // The quick in-row form sends only the two scores. Absent fields must be left
+  // alone rather than blanked — saving a score from the table should not wipe a
+  // note someone wrote in the fuller form.
+  const hasNotes = formData.has("integrity_notes");
   const notes = String(formData.get("integrity_notes") ?? "").trim().slice(0, 1000);
 
   const admin = createAdminClient();
@@ -99,7 +103,7 @@ export async function recordIntegrityCheck(
       similarity_index: similarity,
       ai_percentage: ai,
       integrity_provider: provider,
-      integrity_notes: notes || null,
+      ...(hasNotes ? { integrity_notes: notes || null } : {}),
       integrity_checked_at: new Date().toISOString(),
       integrity_checked_by: profile.id,
       ...(reportPath ? { integrity_report_path: reportPath } : {}),

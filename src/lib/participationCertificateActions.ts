@@ -75,15 +75,25 @@ export async function generateParticipationCertificates(
   const { data: rows } = await admin
     .from("submission_authors")
     .select(
-      "id, submission_id, full_name, profile_id, attended_confirmed, registration_fee_paid, submissions!inner(id, title, status, conference_id, track_id)"
+      "id, submission_id, full_name, profile_id, attended_confirmed, registration_fee_paid, submissions!inner(id, paper_id, title, status, conference_id, track_id)"
     )
     .ilike("email", email);
 
-  const eligible = ((rows ?? []) as any[]).filter(
-    (r) => r.submissions && !NON_ELIGIBLE.includes(r.submissions.status)
-  );
+  const all = ((rows ?? []) as any[]).filter((r) => r.submissions);
+  const eligible = all.filter((r) => !NON_ELIGIBLE.includes(r.submissions.status));
   if (eligible.length === 0) {
-    return { ok: false, message: "This author has no papers eligible for a certificate." };
+    // Say WHICH papers were excluded and on what ground. "No eligible papers"
+    // reads as a fault in the record when the author is marked attended and
+    // fee-paid, and sends the Office hunting for a problem that is not there.
+    const blocked = all
+      .map((r) => `${r.submissions.paper_id ?? "paper"} (${r.submissions.status})`)
+      .join(", ");
+    return {
+      ok: false,
+      message: all.length
+        ? `No certificate: a participation certificate names the paper, and every paper for this author is draft, rejected or withdrawn — ${blocked}.`
+        : "This author is not listed on any paper.",
+    };
   }
 
   // Gate: the person must be marked attended AND have paid the fee.

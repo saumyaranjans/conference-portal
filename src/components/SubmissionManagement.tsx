@@ -403,8 +403,60 @@ export function SubmissionManagement({
                       )}
                     </td>
                     <td className="px-3 py-2 text-xs">
+                      {/* Pathway A has no manuscript, so no boxes and no score. */}
                       {r.pathway === "A" ? (
                         <span className="text-slate-400">n/a</span>
+                      ) : canRecordIntegrity ? (
+                        // Editorial Office types the two numbers straight into
+                        // the row. The tool, report PDF and note stay in the
+                        // fuller form in the detail panel below.
+                        <ActionForm
+                          action={recordIntegrityCheck}
+                          className="flex items-center gap-1"
+                        >
+                          <input type="hidden" name="submission_id" value={r.id} />
+                          <input
+                            type="hidden"
+                            name="integrity_provider"
+                            value={r.integrityProvider || "manual"}
+                          />
+                          <input
+                            name="similarity_index"
+                            type="number"
+                            min="0"
+                            max="100"
+                            defaultValue={r.similarity ?? ""}
+                            placeholder="Sim"
+                            title="Similarity index %"
+                            aria-label={`Similarity index for ${r.paperId}`}
+                            className="input w-16 px-1.5 py-1 text-center text-xs"
+                          />
+                          <input
+                            name="ai_percentage"
+                            type="number"
+                            min="0"
+                            max="100"
+                            defaultValue={r.aiPercent ?? ""}
+                            placeholder="AI"
+                            title="AI writing %"
+                            aria-label={`AI writing percentage for ${r.paperId}`}
+                            className="input w-16 px-1.5 py-1 text-center text-xs"
+                          />
+                          <SubmitButton
+                            variant="secondary"
+                            className="!px-2 !py-1 !text-[11px]"
+                          >
+                            Save
+                          </SubmitButton>
+                          {flagged && (
+                            <span
+                              className="text-[11px] font-medium text-rose-700"
+                              title={`At or above ${SIMILARITY_FLAG_PERCENT}% similarity or ${AI_FLAG_PERCENT}% AI`}
+                            >
+                              flagged
+                            </span>
+                          )}
+                        </ActionForm>
                       ) : r.integrityCheckedAt ? (
                         <span
                           className={`badge ${

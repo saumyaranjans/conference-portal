@@ -151,21 +151,34 @@ function rank(query: string, items: FaqItem[]): Scored[] {
 }
 
 const COORDINATOR =
-  "I couldn't find that in the FAQ. Please write to the Conference Coordinator at glogift27.coordinator@iimsambalpur.ac.in and the team will help you.";
+  "Sorry, I don't have that one yet! 🙈 Try rephrasing, tap a question below, or write to the Conference Coordinator at glogift27.coordinator@iimsambalpur.ac.in and the team will help you.";
+
+/** Greeting words incl. common informal spellings and typos (hye, hlo, gm…). */
+const GREETINGS = new Set([
+  "hi", "hii", "hiii", "hiiii", "hey", "heyy", "heya", "hye", "hei", "helo",
+  "hello", "helloo", "hallo", "hlo", "hola", "yo", "sup", "wassup", "whatsup",
+  "namaste", "namaskar", "greetings", "gm", "morning", "afternoon", "evening",
+  "hai", "haii",
+]);
 
 /** Small talk first — a bot that can't say hello never feels real. */
 function smallTalk(query: string): string | null {
   const q = query.toLowerCase().trim();
-  if (/^(hi|hii+|hello|hey|namaste|namaskar|good\s*(morning|afternoon|evening))\b/.test(q))
+  const words = q.replace(/[^a-z ]/g, " ").split(/\s+/).filter(Boolean);
+  // A short message containing any greeting-ish word (in any casing or
+  // spelling — "HYE", "hlo", "good morning") is a greeting.
+  if (words.length <= 4 && words.some((w) => GREETINGS.has(w)))
     return "Hello! 😊 I'm Toshi. Ask me anything about GLOGIFT 27 — dates, submissions, fees, publication, travel or registration.";
-  if (/thank|thanks|thx|dhanyavad/.test(q))
+  if (/thank|thanks|thx|tysm|dhanyavad/.test(q))
     return "You're most welcome! Happy to help — and we look forward to seeing you at IIM Sambalpur, 25–27 February 2027. 🎉";
-  if (/^(bye|goodbye|see you|tata|ok bye)\b/.test(q))
+  if (/^(bye+|goodbye|good night|see you|see ya|cya|tata|ok bye)\b/.test(q))
     return "Goodbye! Do come back if anything else comes to mind. 👋";
   if (/(who are you|your name|about you|what are you)/.test(q))
     return "I'm Toshi, the GLOGIFT 27 assistant. I answer from the official conference FAQ — dates, venue, submission pathways, fees, publication opportunities and more.";
   if (/(help|what can you)/.test(q) && q.length < 40)
     return "I can answer questions about GLOGIFT 27 — try asking about dates, the venue, how to submit, fees, deadlines, publication or how to reach IIM Sambalpur. You can phrase it your own way!";
+  if (/(how are you|how r u|hows it going|how is it going)/.test(q))
+    return "I'm doing great, thank you for asking! 😊 How can I help you with GLOGIFT 27 today?";
   return null;
 }
 

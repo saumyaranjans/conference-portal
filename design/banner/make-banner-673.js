@@ -2,7 +2,8 @@
 
    The supplied drawing is placed whole against the right edge and its left side
    is dissolved into the paper with a gradient mask, so the two halves read as
-   one sheet rather than a photo pasted beside a caption. */
+   one sheet rather than a picture pasted beside a caption. The footer carries
+   the three deadlines and the full track list over two lines. */
 const fs = require("fs");
 const path = require("path");
 const sharp = require("sharp");
@@ -13,25 +14,30 @@ const SKETCH = path.join(REPO, "design/banner/campus-sketch.jpg");
 
 const W = 1920, H = 673;
 
-// Sketch 1280x658 -> 1080 wide, lifted clear of the footer band (which starts
-// at y=590) while staying whole and flush to the right edge.
-const IW = 1080, IH = 555, IX = W - IW, IY = 26;
-const FOOT = 584;
+// Sketch 1280x658 -> 1000 wide, lifted clear of the footer band.
+const IW = 1000, IH = 514, IX = W - IW, IY = 14;
+const FOOT = 536;
 
-/* Display forms of the ten official tracks. The full titles run to ~460
-   characters with separators — three times what fits on one line at a legible
-   size — so each is cut to its distinguishing phrase. */
+/* The ten tracks, verbatim from src/components/landing/tracks.ts, split across
+   two lines — the full titles run to ~434 characters and cannot fit on one. */
 const TRACKS = [
-  "AI in Finance & FinTech",
-  "Operations, Supply Chain & Industry 5.0",
-  "Digital Transformation",
+  "AI in Finance, Accounting, FinTech & Digital Assets",
+  "AI for Operations, Supply Chain & Industry 5.0",
+  "Digital Transformation & Intelligent Business",
   "Sustainable Finance & Decarbonization",
-  "AI in Marketing",
+  "AI in Marketing: Consumer Insights, Branding & Customer Engagement",
   "Governance, Ethics & Responsible AI",
-  "Analytics & Big Data",
+  "Analytics, Big Data & Intelligent Systems",
   "Human Capital & Leadership",
-  "Strategy & Innovation",
-  "Inclusive Growth",
+  "Strategy, Innovation & Emerging Business Models",
+  "Inclusive Growth & Global Transformation",
+];
+
+/* Deadlines, verbatim from the DEADLINES array on the landing page. */
+const DEADLINES = [
+  "Abstract submission closes 23 November 2026",
+  "Early bird registration closes 20 December 2026",
+  "Regular registration closes 24 January 2027",
 ];
 
 const b64 = (p, mime) =>
@@ -42,6 +48,24 @@ const GIFT = b64(path.join(REPO, "public/glogift-logo.png"), "image/png");
 
 const SERIF = "Georgia, 'Times New Roman', Times, serif";
 const SANS = "'Segoe UI', 'Helvetica Neue', Arial, sans-serif";
+const MAROON = "#7c2d12";
+
+const esc = (t) => t.replace(/&/g, "&amp;");
+
+/* librsvg collapses whitespace across <tspan> boundaries, so separator gaps
+   have to be real advances: dx shifts the next glyph run. */
+function pipeJoin(items, { fill, weight, gap, pipeFill = MAROON }) {
+  return items
+    .map(
+      (t, i) =>
+        (i === 0
+          ? ""
+          : `<tspan fill="${pipeFill}" opacity="0.45" dx="${gap}">|</tspan>`) +
+        `<tspan fill="${fill}"${weight ? ` font-weight="${weight}"` : ""}` +
+        `${i === 0 ? "" : ` dx="${gap}"`}>${esc(t)}</tspan>`
+    )
+    .join("");
+}
 
 const svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
   <defs>
@@ -51,8 +75,7 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.
       <stop offset="76%" stop-color="#d97706"/>
       <stop offset="100%" stop-color="#eab308"/>
     </linearGradient>
-    <!-- dissolve the drawing's left edge into the paper -->
-    <linearGradient id="fade" gradientUnits="userSpaceOnUse" x1="${IX}" y1="0" x2="${IX + 280}" y2="0">
+    <linearGradient id="fade" gradientUnits="userSpaceOnUse" x1="${IX}" y1="0" x2="${IX + 260}" y2="0">
       <stop offset="0%" stop-color="#fff" stop-opacity="0"/>
       <stop offset="55%" stop-color="#fff" stop-opacity="0.75"/>
       <stop offset="100%" stop-color="#fff" stop-opacity="1"/>
@@ -71,44 +94,41 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.
   <rect y="${H - 8}" width="${W}" height="8" fill="url(#accent)"/>
 
   <!-- organisers -->
-  <image xlink:href="${IIM}" x="88" y="40" width="196" height="58" preserveAspectRatio="xMidYMid meet"/>
-  <image xlink:href="${GIFT}" x="320" y="40" width="196" height="58" preserveAspectRatio="xMidYMid meet"/>
-  <text x="186" y="122" text-anchor="middle" fill="#7c2d12" font-size="15" letter-spacing="4" font-weight="600" font-family="${SANS}">IIM SAMBALPUR</text>
-  <text x="418" y="122" text-anchor="middle" fill="#7c2d12" font-size="15" letter-spacing="4" font-weight="600" font-family="${SANS}">GIFT SOCIETY</text>
+  <image xlink:href="${IIM}" x="88" y="36" width="212" height="62" preserveAspectRatio="xMidYMid meet"/>
+  <image xlink:href="${GIFT}" x="336" y="36" width="212" height="62" preserveAspectRatio="xMidYMid meet"/>
+  <text x="194" y="126" text-anchor="middle" fill="${MAROON}" font-size="17" letter-spacing="4" font-weight="600" font-family="${SANS}">IIM SAMBALPUR</text>
+  <text x="442" y="126" text-anchor="middle" fill="${MAROON}" font-size="17" letter-spacing="4" font-weight="600" font-family="${SANS}">GIFT SOCIETY</text>
 
   <!-- call to action, in the clear sky left of the flag -->
-  <text x="1010" y="104" text-anchor="middle" fill="#c2410c" font-size="34" font-weight="800"
+  <text x="1010" y="102" text-anchor="middle" fill="#c2410c" font-size="38" font-weight="800"
         letter-spacing="7" font-family="${SANS}">CALL FOR SUBMISSIONS</text>
-  <path d="M810 128 H1210" stroke="#c2410c" stroke-width="1.6" opacity="0.45"/>
-  <text x="1010" y="156" text-anchor="middle" fill="#7c2d12" font-size="17" font-weight="500"
+  <path d="M790 128 H1230" stroke="#c2410c" stroke-width="1.6" opacity="0.45"/>
+  <text x="1010" y="158" text-anchor="middle" fill="${MAROON}" font-size="19" font-weight="500"
         font-family="${SANS}">Ten tracks&#160;·&#160;Pathway A (abstract) &amp; Pathway B (full paper)</text>
 
   <!-- headline -->
-  <text x="90" y="226" fill="#1e3a8a" font-size="72" font-weight="800" font-family="${SERIF}" letter-spacing="1">GLOGIFT 27</text>
-  <text x="93" y="258" fill="#7c2d12" font-size="17" font-weight="500" font-family="${SERIF}">Twenty Seventh Global Conference on Flexible Systems Management</text>
+  <text x="90" y="240" fill="#1e3a8a" font-size="80" font-weight="800" font-family="${SERIF}" letter-spacing="1">GLOGIFT 27</text>
+  <text x="94" y="276" fill="${MAROON}" font-size="19" font-weight="500" font-family="${SERIF}">Twenty Seventh Global Conference on Flexible Systems Management</text>
 
-  <text x="93" y="316" fill="#b45309" font-size="14" letter-spacing="5" font-weight="700" font-family="${SANS}">INTERNATIONAL CONFERENCE ON</text>
-  <text x="90" y="360" fill="#0f172a" font-size="30" font-weight="700" font-family="${SANS}">AI-Driven Solutions in Management</text>
-  <text x="90" y="396" fill="#475569" font-size="21" font-family="${SANS}">Flexibility, Digitalisation &amp; Decarbonization</text>
+  <text x="94" y="334" fill="#b45309" font-size="15" letter-spacing="5" font-weight="700" font-family="${SANS}">INTERNATIONAL CONFERENCE ON</text>
+  <text x="90" y="380" fill="#0f172a" font-size="33" font-weight="700" font-family="${SANS}">AI-Driven Solutions in Management</text>
+  <text x="90" y="416" fill="#475569" font-size="23" font-family="${SANS}">Flexibility, Digitalisation &amp; Decarbonization</text>
 
   <!-- dates -->
-  <rect x="90" y="446" width="5" height="104" fill="url(#accent)"/>
-  <text x="115" y="484" fill="#1e3a8a" font-size="27" font-weight="800" font-family="${SANS}">25 – 27 February 2027</text>
-  <text x="115" y="518" fill="#7c2d12" font-size="18" font-weight="500" font-family="${SANS}">IIM Sambalpur, Odisha, India · In-Person | Hybrid</text>
-  <text x="115" y="548" fill="#475569" font-size="17" font-family="${SANS}">glogift2027.in</text>
+  <rect x="90" y="452" width="5" height="78" fill="url(#accent)"/>
+  <text x="115" y="492" fill="#1e3a8a" font-size="30" font-weight="800" font-family="${SANS}">25 – 27 February 2027</text>
+  <text x="115" y="524" fill="${MAROON}" font-size="20" font-weight="500" font-family="${SANS}">IIM Sambalpur, Odisha, India · In-Person | Hybrid · glogift2027.in</text>
 
-  <!-- footer: deadlines, then the track list -->
-  <path d="M90 ${FOOT} H${W - 90}" stroke="#c2410c" stroke-width="1" opacity="0.28"/>
-  <text x="${W / 2}" y="${FOOT + 32}" text-anchor="middle" font-family="${SANS}" font-size="21">
-    <tspan fill="#7c2d12" font-weight="700">Abstract submission closes 23 November 2026</tspan><tspan fill="#7c2d12" opacity="0.45" dx="16">|</tspan><tspan fill="#7c2d12" font-weight="700" dx="16">Early bird registration closes 20 December 2026</tspan><tspan fill="#7c2d12" opacity="0.45" dx="16">|</tspan><tspan fill="#7c2d12" font-weight="700" dx="16">Regular registration closes 24 January 2027</tspan>
+  <!-- footer: deadlines, then the ten tracks over two lines -->
+  <path d="M70 ${FOOT} H${W - 70}" stroke="#c2410c" stroke-width="1" opacity="0.28"/>
+  <text x="${W / 2}" y="${FOOT + 34}" text-anchor="middle" font-family="${SANS}" font-size="23">
+    ${pipeJoin(DEADLINES, { fill: MAROON, weight: 700, gap: 16 })}
   </text>
-  <text x="${W / 2}" y="${FOOT + 62}" text-anchor="middle" font-family="${SANS}" font-size="14" fill="#475569">
-    ${TRACKS.map((t, i) =>
-      i === 0
-        ? `<tspan>${t.replace(/&/g, "&amp;")}</tspan>`
-        : `<tspan fill="#c2410c" opacity="0.5" dx="6">|</tspan>` +
-          `<tspan fill="#475569" dx="6">${t.replace(/&/g, "&amp;")}</tspan>`
-    ).join("")}
+  <text x="${W / 2}" y="${FOOT + 68}" text-anchor="middle" font-family="${SANS}" font-size="14">
+    ${pipeJoin(TRACKS.slice(0, 5), { fill: "#475569", gap: 7, pipeFill: "#c2410c" })}
+  </text>
+  <text x="${W / 2}" y="${FOOT + 92}" text-anchor="middle" font-family="${SANS}" font-size="14">
+    ${pipeJoin(TRACKS.slice(5), { fill: "#475569", gap: 7, pipeFill: "#c2410c" })}
   </text>
 </svg>`;
 

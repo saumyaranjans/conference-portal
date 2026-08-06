@@ -50,3 +50,10 @@ organiser. `make-banner-user.js` composes the banner on it:
 
 Outputs: `glogift-27-banner-campus.png` (1920x1240, full drawing) and
 `glogift-27-banner-campus-wide.png` (1920x860 strip for web headers).
+
+### 1920x673 layout (text left, sketch right)
+
+`make-banner-673.js` — the standard banner size. The drawing sits whole against
+the right and bottom edges (1180x606) and its left edge is dissolved into the
+paper with a gradient mask, so the halves read as one sheet instead of a picture
+pasted beside a caption. Output: `glogift-27-banner-1920x673-campus.{svg,png}`.

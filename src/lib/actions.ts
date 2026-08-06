@@ -1728,6 +1728,88 @@ async function reviewHistoryContext(
  * details of a new person. A typed email that turns out to belong to an
  * existing account is quietly treated as the former.
  */
+/**
+ * Pathway B manuscripts go to review only after the Editorial Office has
+ * recorded BOTH integrity scores. Reviewers should not spend time on a paper
+ * whose provenance has not been established, and once a review is under way an
+ * awkward similarity result is far harder to act on.
+ *
+ * Scoped deliberately to the manuscript stage: a Pathway B *abstract* is judged
+ * before any manuscript exists, so gating that would deadlock the pathway.
+ * Pathway A never carries a manuscript and is never gated.
+ *
+ * Returns an error message when assignment must be blocked, else null.
+ */
+async function manuscriptIntegrityBlock(
+  admin: ReturnType<typeof createAdminClient>,
+  submissionId: string
+): Promise<string | null> {
+  const { data } = await admin
+    .from("submissions")
+    .select("submission_type, stage, similarity_index, ai_percentage")
+    .eq("id", submissionId)
+    .maybeSingle();
+  if (!data) return null;
+  const s = data as any;
+  if (s.submission_type !== "full_paper_presentation") return null;
+  if (s.stage !== "full_paper") return null;
+
+  const missing: string[] = [];
+  if (s.similarity_index === null || s.similarity_index === undefined)
+    missing.push("similarity index");
+  if (s.ai_percentage === null || s.ai_percentage === undefined)
+    missing.push("detected-AI percentage");
+  if (missing.length === 0) return null;
+
+  return `This Pathway B manuscript cannot be sent for review yet — the Editorial Office has not recorded the ${missing.join(
+    " and the "
+  )}. Ask them to enter it in Submission Management, then invite the reviewer.`;
+}
+
+/**
+ * Ask the Editorial Office to record the missing integrity scores, and leave
+ * the Convener a record that the request went out.
+ *
+ * Raised at the moment the Convener is blocked from assigning a Track Editor:
+ * that is when the need becomes concrete, and it puts the request in front of
+ * the people who can act on it instead of leaving the Convener to chase it by
+ * mail. Repeated attempts simply raise it again — a nudge with a fresh
+ * timestamp is more useful than silence.
+ */
+async function requestIntegrityScores(
+  admin: ReturnType<typeof createAdminClient>,
+  convenerId: string,
+  submissionId: string,
+  sub: { paper_id?: string | null; title?: string | null }
+): Promise<void> {
+  const paper = sub.paper_id ? `${sub.paper_id} — ` : "";
+  const title = sub.title ?? "this manuscript";
+
+  // Everyone who can enter the scores.
+  const { data: office } = await admin
+    .from("profiles")
+    .select("id")
+    .contains("roles", ["admin"])
+    .eq("is_active", true);
+
+  const rows = ((office ?? []) as any[]).map((p) => ({
+    profile_id: p.id,
+    title: "Integrity scores needed before review",
+    body: `${paper}"${title}" is a Pathway B manuscript waiting on its similarity index and detected-AI percentage. It cannot be assigned to a Track Editor until both are recorded.`,
+    link: "/admin/submissions",
+  }));
+
+  // …and a note for the Convener that the request has gone out.
+  rows.push({
+    profile_id: convenerId,
+    title: "Waiting on integrity scores",
+    body: `${paper}"${title}" cannot go to a Track Editor yet. The Editorial Office has been asked to record the similarity index and detected-AI percentage.`,
+    link: "/chief/submissions",
+  });
+
+  if (rows.length) await admin.from("notifications").insert(rows);
+}
+
 export async function prepareReviewerInvite(
   formData: FormData
 ): Promise<PrepareResult> {
@@ -1743,6 +1825,9 @@ export async function prepareReviewerInvite(
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
 
   if (!submissionId) return { ok: false, message: "Missing submission." };
+
+  const blocked = await manuscriptIntegrityBlock(admin, submissionId);
+  if (blocked) return { ok: false, message: blocked };
 
   const { data: sub } = await admin
     .from("submissions")
@@ -1935,6 +2020,13 @@ export async function sendReviewerInvite(
 
   if (!to) return { ok: false, message: "No recipient address." };
 
+  // Re-checked here, not just at compose time: this is the call that actually
+  // creates the assignment.
+  if (submissionId) {
+    const blocked = await manuscriptIntegrityBlock(admin, submissionId);
+    if (blocked) return { ok: false, message: blocked };
+  }
+
   let assigned = false;
   if (reviewerId) {
     const { data: target } = await admin
@@ -2048,6 +2140,10 @@ export async function reassignReviewer(
   const dueDate = String(formData.get("due_date") ?? "").trim();
   if (!submissionId || !reviewerId)
     return { ok: false, message: "Missing submission or reviewer." };
+
+  // A revision round must not be a way around the gate.
+  const blocked = await manuscriptIntegrityBlock(admin, submissionId);
+  if (blocked) return { ok: false, message: blocked };
 
   const { data: sub } = await admin
     .from("submissions")
@@ -3620,6 +3716,21 @@ export async function reassignTrackEditor(
     .eq("id", submissionId)
     .maybeSingle();
   if (!sub) return { ok: false, message: "Submission not found." };
+
+  // A Pathway B manuscript may not be handed to a Track Editor until the
+  // Editorial Office has recorded both integrity scores. Rather than a bare
+  // refusal, drop the request into the Office's dashboard and leave the
+  // Convener a note of it, so chasing it is one click rather than an email.
+  if (editorId) {
+    const blocked = await manuscriptIntegrityBlock(admin, submissionId);
+    if (blocked) {
+      await requestIntegrityScores(admin, profile.id, submissionId, sub as any);
+      return {
+        ok: false,
+        message: `${blocked} A request has been sent to the Editorial Office and noted on your dashboard.`,
+      };
+    }
+  }
 
   // Clearing the override hands the paper back to the track's own Track Editor.
   if (!editorId) {

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 export type FaqItem = { q: string; a: string };
-type Msg = { role: "bot" | "user"; text: string; chips?: string[] };
+type Msg = { role: "bot" | "user"; text: string; chips?: string[]; wave?: boolean };
 
 /** Toshi — a cute Indian girl (wheatish skin, black hair, small bindi). */
 function ToshiAvatar({ className = "" }: { className?: string }) {
@@ -34,6 +34,59 @@ function ToshiAvatar({ className = "" }: { className?: string }) {
         strokeWidth="1.8"
         strokeLinecap="round"
       />
+    </svg>
+  );
+}
+
+/**
+ * Toshi waving hello — shown once with her greeting reply. The arm rocks from
+ * the shoulder and the whole figure gives a small bounce; `prefers-reduced-
+ * motion` users get the same pose, held still.
+ */
+function ToshiWaving({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 72 72" className={className} role="img" aria-label="Toshi waving hello">
+      <style>{`
+        @keyframes toshi-wave { 0%,100% { transform: rotate(-8deg) } 50% { transform: rotate(26deg) } }
+        @keyframes toshi-bob  { 0%,100% { transform: translateY(0) }  50% { transform: translateY(-1.5px) } }
+        .toshi-arm  { transform-origin: 47px 45px; animation: toshi-wave .62s ease-in-out 5; }
+        .toshi-body { animation: toshi-bob 1.24s ease-in-out 2.5; transform-origin: 36px 60px; }
+        @media (prefers-reduced-motion: reduce) {
+          .toshi-arm, .toshi-body { animation: none; }
+        }
+      `}</style>
+      <g className="toshi-body">
+        {/* kurta / shoulders */}
+        <path d="M22 68 C22 54 28 48 36 48 C44 48 50 54 50 68 Z" fill="#1d4ed8" />
+        <path d="M31 49 C33 53 39 53 41 49 L41 48 L31 48 Z" fill="#E4B78B" />
+        {/* dupatta accent */}
+        <path d="M27 68 C28 58 31 52 36 49 L38 51 C33 55 31 60 30 68 Z" fill="#f59e0b" opacity=".85" />
+        {/* waving arm (rocks at the shoulder) */}
+        <g className="toshi-arm">
+          <path d="M46 47 L54 36" stroke="#1d4ed8" strokeWidth="6" strokeLinecap="round" fill="none" />
+          <circle cx="56" cy="32" r="5.2" fill="#E4B78B" />
+          {/* fingers */}
+          <path d="M53.6 28.4 L54.6 25.2 M56.2 27.6 L57 24.3 M58.8 28.2 L59.9 25.4" stroke="#E4B78B" strokeWidth="2.3" strokeLinecap="round" />
+        </g>
+        {/* other arm, resting */}
+        <path d="M26 48 L23 60" stroke="#1d4ed8" strokeWidth="6" strokeLinecap="round" fill="none" />
+        <circle cx="22.6" cy="62" r="3.4" fill="#E4B78B" />
+        {/* head */}
+        <circle cx="36" cy="26" r="15" fill="#1f1714" />
+        <circle cx="36" cy="30" r="12" fill="#E4B78B" />
+        <path
+          d="M23 28 C25 18 30 15 36 15 C42 15 47 18 49 28 C44 22 40 21 36 21 C32 21 28 22 23 28 Z"
+          fill="#1f1714"
+        />
+        {/* plait over the shoulder */}
+        <path d="M22 30 C18 38 19 46 22 52" stroke="#1f1714" strokeWidth="4.5" strokeLinecap="round" fill="none" />
+        <circle cx="36" cy="23.5" r="1" fill="#c0392b" />
+        <circle cx="28.8" cy="33" r="1.7" fill="#e88f7a" opacity="0.5" />
+        <circle cx="43.2" cy="33" r="1.7" fill="#e88f7a" opacity="0.5" />
+        <circle cx="32" cy="30.5" r="1.6" fill="#20140f" />
+        <circle cx="40" cy="30.5" r="1.6" fill="#20140f" />
+        <path d="M32.5 35.5 Q36 38.6 39.5 35.5" fill="none" stroke="#8a5433" strokeWidth="1.8" strokeLinecap="round" />
+      </g>
     </svg>
   );
 }
@@ -161,46 +214,55 @@ const GREETINGS = new Set([
   "hai", "haii",
 ]);
 
+type SmallTalk = { text: string; wave?: boolean };
+
 /** Small talk first — a bot that can't say hello never feels real. */
-function smallTalk(query: string): string | null {
+function smallTalk(query: string): SmallTalk | null {
   const q = query.toLowerCase().trim();
   const words = q.replace(/[^a-z ]/g, " ").split(/\s+/).filter(Boolean);
+  // Specific openings are checked BEFORE the generic greeting-word match, so
+  // "greetings of the day" gets its own reply rather than a plain "Hello!".
+  if (/(greetings of the day|greetings for the day|compliments of the day)/.test(q))
+    return {
+      text: "Greetings of the day to you too! 🙏 I'm Toshi, your GLOGIFT 27 assistant — how can I help? Please choose a question from the suggestions above, or type your own.",
+      wave: true,
+    };
   // A short message containing any greeting-ish word (in any casing or
   // spelling — "HYE", "hlo", "good morning") is a greeting.
   if (words.length <= 4 && words.some((w) => GREETINGS.has(w)))
-    return "Hello! 😊 I'm Toshi — how can I help? Please choose a question from the suggestions above, or just type your own in any words: dates, submissions, fees, publication, travel or registration.";
-  // "Greetings of the day", "very good morning to you" and similar openings.
-  if (/(greetings of the day|greetings for the day|compliments of the day)/.test(q))
-    return "Greetings of the day to you too! 🙏 I'm Toshi, your GLOGIFT 27 assistant — how can I help? Please choose a question from the suggestions above, or type your own.";
+    return {
+      text: "Hello! 😊 I'm Toshi — how can I help? Please choose a question from the suggestions above, or just type your own in any words: dates, submissions, fees, publication, travel or registration.",
+      wave: true,
+    };
   if (/(how are you|how r u|how do you do|hows it going|how is it going|how have you been|kaise ho)/.test(q))
-    return "I'm doing very well, thank you for asking! 😊 How can I help you with GLOGIFT 27 today? You can pick a question from the suggestions above or ask in your own words.";
+    return { text: "I'm doing very well, thank you for asking! 😊 How can I help you with GLOGIFT 27 today? You can pick a question from the suggestions above or ask in your own words." };
   if (/(thank|thanks|thx|tysm|dhanyavad|shukriya|grateful|appreciate)/.test(q))
-    return "You're most welcome! 😊 Happy to help — and we look forward to seeing you at IIM Sambalpur, 25–27 February 2027. 🎉 Anything else you'd like to know?";
+    return { text: "You're most welcome! 😊 Happy to help — and we look forward to seeing you at IIM Sambalpur, 25–27 February 2027. 🎉 Anything else you'd like to know?" };
   if (/(enjoy your day|have a (nice|good|great|lovely) (day|one|evening)|good day to you|take care|stay safe)/.test(q))
-    return "Thank you — you too, have a wonderful day! ☀️ I'm here whenever you need anything about GLOGIFT 27.";
+    return { text: "Thank you — you too, have a wonderful day! ☀️ I'm here whenever you need anything about GLOGIFT 27." };
   if (/^(good night|gn|sweet dreams)\b/.test(q))
-    return "Good night! 🌙 Do come back any time — I'll be right here.";
+    return { text: "Good night! 🌙 Do come back any time — I'll be right here." };
   if (/^(bye+|goodbye|see you|see ya|cya|tata|ok bye|alvida)\b/.test(q))
-    return "Goodbye! 👋 Do come back if anything else comes to mind — and all the best with your submission.";
+    return { text: "Goodbye! 👋 Do come back if anything else comes to mind — and all the best with your submission." };
   if (/(nice to meet|pleasure to meet|glad to meet)/.test(q))
-    return "Lovely to meet you too! 😊 Ask me anything about GLOGIFT 27, or tap one of the suggested questions above.";
+    return { text: "Lovely to meet you too! 😊 Ask me anything about GLOGIFT 27, or tap one of the suggested questions above." };
   if (/(who are you|your name|about you|what are you|are you (a )?(bot|robot|human|real|ai))/.test(q))
-    return "I'm Toshi, the GLOGIFT 27 assistant — a friendly helper here on the conference website. 🙂 I answer from the official conference information: dates, venue, submission pathways, fees, publication opportunities, travel and more.";
+    return { text: "I'm Toshi, the GLOGIFT 27 assistant — a friendly helper here on the conference website. 🙂 I answer from the official conference information: dates, venue, submission pathways, fees, publication opportunities, travel and more." };
   if (/(help|what can you|what do you do|how does this work)/.test(q) && q.length < 45)
-    return "I can answer questions about GLOGIFT 27 — dates, the venue, how to submit, fees, deadlines, publication, travel to IIM Sambalpur and more. Please choose a question from the suggestions above, or just ask in your own words!";
+    return { text: "I can answer questions about GLOGIFT 27 — dates, the venue, how to submit, fees, deadlines, publication, travel to IIM Sambalpur and more. Please choose a question from the suggestions above, or just ask in your own words!" };
   if (/(sorry|my mistake|oops|nevermind|never mind)/.test(q) && q.length < 30)
-    return "No problem at all! 😊 What would you like to know about GLOGIFT 27?";
+    return { text: "No problem at all! 😊 What would you like to know about GLOGIFT 27?" };
   if (/(good|great|awesome|nice|perfect|excellent|super|ok thanks|okay thanks)$/.test(q) && q.length < 25)
-    return "Glad that helped! 😊 Anything else about GLOGIFT 27 — submissions, fees, schedule or travel?";
+    return { text: "Glad that helped! 😊 Anything else about GLOGIFT 27 — submissions, fees, schedule or travel?" };
   if (/(see you (at|in) (the )?(conference|sambalpur|glogift)|looking forward)/.test(q))
-    return "We look forward to welcoming you at IIM Sambalpur, 25–27 February 2027! 🎉 Let me know if you need anything before then.";
+    return { text: "We look forward to welcoming you at IIM Sambalpur, 25–27 February 2027! 🎉 Let me know if you need anything before then." };
   return null;
 }
 
 /** Build Toshi's reply — answer, answer+related, did-you-mean, or fallback. */
 function reply(query: string, items: FaqItem[]): Msg {
   const st = smallTalk(query);
-  if (st) return { role: "bot", text: st };
+  if (st) return { role: "bot", text: st.text, wave: st.wave };
 
   const ranked = rank(query, items);
   const best = ranked[0];
@@ -357,6 +419,10 @@ export function FaqBot({ items }: { items: FaqItem[] }) {
                 className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div className="max-w-[85%] space-y-1.5">
+                  {/* Toshi waves hello alongside her greeting */}
+                  {m.wave && (
+                    <ToshiWaving className="ml-1 h-20 w-20 drop-shadow-sm" />
+                  )}
                   <div
                     className={`rounded-2xl px-3 py-2 text-sm leading-relaxed ${
                       m.role === "user"

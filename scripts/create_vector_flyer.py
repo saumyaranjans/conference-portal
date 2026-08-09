@@ -1,4 +1,4 @@
-"""Create the GLOGIFT 2027 flyer as a native vector/text PDF."""
+"""Create the GLOGIFT 27 flyer as a native vector/text PDF."""
 
 from pathlib import Path
 
@@ -219,9 +219,9 @@ def draw_track(c, x, y, number, text, width, height):
     c.drawString(x + 4, y + height - 12, f"{number:02d}")
     text_x = x + 20
     text_width = width - 24
-    size = 8.5
+    size = 8.8
     lines = wrap(text, BODY, size, text_width)
-    while len(lines) > 3 and size > 7.6:
+    while len(lines) > 4 and size > 7.4:
         size -= .2
         lines = wrap(text, BODY, size, text_width)
     leading = size + .9
@@ -229,17 +229,17 @@ def draw_track(c, x, y, number, text, width, height):
     baseline = y + (height + total_height) / 2 - leading
     c.setFillColor(INK)
     c.setFont(BODY, size)
-    for index, line in enumerate(lines[:3]):
+    for index, line in enumerate(lines[:4]):
         c.drawString(text_x, baseline - index * leading, line)
 
 
 def build():
     OUT.parent.mkdir(parents=True, exist_ok=True)
     c = canvas.Canvas(str(OUT), pagesize=A4, pageCompression=1)
-    c.setTitle("GLOGIFT 2027 Conference Flyer")
-    c.setAuthor("Indian Institute of Management Sambalpur and GLOGIFT Society")
-    c.setSubject("Call for submissions for GLOGIFT 2027")
-    c.setKeywords("GLOGIFT 2027, IIM Sambalpur, conference, call for submissions")
+    c.setTitle("GLOGIFT 27 Conference Flyer")
+    c.setAuthor("Indian Institute of Management Sambalpur and GIFT Society")
+    c.setSubject("Call for papers for GLOGIFT 27")
+    c.setKeywords("GLOGIFT 27, IIM Sambalpur, conference, call for papers")
 
     # Page and subtle technical background.
     c.setFillColor(PAPER)
@@ -263,16 +263,18 @@ def build():
     draw_contain(c, PUBLIC / "iim-sambalpur.png", 135, 765, 420, 48)
 
     # Conference identity.
-    draw_centred(c, "GLOGIFT 2027", 703, DISPLAY, 43, NAVY, 500)
-    draw_centred(c, "INTERNATIONAL CONFERENCE ON", 679, BOLD, 11.5, INK, 410)
+    draw_centred(c, "GLOGIFT 27", 703, DISPLAY, 45, NAVY, 500)
+    draw_centred(c, "TWENTY SEVENTH GLOBAL CONFERENCE ON FLEXIBLE SYSTEMS MANAGEMENT",
+                 684, BOLD, 7.3, MUTED, 470)
+    draw_centred(c, "INTERNATIONAL CONFERENCE ON", 666, BOLD, 11.5, INK, 410)
     c.setStrokeColor(GOLD)
     c.setLineWidth(1)
-    c.line(86, 684, 123, 684)
-    c.line(PAGE_W - 123, 684, PAGE_W - 86, 684)
-    draw_centred(c, "AI-Driven Solutions in Management", 642, BOLD, 25, BLUE, 530)
+    c.line(86, 671, 123, 671)
+    c.line(PAGE_W - 123, 671, PAGE_W - 86, 671)
+    draw_centred(c, "AI-Driven Solutions in Management", 632, BOLD, 25, BLUE, 530)
     c.setFillColor(NAVY)
-    c.roundRect(73, 597, PAGE_W - 146, 30, 4, fill=1, stroke=0)
-    draw_centred(c, "Flexibility, Digitalisation & Decarbonization", 606,
+    c.roundRect(73, 590, PAGE_W - 146, 30, 4, fill=1, stroke=0)
+    draw_centred(c, "Flexibility, Digitalisation & Decarbonization", 599,
                  DISPLAY, 13.5, GOLD, PAGE_W - 170)
 
     # Date, venue and format panel.
@@ -308,7 +310,7 @@ def build():
 
     # Call for submissions and ten tracks.
     left_x, left_y, left_w, left_h = 27, 82, 265, 348
-    panel(c, left_x, left_y, left_w, left_h, "CALL FOR SUBMISSIONS")
+    panel(c, left_x, left_y, left_w, left_h, "CALL FOR PAPERS")
     c.setFillColor(INK)
     c.setFont(BODY, 10.2)
     c.drawCentredString(left_x + left_w / 2, left_y + left_h - 55,
@@ -327,14 +329,14 @@ def build():
     c.drawCentredString(left_x + left_w / 2, left_y + left_h - 109,
                         "www.glogift2027.in/login")
     c.setFont(BOLD, 11)
-    c.drawCentredString(left_x + left_w / 2, left_y + left_h - 139,
+    c.drawCentredString(left_x + left_w / 2, left_y + left_h - 137,
                         "10 CONFERENCE TRACKS")
     tracks = [
         "AI in Finance, Accounting, FinTech & Digital Assets",
         "AI for Operations, Supply Chain & Industry 5.0",
         "Digital Transformation & Intelligent Business",
         "Sustainable Finance & Decarbonization",
-        "AI in Marketing",
+        "AI in Marketing: Consumer Insights, Branding & Customer Engagement",
         "Governance, Ethics & Responsible AI",
         "Analytics, Big Data & Intelligent Systems",
         "Human Capital & Leadership",
@@ -342,10 +344,10 @@ def build():
         "Inclusive Growth & Global Transformation",
     ]
     grid_x = left_x + 10
-    grid_y = left_y + 12
+    grid_y = left_y + 8
     grid_w = left_w - 20
     cell_w = grid_w / 2
-    cell_h = 37
+    cell_h = 39
     c.setStrokeColor(LINE)
     c.line(grid_x + cell_w, grid_y, grid_x + cell_w, grid_y + cell_h * 5)
     for index, track in enumerate(tracks):
@@ -355,7 +357,7 @@ def build():
                    index + 1, track, cell_w, cell_h)
 
     # Key dates.
-    right_x, dates_y, right_w, dates_h = 304, 222, 264, 208
+    right_x, dates_y, right_w, dates_h = 304, 192, 264, 238
     panel(c, right_x, dates_y, right_w, dates_h, "KEY DATES", GOLD)
     dates = [
         ("Open for abstract submission", "7 AUG 2026"),
@@ -363,9 +365,12 @@ def build():
         ("Abstract submission closes", "23 NOV 2026"),
         ("Abstract decisions announced", "30 NOV 2026"),
         ("Full paper submission closes", "8 DEC 2026"),
+        ("Target full paper decisions", "15 DEC 2026"),
         ("Early bird registration closes", "20 DEC 2026"),
+        ("Regular registration closes", "24 JAN 2027"),
+        ("Conference at IIM Sambalpur", "25-27 FEB 2027"),
     ]
-    row_height = (dates_h - 34) / 6
+    row_height = (dates_h - 34) / len(dates)
     for index, (label, date) in enumerate(dates):
         row_top = dates_y + dates_h - 32 - index * row_height
         icon_y = row_top - row_height / 2
@@ -375,29 +380,30 @@ def build():
         c.setFont(BODY, label_size)
         c.drawString(right_x + 42, row_top - 11, label)
         c.setFillColor(NAVY)
-        c.setFont(BOLD, 8.9)
+        c.setFont(BOLD, 8.5)
         c.drawString(right_x + 42, row_top - 21, date)
-        if index < 5:
+        if index < len(dates) - 1:
             c.setStrokeColor(GOLD)
             c.setLineWidth(.45)
             c.line(right_x + 42, row_top - row_height + 1,
                    right_x + right_w - 16, row_top - row_height + 1)
 
     # Publication opportunities.
-    pubs_y, pubs_h = 82, 130
+    pubs_y, pubs_h = 82, 100
     panel(c, right_x, pubs_y, right_w, pubs_h, "PUBLICATION OPPORTUNITIES")
     publications = [
         ("Conference Proceedings with ISBN", "book"),
-        ("Springer Journals (ABDC Listed)", "stack"),
-        ("Springer Scopus-Indexed Book Series", "stack"),
+        ("Global Journal of Flexible Systems Management (ABDC-A)", "stack"),
+        ("International Journal of Global Business & Competitiveness (ABDC-C)", "stack"),
+        ("Book Series on Flexible Systems Management (Scopus-indexed)", "stack"),
     ]
     for index, (label, kind) in enumerate(publications):
-        row_y = pubs_y + pubs_h - 49 - index * 29
-        publication_icon(c, right_x + 27, row_y + 2, kind, 10.5)
-        size = fit_size(label, BODY, 9.6, right_w - 62, 8.2)
+        row_y = pubs_y + pubs_h - 43 - index * 16.8
+        publication_icon(c, right_x + 24, row_y + 1, kind, 7.5)
+        size = fit_size(label, BODY, 8.1, right_w - 55, 6.8)
         c.setFillColor(INK)
         c.setFont(BODY, size)
-        c.drawString(right_x + 47, row_y - 1, label)
+        c.drawString(right_x + 40, row_y - 1, label)
 
     # Footer with complete vector contact icons.
     c.setFillColor(NAVY)
@@ -412,16 +418,17 @@ def build():
     c.setFillColor(colors.white)
     c.setFont(BODY, 9.5)
     c.drawString(100, 31, "www.glogift2027.in")
-    mail_icon(c, 100, 12, 14)
-    c.setFont(BODY, 8.7)
-    c.drawString(121, 14, "glogift27.chair@iimsambalpur.ac.in")
+    mail_icon(c, 100, 15, 13)
+    c.setFont(BODY, 7.7)
+    c.drawString(119, 18, "glogift27.chair@iimsambalpur.ac.in")
+    c.drawString(119, 7, "glogift27.coordinator@iimsambalpur.ac.in")
     c.setFillColor(GOLD)
     c.setFont(DISPLAY, 18)
     c.drawString(325, 44, "Jointly organised by")
     c.setFillColor(colors.white)
     c.setFont(BOLD, 10.5)
     c.drawString(325, 27, "IIM Sambalpur and")
-    c.drawString(325, 13, "the GLOGIFT Society")
+    c.drawString(325, 13, "the GIFT Society")
 
     c.showPage()
     c.save()

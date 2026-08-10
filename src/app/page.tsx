@@ -147,7 +147,7 @@ const FAQ_JSONLD = {
   mainEntity: [
     {
       "@type": "Question",
-      name: "When is GLOGIFT 27 (GLOGIFT 2027) being held?",
+      name: "When is GLOGIFT 27 being held?",
       acceptedAnswer: {
         "@type": "Answer",
         text: "GLOGIFT 27 is being held on 25–27 February 2027.",
@@ -155,7 +155,7 @@ const FAQ_JSONLD = {
     },
     {
       "@type": "Question",
-      name: "Where is GLOGIFT 27 (GLOGIFT 2027) being held?",
+      name: "Where is GLOGIFT 27 being held?",
       acceptedAnswer: {
         "@type": "Answer",
         text: "GLOGIFT 27 is hosted at the Indian Institute of Management (IIM) Sambalpur, Odisha, India.",

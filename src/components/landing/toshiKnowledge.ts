@@ -69,7 +69,7 @@ export const TOSHI_KNOWLEDGE: FaqItem[] = [
   },
   {
     q: "Who organises GLOGIFT and what is the GIFT Society?",
-    a: "GLOGIFT 27 (GLOGIFT 2027) is jointly organised by IIM Sambalpur and the GIFT Society — the Global Institute of Flexible Systems Management (B-51 Basement, Sarvodaya Enclave, New Delhi 110017), which runs the GLOGIFT conference series; this is its 27th edition.",
+    a: "GLOGIFT 27 is jointly organised by IIM Sambalpur and the GIFT Society — the Global Institute of Flexible Systems Management (B-51 Basement, Sarvodaya Enclave, New Delhi 110017), which runs the GLOGIFT conference series; this is its 27th edition.",
   },
   {
     q: "What language is the conference conducted in?",

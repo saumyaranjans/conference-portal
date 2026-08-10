@@ -686,7 +686,7 @@ export function LandingPage() {
                 International Conference on AI-Driven Solutions in Management:
                 Flexibility, Digitalisation &amp; Decarbonization
               </strong>{" "}
-              (GLOGIFT 27, also written GLOGIFT 2027) is jointly organised by
+              (GLOGIFT 27) is jointly organised by
               the Indian Institute of Management Sambalpur and the GIFT Society
               — Global Institute of Flexible Systems Management — at IIM
               Sambalpur, Odisha, from 25 to 27 February 2027. GLOGIFT 2027 is
@@ -1491,7 +1491,7 @@ export function LandingPage() {
           {/* Separators break onto their own lines on narrow screens rather
               than leaving a bar stranded at the start of a line. */}
           <span className="font-semibold text-slate-700 dark:text-slate-300">
-            GLOGIFT 27 (GLOGIFT 2027)
+            GLOGIFT 27
           </span>
           <span aria-hidden className="mx-2 text-slate-300 dark:text-slate-600">
             |

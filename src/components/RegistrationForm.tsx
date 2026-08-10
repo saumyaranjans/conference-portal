@@ -27,22 +27,34 @@ type Paper = {
   tracks: Track | Track[] | null;
 };
 
+/** The read-only rows shown for one accepted paper. */
+function detailsOf(p: Paper): [string, string][] {
+  return (
+    [
+      ["Pathway", pathwayLabel(p.submission_type)],
+      ["Track", trackLabel(p.tracks)],
+      ["Attending as", participationModeLabel(p.participation_mode ?? "")],
+    ] as [string, string | null][]
+  ).filter((r): r is [string, string] => !!r[1] && r[1] !== "—");
+}
+
 /**
- * The delegate's half of registration: which paper (if any) they are
- * presenting, and acceptance of the refund policy.
+ * The delegate's half of registration: confirming what has been accepted, and
+ * accepting the refund policy.
  *
- * How they will attend, their pathway and their track are NOT asked for again.
- * All three were fixed when the paper was submitted — and the acknowledgement
- * email tells the author they cannot be changed afterwards — so picking the
- * paper fetches them and the form shows them back read-only. Only a delegate
- * attending without a paper still chooses a mode, because there is no
- * submission to read one from.
+ * An author with accepted work is asked NOTHING about it here. The pathway,
+ * the track and how they will attend were all fixed when the paper was
+ * submitted — and the acknowledgement email tells the author they cannot be
+ * changed afterwards — so offering a choice would be offering to change
+ * something that cannot change. Every accepted abstract is listed instead:
+ * one block if one was accepted, two if both were. A delegate with no accepted
+ * paper still picks a mode, because there is no submission to read one from.
  *
  * Notably absent: the amount. The fee is shown above this form for
  * information, but nothing here submits a figure — submitRegistration computes
  * it from the signed-in profile, so a tampered form field has nowhere to land.
- * The same is true of the mode once a paper is linked: the server re-reads it
- * from the submission and ignores the field below.
+ * The same is true of the paper and the mode: the server re-reads both from
+ * the author's own accepted submissions and ignores the fields below.
  */
 export function RegistrationForm({
   papers,
@@ -57,18 +69,17 @@ export function RegistrationForm({
     null
   );
   const [accepted, setAccepted] = useState(false);
-  const [paperId, setPaperId] = useState(
-    papers.length === 1 ? papers[0].id : ""
-  );
 
-  const paper = papers.find((p) => p.id === paperId) ?? null;
-  const fetched = paper
-    ? [
-        ["How you will attend", participationModeLabel(paper.participation_mode ?? "")],
-        ["Pathway", pathwayLabel(paper.submission_type)],
-        ["Track", trackLabel(paper.tracks)],
-      ].filter((row): row is [string, string] => !!row[1] && row[1] !== "—")
-    : [];
+  // Registration is per delegate, so one row is written however many papers
+  // were accepted. The first is the one it is filed against; the rest are
+  // shown because the delegate is presenting them too.
+  const primary = papers[0] ?? null;
+
+  // Both abstracts should carry the same mode — they were submitted by the
+  // same person — but nothing in the schema enforces it, so say so rather than
+  // silently registering them under one of the two.
+  const modes = new Set(papers.map((p) => p.participation_mode ?? ""));
+  const modesDisagree = modes.size > 1;
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -104,9 +115,8 @@ export function RegistrationForm({
       setResult(res);
       if (res.ok) {
         form.reset();
-        // The select and the consent box are controlled, so form.reset() alone
-        // would leave both showing stale values.
-        setPaperId(papers.length === 1 ? papers[0].id : "");
+        // The consent box is controlled, so form.reset() alone would leave it
+        // ticked.
         setAccepted(false);
       }
     } finally {
@@ -117,70 +127,91 @@ export function RegistrationForm({
   return (
     <form onSubmit={onSubmit} className="card card-pad space-y-6">
       <fieldset disabled={pending || !payable} className="contents">
-        {/* Paper first: it is what the attendance, pathway and track are read
-            from, so it cannot be asked for after them. */}
+        {/* Every accepted abstract, read-only. No selector: the delegate is
+            presenting all of them, and none of these values is theirs to
+            change here. */}
         {papers.length > 0 && (
           <div>
-            <label
-              htmlFor="submission_id"
-              className="block text-sm font-medium text-slate-800 dark:text-slate-100 mb-2"
-            >
-              Paper you are presenting
-            </label>
-            <select
-              id="submission_id"
-              name="submission_id"
-              className="input w-full"
-              value={paperId}
-              onChange={(e) => setPaperId(e.target.value)}
-            >
-              <option value="">Not presenting a paper</option>
-              {papers.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.paper_id ? `${p.paper_id} — ` : ""}
-                  {p.title}
-                </option>
-              ))}
-            </select>
-            <p className="text-xs text-slate-500 mt-1.5">
-              Registration is per delegate, not per paper. If you are presenting
-              more than one, pick any — the fee is the same.
-            </p>
-          </div>
-        )}
-
-        {/* Carried over from the submission, not re-asked. */}
-        {paper && fetched.length > 0 && (
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/40">
-            <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-              From your submission
+            <h3 className="text-sm font-medium text-slate-800 dark:text-slate-100 mb-2">
+              {papers.length > 1
+                ? `Your accepted papers (${papers.length})`
+                : "Your accepted paper"}
             </h3>
-            <dl className="mt-3 space-y-2 text-sm">
-              {fetched.map(([term, value]) => (
-                <div key={term} className="sm:flex sm:gap-4">
-                  <dt className="text-slate-500 sm:w-44 sm:shrink-0">{term}</dt>
-                  <dd className="font-medium text-slate-900 dark:text-slate-100">
-                    {value}
-                  </dd>
-                </div>
-              ))}
-            </dl>
-            <p className="mt-3 text-xs text-slate-500">
-              These were set when the paper was submitted and cannot be changed
-              here. If any of them is wrong, contact the Editorial Office.
+
+            <div className="space-y-3">
+              {papers.map((p) => {
+                const isB = p.submission_type === "full_paper_presentation";
+                return (
+                  <div
+                    key={p.id}
+                    className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/40"
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <p className="font-medium text-slate-900 dark:text-slate-100">
+                        {p.paper_id ? `${p.paper_id} — ` : ""}
+                        {p.title}
+                      </p>
+                      {/* The pathway, called out rather than buried in the
+                          rows — it is the thing authors ask about most. */}
+                      <span
+                        className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${
+                          isB
+                            ? "bg-violet-50 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300"
+                            : "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
+                        }`}
+                      >
+                        {isB ? "Pathway B" : "Pathway A"}
+                      </span>
+                    </div>
+                    <dl className="mt-3 space-y-1.5 text-sm">
+                      {detailsOf(p).map(([term, value]) => (
+                        <div key={term} className="sm:flex sm:gap-4">
+                          <dt className="text-slate-500 sm:w-32 sm:shrink-0">
+                            {term}
+                          </dt>
+                          <dd className="text-slate-900 dark:text-slate-100">
+                            {value}
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </div>
+                );
+              })}
+            </div>
+
+            <p className="text-xs text-slate-500 mt-2">
+              Fetched from your submissions and fixed when you submitted them —
+              they cannot be changed here. If anything is wrong, contact the
+              Editorial Office.
+              {papers.length > 1 &&
+                " Registration is per delegate, not per paper: one fee covers both."}
             </p>
-            {/* Informational only — submitRegistration re-reads the mode from
-                the submission and ignores whatever arrives in this field. */}
+
+            {modesDisagree && (
+              <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:bg-amber-500/10 dark:text-amber-200">
+                Your papers record different attendance modes. Registration will
+                be filed as{" "}
+                <strong>
+                  {participationModeLabel(primary?.participation_mode ?? "")}
+                </strong>
+                . Contact the Editorial Office if that is wrong.
+              </p>
+            )}
+
+            {/* Informational only — submitRegistration re-reads both from the
+                author's own accepted submissions and ignores these. */}
+            <input type="hidden" name="submission_id" value={primary?.id ?? ""} />
             <input
               type="hidden"
               name="participation_mode"
-              value={paper.participation_mode ?? ""}
+              value={primary?.participation_mode ?? ""}
             />
           </div>
         )}
 
-        {/* No paper means no submission to read a mode from, so ask. */}
-        {!paper && (
+        {/* No accepted paper means no submission to read a mode from, so ask. */}
+        {papers.length === 0 && (
           <div>
             <label className="block text-sm font-medium text-slate-800 dark:text-slate-100 mb-2">
               How will you attend? <span className="text-red-600">*</span>

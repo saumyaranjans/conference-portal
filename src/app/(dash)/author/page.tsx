@@ -280,7 +280,7 @@ export default async function AuthorDashboard({
   // does — and matches what /registration will actually list, so the prompt
   // never leads to an empty page.
   const hasAcceptance = [...submissions, ...coAuthored].some((s) =>
-    isPresentable(s.status)
+    isPresentable(s.status, (s as unknown as { stage: string }).stage)
   );
 
   // The 2-submission rule counts both roles: papers you submit and papers you

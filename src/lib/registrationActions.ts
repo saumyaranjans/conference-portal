@@ -36,7 +36,12 @@ function newOrderId(): string {
  * submission already recorded.
  */
 const PRESENTABLE_FIELDS =
-  "id, paper_id, title, status, submission_type, participation_mode, tracks(code, name)";
+  "id, paper_id, title, status, stage, submission_type, participation_mode, tracks(code, name)";
+
+/** The same test as isPresentable(), expressed for PostgREST. */
+const PRESENTABLE_FILTER = `status.in.(${PRESENTING_STATUSES.join(
+  ","
+)}),stage.eq.full_paper`;
 
 export async function myPresentableSubmissions(profileId: string) {
   const admin = createAdminClient();
@@ -45,7 +50,7 @@ export async function myPresentableSubmissions(profileId: string) {
     .from("submissions")
     .select(PRESENTABLE_FIELDS)
     .eq("author_id", profileId)
-    .in("status", [...PRESENTING_STATUSES]);
+    .or(PRESENTABLE_FILTER);
 
   const { data: co } = await admin
     .from("submission_authors")
@@ -56,12 +61,22 @@ export async function myPresentableSubmissions(profileId: string) {
     ...((own as any[]) ?? []),
     ...(((co as any[]) ?? [])
       .map((r) => r.submissions)
-      .filter((s) => s && isPresentable(s.status))),
+      .filter((s) => s && isPresentable(s.status, s.stage))),
   ];
 
   // A co-author who is also the corresponding author appears twice.
   const seen = new Set<string>();
-  return rows.filter((s) => (seen.has(s.id) ? false : (seen.add(s.id), true)));
+  const unique = rows.filter((s) =>
+    seen.has(s.id) ? false : (seen.add(s.id), true)
+  );
+
+  // Stable order. submitRegistration files the registration against the first
+  // of these, so "first" must not depend on which of the two queries above
+  // happened to return sooner.
+  return unique.sort((a, b) =>
+    String(a.paper_id ?? "￿").localeCompare(String(b.paper_id ?? "￿")) ||
+    String(a.id).localeCompare(String(b.id))
+  );
 }
 
 /** The delegate's unused coupon, if staff have verified their membership. */
@@ -132,22 +147,17 @@ export async function submitRegistration(
     };
   }
 
-  // --- the paper, if they named one --------------------------------------
-  const submissionId = String(formData.get("submission_id") ?? "").trim();
-  let linkedSubmission: string | null = null;
-  let linkedMode = "";
-  if (submissionId) {
-    const eligible = await myPresentableSubmissions(profile.id);
-    const paper = (eligible as any[]).find((s) => s.id === submissionId);
-    if (!paper) {
-      return {
-        ok: false,
-        message: "That paper is not one you can register against.",
-      };
-    }
-    linkedSubmission = submissionId;
-    linkedMode = String(paper.participation_mode ?? "");
-  }
+  // --- the paper ---------------------------------------------------------
+  //
+  // Derived, not posted. The form offers no choice of paper — an author is
+  // presenting everything that was accepted — so the registration is filed
+  // against their first accepted submission and the posted field is ignored.
+  // Reading it would only let a caller aim the registration at a paper the
+  // form never offered.
+  const eligible = (await myPresentableSubmissions(profile.id)) as any[];
+  const paper = eligible[0] ?? null;
+  const linkedSubmission: string | null = paper?.id ?? null;
+  const linkedMode = String(paper?.participation_mode ?? "");
 
   // --- participation mode ------------------------------------------------
   //

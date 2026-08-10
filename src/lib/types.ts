@@ -289,14 +289,30 @@ export const PARTICIPATION_MODES = [
  * Pathway A reaches `accepted` when the abstract is accepted — for those
  * authors that IS the acceptance. Pathway B passes through `abstract_accepted`
  * on the way, and clearing the abstract is enough to book a place.
- *
- * Both the registration page (which papers may be registered against) and the
- * author dashboard (whether to offer registration at all) read this list, so
- * the dashboard never invites someone to a page with nothing on it.
  */
 export const PRESENTING_STATUSES = ["accepted", "abstract_accepted"] as const;
 
-export function isPresentable(status: string | null | undefined): boolean {
+/**
+ * Whether the author of this paper has been told it was accepted, and may
+ * therefore register.
+ *
+ * The status alone is not enough for Pathway B. Once the abstract clears, the
+ * paper moves to the manuscript stage and `status` starts describing the
+ * MANUSCRIPT — so a paper whose abstract was accepted and whose full paper is
+ * under revision reads `revisions_requested`, which is not an acceptance
+ * status even though the acceptance happened. `stage === "full_paper"` is what
+ * records that the abstract cleared, which is the same test phaseFor() uses on
+ * the author dashboard.
+ *
+ * Both the registration page (which papers may be registered against) and the
+ * dashboard (whether to offer registration at all) call this, so the dashboard
+ * never invites someone to a page with nothing on it.
+ */
+export function isPresentable(
+  status: string | null | undefined,
+  stage?: string | null
+): boolean {
+  if (stage === "full_paper") return true;
   return (PRESENTING_STATUSES as readonly string[]).includes(status ?? "");
 }
 

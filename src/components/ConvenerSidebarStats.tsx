@@ -64,16 +64,17 @@ const getConvenerStats = cache(async () => {
   }
   const emails = [...perPerson.values()].map((v) => v.email);
   const memberByEmail = new Map<string, boolean>();
+  const countryByEmail = new Map<string, string | null>();
   if (emails.length) {
     const { data: profs } = await supabase
       .from("profiles")
-      .select("email, glogift_member")
+      .select("email, glogift_member, country")
       .in("email", emails);
     for (const p of (profs ?? []) as any[]) {
-      memberByEmail.set(
-        (p.email ?? "").trim().toLowerCase(),
-        Boolean(p.glogift_member)
-      );
+      const key = (p.email ?? "").trim().toLowerCase();
+      memberByEmail.set(key, Boolean(p.glogift_member));
+      // Country decides the currency, so it must reach feeForTier below.
+      countryByEmail.set(key, p.country ?? null);
     }
   }
 
@@ -82,7 +83,12 @@ const getConvenerStats = cache(async () => {
   let feesInr = 0;
   for (const [key, info] of perPerson) {
     const tier = info.tier ?? timelineTier;
-    const fee = feeForTier(info.category, memberByEmail.get(key) ?? false, tier);
+    const fee = feeForTier(
+      info.category,
+      memberByEmail.get(key) ?? false,
+      tier,
+      countryByEmail.get(key) ?? null
+    );
     if (!fee.known) continue;
     feesInr += fee.currency === "USD" ? usdToInr(fee.amount, usdInr) : fee.amount;
   }

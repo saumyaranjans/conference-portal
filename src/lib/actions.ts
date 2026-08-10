@@ -45,6 +45,11 @@ import {
   MANUSCRIPT_MIN_SIMILARITY,
 } from "@/lib/types";
 import type { AppRole, DecisionKind, Recommendation } from "@/lib/types";
+import {
+  acceptingAbstracts,
+  closedMessage,
+  deadlinePassed,
+} from "@/lib/submissionWindow";
 import { buildCameraReadyPdf } from "@/lib/cameraReadyPdf";
 
 export type ActionResult = { ok: boolean; message?: string };
@@ -303,6 +308,22 @@ export async function createSubmissionOnePage(payload: {
 }): Promise<{ ok: boolean; id?: string; message?: string }> {
   const profile = await requireProfile();
   const supabase = await createClient();
+
+  // Enforce the advertised closing date server-side. The page hides the form
+  // once the deadline passes, but hiding a form is not a rule — this is.
+  const { data: conf } = await supabase
+    .from("conferences")
+    .select("is_open, submission_deadline")
+    .eq("id", payload.conference_id)
+    .maybeSingle();
+  if (!conf || !acceptingAbstracts(conf)) {
+    return {
+      ok: false,
+      message: conf
+        ? closedMessage(conf)
+        : "That conference is no longer accepting submissions.",
+    };
+  }
 
   // The 2-submission rule counts both roles — papers you submit and papers you
   // co-author (excluding withdrawn ones).
@@ -1034,7 +1055,12 @@ export async function submitFullPaper(
     .eq("id", s.conference_id)
     .maybeSingle();
   const deadline = s.full_paper_deadline ?? (conf as any)?.full_paper_deadline ?? null;
-  if (deadline && new Date() > new Date(`${deadline}T23:59:59`))
+  // Via the shared helper so both deadlines close at the same moment — the end
+  // of the day in IST. Building a Date from `${deadline}T23:59:59` resolved in
+  // the server's zone, which is UTC on Vercel, quietly granting an extra 5½
+  // hours; it also produced an Invalid Date (and so no cutoff at all) if the
+  // column ever came back as a full timestamp rather than a bare date.
+  if (deadlinePassed(deadline))
     return {
       ok: false,
       message: `The full-paper deadline (${prettyDate(deadline)}) has passed. Please contact your Track Editor.`,
@@ -3297,7 +3323,9 @@ export async function recordRecommendation(
         ok: false,
         message: `The deadline must be on or before the conference full-paper deadline (${prettyDate(ceiling)}).`,
       };
-    if (new Date(`${fullPaperDeadline}T23:59:59`) < new Date())
+    // Same IST end-of-day rule the deadline is later enforced against, so a
+    // Track Editor cannot set a date that is already spent.
+    if (deadlinePassed(fullPaperDeadline))
       return { ok: false, message: "The full-paper deadline must be in the future." };
   }
 

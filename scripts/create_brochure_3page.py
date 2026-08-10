@@ -1,4 +1,4 @@
-"""Generate the concise three-page GLOGIFT 2027 conference brochure."""
+"""Generate the concise three-page GLOGIFT 27 conference brochure."""
 
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER
@@ -34,6 +34,23 @@ def cover_background(canvas, doc):
                     PAGE_W - (48 + offset) * mm, PAGE_H)
     canvas.setFillColor(GOLD)
     canvas.rect(0, 0, PAGE_W, 5 * mm, fill=1, stroke=0)
+    canvas.restoreState()
+
+
+def content_header_footer(canvas, doc):
+    canvas.saveState()
+    canvas.setFillColor(NAVY)
+    canvas.rect(0, PAGE_H - 12 * mm, PAGE_W, 12 * mm, fill=1, stroke=0)
+    canvas.setFillColor(colors.white)
+    canvas.setFont(BOLD, 8)
+    canvas.drawString(MARGIN, PAGE_H - 7.6 * mm, "GLOGIFT 27 | IIM SAMBALPUR")
+    canvas.drawRightString(PAGE_W - MARGIN, PAGE_H - 7.6 * mm, "glogift2027.in")
+    canvas.setFillColor(MUTED)
+    canvas.setFont(BODY, 7.5)
+    canvas.drawCentredString(PAGE_W / 2, 7 * mm,
+                             f"Conference Brochure  |  {doc.page}")
+    canvas.setFillColor(GOLD)
+    canvas.rect(0, 0, PAGE_W, 3 * mm, fill=1, stroke=0)
     canvas.restoreState()
 
 
@@ -116,9 +133,13 @@ def cover_story():
     ]))
     return [
         Spacer(1, 9 * mm), logo_band, Spacer(1, 25 * mm),
-        Paragraph("GLOGIFT 2027", ParagraphStyle(
+        Paragraph("GLOGIFT 27", ParagraphStyle(
             "cover-name", fontName=DISPLAY, fontSize=39, leading=44,
-            textColor=colors.white, alignment=TA_CENTER, spaceAfter=5 * mm)),
+            textColor=colors.white, alignment=TA_CENTER, spaceAfter=2.5 * mm)),
+        Paragraph("TWENTY SEVENTH GLOBAL CONFERENCE ON FLEXIBLE SYSTEMS MANAGEMENT",
+                  ParagraphStyle("cover-series", fontName=BOLD, fontSize=8.5,
+                                 leading=10.5, tracking=.5, textColor=colors.HexColor("#D7E2F4"),
+                                 alignment=TA_CENTER, spaceAfter=5 * mm)),
         Paragraph("INTERNATIONAL CONFERENCE ON", ParagraphStyle(
             "cover-k", fontName=BOLD, fontSize=10.5, leading=13,
             tracking=2, textColor=GOLD, alignment=TA_CENTER, spaceAfter=5 * mm)),
@@ -145,7 +166,7 @@ def cover_story():
             "cover-format", fontName=BODY, fontSize=10.5, leading=13,
             textColor=GOLD, alignment=TA_CENTER)),
         Spacer(1, 17 * mm),
-        Paragraph("CALL FOR SUBMISSIONS", ParagraphStyle(
+        Paragraph("CALL FOR PAPERS", ParagraphStyle(
             "cover-call", fontName=BOLD, fontSize=11.5, leading=14,
             tracking=1.5, textColor=GOLD, alignment=TA_CENTER, spaceAfter=4 * mm)),
         Paragraph("www.glogift2027.in", ParagraphStyle(
@@ -157,7 +178,7 @@ def cover_story():
 def overview_page():
     story = page_title("Conference overview", "AI, adaptability and sustainability")
     story.append(para(
-        "GLOGIFT 2027 brings academicians, researchers, practitioners, policymakers, "
+        "GLOGIFT 27 brings academicians, researchers, practitioners, policymakers, "
         "entrepreneurs and students together to explore how AI can strengthen flexible, "
         "competitive and sustainable management.", 10.2, 12.6))
     story.append(Table([[theme_box("FLEXIBILITY", "Adapt and reconfigure amid uncertainty"),
@@ -173,7 +194,7 @@ def overview_page():
         ("02", "AI for Operations, Supply Chain &amp; Industry 5.0"),
         ("03", "Digital Transformation &amp; Intelligent Business"),
         ("04", "Sustainable Finance &amp; Decarbonization"),
-        ("05", "AI in Marketing"),
+        ("05", "AI in Marketing: Consumer Insights, Branding &amp; Customer Engagement"),
         ("06", "Governance, Ethics &amp; Responsible AI"),
         ("07", "Analytics, Big Data &amp; Intelligent Systems"),
         ("08", "Human Capital &amp; Leadership"),
@@ -189,12 +210,12 @@ def overview_page():
                     "track-num", fontName=BOLD, fontSize=10.5,
                     textColor=CORAL, alignment=TA_CENTER)),
                 Paragraph(name, ParagraphStyle(
-                    "track-name", fontName=BODY, fontSize=9.5,
-                    leading=11.2, textColor=INK)),
+                    "track-name", fontName=BODY, fontSize=9.7,
+                    leading=10.8, textColor=INK)),
             ])
         track_rows.append(row)
     tracks_table = Table(track_rows, colWidths=[10 * mm, 71 * mm, 10 * mm, 71 * mm],
-                         rowHeights=[17.5 * mm] * 5)
+                         rowHeights=[18 * mm] * 5)
     tracks_table.setStyle(TableStyle([
         ("ROWBACKGROUNDS", (0, 0), (-1, -1), [colors.white, PALE]),
         ("GRID", (0, 0), (-1, -1), .5, colors.HexColor("#CBD6E5")),
@@ -204,9 +225,9 @@ def overview_page():
     ]))
     story += [tracks_table, Spacer(1, 2.2 * mm), section("PUBLICATION OPPORTUNITIES")]
     story.append(para(
-        "<b>Selected papers considered for Springer journals (ABDC listed) and the Springer "
-        "Scopus-indexed Book Series.</b> All accepted and presented papers appear in the "
-        "Conference Proceedings with ISBN.", 9.5, 11.5, 1.4 * mm))
+        "<b>Selected best papers may be fast-tracked after further peer review and revision</b> "
+        "for the two Springer journals or the Scopus-indexed book series. All accepted and "
+        "presented papers appear in the Conference Proceedings with ISBN.", 9.5, 11.5, 1.4 * mm))
     publications = [
         ("gjfsm.jpg", "Global Journal of Flexible Systems Management", "Springer | ABDC-A"),
         ("ijgbc.jpg", "International Journal of Global Business &amp; Competitiveness", "Springer | ABDC-C"),
@@ -231,8 +252,8 @@ def overview_page():
                               ("RIGHTPADDING", (0, 0), (-1, -1), 1.5 * mm)]))
     story += [Spacer(1, 2.2 * mm), section("CONFERENCE LEADERSHIP")]
     people = [
-        ("mp-jaiswal.jpg", "Conference Patron", "Prof (Dr) M. P. Jaiswal", "Director, IIM Sambalpur"),
-        ("sushil.jpg", "GLOGIFT President", "Prof (Dr) Sushil", "Founder, GLOGIFT Society"),
+        ("mp-jaiswal.jpg", "Conference Patron", "Prof (Dr) Mahadeo Jaiswal", "Director, IIM Sambalpur"),
+        ("sushil.jpg", "GIFT Founder President", "Prof (Dr) Sushil", "GIFT Society | Emeritus Professor, IIT Delhi"),
         ("seema-gupta.jpg", "Conference Convenor", "Prof (Dr) Seema Gupta", "IIM Sambalpur"),
         ("saumyaranjan-sahoo.jpg", "Conference Co-Convenor", "Prof (Dr) Saumyaranjan Sahoo", "IIM Sambalpur"),
     ]
@@ -262,12 +283,12 @@ def overview_page():
 def date_card(date, event):
     table = Table([
         [Paragraph(date, ParagraphStyle(
-            "date", fontName=BOLD, fontSize=8.8, leading=10,
+            "date", fontName=BOLD, fontSize=8.5, leading=9.5,
             textColor=colors.white, alignment=TA_CENTER))],
         [Paragraph(event, ParagraphStyle(
-            "event", fontName=BODY, fontSize=8.5, leading=10.1,
+            "event", fontName=BODY, fontSize=8.4, leading=9.6,
             textColor=INK, alignment=TA_CENTER))],
-    ], colWidths=[52 * mm], rowHeights=[7.5 * mm, 12.5 * mm])
+    ], colWidths=[52 * mm], rowHeights=[6 * mm, 9.5 * mm])
     table.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (0, 0), NAVY),
         ("BACKGROUND", (0, 1), (0, 1), PALE),
@@ -285,9 +306,9 @@ def merged_fee_table():
         "FOREIGN<br/>EARLY BIRD", "FOREIGN<br/>REGULAR",
     ]
     data = [
-        ["Academicians (Faculty)", "Rs 10,000", "Rs 11,500", "$350", "$375"],
+        ["Academicians (Faculty)", "Rs 10,000", "Rs 11,000", "$300", "$350"],
         ["Industry Professionals", "Rs 14,000", "Rs 16,000", "$425", "$450"],
-        ["Research Scholars / PhD", "Rs 5,000", "Rs 6,000", "$250", "$300"],
+        ["PhD / Research Scholars", "Rs 5,000", "Rs 6,000", "$150", "$200"],
         ["Students (UG/PG, full-time)", "Rs 3,000", "Rs 3,500", "$90", "$100"],
     ]
     head_style = ParagraphStyle(
@@ -302,7 +323,7 @@ def merged_fee_table():
         rows.append([Paragraph(row[0], body_style)] +
                     [Paragraph(value, money_style) for value in row[1:]])
     table = Table(rows, colWidths=[54 * mm, 27 * mm, 27 * mm, 27 * mm, 27 * mm],
-                  rowHeights=[11 * mm] + [9.8 * mm] * 4)
+                  rowHeights=[9.5 * mm] + [8.4 * mm] * 4)
     table.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, 0), NAVY),
         ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, PALE]),
@@ -324,41 +345,47 @@ def submission_page():
         "Accepted abstract, registration and presentation; no full paper required."),
                          pathway_box(
         "PATHWAY B - FULL PAPER",
-        "After abstract acceptance, submit up to 10,000 words for double-blind review.",
+        "After abstract acceptance, prepare a double-anonymous manuscript using the published guidelines and templates.",
         colors.HexColor("#FFF7E5"))]],
                        colWidths=[82.5 * mm] * 2,
                        style=[("VALIGN", (0, 0), (-1, -1), "TOP"),
                               ("LEFTPADDING", (0, 0), (-1, -1), 2 * mm),
                               ("RIGHTPADDING", (0, 0), (-1, -1), 2 * mm)]))
-    story += [Spacer(1, 2 * mm), section("NINE KEY DATES")]
+    story += [Spacer(1, .8 * mm), section("NINE KEY DATES")]
     dates = [
         ("07 AUG 2026", "Open for abstract submission"),
         ("21 SEP 2026", "Registration opens"),
         ("23 NOV 2026", "Abstract submission closes"),
         ("30 NOV 2026", "Abstract decisions announced"),
         ("08 DEC 2026", "Full paper submission closes - Pathway B"),
-        ("15 DEC 2026", "Full paper decisions announced - Pathway B"),
+        ("15 DEC 2026", "Target full paper decisions - Pathway B"),
         ("20 DEC 2026", "Early bird registration closes"),
         ("24 JAN 2027", "Regular registration closes"),
-        ("25-27 FEB 2027", "GLOGIFT 2027 at IIM Sambalpur"),
+        ("25-27 FEB 2027", "GLOGIFT 27 at IIM Sambalpur"),
     ]
     date_rows = [[date_card(*dates[index + offset]) for offset in range(3)]
                  for index in range(0, 9, 3)]
-    story.append(Table(date_rows, colWidths=[54 * mm] * 3, rowHeights=[21.5 * mm] * 3,
+    story.append(Table(date_rows, colWidths=[54 * mm] * 3, rowHeights=[16 * mm] * 3,
                        style=[("VALIGN", (0, 0), (-1, -1), "TOP"),
                               ("LEFTPADDING", (0, 0), (-1, -1), 1 * mm),
                               ("RIGHTPADDING", (0, 0), (-1, -1), 1 * mm)]))
-    story += [Spacer(1, 1.7 * mm), section("REGISTRATION FEES (PER DELEGATE)")]
+    story.append(para(
+        "Timing note: 15 December is the target. Review timing may extend by around 30 days or more; "
+        "Pathway B authors should submit as early as possible.",
+        8.3, 9.6, .8 * mm, MUTED, TA_CENTER))
+    story += [Spacer(1, .6 * mm), section("REGISTRATION FEES (PER DELEGATE)")]
     story.append(merged_fee_table())
     story.append(para(
         "<b>Early bird:</b> on or before 20 Dec 2026 &nbsp; | &nbsp; "
-        "<b>Regular:</b> on or before 24 Jan 2027 &nbsp; | &nbsp; GST extra.",
+        "<b>Regular:</b> on or before 24 Jan 2027 &nbsp; | &nbsp; GST extra.<br/>"
+        "<b>GIFT SOCIETY MEMBER DISCOUNT:</b> Members receive <b>20% off registration fees only</b> "
+        "with the coupon code shared by the conference organisers or the GIFT Society.",
         8.8, 10.4, .8 * mm, MUTED, TA_CENTER))
     attendance_style = ParagraphStyle(
-        "attendance-note", fontName=BODY, fontSize=8.5, leading=10,
+        "attendance-note", fontName=BODY, fontSize=8.7, leading=10.2,
         textColor=INK)
     declaration_style = ParagraphStyle(
-        "attendance-declaration", fontName=BODY, fontSize=8.6, leading=10.2,
+        "attendance-declaration", fontName=BODY, fontSize=8.8, leading=10.4,
         textColor=NAVY, alignment=TA_CENTER)
     attendance_note = Table([
         [Paragraph(
@@ -388,29 +415,29 @@ def submission_page():
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
     ]))
     story.append(attendance_note)
-    story.append(para(
-        "<b>On-campus stay:</b> Twin-sharing Rs 1,800 / $19 per night &nbsp; | &nbsp; "
-        "Single room Rs 3,600 / $38 per night &nbsp; | &nbsp; Meals and Wi-Fi included; GST extra.",
-        8.6, 10, 0, INK, TA_CENTER))
-    story += [Spacer(1, .8 * mm)]
-    highlights = Paragraph(
-        "<b>CONFERENCE HIGHLIGHTS:</b> AI and Sustainability Leadership Forum &nbsp; | &nbsp; "
-        "Industry-Academia Conclave on Digital Finance &nbsp; | &nbsp; Policy Roundtable on "
-        "Decarbonization &nbsp; | &nbsp; Startup Showcase on FinTech and Smart Operations &nbsp; | &nbsp; "
-        "Doctoral Colloquium for Emerging Researchers &nbsp; | &nbsp; Directors' Panel on "
-        "AI-Driven Leadership",
-        ParagraphStyle("highlights-band", fontName=BODY, fontSize=8.4,
-                       leading=10, textColor=INK, alignment=TA_CENTER))
-    highlights_band = Table([[highlights]], colWidths=[162 * mm])
-    highlights_band.setStyle(TableStyle([
+    certificate_note = Table([[Paragraph(
+        "<b>CERTIFICATE ELIGIBILITY:</b> Certificates are issued individually to registered, "
+        "fee-paid participants. A registered author who attends and presents receives the "
+        "attendance/participation and presentation certificates. Every co-author who requires "
+        "certificates must register and pay separately; an unregistered co-author receives none.",
+        ParagraphStyle("certificate-note", fontName=BODY, fontSize=8.8,
+                       leading=10.5, textColor=INK))]], colWidths=[162 * mm])
+    certificate_note.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#FFF7E5")),
         ("BOX", (0, 0), (-1, -1), .6, GOLD),
         ("LEFTPADDING", (0, 0), (-1, -1), 2.5 * mm),
         ("RIGHTPADDING", (0, 0), (-1, -1), 2.5 * mm),
-        ("TOPPADDING", (0, 0), (-1, -1), 1 * mm),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 1 * mm),
+        ("TOPPADDING", (0, 0), (-1, -1), 1.5 * mm),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 1.5 * mm),
     ]))
-    story += [highlights_band, Spacer(1, .8 * mm)]
+    story += [Spacer(1, .8 * mm), certificate_note]
+    story.append(para(
+        "<b>On-campus stay:</b> Twin-sharing Rs 1,800 / $19 per night &nbsp; | &nbsp; "
+        "Single room Rs 3,600 / $38 per night &nbsp; | &nbsp; Meals and Wi-Fi included; 18% GST extra.<br/>"
+        "The same rates apply to accompanying spouses, relatives and guests. Rooms are limited and "
+        "allotted first-come, first-served; off-campus hotel options will be shared on the conference website.",
+        8.1, 9.3, 0, INK, TA_CENTER))
+    story += [Spacer(1, .8 * mm)]
     contact = Table([
         [Paragraph("SUBMIT AND REGISTER", ParagraphStyle(
             "contact-title", fontName=DISPLAY, fontSize=16.5, leading=19,
@@ -421,7 +448,7 @@ def submission_page():
         [Paragraph(
             "glogift27.chair@iimsambalpur.ac.in &nbsp; | &nbsp; "
             "glogift27.coordinator@iimsambalpur.ac.in<br/>"
-            "Jointly organised by IIM Sambalpur and the GLOGIFT Society",
+            "Jointly organised by IIM Sambalpur and the GIFT Society",
             ParagraphStyle("contact-mail", fontName=BODY, fontSize=8.5,
                            leading=10, textColor=colors.white, alignment=TA_CENTER))],
     ], colWidths=[162 * mm])
@@ -452,12 +479,12 @@ def main():
     doc = BaseDocTemplate(
         str(OUT), pagesize=A4, leftMargin=MARGIN, rightMargin=MARGIN,
         topMargin=17 * mm, bottomMargin=13 * mm,
-        title="GLOGIFT 2027 Three-Page Conference Brochure",
-        author="Indian Institute of Management Sambalpur and GLOGIFT Society",
+        title="GLOGIFT 27 Three-Page Conference Brochure",
+        author="Indian Institute of Management Sambalpur and GIFT Society",
     )
     doc.addPageTemplates([
         PageTemplate(id="cover", frames=[cover_frame], onPage=cover_background),
-        PageTemplate(id="content", frames=[content_frame], onPageEnd=header_footer),
+        PageTemplate(id="content", frames=[content_frame], onPageEnd=content_header_footer),
     ])
     doc.build(story())
     print(OUT)

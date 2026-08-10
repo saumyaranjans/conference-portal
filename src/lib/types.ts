@@ -216,6 +216,10 @@ export interface Profile {
    *  Only meaningful when `roles` includes "chief". Defaults to true. */
   convener_manage: boolean;
   is_active: boolean;
+  /** Set once registration is finished. Null for a Google / Microsoft account
+   *  that has signed in but not yet supplied institution and category — such an
+   *  account is held at /complete-profile. */
+  profile_completed_at: string | null;
   created_at: string;
 }
 
@@ -379,10 +383,71 @@ export const COUNTRY_DIAL_CODES: { country: string; code: string }[] = [
 export const PARTICIPANT_CATEGORIES = [
   "Faculty / Academician",
   "Industry Professional",
-  "Research Scholar / PhD",
+  "PhD / Research Scholars",
   "Student (UG/PG)",
   "Foreign Delegate",
 ] as const;
+
+/**
+ * The categories a person may choose for themselves when registering.
+ *
+ * "Foreign Delegate" is deliberately absent: it is not really a description of
+ * what someone does, it overlaps every other category, and it is the one that
+ * decides whether the fee is billed in USD. The Editorial Office sets it where
+ * it applies, which is why the full list above keeps it — the fee table and the
+ * staff-facing screens still need it.
+ */
+export const SELECTABLE_PARTICIPANT_CATEGORIES = PARTICIPANT_CATEGORIES.filter(
+  (c) => c !== "Foreign Delegate"
+);
+
+/** Only faculty may volunteer; scholars and students are not eligible. */
+export const VOLUNTEER_ELIGIBLE_CATEGORY = "Faculty / Academician";
+
+export type VolunteerRole = "reviewer" | "editor";
+export type VolunteerStatus = "pending" | "accepted" | "declined";
+
+/** What each role actually commits a volunteer to, shown at the point of asking. */
+export const VOLUNTEER_ROLE_INFO: Record<
+  VolunteerRole,
+  { label: string; summary: string; duties: string[] }
+> = {
+  reviewer: {
+    label: "Reviewer",
+    summary:
+      "Read and evaluate papers assigned to you in your area of expertise.",
+    duties: [
+      "Review 3–5 papers, typically between December 2026 and January 2027",
+      "Score each on originality, technical quality, clarity and relevance",
+      "Write constructive comments for the author, and a private note to the editor",
+      "Return each review within the deadline set by the Track Editor",
+      "Declare any conflict of interest and decline the paper where one exists",
+    ],
+  },
+  editor: {
+    label: "Track Editor",
+    summary:
+      "Take editorial charge of one track — assign reviewers and decide papers.",
+    duties: [
+      "Assign reviewers to each paper in your track and chase late reviews",
+      "Take the accept, revise or reject decision on the strength of the reviews",
+      "Uphold the integrity thresholds on similarity and AI-assisted writing",
+      "Help shape your track's sessions in the conference programme",
+      "A heavier commitment than reviewing, concentrated in December and January",
+    ],
+  },
+};
+
+export type VolunteerRequest = {
+  id: string;
+  profile_id: string;
+  role: VolunteerRole;
+  status: VolunteerStatus;
+  requested_at: string;
+  decided_by: string | null;
+  decided_at: string | null;
+  decision_note: string;
+};
 
 export interface Submission {
   id: string;

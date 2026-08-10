@@ -11,7 +11,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
  * so nobody has to download 2 MB to find out how to reach the campus.
  */
 
-export const PDF = "/travelogue/sambalpur-travelogue-glogift-2027.pdf";
+export const PDF = "/travelogue/sambalpur-travelogue-glogift-2027.pdf?v=glogift27-20260808";
 
 const PLACES: { name: string; image: string; alt: string; body: string[] }[] = [
   {

@@ -230,6 +230,18 @@ export function HowToReachPage() {
               Conference timeline
             </Link>
           </div>
+          {/* Someone reading a travel page is usually about to ask a travel
+              question, so the address to ask it at belongs here rather than
+              only in the footer. */}
+          <p className="mt-4 text-sm text-slate-600 dark:text-slate-400">
+            Questions about travel, arrival or accommodation? Write to{" "}
+            <a
+              href="mailto:glogift27.coordinator@iimsambalpur.ac.in"
+              className="font-medium text-blue-700 hover:underline dark:text-blue-400"
+            >
+              glogift27.coordinator@iimsambalpur.ac.in
+            </a>
+          </p>
         </section>
 
         <footer className="border-t border-slate-200 pt-5 pb-6 text-center text-xs text-slate-500 dark:border-slate-700">

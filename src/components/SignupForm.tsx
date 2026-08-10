@@ -12,8 +12,12 @@ import {
 import {
   COUNTRIES,
   COUNTRY_DIAL_CODES,
-  PARTICIPANT_CATEGORIES,
+  SELECTABLE_PARTICIPANT_CATEGORIES,
+  VOLUNTEER_ELIGIBLE_CATEGORY,
+  type VolunteerRole,
 } from "@/lib/types";
+import { VolunteerOptIn } from "@/components/VolunteerOptIn";
+import { Captcha, captchaEnabled } from "@/components/Captcha";
 import { InstitutionInput } from "@/components/InstitutionInput";
 import { ListAutocomplete } from "@/components/ListAutocomplete";
 
@@ -32,6 +36,8 @@ const EMPTY = {
   orcid: "",
   glogiftMember: "",
   glogiftMembershipNo: "",
+  volunteerReviewer: false,
+  volunteerEditor: false,
   email: "",
   password: "",
   confirm: "",
@@ -65,10 +71,25 @@ export function SignupForm({
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  // Bumped on failure so the widget issues a fresh single-use token.
+  const [captchaReset, setCaptchaReset] = useState(0);
 
   function set(key: keyof typeof form, value: string) {
     setForm((f) => ({ ...f, [key]: value }));
   }
+
+  function setVolunteer(role: VolunteerRole, next: boolean) {
+    setForm((f) => ({
+      ...f,
+      [role === "reviewer" ? "volunteerReviewer" : "volunteerEditor"]: next,
+    }));
+  }
+
+
+  /** Reviewing and chairing are offered to faculty only. */
+  const eligibleToVolunteer =
+    form.participantCategory === VOLUNTEER_ELIGIBLE_CATEGORY;
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -83,11 +104,17 @@ export function SignupForm({
       return;
     }
 
+    if (captchaEnabled && !captchaToken) {
+      setError("Please complete the security check.");
+      return;
+    }
+
     setBusy(true);
     const { data, error } = await createClient().auth.signUp({
       email: form.email,
       password: form.password,
       options: {
+        captchaToken: captchaToken ?? undefined,
         data: {
           full_name: `${form.firstName} ${form.lastName}`.trim(),
           first_name: form.firstName,
@@ -105,6 +132,13 @@ export function SignupForm({
           glogift_member: form.glogiftMember === "yes",
           glogift_membership_no:
             form.glogiftMember === "yes" ? form.glogiftMembershipNo.trim() : "",
+          // This form collects every required field, so the account is
+          // complete on arrival and skips /complete-profile (see 0075).
+          signup_complete: "true",
+          // Offers to serve. The trigger ignores these unless the category is
+          // faculty, so a hand-crafted signup cannot volunteer a student.
+          volunteer_reviewer: String(eligibleToVolunteer && form.volunteerReviewer),
+          volunteer_editor: String(eligibleToVolunteer && form.volunteerEditor),
         },
       },
     });
@@ -122,6 +156,7 @@ export function SignupForm({
       } else {
         setError(error.message);
       }
+      setCaptchaReset((n) => n + 1);
       setBusy(false);
       return;
     }
@@ -175,6 +210,7 @@ export function SignupForm({
             </label>
             <select
               id="title"
+              required
               className="input"
               value={form.title}
               onChange={(e) => set("title", e.target.value)}
@@ -218,19 +254,20 @@ export function SignupForm({
             </label>
             <select
               id="gender"
+              required
               className="input"
               value={form.gender}
               onChange={(e) => set("gender", e.target.value)}
             >
-              <option value="">Prefer not to say</option>
-              {["Female", "Male", "Other"].map((g) => (
+              <option value="">Select…</option>
+              {["Female", "Male", "Other", "Prefer not to say"].map((g) => (
                 <option key={g} value={g}>
                   {g}
                 </option>
               ))}
             </select>
           </div>
-          <div className="sm:col-span-2">
+          <div className="sm:col-span-4">
             <label className="label" htmlFor="mobile">
               Mobile
             </label>
@@ -250,23 +287,30 @@ export function SignupForm({
               <input
                 id="mobile"
                 type="tel"
-                className="input"
-                placeholder="Mobile number"
+                required
+                inputMode="numeric"
+                autoComplete="tel-national"
+                maxLength={15}
+                className="input w-full font-mono tracking-wide"
+                placeholder="10-digit number"
                 value={form.mobile}
                 onChange={(e) => set("mobile", e.target.value)}
               />
             </div>
           </div>
-          <div className="sm:col-span-2">
+          <div className="sm:col-span-3">
             <label className="label" htmlFor="country">
               Country
             </label>
-            <ListAutocomplete
+            <input
               id="country"
-              options={COUNTRIES}
-              placeholder="Start typing…"
+              required
+              maxLength={60}
+              autoComplete="country-name"
+              className="input"
+              placeholder="Country"
               value={form.country}
-              onChange={(v) => set("country", v)}
+              onChange={(e) => set("country", e.target.value)}
             />
           </div>
         </div>
@@ -300,6 +344,7 @@ export function SignupForm({
             </label>
             <input
               id="department"
+              required
               className="input"
               value={form.department}
               onChange={(e) => set("department", e.target.value)}
@@ -311,6 +356,7 @@ export function SignupForm({
             </label>
             <input
               id="designation"
+              required
               className="input"
               placeholder="e.g. Professor, Research Scholar, Manager"
               value={form.designation}
@@ -377,7 +423,7 @@ export function SignupForm({
               onChange={(e) => set("participantCategory", e.target.value)}
             >
               <option value="">Select…</option>
-              {PARTICIPANT_CATEGORIES.map((c) => (
+              {SELECTABLE_PARTICIPANT_CATEGORIES.map((c) => (
                 <option key={c} value={c}>
                   {c}
                 </option>
@@ -386,6 +432,15 @@ export function SignupForm({
           </div>
         </div>
       </div>
+
+      {/* -------- Serving the conference (faculty only) -------- */}
+      {eligibleToVolunteer && (
+        <VolunteerOptIn
+          reviewer={form.volunteerReviewer}
+          editor={form.volunteerEditor}
+          onChange={setVolunteer}
+        />
+      )}
 
       {/* -------- Account -------- */}
       <div>
@@ -449,6 +504,8 @@ export function SignupForm({
           </div>
         </div>
       </div>
+
+      <Captcha onToken={setCaptchaToken} resetSignal={captchaReset} />
 
       {error && (
         <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">

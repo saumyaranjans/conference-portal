@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import { VisitTracker } from "@/components/VisitTracker";
 import "./globals.css";
 
 const SITE_URL = "https://glogift2027.in";
@@ -117,9 +118,15 @@ export const metadata: Metadata = {
     description: SITE_DESC,
     images: ["/og-image.png"],
   },
+  // The tab icon is the year alone: the GIFT smiley was unreadable at 32px and
+  // said nothing about which conference this is.
   icons: {
-    icon: "/glogift-logo.png",
-    apple: "/glogift-logo.png",
+    icon: [
+      { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-48.png", sizes: "48x48", type: "image/png" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: "/apple-touch-icon.png",
   },
 };
 
@@ -156,7 +163,13 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(WEBSITE_JSONLD) }}
         />
       </head>
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        {children}
+        {/* Records public page views. Mounted at the root so every public page
+            is measured, not just the landing page; it excludes the portal
+            itself. */}
+        <VisitTracker />
+      </body>
     </html>
   );
 }

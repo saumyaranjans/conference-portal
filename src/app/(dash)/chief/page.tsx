@@ -103,7 +103,7 @@ export default async function ChiefDashboard() {
     paidEmails.length
       ? admin
           .from("profiles")
-          .select("email, glogift_member")
+          .select("email, glogift_member, country")
           .in("email", paidEmails)
       : Promise.resolve({ data: [] as any[] }),
     submissions.length
@@ -115,8 +115,13 @@ export default async function ChiefDashboard() {
   ]);
 
   const memberByEmail = new Map<string, boolean>();
+  // Country decides the billing currency (see isForeignDelegate), so it has to
+  // travel with membership rather than be looked up separately.
+  const countryByEmail = new Map<string, string | null>();
   for (const p of (profs ?? []) as any[]) {
-    memberByEmail.set((p.email ?? "").trim().toLowerCase(), Boolean(p.glogift_member));
+    const key = (p.email ?? "").trim().toLowerCase();
+    memberByEmail.set(key, Boolean(p.glogift_member));
+    countryByEmail.set(key, p.country ?? null);
   }
 
   // Foreign (USD) fees convert to INR at today's rate (fetched in wave 1) and
@@ -127,7 +132,7 @@ export default async function ChiefDashboard() {
   for (const [key, info] of paidPerPerson) {
     const member = memberByEmail.get(key) ?? false;
     if (member) memberCount += 1;
-    const fee = feeForTier(info.category, member, info.tier ?? timelineTier);
+    const fee = feeForTier(info.category, member, info.tier ?? timelineTier, countryByEmail.get(key) ?? null);
     if (!fee.known) continue;
     collectedInr += fee.currency === "USD" ? usdToInr(fee.amount, usdInr) : fee.amount;
   }

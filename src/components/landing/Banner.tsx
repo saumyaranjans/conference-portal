@@ -339,28 +339,45 @@ function TracksSlide() {
   return (
     <div
       className="relative w-full aspect-[5/4] sm:aspect-[12/5] overflow-hidden
-                 bg-[linear-gradient(120deg,#fff7ed_0%,#ffe4e6_20%,#ede9fe_45%,#dbeafe_70%,#ccfbf1_100%)]"
+                 bg-[linear-gradient(125deg,#07152f_0%,#102a62_38%,#312e81_68%,#701a75_100%)]"
       style={{ containerType: "inline-size" }}
     >
-      {/* Soft colour blooms, for depth behind the cards. */}
-      <div className="pointer-events-none absolute -left-[6cqw] -top-[8cqw] h-[26cqw] w-[26cqw] rounded-full bg-[radial-gradient(circle,#f472b666,transparent_70%)]" />
-      <div className="pointer-events-none absolute -right-[5cqw] top-[2cqw] h-[24cqw] w-[24cqw] rounded-full bg-[radial-gradient(circle,#38bdf866,transparent_70%)]" />
-      <div className="pointer-events-none absolute bottom-[-10cqw] left-[38cqw] h-[28cqw] w-[28cqw] rounded-full bg-[radial-gradient(circle,#fbbf2455,transparent_70%)]" />
+      {/* Colour blooms and a fine technical grid add depth without competing
+          with the track photography. */}
+      <div className="pointer-events-none absolute -left-[8cqw] -top-[12cqw] h-[34cqw] w-[34cqw] rounded-full bg-[radial-gradient(circle,#0ea5e988,transparent_68%)]" />
+      <div className="pointer-events-none absolute -right-[7cqw] -top-[4cqw] h-[31cqw] w-[31cqw] rounded-full bg-[radial-gradient(circle,#ec489977,transparent_70%)]" />
+      <div className="pointer-events-none absolute bottom-[-15cqw] left-[34cqw] h-[34cqw] w-[34cqw] rounded-full bg-[radial-gradient(circle,#f59e0b55,transparent_68%)]" />
+      <div
+        className="pointer-events-none absolute inset-0 opacity-20"
+        style={{
+          backgroundImage:
+            "linear-gradient(#93c5fd33 1px,transparent 1px),linear-gradient(90deg,#93c5fd33 1px,transparent 1px)",
+          backgroundSize: "3.2cqw 3.2cqw",
+          maskImage: "linear-gradient(to bottom,black,transparent 78%)",
+        }}
+      />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[0.45cqw] bg-[linear-gradient(90deg,#38bdf8,#818cf8,#f472b6,#fbbf24)]" />
 
       <div className="absolute inset-0 flex flex-col px-[2.4cqw] py-[1.9cqw] sm:py-[1.9cqw]">
         <div className="text-center">
-          <p className="text-gradient text-[6cqw] sm:text-[3.1cqw] font-extrabold leading-none tracking-tight">
-            Call for Papers
-          </p>
-          <p className="mt-[1.4cqw] sm:mt-[0.6cqw] text-[2.9cqw] sm:text-[1.3cqw] font-medium text-[#3f3f6b]">
-            Ten tracks &middot; abstracts and full papers invited &middot; GLOGIFT 27
+          <div className="inline-flex items-center gap-[1cqw]">
+            <span className="hidden sm:block h-px w-[6cqw] bg-[linear-gradient(90deg,transparent,#fbbf24)]" />
+            <p className="text-[6cqw] sm:text-[3.15cqw] font-extrabold leading-none tracking-tight text-white [text-shadow:0_0.35cqw_1.2cqw_#02061799]">
+              Call for <span className="text-[#fbbf24]">Papers</span>
+            </p>
+            <span className="hidden sm:block h-px w-[6cqw] bg-[linear-gradient(90deg,#fbbf24,transparent)]" />
+          </div>
+          <p className="mt-[1.4cqw] sm:mt-[0.65cqw] text-[2.9cqw] sm:text-[1.28cqw] font-medium tracking-wide text-[#dbeafe]">
+            Ten future-facing tracks <span className="mx-[0.65cqw] text-[#fbbf24]">&bull;</span>
+            Abstracts and full papers invited <span className="mx-[0.65cqw] text-[#fbbf24]">&bull;</span>
+            GLOGIFT 27
           </p>
         </div>
 
         {/* Phones get the tracks named in prose: ten photo cards at this width
             would render the labels at about four pixels. */}
         <div className="sm:hidden flex flex-1 flex-col items-center justify-center px-[4cqw] text-center">
-          <p className="text-[3.1cqw] font-semibold leading-relaxed text-[#111c3a]">
+          <p className="text-[3.1cqw] font-semibold leading-relaxed text-white [text-shadow:0_0.2cqw_0.8cqw_#020617]">
             Finance &amp; FinTech &middot; Operations &amp; Supply Chain &middot;
             Digital Transformation &middot; Sustainable Finance &middot;
             Marketing &middot; Governance &amp; Ethics &middot; Analytics &amp;
@@ -375,10 +392,12 @@ function TracksSlide() {
             return (
               <div
                 key={name}
-                className="flex flex-col overflow-hidden rounded-[1.1cqw] border bg-white/90"
-                style={{ borderColor: `${tint}66` }}
+                className="group relative flex flex-col overflow-hidden rounded-[1.05cqw] border bg-[#07152fcc]
+                           shadow-[0_0.8cqw_1.8cqw_-0.9cqw_#020617] backdrop-blur-sm
+                           transition duration-300 hover:-translate-y-[0.18cqw] hover:brightness-110"
+                style={{ borderColor: `${tint}aa` }}
               >
-                <div className="relative w-full" style={{ height: "7.2cqw" }}>
+                <div className="relative w-full overflow-hidden" style={{ height: "7.4cqw" }}>
                   {/* Decorative: the track name below already says what this
                       is, so the photo carries no alt text. */}
                   <img
@@ -386,20 +405,25 @@ function TracksSlide() {
                     alt=""
                     loading="lazy"
                     decoding="async"
-                    className="h-full w-full object-cover"
+                    className="h-full w-full object-cover saturate-[1.15] contrast-[1.05] transition duration-500 group-hover:scale-105"
                   />
                   <span
                     className="absolute inset-0"
                     style={{
-                      background: `linear-gradient(180deg, transparent 50%, ${tint}59 100%)`,
+                      background: `linear-gradient(180deg, transparent 32%, #07152f44 62%, ${tint}aa 125%)`,
                     }}
                   />
+                  <span
+                    className="absolute left-[0.55cqw] top-[0.5cqw] grid h-[2cqw] min-w-[2cqw] place-items-center rounded-full border border-white/50 bg-[#07152fdd] px-[0.4cqw] text-[0.9cqw] font-bold text-white shadow-lg"
+                  >
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
                 </div>
                 <span
                   className="block w-full"
                   style={{ height: "0.35cqw", backgroundColor: tint }}
                 />
-                <p className="flex-1 px-[0.55cqw] py-[0.65cqw] text-center text-[1.5cqw] lg:text-[1.15cqw] font-semibold leading-tight text-[#111c3a]">
+                <p className="flex flex-1 items-center justify-center px-[0.6cqw] py-[0.62cqw] text-center text-[1.5cqw] lg:text-[1.12cqw] font-semibold leading-tight text-white">
                   {name}
                 </p>
               </div>
@@ -410,14 +434,14 @@ function TracksSlide() {
         <div className="mt-[2cqw] sm:mt-[1.2cqw] flex justify-center">
           <Link
             href="/login"
-            className="inline-flex items-center gap-[0.7cqw] rounded-full
+            className="inline-flex items-center gap-[0.7cqw] rounded-full border border-[#fde68a99]
                        px-[4cqw] py-[1.8cqw] text-[2.8cqw]
-                       sm:px-[2.4cqw] sm:py-[0.95cqw] sm:text-[1.4cqw] font-semibold text-white
-                       transition hover:brightness-110"
+                       sm:px-[2.4cqw] sm:py-[0.88cqw] sm:text-[1.35cqw] font-bold text-[#172554]
+                       transition hover:scale-[1.02] hover:brightness-110"
             style={{
               backgroundImage:
-                "linear-gradient(90deg,#2563eb 0%,#7c3aed 45%,#db2777 100%)",
-              boxShadow: "0 0.6cqw 1.6cqw -0.5cqw #7c3aedcc",
+                "linear-gradient(90deg,#fbbf24 0%,#fb923c 52%,#f472b6 100%)",
+              boxShadow: "0 0.7cqw 2cqw -0.5cqw #f59e0bcc",
             }}
           >
             Submit through the portal

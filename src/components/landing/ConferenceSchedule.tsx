@@ -14,8 +14,9 @@ import { SchedulePdfButton } from "@/components/landing/SchedulePdfButton";
  *    Conference Valedictory.
  *  • Short breaks: Morning High Tea & Evening High Tea. Long break: Lunch.
  *  • On-site plenary/special events run in the Main Hall.
- *  • On-site Track Sessions are scheduled EXCLUSIVE of the on-site events, so an
- *    on-site delegate can attend both.
+ *  • On-site Track Sessions usually alternate with the on-site special events,
+ *    so a delegate can attend both. Where a slot lists several on-site blocks
+ *    they genuinely run in parallel and a delegate must choose.
  *  • Online Track Sessions run in PARALLEL to the on-site events (online
  *    delegates are not on campus for the on-site programme).
  *  • Gala Dinner: Day 1, 20:00–23:00.
@@ -43,7 +44,14 @@ type Row =
       icon?: string;
       venue?: string;
     }
-  | { type: "slot"; time: string; full?: Block; onsite?: Block; online?: Block };
+  | {
+      type: "slot";
+      time: string;
+      full?: Block;
+      /** One block, or several running in parallel in that column. */
+      onsite?: Block | Block[];
+      online?: Block | Block[];
+    };
 
 type Day = {
   date: string;
@@ -102,13 +110,17 @@ const EVENING_TEA: Row = {
   },
 };
 
+/** A column may hold one block or several; normalise to a list. */
+const toBlocks = (b?: Block | Block[]): Block[] =>
+  b ? (Array.isArray(b) ? b : [b]) : [];
+
 const ONLINE: Block = {
-  title: "Online Track Sessions",
+  title: "Track Sessions",
   note: "Virtual rooms · paper presentations",
   kind: "online-track",
 };
 const ONSITE_TRACK: Block = {
-  title: "On-site Track Sessions",
+  title: "Track Sessions",
   note: "Classroom rooms · paper presentations",
   kind: "onsite-track",
 };
@@ -132,7 +144,7 @@ const DAYS: Day[] = [
         type: "slot",
         time: "12:00 – 13:30",
         onsite: {
-          title: "AI & Sustainability Leadership Forum",
+          title: "AI Leadership Forum",
           note: "Konark seminar hall · special session",
           kind: "plenary",
         },
@@ -149,11 +161,16 @@ const DAYS: Day[] = [
       {
         type: "slot",
         time: "16:30 – 18:00",
-        onsite: {
-          title: "Industry–Academia Conclave on Digital Finance",
-          note: "Konark seminar hall · special session",
-          kind: "plenary",
-        },
+        // Three things run at once here: the colloquium, the on-site track
+        // sessions and the online track sessions.
+        onsite: [
+          {
+            title: "Doctoral Colloquium for Emerging Researchers",
+            note: "Konark seminar hall · special session",
+            kind: "plenary",
+          },
+          ONSITE_TRACK,
+        ],
         online: ONLINE,
       },
     ],
@@ -171,7 +188,7 @@ const DAYS: Day[] = [
         type: "slot",
         time: "10:00 – 11:30",
         onsite: {
-          title: "Policy Roundtable on Decarbonization & Inclusive Growth",
+          title: "Directors' Panel on Leadership in an AI-Driven Economy",
           note: "Konark auditorium · special session",
           kind: "plenary",
         },
@@ -181,11 +198,7 @@ const DAYS: Day[] = [
       {
         type: "slot",
         time: "12:00 – 13:30",
-        onsite: {
-          title: "Startup Showcase on FinTech & Smart Operations",
-          note: "Konark seminar hall · special session",
-          kind: "plenary",
-        },
+        onsite: ONSITE_TRACK,
         online: ONLINE,
       },
       LUNCH,
@@ -199,11 +212,7 @@ const DAYS: Day[] = [
       {
         type: "slot",
         time: "16:30 – 18:00",
-        onsite: {
-          title: "Doctoral Colloquium for Emerging Researchers",
-          note: "Konark seminar hall · special session",
-          kind: "plenary",
-        },
+        onsite: ONSITE_TRACK,
         online: ONLINE,
       },
     ],
@@ -216,9 +225,9 @@ const DAYS: Day[] = [
         type: "slot",
         time: "10:00 – 11:30",
         onsite: {
-          title: "Directors' Panel on Leadership in an AI-Driven Economy",
-          note: "Konark auditorium · special session",
-          kind: "plenary",
+          title: "Talk with Editors of Top-Tier Journals",
+          note: "Konark seminar hall · special session",
+          kind: "editor-talk",
         },
         online: ONLINE,
       },
@@ -226,24 +235,13 @@ const DAYS: Day[] = [
       {
         type: "slot",
         time: "12:00 – 13:30",
-        onsite: {
-          title: "Talk with Editors of Top-Tier Journals",
-          note: "Konark seminar hall · special session",
-          kind: "editor-talk",
-        },
+        onsite: ONSITE_TRACK,
         online: ONLINE,
       },
       LUNCH,
       {
         type: "slot",
         time: "14:30 – 16:00",
-        onsite: ONSITE_TRACK,
-        online: ONLINE,
-      },
-      EVENING_TEA,
-      {
-        type: "slot",
-        time: "16:30 – 18:00",
         full: {
           title: "Conference Valedictory",
           note: "Konark auditorium",
@@ -271,21 +269,28 @@ const KIND_CLASS: Record<Kind, string> = {
     "border-slate-300 bg-slate-50 text-slate-800 dark:border-slate-600 dark:bg-slate-800/60 dark:text-slate-100",
 };
 
+/** Meals and the registration desk are neither on-site nor online in a way a
+ *  delegate must choose between, so they carry no badge. */
+const MODE_OF: Partial<Record<Kind, "On-site" | "Online">> = {
+  inaugural: "On-site",
+  valedictory: "On-site",
+  plenary: "On-site",
+  "editor-talk": "On-site",
+  "onsite-track": "On-site",
+  "online-track": "Online",
+};
+
 function BlockCard({ block }: { block: Block }) {
+  const mode = MODE_OF[block.kind];
   return (
-    <div className={`h-full rounded-lg border px-3 py-2 ${KIND_CLASS[block.kind]}`}>
+    <div className={`flex h-full min-h-[4.5rem] flex-col justify-center rounded-lg border px-3 py-2 ${KIND_CLASS[block.kind]}`}>
+      {mode && (
+        <span className="mb-1 w-fit rounded-full border border-current/25 px-1.5 py-px text-[9px] font-bold uppercase tracking-wide opacity-80">
+          {mode}
+        </span>
+      )}
       <p className="text-sm font-semibold leading-snug">
         {block.icon && <span aria-hidden className="mr-1">{block.icon}</span>}
-        {/* Below sm the On-site/Online column headers are hidden and the two
-            channels stack — tag the on-site cards so a phone reader can tell
-            them apart (the online card already says "Online" in its title). */}
-        {(block.kind === "plenary" ||
-          block.kind === "editor-talk" ||
-          block.kind === "onsite-track") && (
-          <span className="sm:hidden mr-1.5 text-[9px] font-bold uppercase tracking-wide opacity-70 align-middle">
-            On-site
-          </span>
-        )}
         {block.title}
       </p>
       {block.note && <p className="mt-0.5 text-[11px] opacity-80">{block.note}</p>}
@@ -365,8 +370,8 @@ export function ConferenceSchedule() {
                 ["inaugural", "Inaugural / Valedictory"],
                 ["plenary", "On-site special session"],
                 ["editor-talk", "Talk with Editors"],
-                ["onsite-track", "On-site Track Sessions"],
-                ["online-track", "Online Track Sessions"],
+                ["onsite-track", "Track Sessions — on-site"],
+                ["online-track", "Track Sessions — online"],
               ] as [Kind, string][]
             ).map(([k, label]) => (
               <span
@@ -390,16 +395,14 @@ export function ConferenceSchedule() {
               </h2>
             </div>
 
-            {/* Column headers */}
-            <div className="hidden grid-cols-[7.5rem_1fr_1fr] gap-2 px-1 pb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400 sm:grid">
-              <span>Time</span>
-              <span>On-site</span>
-              <span>Online</span>
-            </div>
-
-            <div className="space-y-2">
-              {[REGISTRATION, BREAKFAST, ...day.rows].map((row, i) =>
-                row.type === "break" ? (
+            <div className="flex h-full flex-col gap-2">
+              {[REGISTRATION, BREAKFAST, ...day.rows].map((row, i) => {
+                // Everything happening simultaneously in this slot.
+                const parallel =
+                  row.type === "slot"
+                    ? [...toBlocks(row.onsite), ...toBlocks(row.online)]
+                    : [];
+                return row.type === "break" ? (
                   <div key={i} className="sm:grid sm:grid-cols-[7.5rem_1fr] sm:gap-2">
                     <div className="hidden items-center text-xs text-slate-500 sm:flex">
                       {row.time}
@@ -424,23 +427,37 @@ export function ConferenceSchedule() {
                       <div className="sm:col-span-2">
                         <BlockCard block={row.full} />
                       </div>
+                    ) : parallel.length > 2 ? (
+                      /* More than two things at once: give every block the same
+                         width across the whole content area, rather than
+                         cramming the extras into one half. */
+                      <div
+                        className="grid gap-2 sm:col-span-2"
+                        style={{
+                          gridTemplateColumns: `repeat(${parallel.length}, minmax(0, 1fr))`,
+                        }}
+                      >
+                        {parallel.map((b, j) => (
+                          <BlockCard key={j} block={b} />
+                        ))}
+                      </div>
                     ) : (
                       <>
-                        {row.onsite ? (
-                          <BlockCard block={row.onsite} />
+                        {toBlocks(row.onsite).length ? (
+                          <BlockCard block={toBlocks(row.onsite)[0]} />
                         ) : (
                           <div className="hidden rounded-lg border border-dashed border-slate-200 sm:block dark:border-slate-700" />
                         )}
-                        {row.online ? (
-                          <BlockCard block={row.online} />
+                        {toBlocks(row.online).length ? (
+                          <BlockCard block={toBlocks(row.online)[0]} />
                         ) : (
                           <div className="hidden rounded-lg border border-dashed border-slate-200 sm:block dark:border-slate-700" />
                         )}
                       </>
                     )}
                   </div>
-                )
-              )}
+                );
+              })}
 
               {day.gala && (
                 <div className="grid grid-cols-1 gap-2 pt-1 sm:grid-cols-[7.5rem_1fr]">

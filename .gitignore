@@ -25,3 +25,8 @@ verify-fixture.mjs
 tmp/
 output/
 scripts/__pycache__/
+
+# Database exports. These live in OneDrive (which syncs them) rather than in
+# git: they carry visitor geolocation, and they would ship to Vercel for no
+# reason.
+backups/

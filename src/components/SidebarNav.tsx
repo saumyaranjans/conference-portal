@@ -28,6 +28,7 @@ const NAV: Record<AppRole, { href: string; label: string }[]> = {
     { href: "/chief/visit-analytics", label: "Visit Analytics" },
     { href: "/chief/submissions", label: "Submission Management" },
     { href: "/chief/authors", label: "Author Management" },
+    { href: "/chief/volunteers", label: "Reviewer & Editor Requests" },
     { href: "/chief/reviewers", label: "Reviewer Management" },
     { href: "/chief/track-editors", label: "Track Editor Management" },
     { href: "/chief/programme", label: "Conference Programme" },
@@ -41,6 +42,7 @@ const NAV: Record<AppRole, { href: string; label: string }[]> = {
     { href: "/admin/publications", label: "Publication Opportunities" },
     { href: "/admin/submissions", label: "Submission Management" },
     { href: "/admin/authors", label: "Author Management" },
+    { href: "/admin/volunteers", label: "Reviewer & Editor Requests" },
     { href: "/admin/reviewers", label: "Reviewer Management" },
     { href: "/admin/track-editors", label: "Track Editor Management" },
     { href: "/admin/programme", label: "Conference Programme" },
@@ -107,7 +109,9 @@ export function SidebarNav({
           } catch {
             /* navigate regardless — the home route also clears the session */
           }
-          window.location.href = "https://www.glogift2027.in/Home";
+          // Apex, not www: www 308-redirects here, and sending a signed-out
+          // user through an extra hop is a wasted round trip.
+          window.location.href = "https://glogift2027.in/Home";
         }}
         className="flex w-full items-center gap-2 px-3 py-2 mb-2 rounded-lg border border-amber-300 bg-amber-50 text-sm font-medium text-amber-800 transition hover:bg-amber-100 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200"
         title="Go to the conference home — this signs you out of the portal"

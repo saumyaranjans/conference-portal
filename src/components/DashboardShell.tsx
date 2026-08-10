@@ -94,7 +94,11 @@ export async function DashboardShell({
               <p className="text-sm font-medium text-slate-800 leading-tight whitespace-nowrap max-w-40 truncate">
                 {profile.full_name || profile.email}
               </p>
-              <p className="text-[10px] text-slate-500 leading-tight whitespace-nowrap max-w-40 truncate">
+              {/* No width cap here: someone holding four or five roles was
+                  shown "Author · Reviewer · Track Editor · C…", which hides the
+                  very thing the line exists to state. It stays on one line and
+                  the header simply gives it the room. */}
+              <p className="text-[10px] text-slate-500 leading-tight whitespace-nowrap">
                 {profile.roles.map((r) => ROLE_LABELS[r]).join(" · ")}
               </p>
             </Link>

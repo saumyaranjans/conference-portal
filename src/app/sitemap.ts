@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 
 // Bump when public content meaningfully changes — a truthful lastmod keeps
 // crawlers trusting the sitemap.
-const LAST_CONTENT_CHANGE = new Date("2026-08-05T00:00:00.000Z");
+const LAST_CONTENT_CHANGE = new Date("2026-08-07T00:00:00.000Z");
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = "https://glogift2027.in";
@@ -15,6 +15,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/how-to-reach",
     "/travelogue",
     "/security",
+    "/privacy",
+    "/terms",
   ];
 
   return routes.map((route, index) => ({

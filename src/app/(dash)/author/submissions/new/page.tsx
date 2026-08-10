@@ -8,6 +8,7 @@ import {
   type Conference,
   type Track,
 } from "@/lib/types";
+import { acceptingAbstracts, closedMessage } from "@/lib/submissionWindow";
 
 export default async function NewSubmissionPage({
   searchParams,
@@ -46,20 +47,29 @@ export default async function NewSubmissionPage({
     .eq("is_open", true)
     .order("year", { ascending: false });
 
-  const list = ((conferences ?? []) as (Conference & { tracks: Track[] })[]).map(
+  const open = ((conferences ?? []) as (Conference & { tracks: Track[] })[]).map(
     (c) => ({
       ...c,
       tracks: (c.tracks ?? []).sort((a, b) => a.code.localeCompare(b.code)),
     })
   );
 
+  // The advertised closing date is enforced here, not just displayed: an open
+  // conference past its deadline accepts nothing further.
+  const list = open.filter((c) => acceptingAbstracts(c));
+
   if (list.length === 0) {
+    // Prefer the specific reason — an author who missed the date deserves to
+    // be told the date, not a generic "closed".
+    const lapsed = open.find((c) => c.submission_deadline);
     return (
       <>
         <PageHeader title="New Submission" />
         <div className="card card-pad">
           <p className="text-slate-600">
-            Submissions are closed. No conference is currently accepting papers.
+            {closedMessage(
+              lapsed ?? { is_open: false, submission_deadline: null }
+            )}
           </p>
         </div>
       </>

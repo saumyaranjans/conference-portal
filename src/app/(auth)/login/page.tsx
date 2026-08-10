@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { HomeLink } from "@/components/HomeLink";
+import { OAuthButtons } from "@/components/OAuthButtons";
+import { Captcha, captchaEnabled } from "@/components/Captcha";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { ROLE_HOME, type AppRole } from "@/lib/types";
 
@@ -21,9 +23,16 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaReset, setCaptchaReset] = useState(0);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (captchaEnabled && !captchaToken) {
+      setError("Please complete the security check.");
+      return;
+    }
+
     setBusy(true);
     setError(null);
 
@@ -31,10 +40,13 @@ export default function LoginPage() {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
+      options: { captchaToken: captchaToken ?? undefined },
     });
 
     if (error) {
       setError(error.message);
+      // The token is spent whether or not the password was right.
+      setCaptchaReset((n) => n + 1);
       setBusy(false);
       return;
     }
@@ -127,7 +139,7 @@ export default function LoginPage() {
       </aside>
 
       {/* ============ Form panel ============ */}
-      <section className="relative flex items-center justify-center px-5 py-10">
+      <section className="relative flex items-center justify-center px-5 py-6 lg:py-10">
         <div className="absolute top-4 left-4">
           <HomeLink />
         </div>
@@ -135,38 +147,38 @@ export default function LoginPage() {
           <ThemeToggle />
         </div>
 
-        <div className="w-full max-w-sm">
+        <div className="w-full max-w-md">
           {/* compact branding for small screens — mirrors the desktop panel */}
-          <div className="lg:hidden mb-8 text-center">
+          <div className="lg:hidden mb-5 text-center">
             <img
               src="/glogift-logo.png"
               alt="GLOGIFT"
-              className="h-14 w-auto object-contain mx-auto mb-2"
+              className="h-12 w-auto object-contain mx-auto mb-2"
             />
             <p className="text-base font-medium text-slate-600">
               Global Institute of Flexible Systems Management
             </p>
-            <p className="mt-3 text-3xl font-bold uppercase tracking-wider text-gradient w-fit mx-auto">
+            <p className="mt-2 text-2xl font-bold uppercase tracking-wider text-gradient w-fit mx-auto">
               GLOGIFT 27
             </p>
             <h1
-              className="mt-2 font-serif text-base font-semibold leading-snug text-slate-900"
+              className="mt-2 font-serif text-sm font-semibold leading-snug text-slate-900"
             >
               {CONFERENCE}
             </h1>
-            <div className="mt-4 flex items-center justify-center gap-2 text-sm text-slate-500">
+            <div className="mt-3 flex items-center justify-center gap-2 text-sm text-slate-500">
               <span className="shrink-0">Hosted by</span>
               {/* min-w-0 + max-w-full lets the wide wordmark scale down instead
                   of overflowing a 320px viewport. */}
               <img
                 src="/iim-sambalpur.png"
                 alt="Indian Institute of Management Sambalpur"
-                className="h-10 w-auto min-w-0 max-w-full object-contain iim-adaptive"
+                className="h-9 w-auto min-w-0 max-w-full object-contain iim-adaptive"
               />
             </div>
           </div>
 
-          <div className="mb-6">
+          <div className="mb-4 lg:mb-6">
             <h2 className="text-2xl font-semibold text-gradient w-fit">Sign in</h2>
             <p className="text-sm text-slate-500 mt-1">
               Welcome — access your dashboard.
@@ -254,9 +266,13 @@ export default function LoginPage() {
               </p>
             )}
 
+            <Captcha onToken={setCaptchaToken} resetSignal={captchaReset} />
+
             <button type="submit" disabled={busy} className="btn-primary w-full">
               {busy ? "Signing in…" : "Sign in"}
             </button>
+
+            <OAuthButtons />
 
             <div className="text-sm text-center space-y-1 pt-1">
               <p>
@@ -275,6 +291,55 @@ export default function LoginPage() {
               </p>
             </div>
           </form>
+
+          {/* What the portal is and what signing in with a provider actually
+              shares. Placed at the point of decision — someone about to hand
+              over an account is the person who should read it. */}
+          <details className="group mt-6 rounded-xl border border-slate-200 bg-white/70 px-4 py-3 text-xs leading-relaxed text-slate-600 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400">
+            <summary className="cursor-pointer list-none text-sm font-medium text-slate-700 marker:content-[''] hover:text-blue-700 dark:text-slate-300">
+              About the GLOGIFT 27 Submission Portal
+              <span
+                aria-hidden
+                className="float-right transition-transform group-open:rotate-180"
+              >
+                ⌄
+              </span>
+            </summary>
+            <div className="mt-3 space-y-2">
+            <p>
+              This is the official submission portal for GLOGIFT 27. Authors use
+              it to submit an abstract or full paper to one of the ten
+              conference tracks, add co-authors, respond to reviewer comments,
+              upload a camera-ready copy, register and download their
+              certificate. Reviewers read the papers assigned to them and submit
+              evaluations; Track Editors and the Editorial Office assign
+              reviewers, record decisions and build the programme.
+            </p>
+            <p>
+              An account is required to submit or review. Register with an email
+              address and password, or sign in with Google or Microsoft — from
+              those we receive only your{" "}
+              <strong className="font-semibold text-slate-800 dark:text-slate-200">
+                name and email address
+              </strong>
+              , used solely to create and identify your conference account. We
+              never receive your password, and we do not use this information
+              for advertising or share it with third parties.
+            </p>
+            <p className="mt-2 text-slate-500">
+              See our{" "}
+              <Link href="/privacy" className="text-blue-700 hover:underline">
+                privacy policy
+              </Link>{" "}
+              and{" "}
+              <Link href="/terms" className="text-blue-700 hover:underline">
+                terms of use
+              </Link>
+              . Operated by the Indian Institute of Management Sambalpur in
+              association with the GIFT Society.
+            </p>
+            </div>
+          </details>
         </div>
       </section>
     </main>

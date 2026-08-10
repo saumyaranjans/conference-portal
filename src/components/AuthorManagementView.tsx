@@ -42,7 +42,7 @@ export async function AuthorManagementView() {
   const { data: profs } = emails.length
     ? await supabase
         .from("profiles")
-        .select("email, glogift_member, participant_category, mobile")
+        .select("email, glogift_member, participant_category, mobile, country, institution")
         .in("email", emails)
     : { data: [] as any[] };
   const profByEmail = new Map(
@@ -102,6 +102,10 @@ export async function AuthorManagementView() {
       list.map((a) => a.participant_category).find(Boolean) ||
       prof?.participant_category ||
       null;
+    // Country decides the billing currency, and only the profile carries it —
+    // an author row records affiliation but never a country.
+    const country = prof?.country ?? null;
+    const institution = prof?.institution ?? null;
     const member = Boolean(prof?.glogift_member);
     // A delegate attends in one mode; prefer the mode declared on the paper they
     // lead (corresponding author), otherwise their first paper's mode.
@@ -149,10 +153,12 @@ export async function AuthorManagementView() {
       certAnchorId,
       intention,
       category,
+      country,
+      institution,
       member,
       mode,
       modeActual,
-      fee: computeRegistrationFee(category, member, now),
+      fee: computeRegistrationFee(category, member, now, country),
     };
   });
 

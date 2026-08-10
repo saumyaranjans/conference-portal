@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import {
   formatMoney,
   feeForTier,
+  MEMBER_DISCOUNT_PERCENT,
   type RegistrationFee,
 } from "@/lib/registrationFees";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
@@ -13,6 +14,7 @@ import {
 } from "@/lib/actions";
 import { generateParticipationCertificates } from "@/lib/participationCertificateActions";
 import { STATUS_LABELS, type SubmissionStatus } from "@/lib/types";
+import { checkCountry } from "@/lib/institutionCountry";
 
 /** Statuses that can never earn a participation certificate — mirrors
  *  NON_ELIGIBLE in participationCertificateActions.ts. */
@@ -74,6 +76,10 @@ export type PersonRow = {
   /** Staff override when the delegate later switches mode; null if unchanged. */
   modeActual: "onsite" | "virtual" | null;
   category: string | null;
+  /** From the profile. Anything other than India is billed the USD rate. */
+  country: string | null;
+  /** Used only to cross-check the declared country against the institution. */
+  institution: string | null;
   member: boolean;
   fee: RegistrationFee;
 };
@@ -207,7 +213,7 @@ export function AuthorManagement({
     const dataRows = filtered.map((r) => {
       const eff = r.modeActual ?? r.mode;
       const feeInfo = r.paidTier
-        ? feeForTier(r.category, r.member, r.paidTier)
+        ? feeForTier(r.category, r.member, r.paidTier, r.country)
         : null;
       return [
         r.name, r.mobile ?? "", r.email, r.category ?? "",
@@ -532,7 +538,7 @@ export function AuthorManagement({
                 // Headline fee: timeline-driven by default; once staff record
                 // a paid tier it overrides the display to that tier's amount.
                 const tierPaid = r.paidTier
-                  ? feeForTier(r.category, r.member, r.paidTier)
+                  ? feeForTier(r.category, r.member, r.paidTier, r.country)
                   : null;
                 const feeView =
                   r.paidTier && tierPaid
@@ -867,7 +873,16 @@ export function AuthorManagement({
                               <span className="line-through">
                                 {formatMoney(feeView.currency, feeView.base)}
                               </span>{" "}
-                              −15% member ({r.category})
+                              −{MEMBER_DISCOUNT_PERCENT}% member ({r.category})
+                            </span>
+                          )}
+                          {/* Staff-only: the declared country sets the currency,
+                              so a country that disagrees with the institution is
+                              worth a second look before the fee is taken. */}
+                          {checkCountry(r.country, r.institution).mismatch && (
+                            <span className="mt-1 block text-[10px] font-medium text-amber-700 dark:text-amber-300">
+                              ⚠ Declares {checkCountry(r.country, r.institution).declared}; institution in{" "}
+                              {checkCountry(r.country, r.institution).fromInstitution}
                             </span>
                           )}
                           {feeView.discount === 0 && r.category && (
@@ -943,19 +958,19 @@ export function AuthorManagement({
                               <option value="none">Not paid</option>
                               <option value="early">
                                 Early Bird Fee
-                                {feeForTier(r.category, r.member, "early").known
+                                {feeForTier(r.category, r.member, "early", r.country).known
                                   ? ` — ${formatMoney(
-                                      feeForTier(r.category, r.member, "early").currency,
-                                      feeForTier(r.category, r.member, "early").amount
+                                      feeForTier(r.category, r.member, "early", r.country).currency,
+                                      feeForTier(r.category, r.member, "early", r.country).amount
                                     )}`
                                   : ""}
                               </option>
                               <option value="regular">
                                 Regular Fee
-                                {feeForTier(r.category, r.member, "regular").known
+                                {feeForTier(r.category, r.member, "regular", r.country).known
                                   ? ` — ${formatMoney(
-                                      feeForTier(r.category, r.member, "regular").currency,
-                                      feeForTier(r.category, r.member, "regular").amount
+                                      feeForTier(r.category, r.member, "regular", r.country).currency,
+                                      feeForTier(r.category, r.member, "regular", r.country).amount
                                     )}`
                                   : ""}
                               </option>
@@ -1046,10 +1061,10 @@ export function AuthorManagement({
                               {r.paidTier ? (
                                 <span className="rounded px-1.5 py-0 font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
                                   {r.paidTier === "early" ? "Early bird" : "Regular"}
-                                  {feeForTier(r.category, r.member, r.paidTier).known
+                                  {feeForTier(r.category, r.member, r.paidTier, r.country).known
                                     ? ` · ${formatMoney(
-                                        feeForTier(r.category, r.member, r.paidTier).currency,
-                                        feeForTier(r.category, r.member, r.paidTier).amount
+                                        feeForTier(r.category, r.member, r.paidTier, r.country).currency,
+                                        feeForTier(r.category, r.member, r.paidTier, r.country).amount
                                       )}`
                                     : ""}
                                 </span>

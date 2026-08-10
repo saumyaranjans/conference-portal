@@ -32,14 +32,16 @@ function contentSecurityPolicy(nonce: string, dev: boolean) {
     "manifest-src 'self'",
     // Supabase for auth, database, storage and realtime; ROR for the
     // institution lookup on the signup form.
-    `connect-src 'self' ${supabase} ${supabase.replace("https://", "wss://")} https://api.ror.org${dev ? " ws: http://localhost:*" : ""}`,
+    // Turnstile posts its challenge results back to Cloudflare.
+    `connect-src 'self' ${supabase} ${supabase.replace("https://", "wss://")} https://api.ror.org https://challenges.cloudflare.com${dev ? " ws: http://localhost:*" : ""}`,
     // Papers are downloaded from Supabase storage.
     `form-action 'self'`,
     "base-uri 'self'",
     "object-src 'none'",
     "frame-ancestors 'none'",
     // The campus map on /how-to-reach is a Google Maps embed.
-    `frame-src 'self' blob: ${supabase} https://www.google.com https://maps.google.com`,
+    // Turnstile renders its widget in an iframe of its own.
+    `frame-src 'self' blob: ${supabase} https://www.google.com https://maps.google.com https://challenges.cloudflare.com`,
     "worker-src 'self' blob:",
     "upgrade-insecure-requests",
   ]
@@ -142,15 +144,22 @@ export default async function proxy(request: NextRequest) {
   if (user && (path === "/login" || path === "/signup")) {
     const { data: prof } = await supabase
       .from("profiles")
-      .select("roles")
+      .select("roles, profile_completed_at")
       .eq("id", user.id)
       .maybeSingle();
+    const url = request.nextUrl.clone();
+    url.search = "";
+    // A Google / Microsoft account that has not finished registering goes
+    // straight to the remaining questions rather than to a dashboard that
+    // would only bounce it here anyway.
+    if (prof && !prof.profile_completed_at) {
+      url.pathname = "/complete-profile";
+      return NextResponse.redirect(url);
+    }
     const roles: string[] = (prof?.roles as string[] | null) ?? [];
     const primary =
       ROLE_PRIORITY.find((r) => roles.includes(r)) ?? "author";
-    const url = request.nextUrl.clone();
     url.pathname = ROLE_HOME[primary];
-    url.search = "";
     return NextResponse.redirect(url);
   }
 

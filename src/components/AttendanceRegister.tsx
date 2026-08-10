@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/Primitives";
 import {
   computeRegistrationFee,
+  MEMBER_DISCOUNT_PERCENT,
   formatMoney,
   isEarlyBird,
   EARLY_BIRD_CUTOFF,
@@ -32,12 +33,12 @@ export async function AttendanceRegister() {
   );
 
   // GIFT Society membership + category live on the person's profile (co-authors who
-  // signed up). Look them up so the fee can apply the 15% member discount.
+  // signed up). Look them up so the fee can apply the member discount.
   const profileIds = [...new Set(rows.map((r) => r.profile_id).filter(Boolean))];
   const { data: profs } = profileIds.length
     ? await supabase
         .from("profiles")
-        .select("id, glogift_member, participant_category")
+        .select("id, glogift_member, participant_category, country")
         .in("id", profileIds)
     : { data: [] as any[] };
   const profMap = new Map(
@@ -51,7 +52,8 @@ export async function AttendanceRegister() {
     const prof = r.profile_id ? profMap.get(r.profile_id) : null;
     r._category = r.participant_category || prof?.participant_category || null;
     r._member = Boolean(prof?.glogift_member);
-    r._fee = computeRegistrationFee(r._category, r._member, now);
+    r._country = prof?.country ?? null;
+    r._fee = computeRegistrationFee(r._category, r._member, now, r._country);
   }
 
   const attending = rows.filter((r) => r.attendance === "attending");
@@ -101,7 +103,8 @@ export async function AttendanceRegister() {
           </div>
           <p className="text-xs text-slate-500 mb-3">
             Early-bird fees apply on or before {formatDate(EARLY_BIRD_CUTOFF)};
-            regular fees apply from 21 Dec 2026. GIFT Society members receive a 15%
+            regular fees apply from 21 Dec 2026. GIFT Society members receive a{" "}
+            {MEMBER_DISCOUNT_PERCENT}%
             discount. Fees are per delegate, based on the category chosen at
             sign-up.
           </p>
@@ -178,7 +181,7 @@ export async function AttendanceRegister() {
                             <span className="line-through">
                               {formatMoney(r._fee.currency, r._fee.base)}
                             </span>{" "}
-                            − 15% member (−{formatMoney(r._fee.currency, r._fee.discount)})
+                            − {MEMBER_DISCOUNT_PERCENT}% member (−{formatMoney(r._fee.currency, r._fee.discount)})
                           </span>
                         )}
                       </div>

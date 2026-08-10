@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { ConferenceSchedule } from "@/components/landing/ConferenceSchedule";
+import { PublishedProgramme } from "@/components/landing/PublishedProgramme";
 import { pageMetadata, breadcrumbJsonLd } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
@@ -20,6 +21,9 @@ export default function Page() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(BREADCRUMB) }}
       />
       <ConferenceSchedule />
+      {/* Renders only once the Convener has published sessions; before that the
+          day outline above is the whole schedule. */}
+      <PublishedProgramme />
     </>
   );
 }

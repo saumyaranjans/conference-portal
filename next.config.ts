@@ -22,7 +22,14 @@ const securityHeaders = [
   { key: "Cross-Origin-Resource-Policy", value: "same-site" },
   { key: "Origin-Agent-Cluster", value: "?1" },
   { key: "X-Permitted-Cross-Domain-Policies", value: "none" },
-  { key: "Strict-Transport-Security", value: "max-age=63072000" },
+  // includeSubDomains closes the gap where a subdomain served over plain HTTP
+  // could be used to set a cookie or mount a downgrade attack. No subdomain
+  // serves web content today, so nothing breaks. `preload` is deliberately
+  // omitted: it is a commitment to browser vendors that is slow to undo.
+  {
+    key: "Strict-Transport-Security",
+    value: "max-age=63072000; includeSubDomains",
+  },
 ];
 
 const nextConfig: NextConfig = {

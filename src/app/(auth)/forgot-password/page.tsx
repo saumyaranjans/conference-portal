@@ -3,25 +3,34 @@
 import Link from "next/link";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { Captcha, captchaEnabled } from "@/components/Captcha";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaReset, setCaptchaReset] = useState(0);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (captchaEnabled && !captchaToken) {
+      setError("Please complete the security check.");
+      return;
+    }
     setBusy(true);
     setError(null);
 
     const redirectTo = `${window.location.origin}/auth/callback?next=/reset-password`;
     const { error } = await createClient().auth.resetPasswordForEmail(email, {
       redirectTo,
+      captchaToken: captchaToken ?? undefined,
     });
 
     if (error) {
       setError(error.message);
+      setCaptchaReset((n) => n + 1);
       setBusy(false);
       return;
     }
@@ -71,6 +80,8 @@ export default function ForgotPasswordPage() {
                 {error}
               </p>
             )}
+
+            <Captcha onToken={setCaptchaToken} resetSignal={captchaReset} />
 
             <button type="submit" disabled={busy} className="btn-primary w-full">
               {busy ? "Sending…" : "Send reset link"}

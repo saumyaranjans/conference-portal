@@ -8,9 +8,9 @@ import { TOSHI_KNOWLEDGE } from "@/components/landing/toshiKnowledge";
 import { SocialLinks } from "@/components/landing/SocialLinks";
 import { AdvisoryReveal } from "@/components/landing/AdvisoryReveal";
 import { Banner } from "@/components/landing/Banner";
+import { MEMBER_DISCOUNT_PERCENT } from "@/lib/registrationFees";
 import { IkatStrip } from "@/components/landing/IkatStrip";
 import { BackToTop } from "@/components/landing/BackToTop";
-import { VisitTracker } from "@/components/landing/VisitTracker";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { TRACKS } from "@/components/landing/tracks";
 
@@ -178,7 +178,7 @@ export const FAQ_ITEMS: { q: string; a: string }[] = [
   },
   {
     q: "What are the registration fees and deadlines?",
-    a: "Fees depend on the participant category (Faculty / Academician, Industry Professional, Research Scholar / PhD, Student, or Foreign Delegate). Early-bird rates apply on or before 20 December 2026; regular rates apply from 21 December 2026. GIFT Society members receive a 15% discount.",
+    a: `Fees depend on your participant category — Faculty / Academician, Industry Professional, PhD / Research Scholars, or Student. Delegates registering from outside India are billed at the international rate in US Dollars, determined by the country on your profile. Early-bird rates apply on or before 20 December 2026; regular rates apply from 21 December 2026. GIFT Society members receive a ${MEMBER_DISCOUNT_PERCENT}% discount.`,
   },
   {
     q: "Will accepted papers be published?",
@@ -190,7 +190,7 @@ export const FAQ_ITEMS: { q: string; a: string }[] = [
   },
   {
     q: "Is there a discount for GIFT Society members?",
-    a: "Yes — GIFT Society members receive a 15% discount on the registration fee. Indicate your membership at sign-up (with your membership number) to have the discount applied.",
+    a: `Yes — GIFT Society members receive a ${MEMBER_DISCOUNT_PERCENT}% discount on the registration fee. Indicate your membership at sign-up (with your membership number) to have the discount applied.`,
   },
   {
     q: "Can I attend and present online (hybrid)?",
@@ -222,7 +222,7 @@ export const FAQ_ITEMS: { q: string; a: string }[] = [
   },
   {
     q: "In what currency are the fees charged?",
-    a: "Domestic delegates are billed in Indian Rupees (INR); Foreign Delegates are billed in US Dollars (USD). Fees vary by participant category, with early-bird rates on or before 20 December 2026.",
+    a: "Delegates in India are billed in Indian Rupees (INR); delegates anywhere outside India are billed in US Dollars (USD) at the international rate. This follows the country on your profile — there is nothing to select. Fees vary by participant category, with early-bird rates on or before 20 December 2026.",
   },
   {
     q: "How do I reach IIM Sambalpur?",
@@ -277,43 +277,16 @@ const SESSIONS: {
   icon: React.ReactNode;
 }[] = [
   {
-    title: "AI and Sustainability Leadership Forum",
-    tint: "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300",
-    card: "bg-emerald-50/60 border-emerald-100 dark:bg-emerald-500/10 dark:border-emerald-500/25",
-    anim: "anim-sway",
-    // A leaf, swaying.
-    icon: (
-      <path d="M4 20c8 2 16-4 16-14 0-1-.2-2-.5-3-9 0-15 5-15 11 0 2 .6 4 1.5 5Zm0 0 7-7" />
-    ),
-  },
-  {
-    title: "Industry–Academia Conclave on Digital Finance",
-    tint: "bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-300",
-    card: "bg-blue-50/60 border-blue-100 dark:bg-blue-500/10 dark:border-blue-500/25",
-    anim: "anim-bob",
-    // A bridge between two banks.
-    icon: (
-      <path d="M3 17h18M5 17v-4m14 4v-4M3 13c4-5 14-5 18 0M8 17v-3m8 3v-3" />
-    ),
-  },
-  {
-    title: "Policy Roundtable on Decarbonization and Inclusive Growth",
-    tint: "bg-teal-50 text-teal-600 dark:bg-teal-500/15 dark:text-teal-300",
-    card: "bg-teal-50/60 border-teal-100 dark:bg-teal-500/10 dark:border-teal-500/25",
-    anim: "anim-spin-slow",
-    // A globe, turning.
-    icon: (
-      <path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 0c3 3 3 15 0 18M3.5 9h17M3.5 15h17" />
-    ),
-  },
-  {
-    title: "Startup Showcase on FinTech and Smart Operations",
-    tint: "bg-violet-50 text-violet-600 dark:bg-violet-500/15 dark:text-violet-300",
-    card: "bg-violet-50/60 border-violet-100 dark:bg-violet-500/10 dark:border-violet-500/25",
+    title: "AI Leadership Forum",
+    // Was emerald with a leaf, from when this session was about sustainability.
+    // A leaf now points at the wrong subject; sky-blue reads as technology and
+    // stays distinct from the indigo used by the editors' session.
+    tint: "bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-300",
+    card: "bg-sky-50/60 border-sky-100 dark:bg-sky-500/10 dark:border-sky-500/25",
     anim: "anim-lift",
-    // A rocket, lifting.
+    // A small network: two inputs, a hidden node, two outputs.
     icon: (
-      <path d="M12 3c3 2 5 6 5 10l-3 3h-4l-3-3c0-4 2-8 5-10Zm0 6.5v.01M9 19l-2 2m8-2 2 2" />
+      <path d="M3.4 8a1.6 1.6 0 1 0 3.2 0 1.6 1.6 0 1 0-3.2 0Zm0 8a1.6 1.6 0 1 0 3.2 0 1.6 1.6 0 1 0-3.2 0Zm7-4a1.6 1.6 0 1 0 3.2 0 1.6 1.6 0 1 0-3.2 0Zm7-4a1.6 1.6 0 1 0 3.2 0 1.6 1.6 0 1 0-3.2 0Zm0 8a1.6 1.6 0 1 0 3.2 0 1.6 1.6 0 1 0-3.2 0ZM6.6 8.8l4 2.4m-4 4 4-2.4m2.8-1.6 4-2.4m-4 4 4 2.4" />
     ),
   },
   {
@@ -334,6 +307,18 @@ const SESSIONS: {
     // Speakers behind a panel table.
     icon: (
       <path d="M4 20h16M6 20v-4m12 4v-4M3 16h18M7.5 12.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm9 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm-4.5-1a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />
+    ),
+  },
+  {
+    title: "Talk with Editors of Top-Tier Journals",
+    // Amber is taken by the panel above; indigo keeps the four cards distinct
+    // and matches the colour this session already carries on the schedule.
+    tint: "bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300",
+    card: "bg-indigo-50/60 border-indigo-100 dark:bg-indigo-500/10 dark:border-indigo-500/25",
+    anim: "anim-bob",
+    // An open journal.
+    icon: (
+      <path d="M12 7v13M12 7c-1.6-1.3-4-2-7-2v13c3 0 5.4.7 7 2 1.6-1.3 4-2 7-2V5c-3 0-5.4.7-7 2Z" />
     ),
   },
 ];
@@ -392,9 +377,9 @@ function highlightPathways(text: string) {
 }
 
 const REGISTRATION_FEES = [
-  ["Academicians (Faculty)", "10,000", "11,500", "350", "375"],
+  ["Academicians (Faculty)", "10,000", "11,000", "300", "350"],
   ["Industry Professionals", "14,000", "16,000", "425", "450"],
-  ["Research Scholars / PhD", "5,000", "6,000", "250", "300"],
+  ["PhD / Research Scholars", "5,000", "6,000", "150", "200"],
   ["Students (UG/PG, full-time)", "3,000", "3,500", "90", "100"],
 ];
 
@@ -412,12 +397,12 @@ export const LEADERSHIP = [
   {
     name: "Prof (Dr) Seema Gupta",
     role: "Conference Convenor",
-    org: "IIM Sambalpur",
+    org: "Associate Professor, IIM Sambalpur",
   },
   {
     name: "Prof (Dr) Saumyaranjan Sahoo",
     role: "Conference Co-Convenor",
-    org: "IIM Sambalpur",
+    org: "Assistant Professor, IIM Sambalpur",
   },
 ];
 
@@ -627,8 +612,8 @@ export function LandingPage() {
 
   return (
     <main className="min-h-screen">
-      {/* Count this visit once per session (fire-and-forget). */}
-      <VisitTracker />
+      {/* Visit tracking now lives in the root layout, so every public page is
+          counted rather than this one alone. */}
       {/* Sambalpuri Ikat borders, top and bottom of the page. */}
       <IkatStrip />
 
@@ -729,6 +714,23 @@ export function LandingPage() {
               the context of Industry 5.0 and the Sustainable Development Goals.
             </p>
           </div>
+
+          {/* A plain crawlable anchor, server-rendered in the page HTML rather
+              than behind script, so both search engines and the sign-in
+              providers that inspect this page before showing our name on their
+              consent screen can find and follow it. The detail lives on the
+              page it points to. */}
+          <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">
+            Papers are submitted, reviewed and managed through the GLOGIFT 27
+            Submission Portal —{" "}
+            <a
+              href="https://glogift2027.in/login"
+              className="font-medium text-blue-700 hover:underline dark:text-blue-400"
+            >
+              about the portal and signing in
+            </a>
+            .
+          </p>
         </section>
 
         {/* ---- 2. Objectives ---- */}
@@ -814,7 +816,7 @@ export function LandingPage() {
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-3">
             Special sessions &amp; panels
           </p>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {SESSIONS.map((sn) => (
               <div
                 key={sn.title}
@@ -1041,8 +1043,9 @@ export function LandingPage() {
           </div>
           <p className="text-sm leading-relaxed text-blue-900 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 dark:text-blue-100 dark:bg-blue-500/15 dark:border-blue-500/40">
             <strong>GIFT Society members</strong> can avail a{" "}
-            <strong>15% discount on registration fees</strong> only, by applying
-            the coupon code shared by the conference organizers or the GLOGIFT
+            <strong>{MEMBER_DISCOUNT_PERCENT}% discount on registration fees</strong> only, by
+            applying
+            the coupon code shared by the conference organizers or the GIFT
             Society at the time of registration check-out.
           </p>
           <p className="text-xs leading-relaxed text-slate-500">
@@ -1082,7 +1085,7 @@ export function LandingPage() {
                       <p
                         className={`text-xs font-medium leading-snug ${
                           past
-                            ? "text-slate-400 line-through"
+                            ? "text-slate-400"
                             : "text-slate-900 dark:text-slate-100"
                         }`}
                       >
@@ -1222,7 +1225,7 @@ export function LandingPage() {
                   <p
                     className={`text-sm font-medium ${
                       past
-                        ? "text-slate-400 line-through"
+                        ? "text-slate-400"
                         : "text-slate-900 dark:text-slate-100"
                     }`}
                   >

@@ -26,10 +26,19 @@ export const getProfile = cache(async (): Promise<Profile | null> => {
   return (data as Profile) ?? null;
 });
 
-/** Require a session; bounce to /login otherwise. */
+/**
+ * Require a session; bounce to /login otherwise.
+ *
+ * An account created through Google or Microsoft arrives with an email and a
+ * name and nothing else, so it is held at /complete-profile until it supplies
+ * the institution and participant category the portal depends on. Accounts
+ * that registered with the full email + password form are complete the moment
+ * they exist and never see it.
+ */
 export async function requireProfile(): Promise<Profile> {
   const profile = await getProfile();
   if (!profile) redirect("/login");
+  if (!profile.profile_completed_at) redirect("/complete-profile");
   return profile;
 }
 

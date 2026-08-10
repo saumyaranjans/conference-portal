@@ -1582,20 +1582,29 @@ export function LandingPage() {
               privacy, terms, refund/cancellation and contact to be reachable
               from the public site without signing in — a footer is where a
               cardholder (and a reviewer) looks for them. */}
-          <nav className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-1.5">
+          <nav className="mt-2.5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[11px] lowercase">
             {[
-              { href: "/privacy", label: "Privacy policy" },
-              { href: "/terms", label: "Terms of use" },
-              { href: "/refund-cancellation", label: "Refund & cancellation" },
-              { href: "/contact", label: "Contact us" },
-            ].map(({ href, label }) => (
-              <Link
-                key={href}
-                href={href}
-                className="text-slate-500 underline-offset-2 hover:text-blue-700 hover:underline dark:text-slate-400 dark:hover:text-blue-300"
-              >
-                {label}
-              </Link>
+              { href: "/privacy", label: "privacy policy" },
+              { href: "/terms", label: "terms and conditions" },
+              { href: "/refund-cancellation", label: "refund and cancellation policy" },
+              { href: "/contact", label: "contact us" },
+            ].map(({ href, label }, i) => (
+              <span key={href} className="inline-flex items-center gap-2">
+                {i > 0 && (
+                  <span
+                    aria-hidden
+                    className="text-slate-300 dark:text-slate-600"
+                  >
+                    |
+                  </span>
+                )}
+                <Link
+                  href={href}
+                  className="text-slate-500 underline underline-offset-2 hover:text-blue-700 dark:text-slate-400 dark:hover:text-blue-300"
+                >
+                  {label}
+                </Link>
+              </span>
             ))}
           </nav>
         </footer>

@@ -12,7 +12,11 @@
  * attributable to the text that was actually shown.
  */
 
-export const REFUND_POLICY_VERSION = "2027.1";
+// 2027.2 — the conference-kit clause named on-site registrations only, which
+// read as though online delegates were exempt. It now says both outright.
+// Bumped rather than edited in place: consent already recorded against 2027.1
+// was consent to the narrower wording, and must stay attributable to it.
+export const REFUND_POLICY_VERSION = "2027.2";
 
 /** The one circumstance in which money goes back. */
 export const REFUND_EXCEPTION =
@@ -22,7 +26,7 @@ export const REFUND_EXCEPTION =
 export const REFUND_POLICY_CLAUSES: string[] = [
   "Registration fees, once paid, cannot be refunded.",
   "A no-show will be treated as absent. No participation certificate will be issued.",
-  "A no-show forfeits the conference kit, including for on-site registrations.",
+  "A no-show forfeits the conference kit, for both online and on-site registrations.",
   REFUND_EXCEPTION,
 ];
 

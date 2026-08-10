@@ -5,7 +5,7 @@ import { submitRegistration } from "@/lib/registrationActions";
 import {
   PARTICIPATION_MODES,
   participationModeLabel,
-  pathwayLabel,
+  submissionTypeLabel,
   trackLabel,
 } from "@/lib/types";
 import { MEMBER_DISCOUNT_PERCENT } from "@/lib/registrationFees";
@@ -27,13 +27,17 @@ type Paper = {
   tracks: Track | Track[] | null;
 };
 
-/** The read-only rows shown for one accepted paper. */
+/**
+ * The read-only rows shown for one accepted paper. The pathway itself is not
+ * among them — the badge in the corner already says "Pathway A", so the row
+ * carries only the part the badge leaves out.
+ */
 function detailsOf(p: Paper): [string, string][] {
   return (
     [
-      ["Pathway", pathwayLabel(p.submission_type)],
+      ["Type", submissionTypeLabel(p.submission_type)],
       ["Track", trackLabel(p.tracks)],
-      ["Attending as", participationModeLabel(p.participation_mode ?? "")],
+      ["Attending", participationModeLabel(p.participation_mode ?? "")],
     ] as [string, string | null][]
   ).filter((r): r is [string, string] => !!r[1] && r[1] !== "—");
 }
@@ -138,23 +142,25 @@ export function RegistrationForm({
                 : "Your accepted paper"}
             </h3>
 
-            <div className="space-y-3">
+            {/* Side by side from sm up — two abstracts is the cap, so they
+                always fit in two columns and neither needs full width. */}
+            <div className="grid gap-3 sm:grid-cols-2">
               {papers.map((p) => {
                 const isB = p.submission_type === "full_paper_presentation";
                 return (
                   <div
                     key={p.id}
-                    className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/40"
+                    className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/40"
                   >
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <p className="font-medium text-slate-900 dark:text-slate-100">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-sm font-medium leading-snug text-slate-900 dark:text-slate-100">
                         {p.paper_id ? `${p.paper_id} — ` : ""}
                         {p.title}
                       </p>
                       {/* The pathway, called out rather than buried in the
                           rows — it is the thing authors ask about most. */}
                       <span
-                        className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${
+                        className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${
                           isB
                             ? "bg-violet-50 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300"
                             : "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
@@ -163,13 +169,13 @@ export function RegistrationForm({
                         {isB ? "Pathway B" : "Pathway A"}
                       </span>
                     </div>
-                    <dl className="mt-3 space-y-1.5 text-sm">
+                    <dl className="mt-2.5 space-y-1 text-xs">
                       {detailsOf(p).map(([term, value]) => (
-                        <div key={term} className="sm:flex sm:gap-4">
-                          <dt className="text-slate-500 sm:w-32 sm:shrink-0">
+                        <div key={term} className="flex gap-2">
+                          <dt className="w-16 shrink-0 text-slate-500">
                             {term}
                           </dt>
-                          <dd className="text-slate-900 dark:text-slate-100">
+                          <dd className="text-slate-700 dark:text-slate-200">
                             {value}
                           </dd>
                         </div>

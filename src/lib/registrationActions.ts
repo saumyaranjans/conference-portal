@@ -1,0 +1,228 @@
+"use server";
+
+import { randomBytes } from "node:crypto";
+import { revalidatePath } from "next/cache";
+import { requireProfile } from "@/lib/auth";
+import { createAdminClient, createClient } from "@/lib/supabase/server";
+import { computeRegistrationFee } from "@/lib/registrationFees";
+import { REFUND_POLICY_VERSION } from "@/lib/refundPolicy";
+import { paymentProvider, paymentsOpen } from "@/lib/payments";
+import { PARTICIPATION_MODES } from "@/lib/types";
+import type { ActionResult } from "@/lib/actions";
+import type { Checkout } from "@/lib/payments";
+
+/**
+ * Statuses that mean "this paper is in the programme".
+ *
+ * Pathway A (abstract & presentation only) reaches `accepted` the moment the
+ * abstract is accepted — for those authors that IS final acceptance, so it is
+ * sufficient to register. Pathway B papers pass through `abstract_accepted` on
+ * the way to `accepted`; both are included, because an author whose abstract
+ * has cleared should be able to book their place without waiting for the
+ * full-paper decision.
+ */
+const PRESENTING_STATUSES = ["accepted", "abstract_accepted"];
+
+export type RegistrationOutcome = ActionResult & {
+  /** Present when the delegate should be handed to the gateway. */
+  checkout?: Checkout;
+};
+
+/** A human-quotable order reference: GLOGIFT27-XXXXXXXX. */
+function newOrderId(): string {
+  return `GLOGIFT27-${randomBytes(4).toString("hex").toUpperCase()}`;
+}
+
+/** The papers this profile may register against (as author or co-author). */
+export async function myPresentableSubmissions(profileId: string) {
+  const admin = createAdminClient();
+
+  const { data: own } = await admin
+    .from("submissions")
+    .select("id, paper_id, title, status, submission_type")
+    .eq("author_id", profileId)
+    .in("status", PRESENTING_STATUSES);
+
+  const { data: co } = await admin
+    .from("submission_authors")
+    .select("submissions(id, paper_id, title, status, submission_type)")
+    .eq("profile_id", profileId);
+
+  const rows = [
+    ...((own as any[]) ?? []),
+    ...(((co as any[]) ?? [])
+      .map((r) => r.submissions)
+      .filter((s) => s && PRESENTING_STATUSES.includes(s.status))),
+  ];
+
+  // A co-author who is also the corresponding author appears twice.
+  const seen = new Set<string>();
+  return rows.filter((s) => (seen.has(s.id) ? false : (seen.add(s.id), true)));
+}
+
+/** The delegate's current registration, if any. Latest first. */
+export async function myRegistration(profileId: string) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("registrations")
+    .select("*, payment_orders(*)")
+    .eq("profile_id", profileId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return data as any;
+}
+
+/**
+ * Create a registration and, when the gateway is live, an order to pay it.
+ *
+ * The amount is computed HERE, from the signed-in profile, and never read from
+ * the form. The page shows the delegate a figure for information; this action
+ * decides what is actually charged.
+ */
+export async function submitRegistration(
+  formData: FormData
+): Promise<RegistrationOutcome> {
+  const profile = await requireProfile();
+  const admin = createAdminClient();
+
+  // --- consent -----------------------------------------------------------
+  if (String(formData.get("refund_policy") ?? "") !== "1") {
+    return {
+      ok: false,
+      message: "Please accept the refund policy before continuing.",
+    };
+  }
+
+  // --- already paid? -----------------------------------------------------
+  const { data: paid } = await admin
+    .from("registrations")
+    .select("id")
+    .eq("profile_id", profile.id)
+    .eq("status", "paid")
+    .maybeSingle();
+  if (paid) {
+    return {
+      ok: false,
+      message: "You are already registered. Only one registration per delegate is needed.",
+    };
+  }
+
+  // --- participation mode ------------------------------------------------
+  const mode = String(formData.get("participation_mode") ?? "");
+  if (!PARTICIPATION_MODES.some((m) => m.value === mode)) {
+    return { ok: false, message: "Please choose how you will attend." };
+  }
+
+  // --- the paper, if they named one --------------------------------------
+  const submissionId = String(formData.get("submission_id") ?? "").trim();
+  let linkedSubmission: string | null = null;
+  if (submissionId) {
+    const eligible = await myPresentableSubmissions(profile.id);
+    if (!eligible.some((s: any) => s.id === submissionId)) {
+      return {
+        ok: false,
+        message: "That paper is not one you can register against.",
+      };
+    }
+    linkedSubmission = submissionId;
+  }
+
+  // --- the money ---------------------------------------------------------
+  const fee = computeRegistrationFee(
+    profile.participant_category,
+    profile.glogift_member ?? false,
+    undefined,
+    profile.country
+  );
+  if (!fee.known) {
+    return {
+      ok: false,
+      message:
+        "We could not work out your registration fee, because your profile has " +
+        "no participant category. Please set it on your profile and try again.",
+    };
+  }
+
+  const { data: conference } = await admin
+    .from("conferences")
+    .select("id")
+    .eq("acronym", "GLOGIFT")
+    .maybeSingle();
+
+  const { data: registration, error } = await admin
+    .from("registrations")
+    .insert({
+      profile_id: profile.id,
+      conference_id: (conference as any)?.id ?? null,
+      submission_id: linkedSubmission,
+      participant_category: profile.participant_category ?? "",
+      country: profile.country ?? "",
+      is_member: profile.glogift_member ?? false,
+      fee_tier: fee.tier,
+      currency: fee.currency,
+      base_amount: fee.base,
+      discount_amount: fee.discount,
+      amount: fee.amount,
+      participation_mode: mode,
+      status: "pending",
+      refund_policy_accepted_at: new Date().toISOString(),
+      refund_policy_version: REFUND_POLICY_VERSION,
+    })
+    .select("id, amount, currency")
+    .single();
+
+  if (error) return { ok: false, message: error.message };
+
+  revalidatePath("/registration");
+
+  // --- hand off to the bank, if it is ready ------------------------------
+  if (!paymentsOpen()) {
+    return {
+      ok: true,
+      message:
+        "Your registration is saved. Online payment with ICICI Bank is not " +
+        "open yet — we will email you the payment link as soon as it is live.",
+    };
+  }
+
+  const provider = paymentProvider()!;
+  const orderId = newOrderId();
+
+  const { error: orderError } = await admin.from("payment_orders").insert({
+    registration_id: (registration as any).id,
+    order_id: orderId,
+    provider: provider.id,
+    amount: (registration as any).amount,
+    currency: (registration as any).currency,
+    status: "created",
+  });
+  if (orderError) return { ok: false, message: orderError.message };
+
+  try {
+    const checkout = await provider.createCheckout({
+      orderId,
+      amount: (registration as any).amount,
+      currency: (registration as any).currency,
+      description: `GLOGIFT 2027 registration — ${profile.full_name}`,
+      payer: {
+        name: profile.full_name ?? "",
+        email: profile.email ?? "",
+        mobile: (profile as any).mobile ?? "",
+        country: profile.country ?? "",
+      },
+      returnUrl: `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/api/payments/callback`,
+    });
+    return { ok: true, checkout };
+  } catch (e) {
+    // The registration row stays — the delegate's details are not lost just
+    // because the gateway is unreachable.
+    return {
+      ok: true,
+      message:
+        "Your registration is saved, but the payment gateway could not be " +
+        "reached. Please try paying again shortly. " +
+        (e instanceof Error ? e.message : ""),
+    };
+  }
+}

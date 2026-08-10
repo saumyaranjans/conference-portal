@@ -215,6 +215,9 @@ export interface Profile {
   /** Convener access tier: true = manage/edit rights, false = view-only.
    *  Only meaningful when `roles` includes "chief". Defaults to true. */
   convener_manage: boolean;
+  /** Answered at sign-up (0039). Carries the 20% registration discount. */
+  glogift_member: boolean;
+  glogift_membership_no: string;
   is_active: boolean;
   /** Set once registration is finished. Null for a Google / Microsoft account
    *  that has signed in but not yet supplied institution and category — such an

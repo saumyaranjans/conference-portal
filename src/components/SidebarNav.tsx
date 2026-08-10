@@ -16,6 +16,9 @@ const NAV: Record<AppRole, { href: string; label: string }[]> = {
   author: [
     { href: "/author", label: "My Submissions" },
     { href: "/author/submissions/new", label: "New Submission" },
+    // Registration is per delegate, not per role, and every account holds
+    // `author` — so this is the one menu where everyone will find it.
+    { href: "/registration", label: "Conference Registration" },
   ],
   reviewer: [{ href: "/reviewer", label: "My Reviews" }],
   editor: [

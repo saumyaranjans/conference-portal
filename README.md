@@ -60,15 +60,11 @@ data. Both must pass.
 
 ### 1. Supabase
 
-Create a project, then run the migrations in order in the SQL editor:
+Create a project, then run every file in `supabase/migrations/` in the SQL
+editor, in filename order — `0001_init.sql` first, then `0002`, and so on.
 
-```
-supabase/migrations/0001_init.sql
-supabase/migrations/0002_views_and_seed.sql
-```
-
-`0002` seeds one conference (ICCIS 2026) with five tracks so the portal is
-usable immediately.
+The migrations create schema only; no conference or track data is seeded. Set
+up the conference and its tracks from the portal once you can sign in.
 
 ### 2. Environment
 

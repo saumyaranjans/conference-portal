@@ -1578,6 +1578,26 @@ export function LandingPage() {
             |
           </span>
           © Indian Institute of Management Sambalpur
+          {/* Policy links. The payment gateway's compliance review requires
+              privacy, terms, refund/cancellation and contact to be reachable
+              from the public site without signing in — a footer is where a
+              cardholder (and a reviewer) looks for them. */}
+          <nav className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-1.5">
+            {[
+              { href: "/privacy", label: "Privacy policy" },
+              { href: "/terms", label: "Terms of use" },
+              { href: "/refund-cancellation", label: "Refund & cancellation" },
+              { href: "/contact", label: "Contact us" },
+            ].map(({ href, label }) => (
+              <Link
+                key={href}
+                href={href}
+                className="text-slate-500 underline-offset-2 hover:text-blue-700 hover:underline dark:text-slate-400 dark:hover:text-blue-300"
+              >
+                {label}
+              </Link>
+            ))}
+          </nav>
         </footer>
       </div>
       <IkatStrip flip />

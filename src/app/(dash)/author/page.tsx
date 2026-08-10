@@ -174,7 +174,12 @@ export default async function AuthorDashboard({
   // One parallel wave: the certificates box, the author's own submissions and
   // their co-author links only need profile.id — serializing them (the old
   // code) made post-login landing 3 round trips deeper than necessary.
-  const [certificates, { data }, { data: coRows }, { data: registrationRow }] =
+  const [
+    certificates,
+    { data },
+    { data: coRows },
+    { data: registrationRow, error: registrationError },
+  ] =
     await Promise.all([
       certificatesReleased()
         ? listMyCertificates(profile.id)
@@ -200,6 +205,15 @@ export default async function AuthorDashboard({
         .maybeSingle(),
     ]);
 
+  // A read that failed is not the same as "no registration". Left silent, a
+  // broken registrations table renders as a confident "you are not registered
+  // for the conference yet" on every author's dashboard.
+  if (registrationError) {
+    console.error(
+      "[author] registration lookup failed: %s",
+      registrationError.message
+    );
+  }
   const registration = (registrationRow as any) ?? null;
 
   const submissions = (data ?? []) as Row[];

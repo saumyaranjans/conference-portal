@@ -110,11 +110,25 @@ export async function validateCoupon(
   if (!code) return { ok: false, reason: "Enter a coupon code." };
 
   const admin = createAdminClient();
-  const { data } = await admin
+  const { data, error } = await admin
     .from("registration_coupons")
     .select("*")
     .eq("code", code)
     .maybeSingle();
+
+  // A failed lookup is NOT a bad code. Swallowing the error here told every
+  // delegate their coupon "was not recognised" while the table was missing —
+  // a wrong answer that looked like a right one, and impossible to
+  // distinguish from a typo without reading the server logs.
+  if (error) {
+    console.error("[coupons] lookup failed for %s: %s", code, error.message);
+    return {
+      ok: false,
+      reason:
+        "We could not check that coupon just now. Please try again, or " +
+        "contact the Editorial Office if it keeps happening.",
+    };
+  }
 
   if (!data) return { ok: false, reason: "That coupon code was not recognised." };
 

@@ -383,7 +383,11 @@ export function RegistrationForm({
           <h3 className="text-xs font-semibold uppercase tracking-wide text-amber-900/80 dark:text-amber-200/80">
             {REFUND_POLICY_HEADING}
           </h3>
-          <ul className="mt-1.5 space-y-1 text-xs leading-relaxed text-amber-900/90 dark:text-amber-100/90">
+          {/* Reference text, sized as reference text. The clauses are here to
+              be available, not to compete with the fields above them — the
+              consent line is the only part that asks anything of the reader,
+              so it stays the larger of the two. */}
+          <ul className="mt-1.5 space-y-0.5 text-[11px] leading-relaxed text-amber-900/80 dark:text-amber-100/80">
             {REFUND_POLICY_CLAUSES.map((clause) => (
               <li key={clause} className="flex gap-1.5">
                 <span aria-hidden>•</span>
@@ -391,7 +395,7 @@ export function RegistrationForm({
               </li>
             ))}
           </ul>
-          <label className="mt-3 flex items-start gap-2.5 cursor-pointer border-t border-amber-200/70 pt-3 dark:border-amber-500/20">
+          <label className="mt-2.5 flex items-start gap-2 cursor-pointer border-t border-amber-200/70 pt-2.5 dark:border-amber-500/20">
             <input
               type="checkbox"
               name="refund_policy"
@@ -401,7 +405,7 @@ export function RegistrationForm({
               onChange={(e) => setAccepted(e.target.checked)}
               className="mt-0.5 accent-blue-600"
             />
-            <span className="text-sm font-medium text-amber-900 dark:text-amber-100">
+            <span className="text-xs font-medium text-amber-900 dark:text-amber-100">
               {REFUND_POLICY_CONSENT}
             </span>
           </label>

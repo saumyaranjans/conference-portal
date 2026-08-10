@@ -46,16 +46,18 @@ const PRESENTABLE_FILTER = `status.in.(${PRESENTING_STATUSES.join(
 export async function myPresentableSubmissions(profileId: string) {
   const admin = createAdminClient();
 
-  const { data: own } = await admin
+  const { data: own, error: ownError } = await admin
     .from("submissions")
     .select(PRESENTABLE_FIELDS)
     .eq("author_id", profileId)
     .or(PRESENTABLE_FILTER);
+  reportRead("myPresentableSubmissions(own)", ownError);
 
-  const { data: co } = await admin
+  const { data: co, error: coError } = await admin
     .from("submission_authors")
     .select(`submissions(${PRESENTABLE_FIELDS})`)
     .eq("profile_id", profileId);
+  reportRead("myPresentableSubmissions(co-authored)", coError);
 
   const rows = [
     ...((own as any[]) ?? []),
@@ -137,15 +139,28 @@ export async function previewCoupon(rawCode: string): Promise<CouponPreview> {
   };
 }
 
+/**
+ * Report a read that failed, then carry on with nothing.
+ *
+ * These lookups feed a page rather than a decision, so a failure should not
+ * blank the whole screen — but it must not pass for "the delegate has none"
+ * either. Everything here used to discard `error`, which is how three missing
+ * tables rendered as a perfectly normal "you are not registered yet" page.
+ */
+function reportRead(where: string, error: { message: string } | null): void {
+  if (error) console.error("[registration] %s failed: %s", where, error.message);
+}
+
 /** The delegate's unused coupon, if staff have verified their membership. */
 export async function myActiveCoupon(profileId: string) {
   const admin = createAdminClient();
-  const { data } = await admin
+  const { data, error } = await admin
     .from("registration_coupons")
     .select("code, discount_percent")
     .eq("profile_id", profileId)
     .eq("status", "active")
     .maybeSingle();
+  reportRead("myActiveCoupon", error);
   return (data as { code: string; discount_percent: number } | null) ?? null;
 }
 
@@ -157,7 +172,7 @@ export async function myActiveCoupon(profileId: string) {
  */
 export async function myRegistration(profileId: string) {
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("registrations")
     .select(
       "*, payment_orders(*), " +
@@ -167,6 +182,7 @@ export async function myRegistration(profileId: string) {
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
+  reportRead("myRegistration", error);
   return data as any;
 }
 

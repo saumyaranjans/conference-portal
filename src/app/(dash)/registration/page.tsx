@@ -160,7 +160,9 @@ export default async function RegistrationPage({
           form left, but the policy still governs no-shows, so it stays. */}
       {isPaid && (
         <Section title={REFUND_POLICY_HEADING}>
-          <ul className="card card-pad space-y-2 text-sm text-slate-700 dark:text-slate-200">
+          {/* Same sizing as the copy inside the form, so the policy does not
+              shrink before payment and grow again after it. */}
+          <ul className="card card-pad space-y-1 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
             {REFUND_POLICY_CLAUSES.map((clause) => (
               <li key={clause} className="flex gap-2">
                 <span aria-hidden className="text-slate-400">•</span>

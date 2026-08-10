@@ -733,6 +733,38 @@ export function LandingPage() {
           </p>
         </section>
 
+        {/* ---- 2. Objectives ---- */}
+        <section>
+          <Heading>The objective of the conference is to</Heading>
+          <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
+            {OBJECTIVES.map((o) => (
+              <div
+                key={o.text}
+                className="card card-pad text-center card-hover"
+              >
+                <span
+                  className={`mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl ${o.tint}`}
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="h-7 w-7"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.7"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    {o.icon}
+                  </svg>
+                </span>
+                <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                  {o.text}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+
         {/* ---- IIM Sambalpur video (landing page only) ---- */}
         <section aria-labelledby="campus-story">
           <Heading id="campus-story">Discover IIM Sambalpur</Heading>
@@ -781,38 +813,6 @@ export function LandingPage() {
                 />
               </div>
             </div>
-          </div>
-        </section>
-
-        {/* ---- 2. Objectives ---- */}
-        <section>
-          <Heading>The objective of the conference is to</Heading>
-          <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
-            {OBJECTIVES.map((o) => (
-              <div
-                key={o.text}
-                className="card card-pad text-center card-hover"
-              >
-                <span
-                  className={`mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl ${o.tint}`}
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="h-7 w-7"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.7"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    {o.icon}
-                  </svg>
-                </span>
-                <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
-                  {o.text}
-                </p>
-              </div>
-            ))}
           </div>
         </section>
 

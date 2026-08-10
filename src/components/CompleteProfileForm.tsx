@@ -222,15 +222,13 @@ export function CompleteProfileForm({
             <label className="label" htmlFor="country">
               Country
             </label>
-            <input
+            <ListAutocomplete
               id="country"
               required
-              maxLength={60}
-              autoComplete="country-name"
-              className="input"
-              placeholder="Country"
+              options={COUNTRIES}
+              placeholder="Start typing…"
               value={form.country}
-              onChange={(e) => set("country", e.target.value)}
+              onChange={(v) => set("country", v)}
             />
           </div>
         </div>

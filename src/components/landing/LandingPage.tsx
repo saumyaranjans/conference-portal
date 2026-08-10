@@ -676,8 +676,10 @@ export function LandingPage() {
           <DeadlineCountdown deadlines={DEADLINES} />
         </section>
 
-        {/* ---- 1. About ---- */}
-        <section>
+        {/* ---- 1. About + objectives ----
+            Kept in a single section so the pair reads as one screenful
+            below the banner rather than straddling two. ---- */}
+        <section className="space-y-5">
           <Heading id="about">About GLOGIFT 27</Heading>
           <div className="card card-pad space-y-4 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
             <p>
@@ -713,41 +715,37 @@ export function LandingPage() {
               finance, operations, marketing, governance and public policy — in
               the context of Industry 5.0 and the Sustainable Development Goals.
             </p>
+            {/* A plain crawlable anchor, server-rendered in the page HTML
+                rather than behind script, so both search engines and the
+                sign-in providers that inspect this page before showing our
+                name on their consent screen can find and follow it. It sits
+                inside the card so it costs no extra stacked block. */}
+            <p className="text-slate-600 dark:text-slate-400">
+              Papers are submitted, reviewed and managed through the GLOGIFT 27
+              Submission Portal —{" "}
+              <a
+                href="https://glogift2027.in/login"
+                className="font-medium text-blue-700 hover:underline dark:text-blue-400"
+              >
+                about the portal and signing in
+              </a>
+              .
+            </p>
           </div>
 
-          {/* A plain crawlable anchor, server-rendered in the page HTML rather
-              than behind script, so both search engines and the sign-in
-              providers that inspect this page before showing our name on their
-              consent screen can find and follow it. The detail lives on the
-              page it points to. */}
-          <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">
-            Papers are submitted, reviewed and managed through the GLOGIFT 27
-            Submission Portal —{" "}
-            <a
-              href="https://glogift2027.in/login"
-              className="font-medium text-blue-700 hover:underline dark:text-blue-400"
-            >
-              about the portal and signing in
-            </a>
-            .
-          </p>
-        </section>
-
-        {/* ---- 2. Objectives ---- */}
-        <section>
           <Heading>The objective of the conference is to</Heading>
           <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
             {OBJECTIVES.map((o) => (
               <div
                 key={o.text}
-                className="card card-pad text-center card-hover"
+                className="card card-pad py-4 text-center card-hover"
               >
                 <span
-                  className={`mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl ${o.tint}`}
+                  className={`mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-2xl ${o.tint}`}
                 >
                   <svg
                     viewBox="0 0 24 24"
-                    className="h-7 w-7"
+                    className="h-6 w-6"
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="1.7"

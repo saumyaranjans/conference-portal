@@ -1,3 +1,5 @@
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 
 /**
@@ -45,6 +47,34 @@ export type InvoiceData = {
   total: number;
   participationMode: string;
 };
+
+/**
+ * The three marks that head the invoice, left to right: the conference, the
+ * society that convenes it, and the host institute.
+ *
+ * `gift-logo.png` is not in the repository yet. Rather than hard-fail or leave
+ * a hole, a missing file is skipped and the remaining logos close the gap —
+ * so dropping the file into public/ is the whole of adding it, with no code
+ * change. Everything else here would break the invoice if it were absent,
+ * which is why only this one is optional.
+ */
+const LOGO_FILES = ["glogift-logo.png", "gift-logo.png", "iim-sambalpur.png"];
+const LOGO_HEIGHT = 26;
+const LOGO_GAP = 14;
+
+async function loadLogos(pdf: PDFDocument) {
+  const embedded = [];
+  for (const file of LOGO_FILES) {
+    try {
+      const bytes = await readFile(path.join(process.cwd(), "public", file));
+      embedded.push(await pdf.embedPng(bytes));
+    } catch {
+      // Absent or unreadable: the invoice is a receipt, not a brochure, and
+      // must still be issued.
+    }
+  }
+  return embedded;
+}
 
 function money(currency: "INR" | "USD", n: number): string {
   // The PDF is WinAnsi-encoded: "₹" is not in that character set and throws on
@@ -99,6 +129,22 @@ export async function generateInvoicePdf(d: InvoiceData): Promise<Uint8Array> {
   };
 
   // ---- header ------------------------------------------------------------
+  //
+  // The three marks sit on one baseline above the title, each scaled to a
+  // common height so a tall crest and a wide wordmark read as a set rather
+  // than as three unrelated images.
+  const logos = await loadLogos(pdf);
+  if (logos.length) {
+    y -= LOGO_HEIGHT;
+    let x = MARGIN;
+    for (const logo of logos) {
+      const width = (logo.width / logo.height) * LOGO_HEIGHT;
+      page.drawImage(logo, { x, y, width, height: LOGO_HEIGHT });
+      x += width + LOGO_GAP;
+    }
+    y -= 22;
+  }
+
   text("GLOGIFT 2027", { size: 20, font: bold, color: NAVY });
   y -= 16;
   text("Indian Institute of Management Sambalpur", { size: 9, color: MUTED });

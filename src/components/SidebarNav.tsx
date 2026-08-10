@@ -66,13 +66,44 @@ const ROLE_ORDER: AppRole[] = ["author", "reviewer", "editor", "chief", "admin"]
 /** Roles that see the publication-opportunities panel. */
 const SHOW_OPPORTUNITIES: AppRole[] = ["author"];
 
+/**
+ * Pages that belong to a role's area without living under its home path.
+ *
+ * Conference Registration is the Author's. It sits at /registration rather
+ * than /author/registration, so the role inferred from the URL matched no
+ * ROLE_HOME and fell through to roles[0] — meaning the nav shown while
+ * standing ON the registration page depended on which role happened to come
+ * first, and for anyone whose first role was not `author` the entry
+ * disappeared exactly where it was being used.
+ */
+const ROLE_EXTRA_PATHS: Partial<Record<AppRole, string[]>> = {
+  author: ["/registration"],
+};
+
 export function SidebarNav({
   roles,
   canManageUsers = false,
+  canRegister = false,
+  extrasFor,
   opportunities = [],
   children,
 }: {
   roles: AppRole[];
+  /**
+   * Whether the delegate holds an accepted paper. Conference Registration is
+   * hidden until they do — as corresponding author or co-author — because the
+   * page it leads to would list no papers and nothing could be registered.
+   */
+  canRegister?: boolean;
+  /**
+   * The role whose dashboard `children` belong to. They render only while
+   * that role is the one being viewed.
+   *
+   * Without it the extras rendered under every role: the Convener's email,
+   * visit and revenue panels sat in the sidebar of the Author and Reviewer
+   * dashboards too, because children are children whatever nav is on screen.
+   */
+  extrasFor?: AppRole;
   /** Users & Roles is Convener-with-manage-rights only; a view-only Convener
    *  would only reach /denied, so the entry is hidden for them. */
   canManageUsers?: boolean;
@@ -93,7 +124,10 @@ export function SidebarNav({
 
   const current: AppRole =
     ROLE_ORDER.find(
-      (r) => roles.includes(r) && pathname.startsWith(ROLE_HOME[r])
+      (r) =>
+        roles.includes(r) &&
+        (pathname.startsWith(ROLE_HOME[r]) ||
+          (ROLE_EXTRA_PATHS[r] ?? []).some((p) => pathname.startsWith(p)))
     ) ?? roles[0];
 
   if (!current) return null;
@@ -174,6 +208,7 @@ export function SidebarNav({
       <ul className="space-y-0.5">
         {NAV[current]
           .filter((item) => item.href !== "/chief/users" || canManageUsers)
+          .filter((item) => item.href !== "/registration" || canRegister)
           .map((item) => {
             const active =
               item.href === ROLE_HOME[current]
@@ -256,7 +291,7 @@ export function SidebarNav({
         </section>
       )}
 
-      {children}
+      {(!extrasFor || current === extrasFor) && children}
       </nav>
 
       {/* Top ↕ Bottom scroll controls — pinned at the base of the sidebar so

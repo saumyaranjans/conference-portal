@@ -16,6 +16,7 @@ import { NotificationBell } from "@/components/NotificationBell";
 import { RoleSwitcher } from "@/components/RoleSwitcher";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { SidebarNav } from "@/components/SidebarNav";
+import { hasPresentableSubmission } from "@/lib/registrationActions";
 
 const ROLE_ORDER: AppRole[] = ["author", "reviewer", "editor", "chief", "admin"];
 // Which dashboard the header brand links to, by role priority.
@@ -45,7 +46,7 @@ export async function DashboardShell({
   const supabase = await createClient();
   // One round-trip wave, not two: these queries are independent, and the shell
   // (and therefore first paint after login) blocks on both.
-  const [{ count: unread }, { data: opportunities }] = await Promise.all([
+  const [{ count: unread }, { data: opportunities }, canRegister] = await Promise.all([
     supabase
       .from("notifications")
       .select("*", { count: "exact", head: true })
@@ -57,11 +58,11 @@ export async function DashboardShell({
       .eq("is_active", true)
       .order("sort_order")
       .limit(6),
+    // Decides whether Conference Registration belongs in the nav at all: an
+    // author with nothing accepted has nothing to register against, and the
+    // entry would only lead to an empty page.
+    hasPresentableSubmission(profile.id),
   ]);
-
-  // The Convener sidebar metrics (emails / visits / revenue) are heavy, so they
-  // stream in via <Suspense> below rather than blocking the whole shell.
-  const isChief = profile.roles.includes("chief") || profile.roles.includes("admin");
 
   // You see the dashboards for the roles you actually hold — nothing more.
   // Editorial Office used to get every group here, which put Reviewer and
@@ -127,9 +128,11 @@ export async function DashboardShell({
             <SidebarNav
               roles={visibleRoles}
               canManageUsers={canManageUsers}
+              canRegister={canRegister}
+              extrasFor="chief"
               opportunities={(opportunities ?? []) as PublicationOpportunity[]}
             >
-              {isChief && (
+              {canManageUsers && (
                 <Suspense fallback={<StatsSkeleton />}>
                   <ConvenerSidebarStats />
                 </Suspense>
@@ -142,14 +145,21 @@ export async function DashboardShell({
           <SidebarNav
             roles={visibleRoles}
             canManageUsers={canManageUsers}
+            canRegister={canRegister}
+            extrasFor="chief"
             opportunities={(opportunities ?? []) as PublicationOpportunity[]}
           >
             {/* Convener metrics stream in after the shell has painted. Rendered
                 as children so they sit INSIDE the sticky nav and scroll with it
                 (rather than being overlapped by the sticky container). The data
                 fetch inside ConvenerSidebarStats is React.cache'd, so the mobile
-                and desktop instances share one set of queries. */}
-            {isChief && (
+                and desktop instances share one set of queries.
+
+                Gated twice over: canManageUsers keeps them from the Editorial
+                Office and from a view-only Convener, and extrasFor keeps them
+                out of the Author and Reviewer sidebars, where they were
+                appearing for anyone who also held Convener. */}
+            {canManageUsers && (
               <Suspense fallback={<StatsSkeleton />}>
                 <ConvenerSidebarStats />
               </Suspense>

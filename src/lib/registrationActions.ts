@@ -81,6 +81,39 @@ export async function myPresentableSubmissions(profileId: string) {
   );
 }
 
+/**
+ * Whether this delegate has anything to register against.
+ *
+ * Deliberately cheap — it runs on every dashboard page to decide whether the
+ * Conference Registration entry belongs in the nav, so it asks for one id
+ * rather than the full paper list. Counts co-authored papers too: a co-author
+ * registers against a paper exactly as the corresponding author does.
+ */
+export async function hasPresentableSubmission(
+  profileId: string
+): Promise<boolean> {
+  const admin = createAdminClient();
+
+  const { data: own, error: ownError } = await admin
+    .from("submissions")
+    .select("id")
+    .eq("author_id", profileId)
+    .or(PRESENTABLE_FILTER)
+    .limit(1);
+  reportRead("hasPresentableSubmission(own)", ownError);
+  if (own?.length) return true;
+
+  const { data: co, error: coError } = await admin
+    .from("submission_authors")
+    .select("submissions(status, stage)")
+    .eq("profile_id", profileId);
+  reportRead("hasPresentableSubmission(co-authored)", coError);
+
+  return ((co as any[]) ?? []).some(
+    (r) => r.submissions && isPresentable(r.submissions.status, r.submissions.stage)
+  );
+}
+
 export type CouponPreview = {
   ok: boolean;
   message: string;

@@ -708,3 +708,35 @@ export const ROLE_HOME: Record<AppRole, string> = {
   chief: "/chief",
   admin: "/admin",
 };
+
+/**
+ * Pages that belong to a role's area without living under its home path.
+ *
+ * Conference Registration is the Author's but sits at /registration, so
+ * matching on ROLE_HOME alone left it belonging to no role at all.
+ */
+export const ROLE_EXTRA_PATHS: Partial<Record<AppRole, string[]>> = {
+  author: ["/registration"],
+};
+
+/**
+ * Which role's area a path belongs to, out of the roles the viewer holds.
+ *
+ * Shared so the sidebar and the "View as" switcher can never disagree about
+ * where you are: they answered this question separately, and on /registration
+ * the sidebar guessed Author from role order while the switcher gave up and
+ * showed "Select…". Returns undefined for pages that belong to no role, such
+ * as /profile, where showing nothing selected is correct.
+ */
+export function roleForPath(
+  pathname: string,
+  roles: AppRole[],
+  order: AppRole[]
+): AppRole | undefined {
+  return order.find(
+    (r) =>
+      roles.includes(r) &&
+      (pathname.startsWith(ROLE_HOME[r]) ||
+        (ROLE_EXTRA_PATHS[r] ?? []).some((p) => pathname.startsWith(p)))
+  );
+}

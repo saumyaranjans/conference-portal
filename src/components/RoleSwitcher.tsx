@@ -1,7 +1,12 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { ROLE_HOME, ROLE_LABELS, type AppRole } from "@/lib/types";
+import {
+  ROLE_HOME,
+  ROLE_LABELS,
+  roleForPath,
+  type AppRole,
+} from "@/lib/types";
 
 const ROLE_ORDER: AppRole[] = ["admin", "chief", "editor", "reviewer", "author"];
 
@@ -16,9 +21,7 @@ export function RoleSwitcher({ roles }: { roles: AppRole[] }) {
   const router = useRouter();
   const pathname = usePathname();
 
-  const matched = ROLE_ORDER.find(
-    (r) => roles.includes(r) && pathname.startsWith(ROLE_HOME[r])
-  );
+  const matched = roleForPath(pathname, roles, ROLE_ORDER);
 
   if (roles.length <= 1) return null;
 

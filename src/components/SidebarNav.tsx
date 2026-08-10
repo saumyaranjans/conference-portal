@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import {
   ROLE_HOME,
   ROLE_LABELS,
+  roleForPath,
   type AppRole,
   type PublicationOpportunity,
 } from "@/lib/types";
@@ -66,20 +67,6 @@ const ROLE_ORDER: AppRole[] = ["author", "reviewer", "editor", "chief", "admin"]
 /** Roles that see the publication-opportunities panel. */
 const SHOW_OPPORTUNITIES: AppRole[] = ["author"];
 
-/**
- * Pages that belong to a role's area without living under its home path.
- *
- * Conference Registration is the Author's. It sits at /registration rather
- * than /author/registration, so the role inferred from the URL matched no
- * ROLE_HOME and fell through to roles[0] — meaning the nav shown while
- * standing ON the registration page depended on which role happened to come
- * first, and for anyone whose first role was not `author` the entry
- * disappeared exactly where it was being used.
- */
-const ROLE_EXTRA_PATHS: Partial<Record<AppRole, string[]>> = {
-  author: ["/registration"],
-};
-
 export function SidebarNav({
   roles,
   canManageUsers = false,
@@ -123,12 +110,7 @@ export function SidebarNav({
   };
 
   const current: AppRole =
-    ROLE_ORDER.find(
-      (r) =>
-        roles.includes(r) &&
-        (pathname.startsWith(ROLE_HOME[r]) ||
-          (ROLE_EXTRA_PATHS[r] ?? []).some((p) => pathname.startsWith(p)))
-    ) ?? roles[0];
+    roleForPath(pathname, roles, ROLE_ORDER) ?? roles[0];
 
   if (!current) return null;
 

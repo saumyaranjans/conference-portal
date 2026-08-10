@@ -63,10 +63,15 @@ export async function DashboardShell({
   // stream in via <Suspense> below rather than blocking the whole shell.
   const isChief = profile.roles.includes("chief") || profile.roles.includes("admin");
 
-  // Admins get every nav group so they can inspect any part of the portal.
-  const visibleRoles = profile.roles.includes("admin")
-    ? ROLE_ORDER
-    : ROLE_ORDER.filter((r) => profile.roles.includes(r));
+  // You see the dashboards for the roles you actually hold — nothing more.
+  // Editorial Office used to get every group here, which put Reviewer and
+  // Track Editor in the switcher for people holding neither.
+  const visibleRoles = ROLE_ORDER.filter((r) => profile.roles.includes(r));
+
+  // Users & Roles: outright Convener (no Editorial Office stand-in) holding
+  // manage rights. Mirrors requireUserManagement() in lib/auth.
+  const canManageUsers =
+    profile.roles.includes("chief") && profile.convener_manage !== false;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -121,6 +126,7 @@ export async function DashboardShell({
           <div className="card mt-2 p-3">
             <SidebarNav
               roles={visibleRoles}
+              canManageUsers={canManageUsers}
               opportunities={(opportunities ?? []) as PublicationOpportunity[]}
             >
               {isChief && (
@@ -135,6 +141,7 @@ export async function DashboardShell({
         <aside className="w-56 shrink-0 hidden md:block">
           <SidebarNav
             roles={visibleRoles}
+            canManageUsers={canManageUsers}
             opportunities={(opportunities ?? []) as PublicationOpportunity[]}
           >
             {/* Convener metrics stream in after the shell has painted. Rendered

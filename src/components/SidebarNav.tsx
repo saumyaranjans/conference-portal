@@ -24,6 +24,7 @@ const NAV: Record<AppRole, { href: string; label: string }[]> = {
   ],
   chief: [
     { href: "/chief", label: "Convener" },
+    { href: "/chief/users", label: "Users & Roles" },
     { href: "/chief/analytics", label: "Submission Analytics" },
     { href: "/chief/visit-analytics", label: "Visit Analytics" },
     { href: "/chief/submissions", label: "Submission Management" },
@@ -37,7 +38,6 @@ const NAV: Record<AppRole, { href: string; label: string }[]> = {
   admin: [
     { href: "/admin", label: "Overview" },
     { href: "/admin/announcements", label: "Announcements" },
-    { href: "/admin/users", label: "Users & Roles" },
     { href: "/admin/tracks", label: "Conference & Tracks" },
     { href: "/admin/publications", label: "Publication Opportunities" },
     { href: "/admin/submissions", label: "Submission Management" },
@@ -63,10 +63,14 @@ const SHOW_OPPORTUNITIES: AppRole[] = ["author"];
 
 export function SidebarNav({
   roles,
+  canManageUsers = false,
   opportunities = [],
   children,
 }: {
   roles: AppRole[];
+  /** Users & Roles is Convener-with-manage-rights only; a view-only Convener
+   *  would only reach /denied, so the entry is hidden for them. */
+  canManageUsers?: boolean;
   opportunities?: PublicationOpportunity[];
   /** Extra content (e.g. Convener stat cards) rendered INSIDE the sticky,
    *  scrollable nav container so it scrolls with the nav instead of being
@@ -163,22 +167,24 @@ export function SidebarNav({
         {ROLE_LABELS[current]}
       </p>
       <ul className="space-y-0.5">
-        {NAV[current].map((item) => {
-          const active =
-            item.href === ROLE_HOME[current]
-              ? pathname === item.href
-              : pathname.startsWith(item.href);
-          return (
-            <li key={item.href}>
-              <Link
-                href={item.href}
-                className={`nav-item ${active ? "nav-item-active" : ""}`}
-              >
-                {item.label}
-              </Link>
-            </li>
-          );
-        })}
+        {NAV[current]
+          .filter((item) => item.href !== "/chief/users" || canManageUsers)
+          .map((item) => {
+            const active =
+              item.href === ROLE_HOME[current]
+                ? pathname === item.href
+                : pathname.startsWith(item.href);
+            return (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  className={`nav-item ${active ? "nav-item-active" : ""}`}
+                >
+                  {item.label}
+                </Link>
+              </li>
+            );
+          })}
       </ul>
 
       {SHOW_OPPORTUNITIES.includes(current) && opportunities.length > 0 && (

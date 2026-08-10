@@ -58,7 +58,7 @@ async function setRole(
 export async function decideVolunteerRequest(
   formData: FormData
 ): Promise<ActionResult> {
-  const profile = await requireConvenerManage("chief");
+  const profile = await requireConvenerManage("chief", "admin");
   const admin = createAdminClient();
 
   const id = String(formData.get("request_id") ?? "").trim();

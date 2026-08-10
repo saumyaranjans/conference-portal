@@ -43,21 +43,37 @@ export async function requireProfile(): Promise<Profile> {
 }
 
 /**
- * Require one of `roles`. Admins pass every check — they are the break-glass
- * account for the whole portal.
+ * Require one of `roles` — held outright, no exceptions.
+ *
+ * Admins used to pass every check here as a break-glass account, which put the
+ * Reviewer and Track Editor dashboards in front of Editorial Office staff who
+ * hold neither. Every guard now names the roles it admits, so Editorial Office
+ * reaches the /admin tree and the Convener duties it mirrors ("chief", "admin")
+ * and nothing else. Personal queues — reviewer, track editor, author — are
+ * keyed to the signed-in profile and belong to whoever was assigned the work.
  */
 export async function requireRole(...roles: AppRole[]): Promise<Profile> {
   const profile = await requireProfile();
-  const ok =
-    profile.roles.includes("admin") ||
-    roles.some((r) => profile.roles.includes(r));
-  if (!ok) redirect("/denied");
+  if (!roles.some((r) => profile.roles.includes(r))) redirect("/denied");
+  return profile;
+}
+
+/**
+ * Guard for Users & Roles: a Convener holding manage (edit) rights.
+ *
+ * Chief and NOT admin-by-courtesy, so an Editorial Office account cannot grant
+ * itself Convener; manage tier, so a view-only Convener cannot lift their own
+ * restriction by editing their own roles.
+ */
+export async function requireUserManagement(): Promise<Profile> {
+  const profile = await requireRole("chief");
+  if (profile.convener_manage === false) redirect("/denied");
   return profile;
 }
 
 export function hasRole(profile: Profile | null, role: AppRole): boolean {
   if (!profile) return false;
-  return profile.roles.includes(role) || profile.roles.includes("admin");
+  return profile.roles.includes(role);
 }
 
 /** True when this profile may perform Convener manage/edit actions: an admin

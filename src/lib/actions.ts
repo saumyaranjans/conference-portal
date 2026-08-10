@@ -7,6 +7,7 @@ import { createAdminClient, createClient } from "@/lib/supabase/server";
 import {
   requireProfile,
   requireRole,
+  requireUserManagement,
   requireConvenerManage,
 } from "@/lib/auth";
 import { emailConfigured, sendEmail } from "@/lib/email";
@@ -5121,11 +5122,15 @@ export async function broadcastAnnouncement(
 }
 
 // =====================================================================
-// ADMIN
+// USERS & ROLES — Convener only
+//
+// requireUserManagement, not requireRole: an Editorial Office account that
+// could edit roles could grant itself Convener, so the stand-in must not apply
+// here — and a view-only Convener must not be able to lift their own tier.
 // =====================================================================
 
 export async function updateUserRoles(formData: FormData): Promise<ActionResult> {
-  const profile = await requireRole("admin");
+  const profile = await requireUserManagement();
   const admin = createAdminClient();
 
   const userId = String(formData.get("user_id"));
@@ -5134,10 +5139,10 @@ export async function updateUserRoles(formData: FormData): Promise<ActionResult>
   if (roles.length === 0)
     return { ok: false, message: "A user needs at least one role." };
 
-  // Guard against an admin removing their own admin role and locking
+  // Guard against a Convener removing their own Convener role and locking
   // themselves out of user management.
-  if (userId === profile.id && !roles.includes("admin"))
-    return { ok: false, message: "You cannot remove your own admin role." };
+  if (userId === profile.id && !roles.includes("chief"))
+    return { ok: false, message: "You cannot remove your own Convener role." };
 
   const { error } = await admin
     .from("profiles")
@@ -5147,18 +5152,18 @@ export async function updateUserRoles(formData: FormData): Promise<ActionResult>
   if (error) return { ok: false, message: error.message };
 
   await audit(profile.id, "user.roles_updated", "profile", userId, { roles });
-  revalidatePath("/admin/users");
+  revalidatePath("/chief/users");
   return { ok: true, message: "Roles updated." };
 }
 
 /**
- * Set a Convener's access tier: manage (edit) vs view-only. ADMIN (Editorial
- * Office) ONLY — a Convener cannot change their own or another Convener's tier.
+ * Set a Convener's access tier: manage (edit) vs view-only. Convener only —
+ * it sits on the Users & Roles page, which Editorial Office cannot reach.
  */
 export async function setConvenerManage(
   formData: FormData
 ): Promise<ActionResult> {
-  const me = await requireRole("admin");
+  const me = await requireUserManagement();
   const admin = createAdminClient();
 
   const userId = String(formData.get("user_id") ?? "").trim();
@@ -5185,7 +5190,7 @@ export async function setConvenerManage(
   if (error) return { ok: false, message: error.message };
 
   await audit(me.id, "user.convener_manage_set", "profile", userId, { manage });
-  revalidatePath("/admin/users");
+  revalidatePath("/chief/users");
   return {
     ok: true,
     message: manage
@@ -5195,7 +5200,7 @@ export async function setConvenerManage(
 }
 
 export async function setUserActive(formData: FormData): Promise<ActionResult> {
-  const profile = await requireRole("admin");
+  const profile = await requireUserManagement();
   const admin = createAdminClient();
 
   const userId = String(formData.get("user_id"));
@@ -5212,7 +5217,7 @@ export async function setUserActive(formData: FormData): Promise<ActionResult> {
   if (error) return { ok: false, message: error.message };
 
   await audit(profile.id, active ? "user.activated" : "user.deactivated", "profile", userId);
-  revalidatePath("/admin/users");
+  revalidatePath("/chief/users");
   return { ok: true, message: active ? "User activated." : "User deactivated." };
 }
 
@@ -5270,7 +5275,7 @@ export async function createConference(formData: FormData): Promise<ActionResult
 export async function confirmAuthorAttendance(
   formData: FormData
 ): Promise<ActionResult> {
-  const profile = await requireConvenerManage("chief");
+  const profile = await requireConvenerManage("chief", "admin");
   // Staff write: RLS on submission_authors only lets the paper's author update
   // it, so use the admin client after the role check.
   const supabase = createAdminClient();
@@ -5637,7 +5642,7 @@ export async function resetParticipationStatus(
 export async function markRegistrationFee(
   formData: FormData
 ): Promise<ActionResult> {
-  const profile = await requireConvenerManage("chief");
+  const profile = await requireConvenerManage("chief", "admin");
   // Staff write (see confirmAuthorAttendance) — use the admin client.
   const supabase = createAdminClient();
 

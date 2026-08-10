@@ -62,7 +62,8 @@ export default async function AdminDashboard() {
 
       <Section title="Users">
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-          <StatCard label="Total users" value={users.length} href="/admin/users" />
+          {/* Counts only — Users & Roles lives under Convener now. */}
+          <StatCard label="Total users" value={users.length} />
           <StatCard label="Authors" value={roleCount("author")} />
           <StatCard label="Reviewers" value={roleCount("reviewer")} />
           <StatCard label="Track Editors" value={roleCount("editor")} />
@@ -70,10 +71,8 @@ export default async function AdminDashboard() {
         </div>
         {users.filter((u) => !u.is_active).length > 0 && (
           <p className="text-sm text-amber-800 bg-amber-50 rounded-lg px-3 py-2 mt-4">
-            {users.filter((u) => !u.is_active).length} deactivated account(s).{" "}
-            <Link href="/admin/users" className="underline">
-              Manage users
-            </Link>
+            {users.filter((u) => !u.is_active).length} deactivated account(s).
+            Roles and account status are managed by the Convener.
           </p>
         )}
       </Section>

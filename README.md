@@ -91,17 +91,20 @@ npm install
 npm run dev
 ```
 
-### 4. Make yourself an admin
+### 4. Make yourself the Convener
 
 Sign up through the UI, then in the Supabase SQL editor:
 
 ```sql
 update profiles
-   set roles = '{author,admin}'
+   set roles = '{author,chief,admin}'
  where email = 'you@example.com';
 ```
 
-From there `/admin/users` handles all further role grants.
+`chief` is the one that matters here: Users & Roles lives at `/chief/users`
+and is Convener-only, so an `admin`-only account cannot grant roles (by
+design — otherwise Editorial Office could promote itself). From there
+`/chief/users` handles all further role grants.
 
 ### 5. Deploy
 

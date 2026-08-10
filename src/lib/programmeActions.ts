@@ -99,7 +99,7 @@ async function eligiblePapers(
  * someone has already taken.
  */
 export async function generateProgramme(formData: FormData): Promise<ActionResult> {
-  const profile = await requireConvenerManage("chief");
+  const profile = await requireConvenerManage("chief", "admin");
   const admin = createAdminClient();
 
   const conferenceId = await currentConferenceId(admin);
@@ -201,7 +201,7 @@ export async function generateProgramme(formData: FormData): Promise<ActionResul
 /* ---------------------------------------------------------------- venue --- */
 
 export async function setSessionVenue(formData: FormData): Promise<ActionResult> {
-  await requireConvenerManage("chief");
+  await requireConvenerManage("chief", "admin");
   const admin = createAdminClient();
 
   const id = String(formData.get("session_id") ?? "").trim();
@@ -227,7 +227,7 @@ export async function setSessionVenue(formData: FormData): Promise<ActionResult>
 
 /** Move a session, refusing a move that would put someone in two rooms at once. */
 export async function moveSession(formData: FormData): Promise<ActionResult> {
-  await requireConvenerManage("chief");
+  await requireConvenerManage("chief", "admin");
   const admin = createAdminClient();
 
   const id = String(formData.get("session_id") ?? "").trim();
@@ -305,7 +305,7 @@ async function slotClash(
 /* ------------------------------------------------------- chairs & helpers --- */
 
 export async function addSessionChair(formData: FormData): Promise<ActionResult> {
-  const profile = await requireConvenerManage("chief");
+  const profile = await requireConvenerManage("chief", "admin");
   const admin = createAdminClient();
 
   const sessionId = String(formData.get("session_id") ?? "").trim();
@@ -358,7 +358,7 @@ export async function addSessionChair(formData: FormData): Promise<ActionResult>
 }
 
 export async function removeSessionChair(formData: FormData): Promise<ActionResult> {
-  await requireConvenerManage("chief");
+  await requireConvenerManage("chief", "admin");
   const admin = createAdminClient();
   const id = String(formData.get("chair_id") ?? "").trim();
   if (!id) return { ok: false, message: "Missing chair." };
@@ -369,7 +369,7 @@ export async function removeSessionChair(formData: FormData): Promise<ActionResu
 }
 
 export async function saveSessionVolunteer(formData: FormData): Promise<ActionResult> {
-  const profile = await requireConvenerManage("chief");
+  const profile = await requireConvenerManage("chief", "admin");
   const admin = createAdminClient();
 
   const sessionId = String(formData.get("session_id") ?? "").trim();
@@ -393,7 +393,7 @@ export async function saveSessionVolunteer(formData: FormData): Promise<ActionRe
 }
 
 export async function removeSessionVolunteer(formData: FormData): Promise<ActionResult> {
-  await requireConvenerManage("chief");
+  await requireConvenerManage("chief", "admin");
   const admin = createAdminClient();
   const id = String(formData.get("volunteer_id") ?? "").trim();
   if (!id) return { ok: false, message: "Missing volunteer." };
@@ -474,7 +474,7 @@ async function buildSnapshot(
 }
 
 export async function approveSession(formData: FormData): Promise<ActionResult> {
-  const profile = await requireConvenerManage("chief");
+  const profile = await requireConvenerManage("chief", "admin");
   const admin = createAdminClient();
   const id = String(formData.get("session_id") ?? "").trim();
   if (!id) return { ok: false, message: "Missing session." };
@@ -502,7 +502,7 @@ export async function approveSession(formData: FormData): Promise<ActionResult> 
  * snapshot — a half-finished rearrangement never reaches delegates.
  */
 export async function publishSession(formData: FormData): Promise<ActionResult> {
-  await requireConvenerManage("chief");
+  await requireConvenerManage("chief", "admin");
   const admin = createAdminClient();
   const id = String(formData.get("session_id") ?? "").trim();
   if (!id) return { ok: false, message: "Missing session." };
@@ -535,7 +535,7 @@ export async function publishSession(formData: FormData): Promise<ActionResult> 
 }
 
 export async function unpublishSession(formData: FormData): Promise<ActionResult> {
-  await requireConvenerManage("chief");
+  await requireConvenerManage("chief", "admin");
   const admin = createAdminClient();
   const id = String(formData.get("session_id") ?? "").trim();
   if (!id) return { ok: false, message: "Missing session." };
@@ -551,7 +551,7 @@ export async function unpublishSession(formData: FormData): Promise<ActionResult
 }
 
 export async function deleteProgrammeSession(formData: FormData): Promise<ActionResult> {
-  await requireConvenerManage("chief");
+  await requireConvenerManage("chief", "admin");
   const admin = createAdminClient();
   const id = String(formData.get("session_id") ?? "").trim();
   if (!id) return { ok: false, message: "Missing session." };

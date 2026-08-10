@@ -163,6 +163,9 @@ export default async function VisitAnalyticsPage() {
   const pageSessions = new Map<string, Set<string>>();
   let unknownGeo = 0;
   let legacyRows = 0;
+  // India views whose state could not be resolved. Counted so the state map
+  // can say why it totals less than "India page views" beside it.
+  let indiaNoRegion = 0;
 
   const cutoff7 = Date.now() - 7 * 86400000;
   const cutoff30 = Date.now() - 30 * 86400000;
@@ -205,6 +208,7 @@ export default async function VisitAnalyticsPage() {
       if (c === "in") {
         const s = (r.region ?? "").trim().toLowerCase();
         if (s) indiaValues[s] = (indiaValues[s] ?? 0) + 1;
+        else indiaNoRegion++;
       }
     }
   });
@@ -271,15 +275,23 @@ export default async function VisitAnalyticsPage() {
         />
       </div>
 
-      <Section title="By country — World">
+      <Section title="By country — World (all time)">
         <GeoVisitMap kind="world" values={worldValues} regionLabel="Country" />
       </Section>
 
-      <Section title="By state — India">
+      <Section title="By state — India (all time)">
         <GeoVisitMap kind="india" values={indiaValues} regionLabel="State" />
       </Section>
 
       <div className="mt-3 space-y-1">
+        {indiaNoRegion > 0 && (
+          <p className="text-xs text-slate-400">
+            {indiaNoRegion} Indian page view{indiaNoRegion === 1 ? "" : "s"} could
+            not be resolved to a state, so the state map totals{" "}
+            {indiaTotal - indiaNoRegion} rather than the {indiaTotal} shown
+            above.
+          </p>
+        )}
         {unknownGeo > 0 && (
           <p className="text-xs text-slate-400">
             {unknownGeo} page view{unknownGeo === 1 ? "" : "s"} without a

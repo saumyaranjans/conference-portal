@@ -266,11 +266,11 @@ export default function LoginPage() {
               </p>
             )}
 
-            <Captcha onToken={setCaptchaToken} resetSignal={captchaReset} />
-
             <button type="submit" disabled={busy} className="btn-primary w-full">
               {busy ? "Signing in…" : "Sign in"}
             </button>
+
+            <Captcha onToken={setCaptchaToken} resetSignal={captchaReset} />
 
             <OAuthButtons />
 

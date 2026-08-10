@@ -503,8 +503,6 @@ export function SignupForm({
         </div>
       </div>
 
-      <Captcha onToken={setCaptchaToken} resetSignal={captchaReset} />
-
       {error && (
         <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">
           {error}
@@ -527,6 +525,8 @@ export function SignupForm({
           {busy ? "Creating…" : "Create account"}
         </button>
       </div>
+
+      <Captcha onToken={setCaptchaToken} resetSignal={captchaReset} />
 
       <p className="text-xs text-slate-400">
         Registration does not collect payment. Your participant category is

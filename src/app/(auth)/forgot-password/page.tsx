@@ -81,11 +81,11 @@ export default function ForgotPasswordPage() {
               </p>
             )}
 
-            <Captcha onToken={setCaptchaToken} resetSignal={captchaReset} />
-
             <button type="submit" disabled={busy} className="btn-primary w-full">
               {busy ? "Sending…" : "Send reset link"}
             </button>
+
+            <Captcha onToken={setCaptchaToken} resetSignal={captchaReset} />
 
             <p className="text-sm text-slate-500 text-center">
               Remembered it?{" "}

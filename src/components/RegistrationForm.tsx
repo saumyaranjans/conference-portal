@@ -1,7 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { submitRegistration } from "@/lib/registrationActions";
+import {
+  previewCoupon,
+  submitRegistration,
+  type CouponPreview,
+} from "@/lib/registrationActions";
 import {
   PARTICIPATION_MODES,
   participationModeLabel,
@@ -10,7 +14,7 @@ import {
   trackLabel,
   type SubmissionStatus,
 } from "@/lib/types";
-import { MEMBER_DISCOUNT_PERCENT } from "@/lib/registrationFees";
+import { MEMBER_DISCOUNT_PERCENT, formatMoney } from "@/lib/registrationFees";
 import {
   REFUND_POLICY_CLAUSES,
   REFUND_POLICY_CONSENT,
@@ -97,6 +101,21 @@ export function RegistrationForm({
     null
   );
   const [accepted, setAccepted] = useState(false);
+  const [coupon, setCoupon] = useState("");
+  const [checking, setChecking] = useState(false);
+  const [quote, setQuote] = useState<CouponPreview | null>(null);
+
+  async function onApplyCoupon() {
+    const code = coupon.trim();
+    if (!code) return;
+    setChecking(true);
+    setQuote(null);
+    try {
+      setQuote(await previewCoupon(code));
+    } finally {
+      setChecking(false);
+    }
+  }
 
   // Registration is per delegate, so one row is written however many papers
   // were accepted. The first is the one it is filed against; the rest are
@@ -143,9 +162,11 @@ export function RegistrationForm({
       setResult(res);
       if (res.ok) {
         form.reset();
-        // The consent box is controlled, so form.reset() alone would leave it
-        // ticked.
+        // The consent box and the coupon field are controlled, so form.reset()
+        // alone would leave a ticked box and a priced coupon behind.
         setAccepted(false);
+        setCoupon("");
+        setQuote(null);
       }
     } finally {
       setPending(false);
@@ -154,7 +175,11 @@ export function RegistrationForm({
 
   return (
     <form onSubmit={onSubmit} className="card card-pad space-y-6">
-      <fieldset disabled={pending || !payable} className="contents">
+      {/* space-y must live HERE, not on the form. The fieldset is the form's
+          only child, so a gap set on the form falls between the fieldset and
+          the result message and never between the fields themselves. Being
+          display:contents does not stop `> * + *` from matching its children. */}
+      <fieldset disabled={pending || !payable} className="contents space-y-6">
         {/* Every accepted abstract, read-only. No selector: the delegate is
             presenting all of them, and none of these values is theirs to
             change here. */}
@@ -210,16 +235,24 @@ export function RegistrationForm({
               })}
             </div>
 
-            <p className="text-xs text-slate-500 mt-2">
-              Fetched from your submissions and fixed when you submitted them —
-              they cannot be changed here. If anything is wrong, contact the
-              Editorial Office.
-              {papers.length > 1 &&
-                " Registration is per delegate, not per paper: one fee covers both."}
-              {papers.some(atManuscript) &&
-                " Your place rests on the abstract acceptance — a full paper" +
-                  " still in review does not have to be decided before you register."}
-            </p>
+            {/* One idea per line. Run together as a paragraph these read as a
+                wall of small grey text directly above the next field's
+                label. */}
+            <ul className="mt-2 space-y-1 text-xs text-slate-500">
+              <li>
+                Fetched from your submissions — not editable here. Contact the
+                Editorial Office if anything is wrong.
+              </li>
+              {papers.length > 1 && (
+                <li>Registration is per delegate: one fee covers both papers.</li>
+              )}
+              {papers.some(atManuscript) && (
+                <li>
+                  Your place rests on the abstract acceptance. A full paper still
+                  in review does not delay it.
+                </li>
+              )}
+            </ul>
 
             {modesDisagree && (
               <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:bg-amber-500/10 dark:text-amber-200">
@@ -281,15 +314,63 @@ export function RegistrationForm({
             Coupon code{" "}
             <span className="font-normal text-slate-500">(optional)</span>
           </label>
-          <input
-            id="coupon_code"
-            name="coupon_code"
-            type="text"
-            autoComplete="off"
-            spellCheck={false}
-            placeholder="GIFT-XXXX-XXXX"
-            className="input w-full font-mono uppercase sm:max-w-xs"
-          />
+          <div className="flex flex-wrap items-start gap-2">
+            <input
+              id="coupon_code"
+              name="coupon_code"
+              type="text"
+              autoComplete="off"
+              spellCheck={false}
+              placeholder="GIFT-XXXX-XXXX"
+              className="input font-mono uppercase w-full sm:w-64"
+              value={coupon}
+              onChange={(e) => {
+                setCoupon(e.target.value);
+                // A quote for a code that is no longer in the box is a lie.
+                setQuote(null);
+              }}
+              // Enter in a text field submits the form; here it should price
+              // the coupon, not send the delegate to the gateway.
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  void onApplyCoupon();
+                }
+              }}
+            />
+            <button
+              type="button"
+              onClick={onApplyCoupon}
+              disabled={checking || !coupon.trim()}
+              className="btn-secondary shrink-0"
+            >
+              {checking ? "Checking…" : "Apply"}
+            </button>
+          </div>
+
+          {quote && (
+            <p
+              className={`mt-2 rounded-lg px-3 py-2 text-sm ${
+                quote.ok
+                  ? "bg-emerald-50 text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-200"
+                  : "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-300"
+              }`}
+            >
+              {quote.message}
+              {quote.ok && quote.quote && (
+                <span className="mt-1 block">
+                  New total:{" "}
+                  <strong className="font-semibold">
+                    {formatMoney(quote.quote.currency, quote.quote.total)}
+                  </strong>{" "}
+                  <span className="opacity-70">
+                    (incl. GST) — you save{" "}
+                    {formatMoney(quote.quote.currency, quote.quote.discount)}
+                  </span>
+                </span>
+              )}
+            </p>
+          )}
           <p className="text-xs text-slate-500 mt-1.5">
             GIFT Society members are emailed a {MEMBER_DISCOUNT_PERCENT}%
             discount code once the Editorial Office has verified their
@@ -298,19 +379,19 @@ export function RegistrationForm({
         </div>
 
         {/* Refund policy — displayed in full, acceptance recorded */}
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-500/30 dark:bg-amber-500/10">
-          <h3 className="text-sm font-semibold text-amber-900 dark:text-amber-200">
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-500/30 dark:bg-amber-500/10">
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-amber-900/80 dark:text-amber-200/80">
             {REFUND_POLICY_HEADING}
           </h3>
-          <ul className="mt-2 space-y-1.5 text-sm text-amber-900/90 dark:text-amber-100/90">
+          <ul className="mt-1.5 space-y-1 text-xs leading-relaxed text-amber-900/90 dark:text-amber-100/90">
             {REFUND_POLICY_CLAUSES.map((clause) => (
-              <li key={clause} className="flex gap-2">
+              <li key={clause} className="flex gap-1.5">
                 <span aria-hidden>•</span>
                 <span>{clause}</span>
               </li>
             ))}
           </ul>
-          <label className="mt-4 flex items-start gap-3 cursor-pointer">
+          <label className="mt-3 flex items-start gap-2.5 cursor-pointer border-t border-amber-200/70 pt-3 dark:border-amber-500/20">
             <input
               type="checkbox"
               name="refund_policy"

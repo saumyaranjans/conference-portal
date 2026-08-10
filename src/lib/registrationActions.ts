@@ -79,6 +79,64 @@ export async function myPresentableSubmissions(profileId: string) {
   );
 }
 
+export type CouponPreview = {
+  ok: boolean;
+  message: string;
+  /** Present only when ok — the price the coupon produces. */
+  quote?: {
+    discountPercent: number;
+    currency: "INR" | "USD";
+    base: number;
+    discount: number;
+    tax: number;
+    total: number;
+  };
+};
+
+/**
+ * Check a coupon and quote the price it would produce, without redeeming it.
+ *
+ * Lets the delegate see the reduced amount before committing to checkout,
+ * which is the whole point of typing a code in. Nothing is written: the coupon
+ * is redeemed in the payment callback, so an abandoned checkout does not burn
+ * it. submitRegistration re-validates and re-computes from scratch — this
+ * quote is for the delegate's eyes, never an input to what is charged.
+ */
+export async function previewCoupon(rawCode: string): Promise<CouponPreview> {
+  const profile = await requireProfile();
+
+  const check = await validateCoupon(rawCode, profile.id);
+  if (!check.ok) return { ok: false, message: check.reason };
+
+  const fee = computeRegistrationFee(
+    profile.participant_category,
+    true,
+    undefined,
+    profile.country
+  );
+  if (!fee.known) {
+    return {
+      ok: false,
+      message:
+        "We could not work out your fee, because your profile has no " +
+        "participant category.",
+    };
+  }
+
+  return {
+    ok: true,
+    message: `Coupon applied — ${check.coupon.discount_percent}% off.`,
+    quote: {
+      discountPercent: check.coupon.discount_percent,
+      currency: fee.currency,
+      base: fee.base,
+      discount: fee.discount,
+      tax: fee.tax,
+      total: fee.total,
+    },
+  };
+}
+
 /** The delegate's unused coupon, if staff have verified their membership. */
 export async function myActiveCoupon(profileId: string) {
   const admin = createAdminClient();

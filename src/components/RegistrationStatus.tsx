@@ -11,6 +11,7 @@ import { formatDate } from "@/components/ui/Primitives";
  */
 export function RegistrationStatus({
   registration,
+  accepted,
 }: {
   registration: {
     status: string;
@@ -19,7 +20,16 @@ export function RegistrationStatus({
     total_amount: number | null;
     paid_at: string | null;
   } | null;
+  /**
+   * Whether the author has had at least one paper accepted. Nothing can be
+   * registered against until then, so prompting for it would send the author
+   * to a page with an empty paper list and no reason to be there.
+   */
+  accepted: boolean;
 }) {
+  // Nothing to say yet: no acceptance, and no registration already under way.
+  if (!accepted && !registration) return null;
+
   if (registration?.status === "paid") {
     const paid = registration.total_amount ?? registration.amount;
     return (
@@ -58,8 +68,9 @@ export function RegistrationStatus({
             : "You are not registered for the conference yet"}
         </p>
         <p className="text-xs text-amber-800/80 dark:text-amber-300/80">
-          Acceptance of a paper does not register you — registration and payment
-          are separate, and presenting requires both.
+          {started
+            ? "Your place is held but not confirmed. It is confirmed once the registration fee is paid."
+            : "Your paper has been accepted. To present it you must also register as a delegate and pay the registration fee."}
         </p>
       </div>
       <Link href="/registration" className="btn-primary shrink-0">

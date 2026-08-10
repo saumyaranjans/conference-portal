@@ -21,6 +21,7 @@ import {
   myRegistration,
 } from "@/lib/registrationActions";
 import { REFUND_POLICY_CLAUSES, REFUND_POLICY_HEADING } from "@/lib/refundPolicy";
+import { participationModeLabel, pathwayLabel, trackLabel } from "@/lib/types";
 
 /** What came back from the gateway, translated for a human. */
 const PAYMENT_NOTICES: Record<
@@ -68,6 +69,27 @@ export default async function RegistrationPage({
 
   const isPaid = existing?.status === "paid";
 
+  // The paper this registration is against, spelled out for the paid summary.
+  // A delegate who registered without one simply has no rows here.
+  const sub = existing?.submissions
+    ? Array.isArray(existing.submissions)
+      ? existing.submissions[0]
+      : existing.submissions
+    : null;
+  const paidPaper = (
+    [
+      ["Paper", sub ? [sub.paper_id, sub.title].filter(Boolean).join(" — ") : null],
+      ["Pathway", pathwayLabel(sub?.submission_type)],
+      ["Track", trackLabel(sub?.tracks)],
+      [
+        "Attending",
+        existing?.participation_mode
+          ? participationModeLabel(existing.participation_mode)
+          : null,
+      ],
+    ] as [string, string | null][]
+  ).filter((r): r is [string, string] => !!r[1] && r[1] !== "—");
+
   return (
     <>
       <PageHeader
@@ -114,10 +136,42 @@ export default async function RegistrationPage({
                   {existing.paid_at ? formatDate(existing.paid_at) : "—"}
                 </dd>
               </div>
+              {/* What was registered for, not only what it cost. A delegate
+                  checking this page months later needs the paper, not the
+                  receipt. */}
+              {paidPaper.map(([term, value]) => (
+                <div key={term} className="flex justify-between sm:block">
+                  <dt className="text-emerald-800/70 dark:text-emerald-300/70">
+                    {term}
+                  </dt>
+                  <dd className="font-medium text-emerald-900 dark:text-emerald-100">
+                    {value}
+                  </dd>
+                </div>
+              ))}
             </dl>
           </div>
         </Section>
-      ) : (
+      ) : null}
+
+      {/* Shown only once. Before payment the policy is inside the form, next to
+          the box that records acceptance of it; repeating it underneath said
+          the same four clauses twice on one screen. After payment there is no
+          form left, but the policy still governs no-shows, so it stays. */}
+      {isPaid && (
+        <Section title={REFUND_POLICY_HEADING}>
+          <ul className="card card-pad space-y-2 text-sm text-slate-700 dark:text-slate-200">
+            {REFUND_POLICY_CLAUSES.map((clause) => (
+              <li key={clause} className="flex gap-2">
+                <span aria-hidden className="text-slate-400">•</span>
+                <span>{clause}</span>
+              </li>
+            ))}
+          </ul>
+        </Section>
+      )}
+
+      {!isPaid && (
         <>
           {/* ------------------------------------------------------------ */}
           {/* What you owe                                                  */}
@@ -242,18 +296,6 @@ export default async function RegistrationPage({
           )}
         </>
       )}
-
-      {/* Policy stays visible after payment too — it governs no-shows. */}
-      <Section title={REFUND_POLICY_HEADING}>
-        <ul className="card card-pad space-y-2 text-sm text-slate-700 dark:text-slate-200">
-          {REFUND_POLICY_CLAUSES.map((clause) => (
-            <li key={clause} className="flex gap-2">
-              <span aria-hidden className="text-slate-400">•</span>
-              <span>{clause}</span>
-            </li>
-          ))}
-        </ul>
-      </Section>
     </>
   );
 }

@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 import { submitRegistration } from "@/lib/registrationActions";
-import { PARTICIPATION_MODES } from "@/lib/types";
+import {
+  PARTICIPATION_MODES,
+  participationModeLabel,
+  pathwayLabel,
+  trackLabel,
+} from "@/lib/types";
 import { MEMBER_DISCOUNT_PERCENT } from "@/lib/registrationFees";
 import {
   REFUND_POLICY_CLAUSES,
@@ -10,20 +15,34 @@ import {
   REFUND_POLICY_HEADING,
 } from "@/lib/refundPolicy";
 
+type Track = { code: string | null; name: string | null };
+
 type Paper = {
   id: string;
   paper_id: string | null;
   title: string;
   submission_type: string;
+  participation_mode: string | null;
+  /** Supabase returns a to-one embed as an object, but not always. */
+  tracks: Track | Track[] | null;
 };
 
 /**
- * The delegate's half of registration: how they will attend, which paper (if
- * any) they are presenting, and acceptance of the refund policy.
+ * The delegate's half of registration: which paper (if any) they are
+ * presenting, and acceptance of the refund policy.
+ *
+ * How they will attend, their pathway and their track are NOT asked for again.
+ * All three were fixed when the paper was submitted — and the acknowledgement
+ * email tells the author they cannot be changed afterwards — so picking the
+ * paper fetches them and the form shows them back read-only. Only a delegate
+ * attending without a paper still chooses a mode, because there is no
+ * submission to read one from.
  *
  * Notably absent: the amount. The fee is shown above this form for
  * information, but nothing here submits a figure — submitRegistration computes
  * it from the signed-in profile, so a tampered form field has nowhere to land.
+ * The same is true of the mode once a paper is linked: the server re-reads it
+ * from the submission and ignores the field below.
  */
 export function RegistrationForm({
   papers,
@@ -38,13 +57,26 @@ export function RegistrationForm({
     null
   );
   const [accepted, setAccepted] = useState(false);
+  const [paperId, setPaperId] = useState(
+    papers.length === 1 ? papers[0].id : ""
+  );
+
+  const paper = papers.find((p) => p.id === paperId) ?? null;
+  const fetched = paper
+    ? [
+        ["How you will attend", participationModeLabel(paper.participation_mode ?? "")],
+        ["Pathway", pathwayLabel(paper.submission_type)],
+        ["Track", trackLabel(paper.tracks)],
+      ].filter((row): row is [string, string] => !!row[1] && row[1] !== "—")
+    : [];
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const form = e.currentTarget;
     setPending(true);
     setResult(null);
     try {
-      const res = await submitRegistration(new FormData(e.currentTarget));
+      const res = await submitRegistration(new FormData(form));
 
       // The gateway wants a signed form POST, not a redirect: build it in a
       // detached form and submit, so the signed fields never touch the URL.
@@ -70,7 +102,13 @@ export function RegistrationForm({
       }
 
       setResult(res);
-      if (res.ok) e.currentTarget.reset();
+      if (res.ok) {
+        form.reset();
+        // The select and the consent box are controlled, so form.reset() alone
+        // would leave both showing stale values.
+        setPaperId(papers.length === 1 ? papers[0].id : "");
+        setAccepted(false);
+      }
     } finally {
       setPending(false);
     }
@@ -79,31 +117,8 @@ export function RegistrationForm({
   return (
     <form onSubmit={onSubmit} className="card card-pad space-y-6">
       <fieldset disabled={pending || !payable} className="contents">
-        {/* How they will attend */}
-        <div>
-          <label className="block text-sm font-medium text-slate-800 dark:text-slate-100 mb-2">
-            How will you attend? <span className="text-red-600">*</span>
-          </label>
-          <div className="space-y-2">
-            {PARTICIPATION_MODES.map((m) => (
-              <label
-                key={m.value}
-                className="flex items-center gap-3 rounded-lg border border-slate-200 px-3 py-2.5 cursor-pointer hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800/50"
-              >
-                <input
-                  type="radio"
-                  name="participation_mode"
-                  value={m.value}
-                  required
-                  className="accent-blue-600"
-                />
-                <span className="text-sm">{m.label}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        {/* Paper, when they have one */}
+        {/* Paper first: it is what the attendance, pathway and track are read
+            from, so it cannot be asked for after them. */}
         {papers.length > 0 && (
           <div>
             <label
@@ -116,7 +131,8 @@ export function RegistrationForm({
               id="submission_id"
               name="submission_id"
               className="input w-full"
-              defaultValue={papers.length === 1 ? papers[0].id : ""}
+              value={paperId}
+              onChange={(e) => setPaperId(e.target.value)}
             >
               <option value="">Not presenting a paper</option>
               {papers.map((p) => (
@@ -130,6 +146,62 @@ export function RegistrationForm({
               Registration is per delegate, not per paper. If you are presenting
               more than one, pick any — the fee is the same.
             </p>
+          </div>
+        )}
+
+        {/* Carried over from the submission, not re-asked. */}
+        {paper && fetched.length > 0 && (
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/40">
+            <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+              From your submission
+            </h3>
+            <dl className="mt-3 space-y-2 text-sm">
+              {fetched.map(([term, value]) => (
+                <div key={term} className="sm:flex sm:gap-4">
+                  <dt className="text-slate-500 sm:w-44 sm:shrink-0">{term}</dt>
+                  <dd className="font-medium text-slate-900 dark:text-slate-100">
+                    {value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+            <p className="mt-3 text-xs text-slate-500">
+              These were set when the paper was submitted and cannot be changed
+              here. If any of them is wrong, contact the Editorial Office.
+            </p>
+            {/* Informational only — submitRegistration re-reads the mode from
+                the submission and ignores whatever arrives in this field. */}
+            <input
+              type="hidden"
+              name="participation_mode"
+              value={paper.participation_mode ?? ""}
+            />
+          </div>
+        )}
+
+        {/* No paper means no submission to read a mode from, so ask. */}
+        {!paper && (
+          <div>
+            <label className="block text-sm font-medium text-slate-800 dark:text-slate-100 mb-2">
+              How will you attend? <span className="text-red-600">*</span>
+            </label>
+            <div className="space-y-2">
+              {PARTICIPATION_MODES.map((m) => (
+                <label
+                  key={m.value}
+                  className="flex items-center gap-3 rounded-lg border border-slate-200 px-3 py-2.5 cursor-pointer hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800/50"
+                >
+                  <input
+                    type="radio"
+                    name="participation_mode"
+                    value={m.value}
+                    required
+                    className="accent-blue-600"
+                  />
+                  <span className="text-sm">{m.label}</span>
+                </label>
+              ))}
+            </div>
           </div>
         )}
 

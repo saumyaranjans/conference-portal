@@ -282,8 +282,48 @@ export const PARTICIPATION_MODES = [
   { value: "onsite", label: "On-Site Institution Visit (Offline)" },
 ] as const;
 
+/**
+ * Statuses that mean "this paper is in the programme", and therefore that its
+ * authors have been told their work was accepted.
+ *
+ * Pathway A reaches `accepted` when the abstract is accepted — for those
+ * authors that IS the acceptance. Pathway B passes through `abstract_accepted`
+ * on the way, and clearing the abstract is enough to book a place.
+ *
+ * Both the registration page (which papers may be registered against) and the
+ * author dashboard (whether to offer registration at all) read this list, so
+ * the dashboard never invites someone to a page with nothing on it.
+ */
+export const PRESENTING_STATUSES = ["accepted", "abstract_accepted"] as const;
+
+export function isPresentable(status: string | null | undefined): boolean {
+  return (PRESENTING_STATUSES as readonly string[]).includes(status ?? "");
+}
+
 export function submissionTypeLabel(value: string): string {
   return SUBMISSION_TYPES.find((t) => t.value === value)?.label ?? "—";
+}
+
+/** "Pathway A — Abstract & Presentation Only", as the submission form put it. */
+export function pathwayLabel(value: string | null | undefined): string | null {
+  const t = SUBMISSION_TYPES.find((s) => s.value === value);
+  return t ? `${t.pathway} — ${t.label}` : null;
+}
+
+/**
+ * "T3 — Digital Transformation" from a tracks embed. Supabase returns a to-one
+ * embed as an object, but not in every shape of query, so both are accepted.
+ */
+export function trackLabel(
+  tracks:
+    | { code?: string | null; name?: string | null }
+    | { code?: string | null; name?: string | null }[]
+    | null
+    | undefined
+): string | null {
+  const t = Array.isArray(tracks) ? tracks[0] : tracks;
+  if (!t?.name) return null;
+  return t.code ? `${t.code} — ${t.name}` : t.name;
 }
 
 export function participationModeLabel(value: string): string {

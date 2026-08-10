@@ -10,21 +10,13 @@ import { paymentProvider, paymentsOpen } from "@/lib/payments";
 // Coupons are validated here but redeemed in the payment callback: a delegate
 // who abandons checkout must not lose their discount to an unpaid attempt.
 import { validateCoupon, type CouponRow } from "@/lib/coupons";
-import { PARTICIPATION_MODES } from "@/lib/types";
+import {
+  PARTICIPATION_MODES,
+  PRESENTING_STATUSES,
+  isPresentable,
+} from "@/lib/types";
 import type { ActionResult } from "@/lib/actions";
 import type { Checkout } from "@/lib/payments";
-
-/**
- * Statuses that mean "this paper is in the programme".
- *
- * Pathway A (abstract & presentation only) reaches `accepted` the moment the
- * abstract is accepted — for those authors that IS final acceptance, so it is
- * sufficient to register. Pathway B papers pass through `abstract_accepted` on
- * the way to `accepted`; both are included, because an author whose abstract
- * has cleared should be able to book their place without waiting for the
- * full-paper decision.
- */
-const PRESENTING_STATUSES = ["accepted", "abstract_accepted"];
 
 export type RegistrationOutcome = ActionResult & {
   /** Present when the delegate should be handed to the gateway. */
@@ -36,26 +28,35 @@ function newOrderId(): string {
   return `GLOGIFT27-${randomBytes(4).toString("hex").toUpperCase()}`;
 }
 
-/** The papers this profile may register against (as author or co-author). */
+/**
+ * The papers this profile may register against (as author or co-author).
+ *
+ * Carries the pathway, the participation mode and the track alongside the
+ * title: registration does not re-ask for any of them, it shows back what the
+ * submission already recorded.
+ */
+const PRESENTABLE_FIELDS =
+  "id, paper_id, title, status, submission_type, participation_mode, tracks(code, name)";
+
 export async function myPresentableSubmissions(profileId: string) {
   const admin = createAdminClient();
 
   const { data: own } = await admin
     .from("submissions")
-    .select("id, paper_id, title, status, submission_type")
+    .select(PRESENTABLE_FIELDS)
     .eq("author_id", profileId)
-    .in("status", PRESENTING_STATUSES);
+    .in("status", [...PRESENTING_STATUSES]);
 
   const { data: co } = await admin
     .from("submission_authors")
-    .select("submissions(id, paper_id, title, status, submission_type)")
+    .select(`submissions(${PRESENTABLE_FIELDS})`)
     .eq("profile_id", profileId);
 
   const rows = [
     ...((own as any[]) ?? []),
     ...(((co as any[]) ?? [])
       .map((r) => r.submissions)
-      .filter((s) => s && PRESENTING_STATUSES.includes(s.status))),
+      .filter((s) => s && isPresentable(s.status))),
   ];
 
   // A co-author who is also the corresponding author appears twice.
@@ -75,12 +76,20 @@ export async function myActiveCoupon(profileId: string) {
   return (data as { code: string; discount_percent: number } | null) ?? null;
 }
 
-/** The delegate's current registration, if any. Latest first. */
+/**
+ * The delegate's current registration, if any. Latest first.
+ *
+ * Carries the linked paper so the paid summary can show what was registered
+ * for, not just what it cost.
+ */
 export async function myRegistration(profileId: string) {
   const supabase = await createClient();
   const { data } = await supabase
     .from("registrations")
-    .select("*, payment_orders(*)")
+    .select(
+      "*, payment_orders(*), " +
+        "submissions(paper_id, title, submission_type, participation_mode, tracks(code, name))"
+    )
     .eq("profile_id", profileId)
     .order("created_at", { ascending: false })
     .limit(1)
@@ -123,24 +132,38 @@ export async function submitRegistration(
     };
   }
 
-  // --- participation mode ------------------------------------------------
-  const mode = String(formData.get("participation_mode") ?? "");
-  if (!PARTICIPATION_MODES.some((m) => m.value === mode)) {
-    return { ok: false, message: "Please choose how you will attend." };
-  }
-
   // --- the paper, if they named one --------------------------------------
   const submissionId = String(formData.get("submission_id") ?? "").trim();
   let linkedSubmission: string | null = null;
+  let linkedMode = "";
   if (submissionId) {
     const eligible = await myPresentableSubmissions(profile.id);
-    if (!eligible.some((s: any) => s.id === submissionId)) {
+    const paper = (eligible as any[]).find((s) => s.id === submissionId);
+    if (!paper) {
       return {
         ok: false,
         message: "That paper is not one you can register against.",
       };
     }
     linkedSubmission = submissionId;
+    linkedMode = String(paper.participation_mode ?? "");
+  }
+
+  // --- participation mode ------------------------------------------------
+  //
+  // Taken from the submission, not the form, whenever a paper is linked. The
+  // author chose virtual or on-site when they submitted and were told it
+  // cannot be changed afterwards, so registration shows that choice back
+  // rather than re-asking — and a form field claiming otherwise is ignored.
+  // Only a delegate registering without a paper picks a mode here.
+  const mode = linkedMode || String(formData.get("participation_mode") ?? "");
+  if (!PARTICIPATION_MODES.some((m) => m.value === mode)) {
+    return {
+      ok: false,
+      message: linkedSubmission
+        ? "That paper has no participation mode recorded. Please contact the Editorial Office."
+        : "Please choose how you will attend.",
+    };
   }
 
   // --- the coupon, if they typed one -------------------------------------

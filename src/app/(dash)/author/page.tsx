@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/Primitives";
 import {
   MAX_SUBMISSIONS_PER_AUTHOR,
+  isPresentable,
   versionTag,
   type Submission,
   type SubmissionStatus,
@@ -274,6 +275,14 @@ export default async function AuthorDashboard({
     coAuthored = (coSubs ?? []) as Row[];
   }
 
+  // Whether to offer registration at all. Counts both roles, because a
+  // co-author registers against a paper exactly as the corresponding author
+  // does — and matches what /registration will actually list, so the prompt
+  // never leads to an empty page.
+  const hasAcceptance = [...submissions, ...coAuthored].some((s) =>
+    isPresentable(s.status)
+  );
+
   // The 2-submission rule counts both roles: papers you submit and papers you
   // co-author. Withdrawn submissions free a slot.
   const ownedActive = submissions.filter((s) => s.status !== "withdrawn").length;
@@ -347,7 +356,7 @@ export default async function AuthorDashboard({
         }
       />
 
-      <RegistrationStatus registration={registration} />
+      <RegistrationStatus registration={registration} accepted={hasAcceptance} />
 
       {/* -------- Accepted abstracts — next step (corresponding author) ------
           Shown once the author holds an accepted Pathway B abstract. Pathway B

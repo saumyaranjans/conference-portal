@@ -37,7 +37,13 @@ export type InvoiceData = {
     category: string;
     country: string;
   };
-  paper: { reference: string; title: string } | null;
+  /**
+   * Every paper this delegate is presenting, not just the one the registration
+   * row is filed against. One fee covers both accepted abstracts, so a receipt
+   * naming only one of them understates what was paid for — and the delegate's
+   * finance office may be reimbursing against the other.
+   */
+  papers: { reference: string; title: string }[];
   currency: "INR" | "USD";
   base: number;
   discount: number;
@@ -181,16 +187,23 @@ export async function generateInvoicePdf(d: InvoiceData): Promise<Uint8Array> {
   y -= 12;
   text(`Attending: ${d.participationMode}`, { size: 9, color: MUTED });
 
-  if (d.paper) {
-    y -= 12;
-    // Long titles would run off the page; clip rather than overlap the margin.
-    const title = d.paper.title.length > 78
-      ? `${d.paper.title.slice(0, 75)}...`
-      : d.paper.title;
-    text(`Paper: ${d.paper.reference}${title ? ` - ${title}` : ""}`, {
+  if (d.papers.length) {
+    y -= 13;
+    text(d.papers.length > 1 ? "Papers presented:" : "Paper presented:", {
       size: 9,
       color: MUTED,
     });
+    for (const p of d.papers) {
+      y -= 11;
+      // Long titles would run off the page; clip rather than overlap the margin.
+      const title =
+        p.title.length > 74 ? `${p.title.slice(0, 71)}...` : p.title;
+      text(`${p.reference}${title ? ` - ${title}` : ""}`, {
+        x: MARGIN + 10,
+        size: 9,
+        color: MUTED,
+      });
+    }
   }
 
   // ---- charges -----------------------------------------------------------
@@ -240,7 +253,12 @@ export async function generateInvoicePdf(d: InvoiceData): Promise<Uint8Array> {
   rule();
   y -= 12;
   text(
-    "This invoice is issued against a completed payment. No payment is due.",
+    "This is a computer generated invoice and requires no signature.",
+    { size: 8, color: MUTED }
+  );
+  y -= 11;
+  text(
+    "Issued against a completed payment. No payment is due.",
     { size: 8, color: MUTED }
   );
   y -= 11;

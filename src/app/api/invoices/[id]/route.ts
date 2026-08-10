@@ -4,6 +4,7 @@ import { getProfile } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/server";
 import { generateInvoicePdf } from "@/lib/invoicePdf";
 import { participationModeLabel } from "@/lib/types";
+import { myPresentableSubmissions } from "@/lib/registrationActions";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -43,7 +44,7 @@ export async function GET(
       "id, profile_id, status, currency, base_amount, discount_amount, coupon_code, " +
         "tax_rate, tax_amount, total_amount, participation_mode, participant_category, " +
         "country, paid_at, created_at, " +
-        "submissions(paper_id, title), payment_orders(order_id, status)"
+        "payment_orders(order_id, status), profiles(full_name, email)"
     )
     .eq("id", id)
     .maybeSingle();
@@ -69,7 +70,20 @@ export async function GET(
     );
   }
 
-  const sub = Array.isArray(r.submissions) ? r.submissions[0] : r.submissions;
+  // Every accepted paper, not only the one the registration is filed against.
+  // The row carries a single submission_id because a registration has to point
+  // somewhere, but the fee covers the delegate and everything they present.
+  const eligible = (await myPresentableSubmissions(r.profile_id)) as any[];
+  const papers = eligible.map((s) => ({
+    reference: s.paper_id ?? "",
+    title: s.title ?? "",
+  }));
+
+  // The delegate the invoice is FOR, not whoever is downloading it. The
+  // Editorial Office may open anyone's receipt, and reading the signed-in
+  // profile here would print the staff member's name on the delegate's bill.
+  const owner = Array.isArray(r.profiles) ? r.profiles[0] : r.profiles;
+
   const orders = Array.isArray(r.payment_orders)
     ? r.payment_orders
     : r.payment_orders
@@ -94,12 +108,12 @@ export async function GET(
     paidOn: asDate(r.paid_at),
     orderId: paidOrder?.order_id ?? null,
     delegate: {
-      name: profile.full_name ?? "",
-      email: profile.email ?? "",
+      name: owner?.full_name ?? "",
+      email: owner?.email ?? "",
       category: r.participant_category ?? "",
       country: r.country ?? "",
     },
-    paper: sub ? { reference: sub.paper_id ?? "", title: sub.title ?? "" } : null,
+    papers,
     currency: (r.currency ?? "INR") as "INR" | "USD",
     base: r.base_amount ?? 0,
     discount: r.discount_amount ?? 0,

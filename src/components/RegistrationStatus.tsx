@@ -13,6 +13,7 @@ export function RegistrationStatus({
   registration,
   accepted,
   justPaid = false,
+  paymentFailed = false,
 }: {
   registration: {
     id?: string;
@@ -24,6 +25,8 @@ export function RegistrationStatus({
   } | null;
   /** True on the redirect back from the gateway — shows the thank-you once. */
   justPaid?: boolean;
+  /** True on the redirect back from a gateway that declined or was cancelled. */
+  paymentFailed?: boolean;
   /**
    * Whether the author has had at least one paper accepted. Nothing can be
    * registered against until then, so prompting for it would send the author
@@ -32,7 +35,7 @@ export function RegistrationStatus({
   accepted: boolean;
 }) {
   // Nothing to say yet: no acceptance, and no registration already under way.
-  if (!accepted && !registration) return null;
+  if (!accepted && !registration && !paymentFailed) return null;
 
   if (registration?.status === "paid") {
     const paid = registration.total_amount ?? registration.amount;
@@ -88,6 +91,30 @@ export function RegistrationStatus({
   }
 
   const started = registration?.status === "pending";
+
+  // Straight back from a gateway that did not settle. The apology comes first,
+  // and it says plainly that no money moved — the delegate's own bank app may
+  // not agree yet, and "did it go through?" is the question they actually have.
+  if (paymentFailed) {
+    return (
+      <div className="card card-pad mb-6 flex flex-wrap items-center justify-between gap-3 border-red-200 bg-red-50 dark:border-red-500/30 dark:bg-red-500/10">
+        <div>
+          <p className="text-sm font-semibold text-red-900 dark:text-red-200">
+            Sorry — your payment did not go through
+          </p>
+          <p className="text-xs text-red-800/80 dark:text-red-300/80">
+            Nothing has been charged, and your registration details are saved.
+            Please try again. If your bank shows the money as taken, contact the
+            Editorial Office and do not pay a second time.
+          </p>
+        </div>
+        <Link href="/registration" className="btn-primary shrink-0">
+          Try payment again
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="card card-pad mb-6 flex flex-wrap items-center justify-between gap-3 border-amber-200 bg-amber-50 dark:border-amber-500/30 dark:bg-amber-500/10">
       <div>

@@ -374,6 +374,7 @@ export default async function AuthorDashboard({
         registration={registration}
         accepted={hasAcceptance}
         justPaid={payment === "success"}
+        paymentFailed={payment === "failed" || payment === "cancelled"}
       />
 
       {/* -------- Accepted abstracts — next step (corresponding author) ------

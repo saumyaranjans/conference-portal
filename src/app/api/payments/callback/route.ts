@@ -11,8 +11,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { paymentProvider } from "@/lib/payments";
-import { syncPaidRegistrationToRegister } from "@/lib/registrationSync";
-import { redeemCoupon } from "@/lib/coupons";
+import { settleRegistration } from "@/lib/registrationSettle";
 
 export const dynamic = "force-dynamic";
 
@@ -46,13 +45,19 @@ function backTo(req: NextRequest, status: string) {
   }
 
   // A delegate who has just paid is done with the registration page — send
-  // them to their dashboard, where the thank-you, the confirmed status and the
-  // invoice all live. Every other outcome keeps them on /registration, which
-  // is where the form they still need is.
+  // them to the thank-you, which carries the receipt. Every other outcome
+  // keeps them on /registration, which is where the form they still need is.
   const path =
     status === "success"
-      ? `/author?payment=success`
-      : `/registration?payment=${status}`;
+      ? "/registration/thank-you"
+      : status === "failed" || status === "cancelled"
+        ? // Nothing was charged and the saved registration is still there, so
+          // the delegate belongs on their dashboard with the apology and the
+          // button to try again — not staring at the form they just filled in.
+          `/author?payment=${status}`
+        : // mismatch / unknown / unavailable need the longer explanation, and
+          // that lives beside the fee on the registration page.
+          `/registration?payment=${status}`;
 
   return NextResponse.redirect(new URL(path, base), 303);
 }
@@ -116,31 +121,10 @@ async function handle(req: NextRequest) {
     .eq("id", (order as any).id);
 
   if (result.status === "paid" && !mismatch) {
-    await admin
-      .from("registrations")
-      .update({ status: "paid" })
-      .eq("id", (order as any).registration_id);
-
-    // Burn the coupon now rather than at registration: a delegate who
-    // abandoned an earlier attempt keeps their discount, and only a payment
-    // that actually settled consumes it.
-    const { data: reg } = await admin
-      .from("registrations")
-      .select("coupon_id")
-      .eq("id", (order as any).registration_id)
-      .maybeSingle();
-    if ((reg as any)?.coupon_id) {
-      await redeemCoupon((reg as any).coupon_id, (order as any).registration_id);
-    }
-
-    // Fill in the Editorial Office register automatically. A failure here must
-    // not lose the payment — the money is taken and the registration is paid
-    // either way, and staff can still tick the boxes by hand.
-    try {
-      await syncPaidRegistrationToRegister((order as any).registration_id);
-    } catch {
-      // Intentionally swallowed; see above.
-    }
+    // Marking paid, burning the coupon and filling the Editorial Office
+    // register all live in settleRegistration, shared with the Convener's
+    // manual confirmation so a recovered payment leaves an identical row.
+    await settleRegistration((order as any).registration_id);
 
     return backTo(req, "success");
   }

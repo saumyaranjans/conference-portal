@@ -1,5 +1,7 @@
 import Link from "next/link";
-import { requireRole } from "@/lib/auth";
+import { canManageAsConvener, requireRole } from "@/lib/auth";
+import { PaymentRecoveryDesk } from "@/components/PaymentRecoveryDesk";
+import { pendingPayments } from "@/lib/paymentRecoveryActions";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { removeTrackChair } from "@/lib/actions";
 import { feeForTier, isEarlyBird, GST_RATE } from "@/lib/registrationFees";
@@ -29,7 +31,7 @@ import {
 } from "@/lib/types";
 
 export default async function ChiefDashboard() {
-  await requireRole("chief");
+  const profile = await requireRole("chief");
   const supabase = await createClient();
 
   const admin = createAdminClient();
@@ -299,6 +301,14 @@ export default async function ChiefDashboard() {
       </div>
 
       <OnlineRegistrations />
+
+      {/* Payments the bank may have taken while the portal still shows them
+          unsettled. Manage rights only — this writes money decisions. */}
+      {canManageAsConvener(profile) && (
+        <Section title="Payments awaiting confirmation">
+          <PaymentRecoveryDesk rows={(await pendingPayments()) as never} />
+        </Section>
+      )}
 
       {/* ---- Registration collections (from Editorial Office amounts) ---- */}
       {collections.length > 0 && (

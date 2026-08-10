@@ -21,9 +21,14 @@ export const dynamic = "force-dynamic";
  * be able to wave at a finance office.
  */
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // ?inline=1 renders the receipt in the page instead of downloading it —
+  // the thank-you shows the delegate what they are about to save, which is
+  // the difference between a receipt they trust and a file they hope is right.
+  const inline = new URL(request.url).searchParams.get("inline") === "1";
+
   const profile = await getProfile();
   if (!profile) {
     return new NextResponse("Authentication required.", { status: 401 });
@@ -108,9 +113,9 @@ export async function GET(
   return new NextResponse(Buffer.from(pdf), {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="GLOGIFT27-invoice-${String(
-        r.id
-      ).slice(0, 8)}.pdf"`,
+      "Content-Disposition": `${
+        inline ? "inline" : "attachment"
+      }; filename="GLOGIFT27-invoice-${String(r.id).slice(0, 8)}.pdf"`,
       "Cache-Control": "private, no-store, max-age=0, must-revalidate",
       "X-Content-Type-Options": "nosniff",
     },

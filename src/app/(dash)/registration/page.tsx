@@ -8,6 +8,7 @@ import {
   isEarlyBird,
   EARLY_BIRD_CUTOFF,
   MEMBER_DISCOUNT_PERCENT,
+  GST_PERCENT,
 } from "@/lib/registrationFees";
 import { paymentsOpen, paymentsClosedMessage } from "@/lib/payments";
 import {
@@ -90,7 +91,10 @@ export default async function RegistrationPage({
               <div className="flex justify-between sm:block">
                 <dt className="text-emerald-800/70 dark:text-emerald-300/70">Amount paid</dt>
                 <dd className="font-medium text-emerald-900 dark:text-emerald-100">
-                  {formatMoney(existing.currency, existing.amount)}
+                  {formatMoney(existing.currency, existing.total_amount ?? existing.amount)}
+                  <span className="ml-1 text-xs font-normal opacity-70">
+                    incl. GST
+                  </span>
                 </dd>
               </div>
               <div className="flex justify-between sm:block">
@@ -117,7 +121,10 @@ export default async function RegistrationPage({
                       {fee.currency === "USD" && " · international rate"}
                     </p>
                     <p className="mt-1 text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
-                      {formatMoney(fee.currency, fee.amount)}
+                      {formatMoney(fee.currency, fee.total)}
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      including {GST_PERCENT}% GST
                     </p>
                   </div>
                   <span
@@ -142,9 +149,17 @@ export default async function RegistrationPage({
                       <dd>− {formatMoney(fee.currency, fee.discount)}</dd>
                     </div>
                   )}
-                  <div className="flex justify-between border-t border-slate-100 pt-1.5 font-medium dark:border-slate-700">
-                    <dt>Payable</dt>
+                  <div className="flex justify-between">
+                    <dt className="text-slate-500">Subtotal</dt>
                     <dd>{formatMoney(fee.currency, fee.amount)}</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-slate-500">GST ({GST_PERCENT}%)</dt>
+                    <dd>+ {formatMoney(fee.currency, fee.tax)}</dd>
+                  </div>
+                  <div className="flex justify-between border-t border-slate-100 pt-1.5 font-medium dark:border-slate-700">
+                    <dt>Payable at checkout</dt>
+                    <dd>{formatMoney(fee.currency, fee.total)}</dd>
                   </div>
                 </dl>
 

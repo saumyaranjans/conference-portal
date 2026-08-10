@@ -4,7 +4,7 @@ import { randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { requireProfile } from "@/lib/auth";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
-import { computeRegistrationFee } from "@/lib/registrationFees";
+import { computeRegistrationFee, GST_RATE } from "@/lib/registrationFees";
 import { REFUND_POLICY_VERSION } from "@/lib/refundPolicy";
 import { paymentProvider, paymentsOpen } from "@/lib/payments";
 import { PARTICIPATION_MODES } from "@/lib/types";
@@ -164,12 +164,15 @@ export async function submitRegistration(
       base_amount: fee.base,
       discount_amount: fee.discount,
       amount: fee.amount,
+      tax_rate: GST_RATE,
+      tax_amount: fee.tax,
+      total_amount: fee.total,
       participation_mode: mode,
       status: "pending",
       refund_policy_accepted_at: new Date().toISOString(),
       refund_policy_version: REFUND_POLICY_VERSION,
     })
-    .select("id, amount, currency")
+    .select("id, amount, tax_amount, total_amount, currency")
     .single();
 
   if (error) return { ok: false, message: error.message };
@@ -189,11 +192,15 @@ export async function submitRegistration(
   const provider = paymentProvider()!;
   const orderId = newOrderId();
 
+  // The gateway collects the GST-INCLUSIVE figure. `amount` is the fee before
+  // tax and must never be what is sent to the bank.
+  const charge = (registration as any).total_amount as number;
+
   const { error: orderError } = await admin.from("payment_orders").insert({
     registration_id: (registration as any).id,
     order_id: orderId,
     provider: provider.id,
-    amount: (registration as any).amount,
+    amount: charge,
     currency: (registration as any).currency,
     status: "created",
   });
@@ -202,7 +209,7 @@ export async function submitRegistration(
   try {
     const checkout = await provider.createCheckout({
       orderId,
-      amount: (registration as any).amount,
+      amount: charge,
       currency: (registration as any).currency,
       description: `GLOGIFT 2027 registration — ${profile.full_name}`,
       payer: {

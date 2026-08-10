@@ -1105,6 +1105,33 @@ export function LandingPage() {
             first-come, first-served basis; off-campus hotel options will be
             shared on the conference website.
           </p>
+
+          {/* Register CTA. Deliberately emerald rather than the blue used by
+              the "submission portal" banner above: the two lead to different
+              places (paying vs submitting) and a visitor scrolling past should
+              not have to read them to tell which is which. */}
+          <div className="relative mt-6 overflow-hidden rounded-2xl bg-gradient-to-br from-[#065f46] via-[#0d9488] to-[#0891b2] px-5 py-2.5 shadow-lg sm:px-6">
+            <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-amber-300 via-emerald-300 to-sky-400" />
+            <div className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-white/10 blur-2xl" />
+            <div className="relative flex flex-col items-center gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="text-center sm:text-left">
+                <p className="text-sm leading-relaxed text-emerald-50">
+                  Ready to join us? Complete your delegate registration online.
+                  <br />
+                  Sign in to see the fee that applies to you and pay securely.
+                </p>
+              </div>
+              {/* Sign-in gate is the portal's, not ours: /registration is
+                  behind requireProfile, and ?next= carries them straight there
+                  once they are in rather than dropping them on a role home. */}
+              <Link
+                href="/login?next=/registration"
+                className="shrink-0 rounded-xl !bg-white px-6 py-2.5 text-sm font-bold text-emerald-800 shadow transition hover:!bg-emerald-50"
+              >
+                Register for Conference →
+              </Link>
+            </div>
+          </div>
         </section>
 
         {/* ---- 7. Conference timeline ---- */}

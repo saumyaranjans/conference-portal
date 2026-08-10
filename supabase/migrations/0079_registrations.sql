@@ -37,9 +37,20 @@ create table if not exists registrations (
   fee_tier text not null check (fee_tier in ('early', 'regular')),
   currency text not null check (currency in ('INR', 'USD')),
   -- Whole currency units (rupees / dollars), matching registrationFees.ts.
+  --   base_amount     list price for the category/tier
+  --   discount_amount GIFT member discount, if any
+  --   amount          base - discount, EXCLUSIVE of GST. The figure the
+  --                   published fee table and the staff register quote.
+  --   tax_amount      GST on `amount`, at tax_rate
+  --   total_amount    what the gateway actually charged
   base_amount     integer not null check (base_amount >= 0),
   discount_amount integer not null default 0 check (discount_amount >= 0),
   amount          integer not null check (amount >= 0),
+  -- Stored per registration, not read from config: a later change to the GST
+  -- rate must not restate what an earlier delegate was charged.
+  tax_rate        numeric(5,4) not null default 0,
+  tax_amount      integer not null default 0 check (tax_amount >= 0),
+  total_amount    integer not null default 0 check (total_amount >= 0),
 
   participation_mode text check (participation_mode in ('virtual', 'onsite')),
 

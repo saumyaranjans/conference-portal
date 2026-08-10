@@ -10,6 +10,22 @@
 export const EARLY_BIRD_CUTOFF = "2026-12-20"; // inclusive — last early-bird day
 export const GLOGIFT_MEMBER_DISCOUNT = 0.2;
 
+/**
+ * GST, added at payment checkout — the published fee table quotes amounts
+ * exclusive of it ("GST charged extra").
+ *
+ * Charged on the DISCOUNTED figure, not the list price: a member discount
+ * reduces the taxable value, so tax follows the discount rather than the other
+ * way round.
+ *
+ * `amount` on a fee stays exclusive of GST, because the Editorial Office
+ * register, the Convener's collection totals and the Author Management desk
+ * all quote the fee that way and were doing so before checkout existed. Only
+ * `total` — what the gateway actually charges — includes tax.
+ */
+export const GST_RATE = 0.18;
+export const GST_PERCENT = Math.round(GST_RATE * 100);
+
 /** The same figure as a whole number, for copy — so text cannot drift from maths. */
 export const MEMBER_DISCOUNT_PERCENT = Math.round(GLOGIFT_MEMBER_DISCOUNT * 100);
 
@@ -112,9 +128,19 @@ export type RegistrationFee = {
   isMember: boolean;
   /** Amount discounted for a GLOGIFT member (0 otherwise). */
   discount: number;
-  /** Amount actually payable. */
+  /** Fee payable, EXCLUSIVE of GST. This is the figure the staff register and
+   *  the published table quote. */
   amount: number;
+  /** GST on `amount`. */
+  tax: number;
+  /** What the payment gateway charges: amount + tax. */
+  total: number;
 };
+
+/** GST on a taxable value, rounded to whole currency units. */
+export function gstOn(amount: number): number {
+  return Math.round(amount * GST_RATE);
+}
 
 /** Early bird through the end of 20 Dec 2026 (IST); regular from 21 Dec 2026. */
 export function isEarlyBird(at?: Date): boolean {
@@ -133,11 +159,19 @@ export function computeRegistrationFee(
   const tier = early ? "early" : "regular";
   const fee = priceOf(category, country);
   if (!fee) {
-    return { category, known: false, tier, currency: "INR", base: 0, isMember, discount: 0, amount: 0 };
+    return {
+      category, known: false, tier, currency: "INR", base: 0, isMember,
+      discount: 0, amount: 0, tax: 0, total: 0,
+    };
   }
   const base = early ? fee.earlyBird : fee.regular;
   const discount = isMember ? Math.round(base * GLOGIFT_MEMBER_DISCOUNT) : 0;
-  return { category, known: true, tier, currency: fee.currency, base, isMember, discount, amount: base - discount };
+  const amount = base - discount;
+  const tax = gstOn(amount);
+  return {
+    category, known: true, tier, currency: fee.currency, base, isMember,
+    discount, amount, tax, total: amount + tax,
+  };
 }
 
 /** Fee for a SPECIFIC tier (regardless of today's date) — used when staff
@@ -148,12 +182,19 @@ export function feeForTier(
   tier: "early" | "regular",
   /** Country from the profile. Anything other than India bills in USD. */
   country?: string | null
-): { known: boolean; currency: "INR" | "USD"; base: number; discount: number; amount: number } {
+): {
+  known: boolean; currency: "INR" | "USD"; base: number; discount: number;
+  amount: number; tax: number; total: number;
+} {
   const fee = priceOf(category, country);
-  if (!fee) return { known: false, currency: "INR", base: 0, discount: 0, amount: 0 };
+  if (!fee) {
+    return { known: false, currency: "INR", base: 0, discount: 0, amount: 0, tax: 0, total: 0 };
+  }
   const base = tier === "early" ? fee.earlyBird : fee.regular;
   const discount = isMember ? Math.round(base * GLOGIFT_MEMBER_DISCOUNT) : 0;
-  return { known: true, currency: fee.currency, base, discount, amount: base - discount };
+  const amount = base - discount;
+  const tax = gstOn(amount);
+  return { known: true, currency: fee.currency, base, discount, amount, tax, total: amount + tax };
 }
 
 export function formatMoney(currency: "INR" | "USD", n: number): string {

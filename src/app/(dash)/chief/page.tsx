@@ -2,13 +2,14 @@ import Link from "next/link";
 import { requireRole } from "@/lib/auth";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { removeTrackChair } from "@/lib/actions";
-import { feeForTier, isEarlyBird } from "@/lib/registrationFees";
+import { feeForTier, isEarlyBird, GST_RATE } from "@/lib/registrationFees";
 import { getUsdInrRate, usdToInr } from "@/lib/fx";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { ChairInviteComposer } from "@/components/ChairInviteComposer";
 import { DeleteSubmissionButton } from "@/components/DeleteSubmissionButton";
 import { AssignPaperEditor } from "@/components/AssignPaperEditor";
 import { RemindTrackEditor } from "@/components/RemindTrackEditor";
+import { OnlineRegistrations } from "@/components/OnlineRegistrations";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import {
   DataTable,
@@ -141,8 +142,8 @@ export default async function ChiefDashboard() {
         {
           currency: "INR",
           amount: collectedInr,
-          tax: collectedInr * 0.18,
-          total: collectedInr * 1.18,
+          tax: collectedInr * GST_RATE,
+          total: collectedInr * (1 + GST_RATE),
         },
       ]
     : [];
@@ -296,6 +297,8 @@ export default async function ChiefDashboard() {
         <StatCard label="Accepted" value={totals.accepted ?? 0} />
         <StatCard label="Rejected" value={totals.rejected ?? 0} />
       </div>
+
+      <OnlineRegistrations />
 
       {/* ---- Registration collections (from Editorial Office amounts) ---- */}
       {collections.length > 0 && (

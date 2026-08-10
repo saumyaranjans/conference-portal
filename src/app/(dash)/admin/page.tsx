@@ -9,6 +9,7 @@ import {
   formatDate,
 } from "@/components/ui/Primitives";
 import { SubmissionAnalytics } from "@/components/SubmissionAnalytics";
+import { OnlineRegistrations } from "@/components/OnlineRegistrations";
 import type { Profile } from "@/lib/types";
 
 export default async function AdminDashboard() {
@@ -55,6 +56,8 @@ export default async function AdminDashboard() {
           </div>
         }
       />
+
+      <OnlineRegistrations />
 
       <Section title="Submission analytics">
         <SubmissionAnalytics rows={(subs ?? []) as any} showChoices />

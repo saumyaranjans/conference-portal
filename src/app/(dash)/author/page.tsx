@@ -15,6 +15,7 @@ import {
   type SubmissionStatus,
 } from "@/lib/types";
 import { MyCertificates } from "@/components/MyCertificates";
+import { RegistrationStatus } from "@/components/RegistrationStatus";
 import { CancelFullPaperButton } from "@/components/CancelFullPaperButton";
 import { listMyCertificates, certificatesReleased } from "@/lib/certificateAccess";
 
@@ -172,21 +173,33 @@ export default async function AuthorDashboard({
   // One parallel wave: the certificates box, the author's own submissions and
   // their co-author links only need profile.id — serializing them (the old
   // code) made post-login landing 3 round trips deeper than necessary.
-  const [certificates, { data }, { data: coRows }] = await Promise.all([
-    certificatesReleased()
-      ? listMyCertificates(profile.id)
-      : Promise.resolve([]),
-    supabase
-      .from("submissions")
-      .select("*, tracks(name)")
-      .eq("author_id", profile.id)
-      .order("updated_at", { ascending: false }),
-    admin
-      .from("submission_authors")
-      .select("submission_id")
-      .eq("profile_id", profile.id)
-      .eq("is_corresponding", false),
-  ]);
+  const [certificates, { data }, { data: coRows }, { data: registrationRow }] =
+    await Promise.all([
+      certificatesReleased()
+        ? listMyCertificates(profile.id)
+        : Promise.resolve([]),
+      supabase
+        .from("submissions")
+        .select("*, tracks(name)")
+        .eq("author_id", profile.id)
+        .order("updated_at", { ascending: false }),
+      admin
+        .from("submission_authors")
+        .select("submission_id")
+        .eq("profile_id", profile.id)
+        .eq("is_corresponding", false),
+      // Newest first: a delegate who abandoned a payment and started again has
+      // more than one row, and the latest is the one they are working on.
+      admin
+        .from("registrations")
+        .select("status, currency, amount, total_amount, paid_at")
+        .eq("profile_id", profile.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
+
+  const registration = (registrationRow as any) ?? null;
 
   const submissions = (data ?? []) as Row[];
 
@@ -333,6 +346,8 @@ export default async function AuthorDashboard({
           )
         }
       />
+
+      <RegistrationStatus registration={registration} />
 
       {/* -------- Accepted abstracts — next step (corresponding author) ------
           Shown once the author holds an accepted Pathway B abstract. Pathway B

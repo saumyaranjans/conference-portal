@@ -745,10 +745,18 @@ export function LandingPage() {
                 <h2 className="mt-3 font-serif text-2xl font-bold leading-tight sm:text-3xl">
                   The IIM Sambalpur Story
                 </h2>
-                <p className="mt-4 text-sm leading-relaxed text-blue-100">
-                  Discover the people, ideas and inclusive campus culture behind
-                  IIM Sambalpur&mdash;the host of GLOGIFT 27.
-                </p>
+                <div className="mt-4 space-y-3 text-sm leading-relaxed text-blue-100">
+                  <p>
+                    Indian Institute of Management Sambalpur is a new-generation
+                    IIM committed to academic excellence, responsible leadership
+                    and an inclusive culture of innovation.
+                  </p>
+                  <p>
+                    Watch this short film to discover the Institute&rsquo;s vision,
+                    people and learning environment as it welcomes the GLOGIFT 27
+                    community to Odisha.
+                  </p>
+                </div>
                 <a
                   href="https://www.youtube.com/watch?v=FOFb0ebu2Vw"
                   target="_blank"

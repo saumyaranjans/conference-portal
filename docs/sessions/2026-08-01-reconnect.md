@@ -38,5 +38,5 @@ npx vercel env pull .env.local --environment=production --yes
 
 ## Open items carried forward
 - Supabase `service_role` key still unrotated (long-standing).
-- `demo.reviewer@aidsm.example` old seed account still present.
+- ~~`demo.reviewer@aidsm.example` old seed account still present.~~ Removed 2026-08-10, along with the `verify.ed1` / `verify.ed2` / `verify.convener` `@example.test` accounts and the ICCIS seed block in `0002_views_and_seed.sql`.
 - Untracked scratch in the repo: `output/`, `tmp/`, `scripts/__pycache__/`, `scripts/create_brochure_concise.py`, `scripts/create_campaign_assets.py` (marketing-asset scripts, not committed).

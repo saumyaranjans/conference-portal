@@ -62,29 +62,7 @@ left join assignments a on a.reviewer_id = p.id
 where 'reviewer' = any(p.roles)
 group by p.id, p.full_name, p.email, p.affiliation, p.expertise;
 
--- =====================================================================
--- Seed: one conference with a few tracks so the portal is usable
--- immediately after deploy.
--- =====================================================================
-insert into conferences (name, acronym, year, description, is_open)
-values (
-  'International Conference on Computing and Intelligent Systems',
-  'ICCIS',
-  2026,
-  'Annual peer-reviewed conference covering computing, AI and intelligent systems.',
-  true
-)
-on conflict do nothing;
-
-insert into tracks (conference_id, name, description)
-select c.id, t.name, t.description
-from conferences c
-cross join (values
-  ('Artificial Intelligence & Machine Learning', 'Learning theory, deep learning, applications.'),
-  ('Systems & Networks',                          'Distributed systems, networking, cloud.'),
-  ('Human-Computer Interaction',                  'Interaction design, accessibility, UX research.'),
-  ('Security & Privacy',                          'Cryptography, systems security, privacy engineering.'),
-  ('Data Science & Analytics',                    'Data mining, visualisation, applied statistics.')
-) as t(name, description)
-where c.acronym = 'ICCIS' and c.year = 2026
-on conflict (conference_id, name) do nothing;
+-- The placeholder ICCIS 2026 conference and its five sample tracks that used
+-- to be seeded here were scaffolding for early development. The live GLOGIFT
+-- 2027 conference and its ten tracks are created through the portal, so the
+-- seed has been removed to keep fresh databases free of dummy data.

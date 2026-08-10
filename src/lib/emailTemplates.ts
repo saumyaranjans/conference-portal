@@ -1190,3 +1190,45 @@ export function convenerPendingReminderEmail(o: {
   ]);
   return { subject, body };
 }
+
+/**
+ * The coupon letter, sent when staff verify a GIFT Society membership.
+ *
+ * The discount exists only as a coupon (see lib/coupons.ts), so this email is
+ * the delegate's sole route to it — it has to carry the code plainly and say
+ * exactly where to type it.
+ */
+export function giftMemberCouponEmail(o: {
+  name?: string | null;
+  code: string;
+  discountPercent: number;
+  membershipNo?: string | null;
+  conferenceName?: string | null;
+  brand?: string | null;
+}): EmailContent {
+  const brand = (o.brand ?? "").trim() || CONF_DEFAULT;
+  const conf = (o.conferenceName ?? "").trim() || brand;
+  const subject = `${brand} — Your GIFT Society discount code`;
+  const body = compose([
+    greeting(o.name ?? undefined, "Delegate"),
+    "",
+    `We have verified your GIFT Society membership${o.membershipNo ? ` (membership no. ${o.membershipNo})` : ""} for ${conf}.`,
+    "",
+    `Your discount code is:   ${o.code}`,
+    "",
+    `Enter it in the "Coupon code" box on the registration page, before you continue to payment, to take ${o.discountPercent}% off your registration fee. The reduced amount is shown to you before anything is charged.`,
+    "",
+    "A few things to note:",
+    "  • The code is issued to you and cannot be used by anyone else.",
+    "  • It can be used once.",
+    "  • It cannot be applied to a payment already made, so please enter it before paying.",
+    "",
+    `For any query, please contact the Chair and Coordinator: ${ORG_CONTACTS}.`,
+    "",
+    "This is a system-generated email — please do not reply.",
+    "",
+    "With regards,",
+    `Editorial Office, ${brand}`,
+  ]);
+  return { subject, body };
+}

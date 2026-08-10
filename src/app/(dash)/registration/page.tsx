@@ -12,6 +12,7 @@ import {
 } from "@/lib/registrationFees";
 import { paymentsOpen, paymentsClosedMessage } from "@/lib/payments";
 import {
+  myActiveCoupon,
   myPresentableSubmissions,
   myRegistration,
 } from "@/lib/registrationActions";
@@ -44,9 +45,14 @@ export default async function RegistrationPage({
   const profile = await requireProfile();
   const { payment } = await searchParams;
 
+  // An ISSUED coupon, not the sign-up tick, decides whether the discounted
+  // price is quoted. A delegate who claimed membership but has not been
+  // verified sees the full fee, which is what they will actually be charged.
+  const myCoupon = await myActiveCoupon(profile.id);
+
   const fee = computeRegistrationFee(
     profile.participant_category,
-    profile.glogift_member ?? false,
+    !!myCoupon,
     undefined,
     profile.country
   );
@@ -145,7 +151,14 @@ export default async function RegistrationPage({
                   </div>
                   {fee.isMember && (
                     <div className="flex justify-between text-emerald-700 dark:text-emerald-300">
-                      <dt>GIFT member discount ({MEMBER_DISCOUNT_PERCENT}%)</dt>
+                      <dt>
+                        GIFT member discount ({MEMBER_DISCOUNT_PERCENT}%)
+                        {myCoupon && (
+                          <span className="ml-1 font-mono text-xs opacity-80">
+                            {myCoupon.code}
+                          </span>
+                        )}
+                      </dt>
                       <dd>− {formatMoney(fee.currency, fee.discount)}</dd>
                     </div>
                   )}
@@ -188,6 +201,14 @@ export default async function RegistrationPage({
           {!open && (
             <div className="mb-8 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-200">
               {paymentsClosedMessage()}
+            </div>
+          )}
+
+          {myCoupon && (
+            <div className="mb-8 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200">
+              Your GIFT Society membership is verified. Enter{" "}
+              <span className="font-mono font-semibold">{myCoupon.code}</span> in
+              the coupon box below to take {myCoupon.discount_percent}% off.
             </div>
           )}
 

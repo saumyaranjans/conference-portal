@@ -12,6 +12,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { paymentProvider } from "@/lib/payments";
 import { syncPaidRegistrationToRegister } from "@/lib/registrationSync";
+import { redeemCoupon } from "@/lib/coupons";
 
 export const dynamic = "force-dynamic";
 
@@ -83,6 +84,18 @@ async function handle(req: NextRequest) {
       .from("registrations")
       .update({ status: "paid" })
       .eq("id", (order as any).registration_id);
+
+    // Burn the coupon now rather than at registration: a delegate who
+    // abandoned an earlier attempt keeps their discount, and only a payment
+    // that actually settled consumes it.
+    const { data: reg } = await admin
+      .from("registrations")
+      .select("coupon_id")
+      .eq("id", (order as any).registration_id)
+      .maybeSingle();
+    if ((reg as any)?.coupon_id) {
+      await redeemCoupon((reg as any).coupon_id, (order as any).registration_id);
+    }
 
     // Fill in the Editorial Office register automatically. A failure here must
     // not lose the payment — the money is taken and the registration is paid

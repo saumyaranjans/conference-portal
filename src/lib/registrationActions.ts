@@ -7,6 +7,9 @@ import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { computeRegistrationFee, GST_RATE } from "@/lib/registrationFees";
 import { REFUND_POLICY_VERSION } from "@/lib/refundPolicy";
 import { paymentProvider, paymentsOpen } from "@/lib/payments";
+// Coupons are validated here but redeemed in the payment callback: a delegate
+// who abandons checkout must not lose their discount to an unpaid attempt.
+import { validateCoupon, type CouponRow } from "@/lib/coupons";
 import { PARTICIPATION_MODES } from "@/lib/types";
 import type { ActionResult } from "@/lib/actions";
 import type { Checkout } from "@/lib/payments";
@@ -58,6 +61,18 @@ export async function myPresentableSubmissions(profileId: string) {
   // A co-author who is also the corresponding author appears twice.
   const seen = new Set<string>();
   return rows.filter((s) => (seen.has(s.id) ? false : (seen.add(s.id), true)));
+}
+
+/** The delegate's unused coupon, if staff have verified their membership. */
+export async function myActiveCoupon(profileId: string) {
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from("registration_coupons")
+    .select("code, discount_percent")
+    .eq("profile_id", profileId)
+    .eq("status", "active")
+    .maybeSingle();
+  return (data as { code: string; discount_percent: number } | null) ?? null;
 }
 
 /** The delegate's current registration, if any. Latest first. */
@@ -128,10 +143,26 @@ export async function submitRegistration(
     linkedSubmission = submissionId;
   }
 
+  // --- the coupon, if they typed one -------------------------------------
+  //
+  // This is the ONLY route to the GIFT discount. profile.glogift_member is the
+  // delegate's own unverified claim and is deliberately NOT consulted here:
+  // it is editable from their profile, so honouring it would hand 20% off to
+  // anyone who ticked a box. Staff verify the claim, verification mints the
+  // coupon, and the coupon moves the price.
+  const rawCoupon = String(formData.get("coupon_code") ?? "").trim();
+  let coupon: CouponRow | null = null;
+
+  if (rawCoupon) {
+    const check = await validateCoupon(rawCoupon, profile.id);
+    if (!check.ok) return { ok: false, message: check.reason };
+    coupon = check.coupon;
+  }
+
   // --- the money ---------------------------------------------------------
   const fee = computeRegistrationFee(
     profile.participant_category,
-    profile.glogift_member ?? false,
+    !!coupon,
     undefined,
     profile.country
   );
@@ -158,7 +189,11 @@ export async function submitRegistration(
       submission_id: linkedSubmission,
       participant_category: profile.participant_category ?? "",
       country: profile.country ?? "",
-      is_member: profile.glogift_member ?? false,
+      // "Member" on the registration record means "a verified coupon was
+      // applied", not "claimed membership at sign-up".
+      is_member: !!coupon,
+      coupon_id: coupon?.id ?? null,
+      coupon_code: coupon?.code ?? "",
       fee_tier: fee.tier,
       currency: fee.currency,
       base_amount: fee.base,

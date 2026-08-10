@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { submitRegistration } from "@/lib/registrationActions";
 import { PARTICIPATION_MODES } from "@/lib/types";
+import { MEMBER_DISCOUNT_PERCENT } from "@/lib/registrationFees";
 import {
   REFUND_POLICY_CLAUSES,
   REFUND_POLICY_CONSENT,
@@ -131,6 +132,34 @@ export function RegistrationForm({
             </p>
           </div>
         )}
+
+        {/* Coupon. Shown to everyone rather than only to self-declared
+            members: the code is what grants the discount, and a delegate who
+            has one should not have to have ticked a box at sign-up to be
+            offered the box to type it in. */}
+        <div>
+          <label
+            htmlFor="coupon_code"
+            className="block text-sm font-medium text-slate-800 dark:text-slate-100 mb-2"
+          >
+            Coupon code{" "}
+            <span className="font-normal text-slate-500">(optional)</span>
+          </label>
+          <input
+            id="coupon_code"
+            name="coupon_code"
+            type="text"
+            autoComplete="off"
+            spellCheck={false}
+            placeholder="GIFT-XXXX-XXXX"
+            className="input w-full font-mono uppercase sm:max-w-xs"
+          />
+          <p className="text-xs text-slate-500 mt-1.5">
+            GIFT Society members are emailed a {MEMBER_DISCOUNT_PERCENT}%
+            discount code once the Editorial Office has verified their
+            membership. The reduced amount is shown before anything is charged.
+          </p>
+        </div>
 
         {/* Refund policy — displayed in full, acceptance recorded */}
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-500/30 dark:bg-amber-500/10">

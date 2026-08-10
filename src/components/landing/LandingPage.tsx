@@ -737,7 +737,7 @@ export function LandingPage() {
         <section aria-labelledby="campus-story">
           <Heading id="campus-story">Discover IIM Sambalpur</Heading>
           <div className="overflow-hidden rounded-3xl border border-blue-100 bg-white shadow-lg shadow-blue-950/5 dark:border-slate-700 dark:bg-slate-900">
-            <div className="grid lg:grid-cols-[0.72fr_1.28fr]">
+            <div className="grid items-stretch lg:grid-cols-[minmax(0,2fr)_minmax(0,5fr)]">
               <div className="flex flex-col justify-center bg-gradient-to-br from-blue-950 via-blue-900 to-indigo-900 p-6 text-white sm:p-8">
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-300">
                   Host institution
@@ -769,7 +769,7 @@ export function LandingPage() {
                   </svg>
                 </a>
               </div>
-              <div className="relative aspect-video min-h-[220px] bg-black lg:min-h-0">
+              <div className="relative aspect-video min-h-[220px] w-full min-w-0 overflow-hidden bg-black lg:aspect-auto lg:h-full lg:min-h-0">
                 <iframe
                   src="https://www.youtube-nocookie.com/embed/FOFb0ebu2Vw?rel=0"
                   title="The IIM Sambalpur Story: A beacon of academic excellence, innovation and inclusivity"

@@ -164,9 +164,9 @@ function FolderRow({
 export default async function AuthorDashboard({
   searchParams,
 }: {
-  searchParams: Promise<{ folder?: string; pw?: string }>;
+  searchParams: Promise<{ folder?: string; pw?: string; payment?: string }>;
 }) {
-  const { folder, pw } = await searchParams;
+  const { folder, pw, payment } = await searchParams;
   const profile = await requireProfile();
   const supabase = await createClient();
   const admin = createAdminClient();
@@ -198,7 +198,7 @@ export default async function AuthorDashboard({
       // more than one row, and the latest is the one they are working on.
       admin
         .from("registrations")
-        .select("status, currency, amount, total_amount, paid_at")
+        .select("id, status, currency, amount, total_amount, paid_at")
         .eq("profile_id", profile.id)
         .order("created_at", { ascending: false })
         .limit(1)
@@ -370,7 +370,11 @@ export default async function AuthorDashboard({
         }
       />
 
-      <RegistrationStatus registration={registration} accepted={hasAcceptance} />
+      <RegistrationStatus
+        registration={registration}
+        accepted={hasAcceptance}
+        justPaid={payment === "success"}
+      />
 
       {/* -------- Accepted abstracts — next step (corresponding author) ------
           Shown once the author holds an accepted Pathway B abstract. Pathway B

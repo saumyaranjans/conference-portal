@@ -12,14 +12,18 @@ import { formatDate } from "@/components/ui/Primitives";
 export function RegistrationStatus({
   registration,
   accepted,
+  justPaid = false,
 }: {
   registration: {
+    id?: string;
     status: string;
     currency: "INR" | "USD";
     amount: number;
     total_amount: number | null;
     paid_at: string | null;
   } | null;
+  /** True on the redirect back from the gateway — shows the thank-you once. */
+  justPaid?: boolean;
   /**
    * Whether the author has had at least one paper accepted. Nothing can be
    * registered against until then, so prompting for it would send the author
@@ -33,27 +37,52 @@ export function RegistrationStatus({
   if (registration?.status === "paid") {
     const paid = registration.total_amount ?? registration.amount;
     return (
-      <div className="card card-pad mb-6 flex flex-wrap items-center justify-between gap-3 border-emerald-200 bg-emerald-50 dark:border-emerald-500/30 dark:bg-emerald-500/10">
-        <div className="flex items-center gap-3">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-sm font-bold text-white">
-            ✓
-          </span>
-          <div>
-            <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-200">
-              Registered for GLOGIFT 2027
-            </p>
-            <p className="text-xs text-emerald-800/80 dark:text-emerald-300/80">
-              {formatMoney(registration.currency, paid)} paid
-              {registration.paid_at && ` on ${formatDate(registration.paid_at)}`}
-            </p>
+      <div className="card card-pad mb-6 border-emerald-200 bg-emerald-50 dark:border-emerald-500/30 dark:bg-emerald-500/10">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-sm font-bold text-white">
+              ✓
+            </span>
+            <div>
+              <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-200">
+                Registered for GLOGIFT 2027
+              </p>
+              <p className="text-xs text-emerald-800/80 dark:text-emerald-300/80">
+                {formatMoney(registration.currency, paid)} paid
+                {registration.paid_at &&
+                  ` on ${formatDate(registration.paid_at)}`}
+              </p>
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-3">
+            {registration.id && (
+              <a
+                href={`/api/invoices/${registration.id}`}
+                className="btn-secondary text-sm"
+              >
+                Download invoice
+              </a>
+            )}
+            <Link
+              href="/registration"
+              className="text-sm font-medium text-emerald-800 hover:underline dark:text-emerald-300"
+            >
+              View details →
+            </Link>
           </div>
         </div>
-        <Link
-          href="/registration"
-          className="text-sm font-medium text-emerald-800 hover:underline dark:text-emerald-300"
-        >
-          View details →
-        </Link>
+
+        {/* Shown only on the hop back from the gateway. It thanks them once,
+            for the payment they just made — on every later visit the badge
+            above is the whole message. */}
+        {justPaid && (
+          <p className="mt-3 border-t border-emerald-200/70 pt-3 text-sm text-emerald-900 dark:border-emerald-500/20 dark:text-emerald-100">
+            <strong className="font-semibold">Thank you.</strong> Your payment
+            has been confirmed and your place at GLOGIFT 2027 is secured. A
+            receipt is available above, and we will email you the programme
+            nearer the conference. We look forward to seeing you in Sambalpur.
+          </p>
+        )}
       </div>
     );
   }

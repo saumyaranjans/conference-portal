@@ -45,10 +45,16 @@ function backTo(req: NextRequest, status: string) {
     }
   }
 
-  return NextResponse.redirect(
-    new URL(`/registration?payment=${status}`, base),
-    303
-  );
+  // A delegate who has just paid is done with the registration page — send
+  // them to their dashboard, where the thank-you, the confirmed status and the
+  // invoice all live. Every other outcome keeps them on /registration, which
+  // is where the form they still need is.
+  const path =
+    status === "success"
+      ? `/author?payment=success`
+      : `/registration?payment=${status}`;
+
+  return NextResponse.redirect(new URL(path, base), 303);
 }
 
 async function handle(req: NextRequest) {

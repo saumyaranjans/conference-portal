@@ -5,8 +5,10 @@ import { submitRegistration } from "@/lib/registrationActions";
 import {
   PARTICIPATION_MODES,
   participationModeLabel,
+  statusLabel,
   submissionTypeLabel,
   trackLabel,
+  type SubmissionStatus,
 } from "@/lib/types";
 import { MEMBER_DISCOUNT_PERCENT } from "@/lib/registrationFees";
 import {
@@ -21,16 +23,27 @@ type Paper = {
   id: string;
   paper_id: string | null;
   title: string;
+  status: string;
+  stage: string | null;
+  version: number | null;
   submission_type: string;
   participation_mode: string | null;
   /** Supabase returns a to-one embed as an object, but not always. */
   tracks: Track | Track[] | null;
 };
 
+/** Pathway B, past the abstract: the manuscript has a status of its own. */
+const atManuscript = (p: Paper) =>
+  p.submission_type === "full_paper_presentation" && p.stage === "full_paper";
+
 /**
  * The read-only rows shown for one accepted paper. The pathway itself is not
  * among them — the badge in the corner already says "Pathway A", so the row
  * carries only the part the badge leaves out.
+ *
+ * A Pathway B paper also shows where its full paper stands. That is reported,
+ * never required: the place is booked on the abstract acceptance, and a
+ * manuscript still in review neither adds to nor takes away from it.
  */
 function detailsOf(p: Paper): [string, string][] {
   return (
@@ -38,7 +51,18 @@ function detailsOf(p: Paper): [string, string][] {
       ["Type", submissionTypeLabel(p.submission_type)],
       ["Track", trackLabel(p.tracks)],
       ["Attending", participationModeLabel(p.participation_mode ?? "")],
-    ] as [string, string | null][]
+      atManuscript(p)
+        ? [
+            "Full paper",
+            statusLabel(
+              p.status as SubmissionStatus,
+              p.submission_type,
+              p.stage,
+              p.version
+            ),
+          ]
+        : null,
+    ].filter(Boolean) as [string, string | null][]
   ).filter((r): r is [string, string] => !!r[1] && r[1] !== "—");
 }
 
@@ -192,6 +216,9 @@ export function RegistrationForm({
               Editorial Office.
               {papers.length > 1 &&
                 " Registration is per delegate, not per paper: one fee covers both."}
+              {papers.some(atManuscript) &&
+                " Your place rests on the abstract acceptance — a full paper" +
+                  " still in review does not have to be decided before you register."}
             </p>
 
             {modesDisagree && (

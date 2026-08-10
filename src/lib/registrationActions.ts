@@ -36,7 +36,7 @@ function newOrderId(): string {
  * submission already recorded.
  */
 const PRESENTABLE_FIELDS =
-  "id, paper_id, title, status, stage, submission_type, participation_mode, tracks(code, name)";
+  "id, paper_id, title, status, stage, version, submission_type, participation_mode, tracks(code, name)";
 
 /** The same test as isPresentable(), expressed for PostgREST. */
 const PRESENTABLE_FILTER = `status.in.(${PRESENTING_STATUSES.join(

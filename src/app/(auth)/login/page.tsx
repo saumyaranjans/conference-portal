@@ -326,16 +326,32 @@ export default function LoginPage() {
               never receive your password, and we do not use this information
               for advertising or share it with third parties.
             </p>
+            {/* All four policies the payment gateway's review looks for, in
+                one place. Registration is paid for from inside this portal, so
+                a delegate must be able to reach the refund terms from the same
+                box that explains what the portal is. */}
+            <p className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-slate-500">
+              <span>See our</span>
+              {[
+                { href: "/privacy", label: "privacy policy" },
+                { href: "/terms", label: "terms of use" },
+                {
+                  href: "/refund-cancellation",
+                  label: "refund & cancellation policy",
+                },
+                { href: "/contact", label: "contact us" },
+              ].map(({ href, label }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className="text-blue-700 hover:underline dark:text-blue-300"
+                >
+                  {label}
+                </Link>
+              ))}
+            </p>
             <p className="mt-2 text-slate-500">
-              See our{" "}
-              <Link href="/privacy" className="text-blue-700 hover:underline">
-                privacy policy
-              </Link>{" "}
-              and{" "}
-              <Link href="/terms" className="text-blue-700 hover:underline">
-                terms of use
-              </Link>
-              . Operated by the Indian Institute of Management Sambalpur in
+              Operated by the Indian Institute of Management Sambalpur in
               association with the GIFT Society.
             </p>
             </div>

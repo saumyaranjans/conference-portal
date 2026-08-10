@@ -733,6 +733,49 @@ export function LandingPage() {
           </p>
         </section>
 
+        {/* ---- IIM Sambalpur video (landing page only) ---- */}
+        <section aria-labelledby="campus-story">
+          <Heading id="campus-story">Discover IIM Sambalpur</Heading>
+          <div className="overflow-hidden rounded-3xl border border-blue-100 bg-white shadow-lg shadow-blue-950/5 dark:border-slate-700 dark:bg-slate-900">
+            <div className="grid lg:grid-cols-[0.72fr_1.28fr]">
+              <div className="flex flex-col justify-center bg-gradient-to-br from-blue-950 via-blue-900 to-indigo-900 p-6 text-white sm:p-8">
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-300">
+                  Host institution
+                </p>
+                <h2 className="mt-3 font-serif text-2xl font-bold leading-tight sm:text-3xl">
+                  The IIM Sambalpur Story
+                </h2>
+                <p className="mt-4 text-sm leading-relaxed text-blue-100">
+                  Discover the people, ideas and inclusive campus culture behind
+                  IIM Sambalpur&mdash;the host of GLOGIFT 27.
+                </p>
+                <a
+                  href="https://www.youtube.com/watch?v=FOFb0ebu2Vw"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-5 inline-flex w-fit items-center gap-2 rounded-full border border-white/30 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20"
+                >
+                  Watch on YouTube
+                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    <path d="M7 17 17 7M7 7h10v10" />
+                  </svg>
+                </a>
+              </div>
+              <div className="relative aspect-video min-h-[220px] bg-black lg:min-h-0">
+                <iframe
+                  src="https://www.youtube-nocookie.com/embed/FOFb0ebu2Vw?rel=0"
+                  title="The IIM Sambalpur Story: A beacon of academic excellence, innovation and inclusivity"
+                  loading="lazy"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allowFullScreen
+                  className="absolute inset-0 h-full w-full"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* ---- 2. Objectives ---- */}
         <section>
           <Heading>The objective of the conference is to</Heading>

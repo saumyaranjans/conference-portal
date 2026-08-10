@@ -7,8 +7,11 @@ import { useEffect, useRef, useState } from "react";
  * registration, sign-in and password reset.
  *
  * Turnstile rather than hCaptcha because it is free without a usage ceiling and
- * usually solves itself — most visitors see a spinner and nothing more, which
- * matters on a registration form that already asks for fifteen fields.
+ * usually solves itself. Run in "interaction-only" mode, so most visitors see
+ * nothing at all and only those Cloudflare actually wants to challenge get a
+ * widget — which matters on a registration form already asking for fifteen
+ * fields, and on a sign-in page where a 300x65 box was the largest thing after
+ * the form itself.
  *
  * Inert until NEXT_PUBLIC_TURNSTILE_SITE_KEY is set, and the forms treat a
  * missing key as "no captcha required". That ordering is deliberate: the widget
@@ -77,6 +80,16 @@ export function Captcha({
         widgetId.current = window.turnstile.render(boxRef.current, {
           sitekey: SITE_KEY,
           theme: "auto",
+          // Render NOTHING unless Cloudflare actually needs the visitor to do
+          // something. Turnstile clears most people silently, so the default
+          // ("always") was showing a 300x65 "Verify you are human" box to
+          // everyone in order to serve the few who get challenged. The token
+          // still arrives via `callback` either way — only the box is
+          // conditional, not the protection.
+          appearance: "interaction-only",
+          // When it IS shown, fill the form width instead of sitting at a
+          // fixed 300px beside full-width inputs.
+          size: "flexible",
           callback: (token: string) => onToken(token),
           // A token that expires or errors must not look like a valid one.
           "expired-callback": () => onToken(null),

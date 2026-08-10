@@ -10,7 +10,11 @@ import {
   MEMBER_DISCOUNT_PERCENT,
   GST_PERCENT,
 } from "@/lib/registrationFees";
-import { paymentsOpen, paymentsClosedMessage } from "@/lib/payments";
+import {
+  paymentsOpen,
+  paymentsClosedMessage,
+  paymentsAreSandbox,
+} from "@/lib/payments";
 import {
   myActiveCoupon,
   myPresentableSubmissions,
@@ -59,6 +63,7 @@ export default async function RegistrationPage({
   const papers = await myPresentableSubmissions(profile.id);
   const existing = await myRegistration(profile.id);
   const open = paymentsOpen();
+  const sandbox = paymentsAreSandbox();
   const notice = payment ? PAYMENT_NOTICES[payment] : undefined;
 
   const isPaid = existing?.status === "paid";
@@ -201,6 +206,19 @@ export default async function RegistrationPage({
           {!open && (
             <div className="mb-8 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-200">
               {paymentsClosedMessage()}
+            </div>
+          )}
+
+          {/* Loud on purpose. Somebody testing must never come away thinking a
+              real payment was taken, and a delegate must never reach this
+              silently. */}
+          {open && sandbox && (
+            <div className="mb-8 rounded-xl border-2 border-red-300 bg-red-50 px-4 py-3 text-sm text-red-900 dark:border-red-500/40 dark:bg-red-500/10 dark:text-red-200">
+              <strong className="font-bold uppercase tracking-wide">
+                Test mode
+              </strong>{" "}
+              — payments go to a sandbox gateway, not to ICICI Bank. No money is
+              taken and no registration made here is real.
             </div>
           )}
 

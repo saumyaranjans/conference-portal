@@ -16,14 +16,44 @@ import { redeemCoupon } from "@/lib/coupons";
 
 export const dynamic = "force-dynamic";
 
-function backTo(status: string) {
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "";
-  return NextResponse.redirect(`${base}/registration?payment=${status}`, 303);
+/**
+ * Send the delegate back to the registration page with an outcome.
+ *
+ * Resolved against the REQUEST origin, with NEXT_PUBLIC_SITE_URL preferred
+ * only when it is a usable absolute URL. Depending on the env var alone threw
+ * `ERR_INVALID_URL` wherever it was unset or relative, which turned every
+ * callback — including a legitimate successful payment — into a 500 that left
+ * the delegate staring at an error page with no idea whether they had been
+ * charged.
+ */
+function backTo(req: NextRequest, status: string) {
+  const origin = req.nextUrl.origin;
+  let base = origin;
+
+  // In production the configured site URL wins: behind Vercel's proxy the
+  // request origin can be the internal deployment host rather than the custom
+  // domain, and bouncing a delegate to a *.vercel.app URL mid-payment looks
+  // like a phishing redirect. Locally the request origin wins, or every
+  // sandbox callback would throw the tester over to the live site.
+  const isLocal = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:|$)/.test(origin);
+  const configured = (process.env.NEXT_PUBLIC_SITE_URL ?? "").trim();
+  if (!isLocal && configured) {
+    try {
+      base = new URL(configured).origin;
+    } catch {
+      // Malformed config: the request origin is the safer answer.
+    }
+  }
+
+  return NextResponse.redirect(
+    new URL(`/registration?payment=${status}`, base),
+    303
+  );
 }
 
 async function handle(req: NextRequest) {
   const provider = paymentProvider();
-  if (!provider) return backTo("unavailable");
+  if (!provider) return backTo(req, "unavailable");
 
   // Accept both encodings — gateways vary, and some send the browser back by
   // GET while notifying the server by POST.
@@ -45,7 +75,7 @@ async function handle(req: NextRequest) {
   } catch {
     // Unverifiable: could be a forgery, could be an unfinished adapter.
     // Either way nothing is marked paid.
-    return backTo("failed");
+    return backTo(req, "failed");
   }
 
   const admin = createAdminClient();
@@ -55,10 +85,10 @@ async function handle(req: NextRequest) {
     .eq("order_id", result.orderId)
     .maybeSingle();
 
-  if (!order) return backTo("unknown");
+  if (!order) return backTo(req, "unknown");
 
   // Already settled — a repeat callback must not undo or re-apply anything.
-  if ((order as any).status === "paid") return backTo("success");
+  if ((order as any).status === "paid") return backTo(req, "success");
 
   // The gateway's amount is untrusted input. If it disagrees with what we
   // asked for, record the payment but do NOT mark the registration paid: that
@@ -106,11 +136,11 @@ async function handle(req: NextRequest) {
       // Intentionally swallowed; see above.
     }
 
-    return backTo("success");
+    return backTo(req, "success");
   }
 
-  if (mismatch) return backTo("mismatch");
-  return backTo(result.status === "cancelled" ? "cancelled" : "failed");
+  if (mismatch) return backTo(req, "mismatch");
+  return backTo(req, result.status === "cancelled" ? "cancelled" : "failed");
 }
 
 export async function GET(req: NextRequest) {

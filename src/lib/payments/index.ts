@@ -7,6 +7,7 @@
  */
 
 import { iciciProvider } from "./icici";
+import { sandboxProvider } from "./sandbox";
 import type { PaymentProvider } from "./types";
 
 export * from "./types";
@@ -17,9 +18,20 @@ export function paymentProvider(): PaymentProvider | null {
       return iciciProvider("icici_eazypay");
     case "icici_ccavenue":
       return iciciProvider("icici_ccavenue");
+    // A stand-in bank for testing the flow end to end before ICICI is wired.
+    // Refuses to run in production without an explicit override — see
+    // sandbox.ts.
+    case "sandbox":
+      return sandboxProvider();
     default:
       return null;
   }
+}
+
+/** True when the gateway in use is the test stand-in, so the UI can say so
+ *  rather than letting anyone believe a real payment was taken. */
+export function paymentsAreSandbox(): boolean {
+  return (process.env.PAYMENT_PROVIDER ?? "").trim() === "sandbox";
 }
 
 /** True only when a provider is selected AND holds every credential. */

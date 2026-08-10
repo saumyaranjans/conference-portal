@@ -39,9 +39,10 @@ function contentSecurityPolicy(nonce: string, dev: boolean) {
     "base-uri 'self'",
     "object-src 'none'",
     "frame-ancestors 'none'",
-    // The campus map on /how-to-reach is a Google Maps embed.
-    // Turnstile renders its widget in an iframe of its own.
-    `frame-src 'self' blob: ${supabase} https://www.google.com https://maps.google.com https://challenges.cloudflare.com`,
+    // The campus map on /how-to-reach is a Google Maps embed, and the
+    // institute film on the home page is a YouTube embed served from the
+    // no-cookie domain. Turnstile renders its widget in an iframe of its own.
+    `frame-src 'self' blob: ${supabase} https://www.google.com https://maps.google.com https://www.youtube-nocookie.com https://challenges.cloudflare.com`,
     "worker-src 'self' blob:",
     "upgrade-insecure-requests",
   ]

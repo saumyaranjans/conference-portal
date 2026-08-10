@@ -53,6 +53,15 @@ export async function requireProfile(): Promise<Profile> {
  * keyed to the signed-in profile and belong to whoever was assigned the work.
  */
 export async function requireRole(...roles: AppRole[]): Promise<Profile> {
+  // Naming no roles is a programming mistake, not an access decision:
+  // `[].some(...)` is false, so the guard would deny EVERY account, including
+  // the one whose page it protects. That has happened, and as a redirect it
+  // looked like a permissions problem rather than a bug. Fail loudly instead.
+  if (roles.length === 0) {
+    throw new Error(
+      "requireRole() was called without any roles — name the roles it admits."
+    );
+  }
   const profile = await requireProfile();
   if (!roles.some((r) => profile.roles.includes(r))) redirect("/denied");
   return profile;

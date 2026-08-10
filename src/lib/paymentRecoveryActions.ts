@@ -17,7 +17,10 @@ import type { ActionResult } from "@/lib/actions";
  * the money can still have moved.
  */
 export async function pendingPayments() {
-  await requireConvenerManage();
+  // The roles MUST be named. requireConvenerManage() forwards them to
+  // requireRole(), and `[].some(...)` is false — calling it bare redirects
+  // everyone to /denied, including the Convener whose page this is.
+  await requireConvenerManage("chief", "admin");
   const admin = createAdminClient();
 
   const { data, error } = await admin
@@ -54,7 +57,7 @@ export async function pendingPayments() {
 export async function confirmPaymentManually(
   formData: FormData
 ): Promise<ActionResult> {
-  const staff = await requireConvenerManage();
+  const staff = await requireConvenerManage("chief", "admin");
 
   const registrationId = String(formData.get("registration_id") ?? "").trim();
   const bankReference = String(formData.get("bank_reference") ?? "").trim();

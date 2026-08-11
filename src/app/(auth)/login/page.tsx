@@ -8,6 +8,7 @@ import { HomeLink } from "@/components/HomeLink";
 import { OAuthButtons } from "@/components/OAuthButtons";
 import { Captcha, captchaEnabled } from "@/components/Captcha";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { AboutPortalDialog } from "@/components/AboutPortalDialog";
 import { ROLE_HOME, type AppRole } from "@/lib/types";
 
 // Landing priority for multi-role users (mirrors the proxy / former home page).
@@ -292,70 +293,7 @@ export default function LoginPage() {
             </div>
           </form>
 
-          {/* What the portal is and what signing in with a provider actually
-              shares. Placed at the point of decision — someone about to hand
-              over an account is the person who should read it. */}
-          <details className="group mt-6 rounded-xl border border-slate-200 bg-white/70 px-4 py-3 text-xs leading-relaxed text-slate-600 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400">
-            <summary className="cursor-pointer list-none text-sm font-medium text-slate-700 marker:content-[''] hover:text-blue-700 dark:text-slate-300">
-              About the GLOGIFT 27 Submission Portal
-              <span
-                aria-hidden
-                className="float-right transition-transform group-open:rotate-180"
-              >
-                ⌄
-              </span>
-            </summary>
-            <div className="mt-3 space-y-2">
-            <p>
-              This is the official submission portal for GLOGIFT 27. Authors use
-              it to submit an abstract or full paper to one of the ten
-              conference tracks, add co-authors, respond to reviewer comments,
-              upload a camera-ready copy, register and download their
-              certificate. Reviewers read the papers assigned to them and submit
-              evaluations; Track Editors and the Editorial Office assign
-              reviewers, record decisions and build the programme.
-            </p>
-            <p>
-              An account is required to submit or review. Register with an email
-              address and password, or sign in with Google or Microsoft — from
-              those we receive only your{" "}
-              <strong className="font-semibold text-slate-800 dark:text-slate-200">
-                name and email address
-              </strong>
-              , used solely to create and identify your conference account. We
-              never receive your password, and we do not use this information
-              for advertising or share it with third parties.
-            </p>
-            {/* All four policies the payment gateway's review looks for, in
-                one place. Registration is paid for from inside this portal, so
-                a delegate must be able to reach the refund terms from the same
-                box that explains what the portal is. */}
-            <p className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-slate-500">
-              <span>See our</span>
-              {[
-                { href: "/privacy", label: "privacy policy" },
-                { href: "/terms", label: "terms of use" },
-                {
-                  href: "/refund-cancellation",
-                  label: "refund & cancellation policy",
-                },
-                { href: "/contact", label: "contact us" },
-              ].map(({ href, label }) => (
-                <Link
-                  key={href}
-                  href={href}
-                  className="text-blue-700 hover:underline dark:text-blue-300"
-                >
-                  {label}
-                </Link>
-              ))}
-            </p>
-            <p className="mt-2 text-slate-500">
-              Operated by the Indian Institute of Management Sambalpur in
-              association with the GIFT Society.
-            </p>
-            </div>
-          </details>
+          <AboutPortalDialog />
         </div>
       </section>
     </main>

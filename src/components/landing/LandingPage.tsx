@@ -766,16 +766,21 @@ export function LandingPage() {
         {/* ---- IIM Sambalpur video (landing page only) ---- */}
         <section aria-labelledby="campus-story">
           <Heading id="campus-story">Discover IIM Sambalpur</Heading>
-          <div className="overflow-hidden rounded-3xl border border-blue-100 bg-white shadow-lg shadow-blue-950/5 dark:border-slate-700 dark:bg-slate-900">
+          <div className="overflow-hidden rounded-3xl border border-teal-100 bg-white shadow-lg shadow-teal-950/10 dark:border-teal-900/50 dark:bg-slate-900">
             <div className="grid items-stretch lg:grid-cols-[minmax(0,2fr)_minmax(0,5fr)]">
-              <div className="flex flex-col justify-center bg-gradient-to-br from-blue-950 via-blue-900 to-indigo-900 p-6 text-white sm:p-8">
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-300">
+              {/* Teal, where the rest of the page is blue: this is the host
+                  institute speaking about itself, not conference matter, and
+                  the panel should read as a different voice. Lighter in the
+                  light theme; deepened in the dark theme so it sits in the page
+                  instead of glowing out of it. */}
+              <div className="flex flex-col justify-center bg-gradient-to-br from-teal-800 via-teal-900 to-emerald-900 p-6 text-white dark:from-teal-950 dark:via-emerald-950 dark:to-slate-900 sm:p-8">
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-300 dark:text-amber-200/90">
                   Host institution
                 </p>
                 <h2 className="mt-3 font-serif text-2xl font-bold leading-tight sm:text-3xl">
                   The IIM Sambalpur Story
                 </h2>
-                <div className="mt-4 space-y-3 text-sm leading-relaxed text-blue-100">
+                <div className="mt-4 space-y-3 text-sm leading-relaxed text-teal-50/90 dark:text-teal-100/75">
                   <p>
                     Indian Institute of Management Sambalpur is a new-generation
                     IIM committed to academic excellence, responsible leadership
@@ -791,7 +796,7 @@ export function LandingPage() {
                   href="https://www.youtube.com/watch?v=FOFb0ebu2Vw"
                   target="_blank"
                   rel="noreferrer"
-                  className="mt-5 inline-flex w-fit items-center gap-2 rounded-full border border-white/30 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20"
+                  className="mt-5 inline-flex w-fit items-center gap-2 rounded-full border border-white/30 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20 dark:border-teal-200/25 dark:bg-teal-200/10 dark:hover:bg-teal-200/20"
                 >
                   Watch on YouTube
                   <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>

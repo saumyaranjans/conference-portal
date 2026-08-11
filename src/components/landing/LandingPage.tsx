@@ -9,6 +9,7 @@ import { SocialLinks } from "@/components/landing/SocialLinks";
 import { AdvisoryReveal } from "@/components/landing/AdvisoryReveal";
 import { Banner } from "@/components/landing/Banner";
 import { MEMBER_DISCOUNT_PERCENT } from "@/lib/registrationFees";
+import { CampusFilmCurtain } from "@/components/CampusFilmCurtain";
 import { IkatStrip } from "@/components/landing/IkatStrip";
 import { BackToTop } from "@/components/landing/BackToTop";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -804,17 +805,7 @@ export function LandingPage() {
                   </svg>
                 </a>
               </div>
-              <div className="relative aspect-video min-h-[220px] w-full min-w-0 overflow-hidden bg-black lg:aspect-auto lg:h-full lg:min-h-0">
-                <iframe
-                  src="https://www.youtube-nocookie.com/embed/FOFb0ebu2Vw?rel=0"
-                  title="The IIM Sambalpur Story: A beacon of academic excellence, innovation and inclusivity"
-                  loading="lazy"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  referrerPolicy="strict-origin-when-cross-origin"
-                  allowFullScreen
-                  className="absolute inset-0 h-full w-full"
-                />
-              </div>
+              <CampusFilmCurtain />
             </div>
           </div>
         </section>

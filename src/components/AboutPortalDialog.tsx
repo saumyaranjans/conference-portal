@@ -36,38 +36,47 @@ export function AboutPortalDialog() {
     <>
       {/* One line of links rather than a panel. The box this replaced occupied
           more of the sign-in page than the sign-in form did, to say things a
-          visitor reads once. The wording is unchanged and nothing is now
-          unreachable — About opens over the page, the policies are ordinary
-          links, and "contact us" sits inside About with the other three. */}
+          visitor reads once. About opens over the page; the four policies the
+          payment gateway's review looks for are ordinary links, in the same
+          lowercase wording as the site footer. */}
       <nav
         aria-label="About and policies"
-        className="mt-6 flex flex-wrap items-center justify-center gap-x-2 gap-y-1
-                   border-t border-slate-200 pt-4 text-xs text-slate-500
-                   dark:border-slate-700"
+        className="mt-6 space-y-1.5 border-t border-slate-200 pt-4 text-center
+                   text-xs text-slate-500 dark:border-slate-700"
       >
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="font-medium text-blue-700 hover:underline dark:text-blue-300"
-        >
-          About the GLOGIFT 27 Submission Portal
-        </button>
-        {POLICY_LINKS.filter((l) => l.href !== "/contact").map((l) => (
-          <span key={l.href} className="flex items-center gap-2">
-            <span aria-hidden className="text-slate-300 dark:text-slate-600">
-              |
+        {/* Two rows on purpose: what this portal is, then the terms it runs
+            under. On one row the four policies pushed About onto a line of its
+            own anyway, but with a stray leading pipe wherever it wrapped. */}
+        <div>
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            className="font-medium text-blue-700 hover:underline dark:text-blue-300"
+          >
+            About the GLOGIFT 27 Submission Portal
+          </button>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
+          {POLICY_LINKS.map((l, i) => (
+            <span key={l.href} className="flex items-center gap-2">
+              {i > 0 && (
+                <span aria-hidden className="text-slate-300 dark:text-slate-600">
+                  |
+                </span>
+              )}
+              {/* Left lowercase on purpose. These labels are the exact phrases
+                  the payment gateway's review looks for, and the site footer
+                  already renders them this way. */}
+              <Link
+                href={l.href}
+                className="text-blue-700 hover:underline dark:text-blue-300"
+              >
+                {l.label}
+              </Link>
             </span>
-            {/* Left lowercase on purpose. These labels are the exact phrases
-                the payment gateway's review looks for, and the site footer
-                already renders them this way. */}
-            <Link
-              href={l.href}
-              className="text-blue-700 hover:underline dark:text-blue-300"
-            >
-              {l.label}
-            </Link>
-          </span>
-        ))}
+          ))}
+        </div>
       </nav>
 
       <dialog

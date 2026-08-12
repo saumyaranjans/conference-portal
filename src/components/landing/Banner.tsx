@@ -351,11 +351,11 @@ function Week2ThemeSlide() {
       <img
         src={WEEK2_THEME_ART}
         alt="Illustrations representing flexibility, digitalisation and decarbonization"
-        className="absolute inset-x-0 top-[35cqw] sm:top-[16.8cqw] h-[31cqw] sm:h-[12.5cqw] w-full object-cover object-center
+        className="absolute inset-x-0 top-[34cqw] sm:top-[16.3cqw] h-[38cqw] sm:h-[16.5cqw] w-full object-cover object-[center_42%]
                    saturate-[0.78] contrast-[1.08] brightness-[0.72]"
       />
       <div
-        className="pointer-events-none absolute inset-x-0 top-[35cqw] sm:top-[16.8cqw] h-[31cqw] sm:h-[12.5cqw]
+        className="pointer-events-none absolute inset-x-0 top-[34cqw] sm:top-[16.3cqw] h-[38cqw] sm:h-[16.5cqw]
                    bg-[linear-gradient(90deg,#0f172a99,#1e3a8a88,#312e8199)] mix-blend-color"
       />
 

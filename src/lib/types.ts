@@ -481,6 +481,7 @@ export const VOLUNTEER_ROLE_INFO: Record<
       "Write constructive comments for the author, and a private note to the editor",
       "Return each review within the deadline set by the Track Editor",
       "Declare any conflict of interest and decline the paper where one exists",
+      "Named in the conference records and issued a Certificate of Appreciation",
     ],
   },
   editor: {
@@ -493,6 +494,7 @@ export const VOLUNTEER_ROLE_INFO: Record<
       "Uphold the integrity thresholds on similarity and AI-assisted writing",
       "Help shape your track's sessions in the conference programme",
       "A heavier commitment than reviewing, concentrated in December and January",
+      "Named in the conference records and issued a Certificate of Appreciation",
     ],
   },
 };

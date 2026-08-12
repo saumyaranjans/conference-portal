@@ -13,6 +13,14 @@ import { VOLUNTEER_ROLE_INFO, type VolunteerRole } from "@/lib/types";
  * volunteer's full profile to judge the offer.
  */
 
+/**
+ * The track embed only resolves once migration 0082 adds preferred_track_id;
+ * before that PostgREST cannot see a relationship and rejects the whole query.
+ * Rather than gate the page on a migration, the query is retried without the
+ * embed — the track simply does not show until 0082 is applied.
+ */
+const TRACK_EMBED = "tracks(code, name), ";
+
 type Row = {
   id: string;
   role: VolunteerRole;
@@ -79,15 +87,30 @@ function Person({ p }: { p: Row["profiles"] }) {
 
 export async function VolunteerRequests({ basePath }: { basePath: string }) {
   const admin = createAdminClient();
-  const { data } = await admin
-    .from("volunteer_requests")
-    // The foreign key must be named: this table points at profiles twice
-    // (the volunteer, and the Convener who decided), so an unqualified join is
-    // ambiguous and PostgREST refuses it outright.
-    .select(
-      "id, role, status, requested_at, decided_at, decision_note, profiles!volunteer_requests_profile_id_fkey(full_name, email, title, designation, institution, country, participant_category, orcid, roles)"
-    )
-    .order("requested_at", { ascending: false });
+
+  // The foreign key must be named: this table points at profiles twice (the
+  // volunteer, and the Convener who decided), so an unqualified join is
+  // ambiguous and PostgREST refuses it outright.
+  const columns = (withTrack: boolean) =>
+    `id, role, status, requested_at, decided_at, decision_note, ${
+      withTrack ? TRACK_EMBED : ""
+    }profiles!volunteer_requests_profile_id_fkey(full_name, email, title, designation, institution, country, participant_category, orcid, roles)`;
+
+  const load = (withTrack: boolean) =>
+    admin
+      .from("volunteer_requests")
+      .select(columns(withTrack))
+      .order("requested_at", { ascending: false });
+
+  let { data, error } = await load(true);
+  if (error) {
+    // Almost certainly 0082 not yet applied. Retry without the track rather
+    // than render an empty queue and leave offers looking as though they
+    // vanished.
+    console.error("[volunteers] track embed failed: %s", error.message);
+    ({ data, error } = await load(false));
+    if (error) console.error("[volunteers] load failed: %s", error.message);
+  }
 
   const rows = ((data ?? []) as unknown as Row[]) ?? [];
   const pending = rows.filter((r) => r.status === "pending");

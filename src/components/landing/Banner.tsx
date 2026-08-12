@@ -318,13 +318,17 @@ function Week2ThemeSlide() {
   return (
     <div
       className="relative w-full aspect-[5/4] sm:aspect-[12/5] overflow-hidden
-                 bg-[linear-gradient(125deg,#07152f_0%,#102a62_48%,#312e81_100%)]"
+                 bg-[linear-gradient(125deg,#06162f_0%,#123d72_48%,#3b2478_100%)]"
       style={{ containerType: "inline-size" }}
       role="img"
       aria-label="GLOGIFT 27 conference theme — Flexibility, Digitalisation and Decarbonization"
     >
       <div className="absolute inset-x-0 top-0 h-[0.45cqw] bg-[linear-gradient(90deg,#38bdf8,#818cf8,#f472b6,#fbbf24)]" />
-      <div className="absolute inset-x-[4cqw] top-[3cqw] text-center">
+      <div className="pointer-events-none absolute -left-[10cqw] top-[2cqw] h-[35cqw] w-[35cqw] rounded-full bg-[radial-gradient(circle,#0ea5e955,transparent_68%)]" />
+      <div className="pointer-events-none absolute -right-[8cqw] top-[4cqw] h-[32cqw] w-[32cqw] rounded-full bg-[radial-gradient(circle,#f472b644,transparent_70%)]" />
+      <div className="pointer-events-none absolute bottom-[-15cqw] left-[34cqw] h-[30cqw] w-[30cqw] rounded-full bg-[radial-gradient(circle,#fbbf2433,transparent_68%)]" />
+
+      <div className="absolute inset-x-[4cqw] top-[2.2cqw] text-center">
         <div className="text-center">
           <p className="font-serif text-[5.8cqw] sm:text-[3.3cqw] font-extrabold leading-none text-white">GLOGIFT 27</p>
           <p className="mt-[1.2cqw] text-[3.5cqw] sm:text-[1.55cqw] font-black leading-none tracking-[0.2em] text-[#fbbf24]">CONFERENCE THEME</p>
@@ -335,11 +339,11 @@ function Week2ThemeSlide() {
           flow inside it. Given a `top` each, the headline wrapped to two lines
           on a narrow screen and grew straight through the strapline below —
           absolute positioning cannot know how tall the text above it became. */}
-      <div className="absolute inset-x-[3cqw] top-[24cqw] sm:top-[14cqw] text-center">
-        <p className="font-serif text-[6.7cqw] sm:text-[3.1cqw] font-extrabold leading-tight text-white">
+      <div className="absolute inset-x-[3cqw] top-[21cqw] sm:top-[11cqw] text-center">
+        <p className="font-serif text-[6.2cqw] sm:text-[2.8cqw] font-extrabold leading-tight text-white">
           Three words. Three management questions.
         </p>
-        <p className="mt-[2.5cqw] sm:mt-[1.6cqw] text-[3.7cqw] sm:text-[1.75cqw] font-bold text-[#bfdbfe]">
+        <p className="mt-[1.5cqw] sm:mt-[0.7cqw] text-[3.4cqw] sm:text-[1.35cqw] font-bold text-[#bfdbfe]">
           Flexibility · Digitalisation · Decarbonization
         </p>
       </div>
@@ -347,23 +351,24 @@ function Week2ThemeSlide() {
       <img
         src={WEEK2_THEME_ART}
         alt="Illustrations representing flexibility, digitalisation and decarbonization"
-        className="absolute inset-x-0 top-[42cqw] sm:top-[23cqw] h-[28cqw] sm:h-[11cqw] w-full object-cover
+        className="absolute inset-x-0 top-[37cqw] sm:top-[18cqw] h-[25cqw] sm:h-[9.5cqw] w-full object-cover
                    saturate-[0.78] contrast-[1.08] brightness-[0.72]"
       />
       <div
-        className="pointer-events-none absolute inset-x-0 top-[42cqw] sm:top-[23cqw] h-[28cqw] sm:h-[11cqw]
+        className="pointer-events-none absolute inset-x-0 top-[37cqw] sm:top-[18cqw] h-[25cqw] sm:h-[9.5cqw]
                    bg-[linear-gradient(90deg,#0f172a99,#1e3a8a88,#312e8199)] mix-blend-color"
       />
 
-      <div className="absolute inset-x-[3cqw] bottom-[2.2cqw] grid grid-cols-3 gap-[1.2cqw] text-center">
+      <div className="absolute inset-x-[2.2cqw] bottom-[1.5cqw] grid grid-cols-3 gap-[1cqw] text-center">
         {[
-          ["Flexibility", "Does AI make the organisation more adaptable—or simply automate what is already rigid?"],
-          ["Digitalisation", "Who remains accountable when an AI recommendation becomes a management decision?"],
-          ["Decarbonization", "Can AI reduce emissions while we account honestly for the energy it consumes?"],
-        ].map(([theme, question]) => (
-          <div key={theme} className="border-t border-[#93c5fd]/40 pt-[0.7cqw]">
-            <p className="text-[2.5cqw] sm:text-[0.9cqw] font-extrabold uppercase tracking-wide text-[#fbbf24]">{theme}</p>
-            <p className="mt-[0.45cqw] font-serif text-[2.35cqw] sm:text-[0.94cqw] font-semibold italic leading-[1.18] text-white">
+          ["Flexibility", "Adaptability is not automation.", "Does AI make the organisation more adaptable—or simply automate what is already rigid?"],
+          ["Digitalisation", "Accuracy is only the beginning.", "Who remains accountable when an AI recommendation becomes a management decision?"],
+          ["Decarbonization", "Count both halves of the ledger.", "Can AI reduce emissions while we account honestly for the energy it consumes?"],
+        ].map(([theme, dilemma, question]) => (
+          <div key={theme} className="rounded-[1cqw] border border-white/20 bg-[#07152f]/60 px-[1cqw] py-[0.8cqw] shadow-[0_0.8cqw_2cqw_-1cqw_#020617] backdrop-blur-sm">
+            <p className="text-[2.35cqw] sm:text-[0.82cqw] font-extrabold uppercase tracking-[0.08em] text-[#fbbf24]">{theme}</p>
+            <p className="mt-[0.3cqw] font-serif text-[2.25cqw] sm:text-[1cqw] font-bold leading-tight text-[#dbeafe]">{dilemma}</p>
+            <p className="mt-[0.5cqw] font-serif text-[1.9cqw] sm:text-[0.72cqw] font-medium italic leading-[1.25] text-white/90">
               “{question}”
             </p>
           </div>

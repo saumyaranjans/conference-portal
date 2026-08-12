@@ -351,11 +351,11 @@ function Week2ThemeSlide() {
       <img
         src={WEEK2_THEME_ART}
         alt="Illustrations representing flexibility, digitalisation and decarbonization"
-        className="absolute inset-x-0 top-[37cqw] sm:top-[18cqw] h-[25cqw] sm:h-[9.5cqw] w-full object-cover
+        className="absolute inset-x-0 top-[35cqw] sm:top-[16.8cqw] h-[31cqw] sm:h-[12.5cqw] w-full object-cover object-center
                    saturate-[0.78] contrast-[1.08] brightness-[0.72]"
       />
       <div
-        className="pointer-events-none absolute inset-x-0 top-[37cqw] sm:top-[18cqw] h-[25cqw] sm:h-[9.5cqw]
+        className="pointer-events-none absolute inset-x-0 top-[35cqw] sm:top-[16.8cqw] h-[31cqw] sm:h-[12.5cqw]
                    bg-[linear-gradient(90deg,#0f172a99,#1e3a8a88,#312e8199)] mix-blend-color"
       />
 
@@ -365,7 +365,7 @@ function Week2ThemeSlide() {
           ["Digitalisation", "Accuracy is only the beginning.", "Who remains accountable when an AI recommendation becomes a management decision?"],
           ["Decarbonization", "Count both halves of the ledger.", "Can AI reduce emissions while we account honestly for the energy it consumes?"],
         ].map(([theme, dilemma, question]) => (
-          <div key={theme} className="rounded-[1cqw] border border-white/20 bg-[#07152f]/60 px-[1cqw] py-[0.8cqw] shadow-[0_0.8cqw_2cqw_-1cqw_#020617] backdrop-blur-sm">
+          <div key={theme} className="border-t border-[#93c5fd]/45 px-[1cqw] pt-[0.8cqw]">
             <p className="text-[2.35cqw] sm:text-[0.82cqw] font-extrabold uppercase tracking-[0.08em] text-[#fbbf24]">{theme}</p>
             <p className="mt-[0.3cqw] font-serif text-[2.25cqw] sm:text-[1cqw] font-bold leading-tight text-[#dbeafe]">{dilemma}</p>
             <p className="mt-[0.5cqw] font-serif text-[1.9cqw] sm:text-[0.72cqw] font-medium italic leading-[1.25] text-white/90">

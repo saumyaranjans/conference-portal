@@ -3,8 +3,9 @@ const path = require("path");
 const sharp = require("sharp");
 
 const REPO = "C:/Users/saumy/OneDrive/Documents/Glogift2026";
-const OUT = path.join(REPO, "design/social/week-2-theme");
-const ART = path.join(OUT, "theme-triptych-source.png");
+const ROOT = path.join(REPO, "design/social/week-2-theme");
+const OUT = path.join(ROOT, "instagram-1080x1350");
+const ART = path.join(ROOT, "theme-triptych-source.png");
 const PAPER = "#fdf8f2";
 const NAVY = "#1e3a8a";
 const MAROON = "#7c2d12";
@@ -14,7 +15,7 @@ const IIM = `data:image/png;base64,${fs.readFileSync(path.join(REPO, "public/iim
 const IIM_WORDMARK = `data:image/png;base64,${fs.readFileSync(path.join(REPO, "public/iim-sambalpur-wordmark.png")).toString("base64")}`;
 const GIFT = `data:image/png;base64,${fs.readFileSync(path.join(REPO, "public/glogift-logo.png")).toString("base64")}`;
 const CAMPUS = `data:image/jpeg;base64,${fs.readFileSync(path.join(REPO, "design/banner/campus-sketch.jpg")).toString("base64")}`;
-const QR = `data:image/png;base64,${fs.readFileSync(path.join(OUT, "conference-website-qr.png")).toString("base64")}`;
+const QR = `data:image/png;base64,${fs.readFileSync(path.join(ROOT, "conference-website-qr.png")).toString("base64")}`;
 
 const b64 = (p) => `data:image/png;base64,${fs.readFileSync(p).toString("base64")}`;
 const esc = (s) => s.replace(/&/g, "&amp;");
@@ -89,8 +90,7 @@ function closingSlide() {
     closingSlide(),
   ];
   for (let i = 0; i < slides.length; i++) {
-    const stem = `glogift-27-week2-theme-slide-${i + 1}`;
-    fs.writeFileSync(path.join(OUT, `${stem}.svg`), slides[i]);
+    const stem = `glogift-27-instagram-theme-${i + 1}`;
     await sharp(Buffer.from(slides[i])).png().toFile(path.join(OUT, `${stem}.png`));
   }
 })();

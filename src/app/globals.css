@@ -138,7 +138,11 @@ body {
     @apply bg-red-600 text-white hover:bg-red-700;
   }
   .input {
-    @apply w-full rounded-lg border border-slate-300 px-3 py-2 text-sm
+    /* bg-white is not cosmetic. Without it the control is transparent, and a
+       <select>'s option list has no background of its own -- the popup fell
+       through to the UA's dark layer and rendered as a black block. Only the
+       dark theme set a background, so this only ever showed in light mode. */
+    @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm
            outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100;
   }
   .label {
@@ -224,6 +228,11 @@ body {
   color: #e2e8f0;
 }
 .dark .input::placeholder { color: #64748b; }
+
+/* Options are painted by the platform, not the page, so they need saying
+   explicitly in both themes or they inherit whatever the OS decides. */
+select.input option { background-color: #ffffff; color: #0f172a; }
+.dark select.input option { background-color: #0f172a; color: #e2e8f0; }
 .dark .label { color: #cbd5e1; }
 .dark .th { color: #94a3b8; }
 .dark .td { color: #cbd5e1; }

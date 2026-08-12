@@ -317,16 +317,17 @@ function LatticeSlide() {
 function Week2ThemeSlide() {
   return (
     <div
-      className="relative w-full aspect-[5/4] sm:aspect-[12/5] overflow-hidden bg-[#fdf8f2]"
+      className="relative w-full aspect-[5/4] sm:aspect-[12/5] overflow-hidden
+                 bg-[linear-gradient(125deg,#07152f_0%,#102a62_48%,#312e81_100%)]"
       style={{ containerType: "inline-size" }}
       role="img"
       aria-label="GLOGIFT 27 conference theme — Flexibility, Digitalisation and Decarbonization"
     >
-      <div className="absolute inset-x-0 top-0 h-[0.45cqw] bg-[linear-gradient(90deg,#7c2d12,#d97706,#eab308)]" />
+      <div className="absolute inset-x-0 top-0 h-[0.45cqw] bg-[linear-gradient(90deg,#38bdf8,#818cf8,#f472b6,#fbbf24)]" />
       <div className="absolute inset-x-[4cqw] top-[3cqw] text-center">
         <div className="text-center">
-          <p className="font-serif text-[5.8cqw] sm:text-[3.3cqw] font-extrabold leading-none text-[#1e3a8a]">GLOGIFT 27</p>
-          <p className="mt-[1.2cqw] text-[3.5cqw] sm:text-[1.55cqw] font-black leading-none tracking-[0.2em] text-[#c2410c]">CONFERENCE THEME</p>
+          <p className="font-serif text-[5.8cqw] sm:text-[3.3cqw] font-extrabold leading-none text-white">GLOGIFT 27</p>
+          <p className="mt-[1.2cqw] text-[3.5cqw] sm:text-[1.55cqw] font-black leading-none tracking-[0.2em] text-[#fbbf24]">CONFERENCE THEME</p>
         </div>
       </div>
 
@@ -335,10 +336,10 @@ function Week2ThemeSlide() {
           on a narrow screen and grew straight through the strapline below —
           absolute positioning cannot know how tall the text above it became. */}
       <div className="absolute inset-x-[3cqw] top-[24cqw] sm:top-[14cqw] text-center">
-        <p className="font-serif text-[6.7cqw] sm:text-[3.1cqw] font-extrabold leading-tight text-[#1e3a8a]">
+        <p className="font-serif text-[6.7cqw] sm:text-[3.1cqw] font-extrabold leading-tight text-white">
           Three words. Three management questions.
         </p>
-        <p className="mt-[2.5cqw] sm:mt-[1.6cqw] text-[3.7cqw] sm:text-[1.75cqw] font-bold text-[#7c2d12]">
+        <p className="mt-[2.5cqw] sm:mt-[1.6cqw] text-[3.7cqw] sm:text-[1.75cqw] font-bold text-[#bfdbfe]">
           Flexibility · Digitalisation · Decarbonization
         </p>
       </div>
@@ -346,23 +347,30 @@ function Week2ThemeSlide() {
       <img
         src={WEEK2_THEME_ART}
         alt="Illustrations representing flexibility, digitalisation and decarbonization"
-        className="absolute inset-x-0 top-[42cqw] sm:top-[23cqw] h-[28cqw] sm:h-[11cqw] w-full object-cover"
+        className="absolute inset-x-0 top-[42cqw] sm:top-[23cqw] h-[28cqw] sm:h-[11cqw] w-full object-cover
+                   saturate-[0.78] contrast-[1.08] brightness-[0.72]"
+      />
+      <div
+        className="pointer-events-none absolute inset-x-0 top-[42cqw] sm:top-[23cqw] h-[28cqw] sm:h-[11cqw]
+                   bg-[linear-gradient(90deg,#0f172a99,#1e3a8a88,#312e8199)] mix-blend-color"
       />
 
       <div className="absolute inset-x-[3cqw] bottom-[2.2cqw] grid grid-cols-3 gap-[1.2cqw] text-center">
         {[
-          ["Flexibility", "Adaptability is not automation."],
-          ["Digitalisation", "Accuracy is only the beginning."],
-          ["Decarbonization", "Count both halves of the ledger."],
-        ].map(([theme, story]) => (
-          <div key={theme} className="border-t border-[#c2410c]/30 pt-[0.7cqw]">
-            <p className="text-[2.5cqw] sm:text-[0.9cqw] font-extrabold uppercase tracking-wide text-[#c2410c]">{theme}</p>
-            <p className="mt-[0.35cqw] font-serif text-[2.7cqw] sm:text-[1.18cqw] font-bold leading-tight text-[#1e3a8a]">{story}</p>
+          ["Flexibility", "Does AI make the organisation more adaptable—or simply automate what is already rigid?"],
+          ["Digitalisation", "Who remains accountable when an AI recommendation becomes a management decision?"],
+          ["Decarbonization", "Can AI reduce emissions while we account honestly for the energy it consumes?"],
+        ].map(([theme, question]) => (
+          <div key={theme} className="border-t border-[#93c5fd]/40 pt-[0.7cqw]">
+            <p className="text-[2.5cqw] sm:text-[0.9cqw] font-extrabold uppercase tracking-wide text-[#fbbf24]">{theme}</p>
+            <p className="mt-[0.45cqw] font-serif text-[2.35cqw] sm:text-[0.94cqw] font-semibold italic leading-[1.18] text-white">
+              “{question}”
+            </p>
           </div>
         ))}
       </div>
 
-      <div className="absolute inset-x-0 bottom-0 h-[0.45cqw] bg-[linear-gradient(90deg,#7c2d12,#d97706,#eab308)]" />
+      <div className="absolute inset-x-0 bottom-0 h-[0.45cqw] bg-[linear-gradient(90deg,#38bdf8,#818cf8,#f472b6,#fbbf24)]" />
     </div>
   );
 }

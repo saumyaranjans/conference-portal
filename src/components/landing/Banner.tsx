@@ -18,6 +18,7 @@ const MAX_SLIDES = 5;
    only the mark shows, never the wordmark beside it. */
 const IIM_CREST = "/iim-crest.png";
 const GLOGIFT_LOGO = "/glogift-logo.png";
+const WEEK2_THEME_ART = "/banners/week-2-theme.png";
 
 /* The crest is navy artwork; on the dark panels it is flipped to solid white
    the same way the header logo is (see `.iim-adaptive` in globals.css). */
@@ -312,6 +313,60 @@ function LatticeSlide() {
   );
 }
 
+/** Slide 2 — Week 2 campaign creative, adapted from the social carousel. */
+function Week2ThemeSlide() {
+  return (
+    <div
+      className="relative w-full aspect-[5/4] sm:aspect-[12/5] overflow-hidden bg-[#fdf8f2]"
+      style={{ containerType: "inline-size" }}
+      role="img"
+      aria-label="GLOGIFT 27 conference theme — Flexibility, Digitalisation and Decarbonization"
+    >
+      <div className="absolute inset-x-0 top-0 h-[0.45cqw] bg-[linear-gradient(90deg,#7c2d12,#d97706,#eab308)]" />
+      <div className="absolute inset-x-[4cqw] top-[3cqw] text-center">
+        <div className="text-center">
+          <p className="font-serif text-[5.8cqw] sm:text-[3.3cqw] font-extrabold leading-none text-[#1e3a8a]">GLOGIFT 27</p>
+          <p className="mt-[1.2cqw] text-[3.5cqw] sm:text-[1.55cqw] font-black leading-none tracking-[0.2em] text-[#c2410c]">CONFERENCE THEME</p>
+        </div>
+      </div>
+
+      {/* Headline and strapline share ONE positioned block and stack in normal
+          flow inside it. Given a `top` each, the headline wrapped to two lines
+          on a narrow screen and grew straight through the strapline below —
+          absolute positioning cannot know how tall the text above it became. */}
+      <div className="absolute inset-x-[3cqw] top-[24cqw] sm:top-[14cqw] text-center">
+        <p className="font-serif text-[6.7cqw] sm:text-[3.1cqw] font-extrabold leading-tight text-[#1e3a8a]">
+          Three words. Three management questions.
+        </p>
+        <p className="mt-[2.5cqw] sm:mt-[1.6cqw] text-[3.7cqw] sm:text-[1.75cqw] font-bold text-[#7c2d12]">
+          Flexibility · Digitalisation · Decarbonization
+        </p>
+      </div>
+
+      <img
+        src={WEEK2_THEME_ART}
+        alt="Illustrations representing flexibility, digitalisation and decarbonization"
+        className="absolute inset-x-0 top-[42cqw] sm:top-[23cqw] h-[28cqw] sm:h-[11cqw] w-full object-cover"
+      />
+
+      <div className="absolute inset-x-[3cqw] bottom-[2.2cqw] grid grid-cols-3 gap-[1.2cqw] text-center">
+        {[
+          ["Flexibility", "Adaptability is not automation."],
+          ["Digitalisation", "Accuracy is only the beginning."],
+          ["Decarbonization", "Count both halves of the ledger."],
+        ].map(([theme, story]) => (
+          <div key={theme} className="border-t border-[#c2410c]/30 pt-[0.7cqw]">
+            <p className="text-[2.5cqw] sm:text-[0.9cqw] font-extrabold uppercase tracking-wide text-[#c2410c]">{theme}</p>
+            <p className="mt-[0.35cqw] font-serif text-[2.7cqw] sm:text-[1.18cqw] font-bold leading-tight text-[#1e3a8a]">{story}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="absolute inset-x-0 bottom-0 h-[0.45cqw] bg-[linear-gradient(90deg,#7c2d12,#d97706,#eab308)]" />
+    </div>
+  );
+}
+
 /* One photograph per track, in TRACKS order, each paired with the accent
    colour used for its card. The images are CC0 / public domain; provenance is
    recorded in docs/track-photos.md. */
@@ -467,6 +522,7 @@ function TracksSlide() {
    lengthening the rotation. */
 const SLIDES: { key: string; label: string; render: () => React.ReactNode }[] = [
   { key: "lattice", label: "Navy lattice", render: () => <LatticeSlide /> },
+  { key: "week-2-theme", label: "Week 2 conference theme", render: () => <Week2ThemeSlide /> },
   { key: "tracks", label: "Call for submissions", render: () => <TracksSlide /> },
 ].slice(0, MAX_SLIDES);
 

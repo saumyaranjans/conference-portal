@@ -148,11 +148,28 @@ export default async function VisitAnalyticsPage() {
   await requireRole("chief", "admin");
   const supabase = await createClient();
 
-  const { data } = await supabase
-    .from("site_visits")
-    .select("country, region, path, session_id, referrer, visited_at")
-    .limit(100000);
-  const rows = (data ?? []) as Row[];
+  // Read in pages. PostgREST caps a response at 1000 rows whatever .limit()
+  // asks for, so this page silently analysed a 1000-row slice of the table and
+  // reported it as the whole: totals stuck at exactly 1000, and days outside
+  // the slice — including today — showed nothing at all.
+  const PAGE = 1000;
+  const rows: Row[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await supabase
+      .from("site_visits")
+      .select("country, region, path, session_id, referrer, visited_at")
+      .order("visited_at", { ascending: false })
+      .range(from, from + PAGE - 1);
+    if (error) {
+      console.error("[visit-analytics] page %d failed: %s", from / PAGE, error.message);
+      break;
+    }
+    const batch = (data ?? []) as Row[];
+    rows.push(...batch);
+    // A short page is the last one. The guard stops a pathological table from
+    // looping for ever.
+    if (batch.length < PAGE || rows.length >= 100000) break;
+  }
 
   const worldValues: Record<string, number> = {};
   const indiaValues: Record<string, number> = {};

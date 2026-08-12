@@ -24,8 +24,16 @@ function money(currency: string, amount: number) {
  */
 const getConvenerStats = cache(async () => {
   const supabase = await createClient();
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
+  // Midnight IST, not the server's. Vercel runs in UTC, so setHours(0,0,0,0)
+  // measured "today" from 05:30 IST — visits before that fell into yesterday
+  // and the figure disagreed with the Visit Analytics page, which buckets in
+  // IST. Same instant computed the same way in both places now.
+  const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+  const istNow = new Date(Date.now() + IST_OFFSET_MS);
+  const startOfToday = new Date(
+    Date.UTC(istNow.getUTCFullYear(), istNow.getUTCMonth(), istNow.getUTCDate()) -
+      IST_OFFSET_MS
+  );
 
   const [{ count: emailToday }, { count: emailTotal }] = await Promise.all([
     supabase

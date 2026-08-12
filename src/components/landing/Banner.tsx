@@ -18,7 +18,9 @@ const MAX_SLIDES = 5;
    only the mark shows, never the wordmark beside it. */
 const IIM_CREST = "/iim-crest.png";
 const GLOGIFT_LOGO = "/glogift-logo.png";
-const WEEK2_THEME_ART = "/banners/week-2-theme.png";
+// WebP: the PNG was 2.74MB for a 1774x887 image in the hero carousel,
+// which every visitor downloaded before the page settled. Same picture, 267KB.
+const WEEK2_THEME_ART = "/banners/week-2-theme.webp";
 
 /* The crest is navy artwork; on the dark panels it is flipped to solid white
    the same way the header logo is (see `.iim-adaptive` in globals.css). */

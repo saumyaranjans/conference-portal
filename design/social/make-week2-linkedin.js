@@ -10,19 +10,21 @@ const PAPER = "#fdf8f2", NAVY = "#1e3a8a", MAROON = "#7c2d12";
 const SANS = "'Segoe UI', 'Helvetica Neue', Arial, sans-serif";
 const SERIF = "Georgia, 'Times New Roman', Times, serif";
 const IIM = `data:image/png;base64,${fs.readFileSync(path.join(REPO, "public/iim-crest.png")).toString("base64")}`;
+const IIM_WORDMARK = `data:image/png;base64,${fs.readFileSync(path.join(REPO, "public/iim-sambalpur-wordmark.png")).toString("base64")}`;
 const GIFT = `data:image/png;base64,${fs.readFileSync(path.join(REPO, "public/glogift-logo.png")).toString("base64")}`;
 const CAMPUS = `data:image/jpeg;base64,${fs.readFileSync(path.join(REPO, "design/banner/campus-sketch.jpg")).toString("base64")}`;
 const QR = `data:image/png;base64,${fs.readFileSync(path.join(ROOT, "conference-website-qr.png")).toString("base64")}`;
 const esc = (s) => s.replace(/&/g, "&amp;");
 const uri = (buf) => `data:image/png;base64,${buf.toString("base64")}`;
 
-function frame(body, { qrSize = 240, qrX = 930, qrY = 940, scanEnd = 910 } = {}) {
+function frame(body, { qrSize = 240, qrX = 930, qrY = 940, scanEnd = 910, iimLogo = IIM_WORDMARK } = {}) {
+  const iimMark = `<image xlink:href="${iimLogo}" x="48" y="22" width="340" height="68" preserveAspectRatio="xMinYMid meet"/>`;
   return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1200" height="1200" viewBox="0 0 1200 1200">
   <defs><linearGradient id="accent"><stop stop-color="#7c2d12"/><stop offset=".55" stop-color="#d97706"/><stop offset="1" stop-color="#eab308"/></linearGradient></defs>
   <rect width="1200" height="1200" fill="${PAPER}"/><rect width="1200" height="10" fill="url(#accent)"/><rect y="1190" width="1200" height="10" fill="url(#accent)"/>
   ${body}
   <rect x="0" y="10" width="1200" height="190" fill="${PAPER}"/>
-  <image xlink:href="${IIM}" x="58" y="20" width="190" height="82" preserveAspectRatio="xMidYMid meet"/>
+  ${iimMark}
   <image xlink:href="${GIFT}" x="952" y="16" width="190" height="90" preserveAspectRatio="xMidYMid meet"/>
   <text x="600" y="62" text-anchor="middle" fill="${NAVY}" font-size="50" font-weight="800" font-family="${SERIF}">GLOGIFT 27</text>
   <text x="600" y="160" text-anchor="middle" fill="#c2410c" font-size="54" font-weight="900" letter-spacing="1.5" font-family="${SANS}">CALL FOR SUBMISSION</text>
@@ -45,13 +47,13 @@ const cover = (art) => frame(`
   <text x="600" y="1055" text-anchor="middle" fill="#475569" font-size="22" font-weight="600" font-family="${SANS}">IIM Sambalpur, Odisha · Hybrid</text>`,
   { qrSize: 130, qrX: 1000, qrY: 1040, scanEnd: 980 });
 
-function concept(art, n, title, kicker, lines) {
+function concept(art, n, title, kicker, lines, iimLogo = IIM_WORDMARK) {
   const copy = lines.map((line, i) => `<text x="72" y="${920 + i * 40}" fill="#334155" font-size="28" font-family="${SANS}">${esc(line)}</text>`).join("");
   return frame(`
   <text x="72" y="240" fill="#c2410c" font-size="21" font-weight="800" letter-spacing="5" font-family="${SANS}">0${n} · ${title.toUpperCase()}</text>
   <text x="72" y="320" fill="${NAVY}" font-size="52" font-weight="800" font-family="${SERIF}">${esc(kicker)}</text>
   <image xlink:href="${art}" x="0" y="375" width="1200" height="455" preserveAspectRatio="xMidYMid slice"/>
-  ${copy}`);
+  ${copy}`, { iimLogo });
 }
 
 function closingSlide() {
@@ -77,7 +79,7 @@ function closingSlide() {
   }
   const slides = [
     cover(uri(source)),
-    concept(crops[0], 1, "Flexibility", "Adaptability is not automation.", ["A faster rigid process is still rigid.", "What lets an organisation change its mind?", "AI can widen that capacity — or narrow it."]),
+    concept(crops[0], 1, "Flexibility", "Adaptability is not automation.", ["A faster rigid process is still rigid.", "What lets an organisation change its mind?", "AI can widen that capacity — or narrow it."], IIM_WORDMARK),
     concept(crops[1], 2, "Digitalisation", "Accuracy is only the beginning.", ["What happens when an AI recommendation meets", "a human who must defend the decision?", "Governance is the binding constraint."]),
     concept(crops[2], 3, "Decarbonization", "Count both halves of the ledger.", ["AI can help decarbonise operations and supply chains.", "It also consumes meaningful energy.", "Responsible management must account for both."]),
     closingSlide(),

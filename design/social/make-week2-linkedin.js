@@ -12,23 +12,23 @@ const SERIF = "Georgia, 'Times New Roman', Times, serif";
 const IIM = `data:image/png;base64,${fs.readFileSync(path.join(REPO, "public/iim-crest.png")).toString("base64")}`;
 const IIM_WORDMARK = `data:image/png;base64,${fs.readFileSync(path.join(REPO, "public/iim-sambalpur-wordmark.png")).toString("base64")}`;
 const GIFT = `data:image/png;base64,${fs.readFileSync(path.join(REPO, "public/glogift-logo.png")).toString("base64")}`;
-const CAMPUS = `data:image/jpeg;base64,${fs.readFileSync(path.join(REPO, "design/banner/campus-sketch.jpg")).toString("base64")}`;
+const CAMPUS = `data:image/png;base64,${fs.readFileSync(path.join(REPO, "design/banner/campus-sketch-no-logo.png")).toString("base64")}`;
 const QR = `data:image/png;base64,${fs.readFileSync(path.join(ROOT, "conference-website-qr.png")).toString("base64")}`;
 const esc = (s) => s.replace(/&/g, "&amp;");
 const uri = (buf) => `data:image/png;base64,${buf.toString("base64")}`;
 
 function frame(body, { qrSize = 240, qrX = 930, qrY = 940, scanEnd = 910, iimLogo = IIM_WORDMARK } = {}) {
-  const iimMark = `<image xlink:href="${iimLogo}" x="48" y="22" width="340" height="68" preserveAspectRatio="xMinYMid meet"/>`;
+  const iimMark = `<image xlink:href="${iimLogo}" x="48" y="16" width="680" height="68" preserveAspectRatio="xMinYMid meet"/>`;
   return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1200" height="1200" viewBox="0 0 1200 1200">
   <defs><linearGradient id="accent"><stop stop-color="#7c2d12"/><stop offset=".55" stop-color="#d97706"/><stop offset="1" stop-color="#eab308"/></linearGradient></defs>
   <rect width="1200" height="1200" fill="${PAPER}"/><rect width="1200" height="10" fill="url(#accent)"/><rect y="1190" width="1200" height="10" fill="url(#accent)"/>
   ${body}
   <rect x="0" y="10" width="1200" height="190" fill="${PAPER}"/>
   ${iimMark}
-  <image xlink:href="${GIFT}" x="952" y="16" width="190" height="90" preserveAspectRatio="xMidYMid meet"/>
-  <text x="600" y="62" text-anchor="middle" fill="${NAVY}" font-size="50" font-weight="800" font-family="${SERIF}">GLOGIFT 27</text>
-  <text x="600" y="160" text-anchor="middle" fill="#c2410c" font-size="54" font-weight="900" letter-spacing="1.5" font-family="${SANS}">CALL FOR SUBMISSION</text>
-  <path d="M58 198 H1142" stroke="#c2410c" stroke-width="2" opacity=".3"/>
+  <image xlink:href="${GIFT}" x="990" y="16" width="152" height="90" preserveAspectRatio="xMidYMid meet"/>
+  <text x="600" y="140" text-anchor="middle" fill="${NAVY}" font-size="50" font-weight="800" font-family="${SERIF}">GLOGIFT 27</text>
+  <text x="600" y="190" text-anchor="middle" fill="#c2410c" font-size="48" font-weight="900" letter-spacing="1.5" font-family="${SANS}">CALL FOR SUBMISSION</text>
+  <path d="M58 202 H1142" stroke="#c2410c" stroke-width="2" opacity=".3"/>
   <text x="58" y="1122" fill="${MAROON}" font-size="17" font-weight="800" letter-spacing="1.2" font-family="${SANS}">INTERNATIONAL CONFERENCE ON</text>
   <text x="58" y="1152" fill="${NAVY}" font-size="19" font-weight="800" font-family="${SANS}">AI-DRIVEN SOLUTIONS IN MANAGEMENT</text>
   <text x="825" y="1180" text-anchor="end" fill="${NAVY}" font-size="18" font-weight="800" font-family="${SANS}">glogift2027.in</text>

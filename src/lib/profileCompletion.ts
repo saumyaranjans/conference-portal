@@ -92,14 +92,20 @@ export async function completeProfile(
   // Offers to serve, recorded for the Convener to decide. Faculty only — the
   // same rule the trigger applies to the password signup path (0077).
   if (category === VOLUNTEER_ELIGIBLE_CATEGORY) {
-    const wanted: VolunteerRole[] = [];
-    if (str("volunteer_reviewer") === "true") wanted.push("reviewer");
-    if (str("volunteer_editor") === "true") wanted.push("editor");
+    const wanted: { role: VolunteerRole; track: string }[] = [];
+    if (str("volunteer_reviewer") === "true")
+      wanted.push({ role: "reviewer", track: str("volunteer_reviewer_track") });
+    if (str("volunteer_editor") === "true")
+      wanted.push({ role: "editor", track: str("volunteer_editor_track") });
     if (wanted.length) {
       await createAdminClient()
         .from("volunteer_requests")
         .upsert(
-          wanted.map((role) => ({ profile_id: profile.id, role })),
+          wanted.map(({ role, track }) => ({
+            profile_id: profile.id,
+            role,
+            preferred_track_id: track || null,
+          })),
           { onConflict: "profile_id,role", ignoreDuplicates: true }
         );
     }

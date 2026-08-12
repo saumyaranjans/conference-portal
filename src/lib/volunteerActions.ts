@@ -71,7 +71,7 @@ export async function decideVolunteerRequest(
 
   const { data: request } = await admin
     .from("volunteer_requests")
-    .select("id, profile_id, role, status")
+    .select("id, profile_id, role, status, preferred_track_id, tracks(code, name)")
     .eq("id", id)
     .maybeSingle();
   if (!request) return { ok: false, message: "That request no longer exists." };
@@ -87,6 +87,30 @@ export async function decideVolunteerRequest(
     decision === "accepted"
   );
   if (roleError) return { ok: false, message: roleError };
+
+  // An accepted editor who named a track is seated on it here, so "accepted"
+  // and "chairs that track" are one action rather than two. Reviewers are not
+  // seated: they are assigned per paper, and their track is expertise only.
+  //
+  // A failure to seat must not undo the acceptance — the role is already
+  // granted and the Convener can seat them by hand — so this reports rather
+  // than aborts. The 2-track cap is a database trigger and surfaces here.
+  let seatNote = "";
+  const trackId = (request as any).preferred_track_id as string | null;
+  if (decision === "accepted" && role === "editor" && trackId) {
+    const { error: seatError } = await admin
+      .from("track_editors")
+      .upsert(
+        { track_id: trackId, profile_id: request.profile_id },
+        { onConflict: "track_id,profile_id", ignoreDuplicates: true }
+      );
+    if (seatError) {
+      console.error("[volunteer] seating failed: %s", seatError.message);
+      seatNote = ` Their track could not be assigned automatically (${seatError.message}) — please seat them from Track Editor Management.`;
+    } else {
+      seatNote = " They have been seated on their chosen track.";
+    }
+  }
 
   const { error } = await admin
     .from("volunteer_requests")

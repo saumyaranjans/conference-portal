@@ -1,6 +1,7 @@
 import { HomeLink } from "@/components/HomeLink";
 import { OAuthButtons } from "@/components/OAuthButtons";
 import { SignupForm } from "@/components/SignupForm";
+import { createClient } from "@/lib/supabase/server";
 
 import type { Metadata } from "next";
 // Utility/token page — never index, never follow.
@@ -11,7 +12,19 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
 const oauthEnabled =
   (process.env.NEXT_PUBLIC_OAUTH_PROVIDERS ?? "").trim().length > 0;
 
-export default function SignupPage() {
+export default async function SignupPage() {
+  // Tracks feed the "which track" question on a volunteer offer. Public data,
+  // and a failure here must not block signing up, so it degrades to no list —
+  // which simply hides the question.
+  const supabase = await createClient();
+  const { data: tracks, error: tracksError } = await supabase
+    .from("tracks")
+    .select("id, code, name")
+    .order("code");
+  if (tracksError) {
+    console.error("[signup] track list failed: %s", tracksError.message);
+  }
+
   return (
     <main className="min-h-screen flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-2xl">
@@ -43,7 +56,7 @@ export default function SignupPage() {
           </>
         )}
 
-        <SignupForm />
+        <SignupForm tracks={(tracks ?? []) as never} />
       </div>
     </main>
   );

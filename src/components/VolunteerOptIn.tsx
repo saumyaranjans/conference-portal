@@ -13,18 +13,29 @@ import { VOLUNTEER_ROLE_INFO, type VolunteerRole } from "@/lib/types";
  * agreeing to review three to five papers over Christmas should be able to see
  * that before they tick the box, not after they are assigned.
  */
+export type VolunteerTrack = { id: string; code: string | null; name: string };
+
 export function VolunteerOptIn({
   reviewer,
   editor,
+  tracks = [],
+  reviewerTrack = "",
+  editorTrack = "",
   onChange,
+  onTrackChange,
 }: {
   reviewer: boolean;
   editor: boolean;
+  /** Conference tracks, for the "which track" question. */
+  tracks?: VolunteerTrack[];
+  reviewerTrack?: string;
+  editorTrack?: string;
   onChange: (role: VolunteerRole, next: boolean) => void;
+  onTrackChange?: (role: VolunteerRole, trackId: string) => void;
 }) {
-  const rows: { role: VolunteerRole; checked: boolean }[] = [
-    { role: "reviewer", checked: reviewer },
-    { role: "editor", checked: editor },
+  const rows: { role: VolunteerRole; checked: boolean; track: string }[] = [
+    { role: "reviewer", checked: reviewer, track: reviewerTrack },
+    { role: "editor", checked: editor, track: editorTrack },
   ];
 
   return (
@@ -40,7 +51,7 @@ export function VolunteerOptIn({
       </p>
 
       <div className="space-y-3">
-        {rows.map(({ role, checked }) => {
+        {rows.map(({ role, checked, track }) => {
           const info = VOLUNTEER_ROLE_INFO[role];
           return (
             <label
@@ -73,6 +84,39 @@ export function VolunteerOptIn({
                       <li key={d}>{d}</li>
                     ))}
                   </ul>
+
+                  {checked && tracks.length > 0 && (
+                    <span
+                      className="mt-3 block"
+                      // The select lives inside a <label>; without this a click
+                      // on it toggles the checkbox that wraps it.
+                      onClick={(e) => e.preventDefault()}
+                    >
+                      <span className="block text-xs font-medium text-slate-700 dark:text-slate-200">
+                        {role === "editor"
+                          ? "Which track would you chair?"
+                          : "Which track is closest to your expertise?"}
+                      </span>
+                      <select
+                        value={track}
+                        onChange={(e) => onTrackChange?.(role, e.target.value)}
+                        className="input mt-1 w-full text-sm"
+                      >
+                        <option value="">Select a track</option>
+                        {tracks.map((t) => (
+                          <option key={t.id} value={t.id}>
+                            {t.code ? `${t.code} - ` : ""}
+                            {t.name}
+                          </option>
+                        ))}
+                      </select>
+                      <span className="mt-1 block text-xs text-slate-500">
+                        {role === "editor"
+                          ? "If the Convener accepts, you are seated on this track."
+                          : "Used to match you with papers; reviewers are assigned per paper."}
+                      </span>
+                    </span>
+                  )}
                 </span>
               </span>
             </label>

@@ -16,7 +16,7 @@ import {
   VOLUNTEER_ELIGIBLE_CATEGORY,
   type VolunteerRole,
 } from "@/lib/types";
-import { VolunteerOptIn } from "@/components/VolunteerOptIn";
+import { VolunteerOptIn, type VolunteerTrack } from "@/components/VolunteerOptIn";
 import { Captcha, captchaEnabled } from "@/components/Captcha";
 import { InstitutionInput } from "@/components/InstitutionInput";
 import { ListAutocomplete } from "@/components/ListAutocomplete";
@@ -38,6 +38,8 @@ const EMPTY = {
   glogiftMembershipNo: "",
   volunteerReviewer: false,
   volunteerEditor: false,
+  volunteerReviewerTrack: "",
+  volunteerEditorTrack: "",
   email: "",
   password: "",
   confirm: "",
@@ -56,6 +58,7 @@ export function SignupForm({
   trackEditorInviteToken,
   coAuthorInviteToken,
   emailLocked = false,
+  tracks = [],
 }: {
   prefill?: SignupPrefill;
   /** Reviewer invitation — lands them in the reviewer dashboard. */
@@ -65,6 +68,8 @@ export function SignupForm({
   /** Co-author invitation — links them to the submission, lands on /author. */
   coAuthorInviteToken?: string;
   emailLocked?: boolean;
+  /** Conference tracks, for the volunteer "which track" question. */
+  tracks?: VolunteerTrack[];
 }) {
   const router = useRouter();
   const [form, setForm] = useState({ ...EMPTY, ...prefill });
@@ -139,6 +144,12 @@ export function SignupForm({
           // faculty, so a hand-crafted signup cannot volunteer a student.
           volunteer_reviewer: String(eligibleToVolunteer && form.volunteerReviewer),
           volunteer_editor: String(eligibleToVolunteer && form.volunteerEditor),
+          // Read by the handle_new_user trigger (migration 0082) and cast to
+          // uuid there, so an empty string must stay empty rather than "null".
+          volunteer_reviewer_track:
+            eligibleToVolunteer && form.volunteerReviewer ? form.volunteerReviewerTrack : "",
+          volunteer_editor_track:
+            eligibleToVolunteer && form.volunteerEditor ? form.volunteerEditorTrack : "",
         },
       },
     });
@@ -436,7 +447,16 @@ export function SignupForm({
         <VolunteerOptIn
           reviewer={form.volunteerReviewer}
           editor={form.volunteerEditor}
+          tracks={tracks}
+          reviewerTrack={form.volunteerReviewerTrack}
+          editorTrack={form.volunteerEditorTrack}
           onChange={setVolunteer}
+          onTrackChange={(role, id) =>
+            setForm((f) => ({
+              ...f,
+              [role === "reviewer" ? "volunteerReviewerTrack" : "volunteerEditorTrack"]: id,
+            }))
+          }
         />
       )}
 

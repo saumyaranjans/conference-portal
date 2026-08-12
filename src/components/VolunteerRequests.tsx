@@ -20,6 +20,8 @@ type Row = {
   requested_at: string;
   decided_at: string | null;
   decision_note: string;
+  /** The track they offered to serve. Null on offers made before 0082. */
+  tracks: { code: string | null; name: string } | { code: string | null; name: string }[] | null;
   profiles: {
     full_name: string | null;
     email: string | null;
@@ -134,6 +136,28 @@ export async function VolunteerRequests({ basePath }: { basePath: string }) {
                 <p className="mt-3 border-t border-slate-100 pt-3 text-xs text-slate-500 dark:border-slate-800">
                   {VOLUNTEER_ROLE_INFO[r.role].summary}
                 </p>
+
+                {/* Which track they asked for. For an editor this is what
+                    accepting will seat them on, so it belongs in front of the
+                    person deciding. */}
+                {(() => {
+                  const t = Array.isArray(r.tracks) ? r.tracks[0] : r.tracks;
+                  if (!t?.name) return null;
+                  return (
+                    <p className="mt-2 text-xs text-slate-600 dark:text-slate-300">
+                      <span className="font-medium">
+                        {r.role === "editor" ? "Track requested: " : "Expertise: "}
+                      </span>
+                      {t.code ? `${t.code} - ` : ""}
+                      {t.name}
+                      {r.role === "editor" && (
+                        <span className="text-slate-400">
+                          {" "}(accepting seats them on this track)
+                        </span>
+                      )}
+                    </p>
+                  );
+                })()}
 
                 <div className="mt-3 flex flex-wrap items-end gap-2">
                   <ActionForm

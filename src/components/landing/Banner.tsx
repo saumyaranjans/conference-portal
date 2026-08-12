@@ -339,7 +339,7 @@ function Week2ThemeSlide() {
           flow inside it. Given a `top` each, the headline wrapped to two lines
           on a narrow screen and grew straight through the strapline below —
           absolute positioning cannot know how tall the text above it became. */}
-      <div className="absolute inset-x-[3cqw] top-[21cqw] sm:top-[11cqw] text-center">
+      <div className="absolute inset-x-[3cqw] top-[18cqw] sm:top-[8.2cqw] text-center">
         <p className="font-serif text-[6.2cqw] sm:text-[2.8cqw] font-extrabold leading-tight text-white">
           Three words. Three management questions.
         </p>
@@ -351,11 +351,11 @@ function Week2ThemeSlide() {
       <img
         src={WEEK2_THEME_ART}
         alt="Illustrations representing flexibility, digitalisation and decarbonization"
-        className="absolute inset-x-0 top-[34cqw] sm:top-[16.3cqw] h-[38cqw] sm:h-[16.5cqw] w-full object-cover object-[center_42%]
+        className="absolute inset-x-0 top-[34cqw] sm:top-[16.8cqw] h-[38cqw] sm:h-[16cqw] w-full object-cover object-[center_42%]
                    saturate-[0.78] contrast-[1.08] brightness-[0.72]"
       />
       <div
-        className="pointer-events-none absolute inset-x-0 top-[34cqw] sm:top-[16.3cqw] h-[38cqw] sm:h-[16.5cqw]
+        className="pointer-events-none absolute inset-x-0 top-[34cqw] sm:top-[16.8cqw] h-[38cqw] sm:h-[16cqw]
                    bg-[linear-gradient(90deg,#0f172a99,#1e3a8a88,#312e8199)] mix-blend-color"
       />
 

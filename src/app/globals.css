@@ -233,6 +233,13 @@ body {
    explicitly in both themes or they inherit whatever the OS decides. */
 select.input option { background-color: #ffffff; color: #0f172a; }
 .dark select.input option { background-color: #0f172a; color: #e2e8f0; }
+
+/* Chrome on Windows paints the select popup from the OS theme, and that beats
+   any option colours the page sets. Declaring the scheme on the control is the
+   only way to stop a dark desktop theme opening a black panel over a light
+   page. Stated per theme so the dark site still gets a dark popup. */
+.input { color-scheme: light; }
+.dark .input { color-scheme: dark; }
 .dark .label { color: #cbd5e1; }
 .dark .th { color: #94a3b8; }
 .dark .td { color: #cbd5e1; }

@@ -7,6 +7,7 @@
  */
 
 import { iciciProvider } from "./icici";
+import { orangeProvider } from "./orange";
 import { sandboxProvider } from "./sandbox";
 import type { PaymentProvider } from "./types";
 
@@ -18,6 +19,10 @@ export function paymentProvider(): PaymentProvider | null {
       return iciciProvider("icici_eazypay");
     case "icici_ccavenue":
       return iciciProvider("icici_ccavenue");
+    // The product ICICI actually offered: REST/JSON, HMAC-SHA256 over values
+    // ordered by field name. See orange.ts.
+    case "icici_orange":
+      return orangeProvider();
     // A stand-in bank for testing the flow end to end before ICICI is wired.
     // Refuses to run in production without an explicit override — see
     // sandbox.ts.

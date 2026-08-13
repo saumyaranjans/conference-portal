@@ -36,7 +36,7 @@ export default async function SandboxGatewayPage({
 }) {
   // Unreachable unless the sandbox is the selected provider. Anything else —
   // including the real ICICI adapter being live — makes this a 404.
-  if (!paymentsAreSandbox() || productionBlocked()) notFound();
+  if (!(await paymentsAreSandbox()) || productionBlocked()) notFound();
 
   const q = await searchParams;
   const orderId = q.orderId ?? "";

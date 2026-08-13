@@ -63,7 +63,7 @@ function backTo(req: NextRequest, status: string) {
 }
 
 async function handle(req: NextRequest) {
-  const provider = paymentProvider();
+  const provider = await paymentProvider();
   if (!provider) return backTo(req, "unavailable");
 
   // Accept both encodings — gateways vary, and some send the browser back by

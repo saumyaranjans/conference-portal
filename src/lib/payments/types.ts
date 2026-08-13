@@ -57,8 +57,9 @@ export interface PaymentProvider {
   /** Shown to staff and delegates, e.g. "ICICI Bank (Eazypay)". */
   readonly label: string;
   /** False when credentials are missing, so the UI can say so instead of
-   *  offering a button that leads nowhere. */
-  isConfigured(): boolean;
+   *  offering a button that leads nowhere. Async because configuration now
+   *  lives in the database as well as the environment. */
+  isConfigured(): boolean | Promise<boolean>;
   /** Build the hand-off. Must sign/encrypt per the provider's spec. */
   createCheckout(order: PaymentOrder): Promise<Checkout>;
   /**

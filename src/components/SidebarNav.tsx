@@ -37,6 +37,7 @@ const NAV: Record<AppRole, { href: string; label: string }[]> = {
     { href: "/chief/reviewers", label: "Reviewer Management" },
     { href: "/chief/track-editors", label: "Track Editor Management" },
     { href: "/chief/gift-members", label: "GIFT Membership" },
+    { href: "/chief/payment-gateway", label: "Payment Gateway" },
     { href: "/chief/programme", label: "Conference Programme" },
     { href: "/chief/event-management", label: "Event Management" },
   ],
@@ -190,6 +191,7 @@ export function SidebarNav({
       <ul className="space-y-0.5">
         {NAV[current]
           .filter((item) => item.href !== "/chief/users" || canManageUsers)
+          .filter((item) => item.href !== "/chief/payment-gateway" || canManageUsers)
           .filter((item) => item.href !== "/registration" || canRegister)
           .map((item) => {
             const active =

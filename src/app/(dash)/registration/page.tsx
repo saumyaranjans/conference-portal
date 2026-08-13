@@ -63,8 +63,8 @@ export default async function RegistrationPage({
   );
   const papers = await myPresentableSubmissions(profile.id);
   const existing = await myRegistration(profile.id);
-  const open = paymentsOpen();
-  const sandbox = paymentsAreSandbox();
+  const open = await paymentsOpen();
+  const sandbox = await paymentsAreSandbox();
   const notice = payment ? PAYMENT_NOTICES[payment] : undefined;
 
   const isPaid = existing?.status === "paid";
@@ -261,7 +261,7 @@ export default async function RegistrationPage({
           {/* ------------------------------------------------------------ */}
           {!open && (
             <div className="mb-8 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-200">
-              {paymentsClosedMessage()}
+              {await paymentsClosedMessage()}
             </div>
           )}
 

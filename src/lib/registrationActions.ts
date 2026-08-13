@@ -355,7 +355,7 @@ export async function submitRegistration(
   revalidatePath("/registration");
 
   // --- hand off to the bank, if it is ready ------------------------------
-  if (!paymentsOpen()) {
+  if (!(await paymentsOpen())) {
     return {
       ok: true,
       message:
@@ -364,7 +364,7 @@ export async function submitRegistration(
     };
   }
 
-  const provider = paymentProvider()!;
+  const provider = (await paymentProvider())!;
   const orderId = newOrderId();
 
   // The gateway collects the GST-INCLUSIVE figure. `amount` is the fee before

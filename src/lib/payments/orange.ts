@@ -21,6 +21,8 @@
 
 import { createHmac, timingSafeEqual } from "node:crypto";
 
+import { gatewayConfig, orangeCredentialsFrom } from "./config";
+
 import {
   PaymentNotConfiguredError,
   type Checkout,
@@ -38,14 +40,8 @@ const CODE_TO_CURRENCY: Record<string, Currency> = { "356": "INR", "840": "USD" 
 const INITIATED_OK = "R1000";
 const TXN_SUCCESS = "0000";
 
-function credentials() {
-  return {
-    merchantId: process.env.ICICI_ORANGE_MERCHANT_ID ?? "",
-    aggregatorId: process.env.ICICI_ORANGE_AGGREGATOR_ID ?? "",
-    key: process.env.ICICI_ORANGE_SECURE_KEY ?? "",
-    initiateUrl: process.env.ICICI_ORANGE_INITIATE_URL ?? "",
-    commandUrl: process.env.ICICI_ORANGE_COMMAND_URL ?? "",
-  };
+async function credentials() {
+  return orangeCredentialsFrom(await gatewayConfig());
 }
 
 /**
@@ -85,22 +81,21 @@ function txnDate(now = new Date()): string {
 }
 
 export function orangeProvider(): PaymentProvider {
-  const c = credentials();
-
   return {
     id: "icici_orange",
     label: "ICICI Bank (Orange PG)",
 
-    isConfigured(): boolean {
+    async isConfigured(): Promise<boolean> {
       // Every credential, or none. A half-configured gateway gets as far as
       // the bank and fails there, which is worse than not offering payment.
-      return Object.values(c).every((v) => v.trim().length > 0);
+      return (await credentials()).complete;
     },
 
     async createCheckout(order: PaymentOrder): Promise<Checkout> {
-      if (!this.isConfigured()) {
+      const c = await credentials();
+      if (!c.complete) {
         throw new PaymentNotConfiguredError(
-          "Orange PG is not configured. Set the ICICI_ORANGE_* environment variables."
+          "Orange PG is not configured. Complete it under Payment Gateway, or set the ICICI_ORANGE_* environment variables."
         );
       }
 
@@ -150,7 +145,8 @@ export function orangeProvider(): PaymentProvider {
     async verifyCallback(
       payload: Record<string, string>
     ): Promise<PaymentResult> {
-      if (!this.isConfigured()) {
+      const c = await credentials();
+      if (!c.complete) {
         throw new PaymentNotConfiguredError("Orange PG is not configured.");
       }
 
@@ -197,8 +193,8 @@ export function orangeProvider(): PaymentProvider {
 export async function orangeStatusCheck(
   merchantTxnNo: string
 ): Promise<PaymentResult> {
-  const c = credentials();
-  if (Object.values(c).some((v) => !v.trim())) {
+  const c = await credentials();
+  if (!c.complete) {
     throw new PaymentNotConfiguredError("Orange PG is not configured.");
   }
 

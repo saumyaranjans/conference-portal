@@ -353,6 +353,11 @@ function Week2ThemeSlide() {
       <img
         src={WEEK2_THEME_ART}
         alt="Illustrations representing flexibility, digitalisation and decarbonization"
+        // Slide 2 of a carousel that opens on slide 1 and turns after 25s, so
+        // this need not be fetched before first paint. It was the only eager
+        // image left on the landing page.
+        loading="lazy"
+        decoding="async"
         className="absolute inset-x-0 top-[34cqw] sm:top-[16.8cqw] h-[38cqw] sm:h-[16cqw] w-full object-cover object-[center_42%]
                    saturate-[0.78] contrast-[1.08] brightness-[0.72]"
       />

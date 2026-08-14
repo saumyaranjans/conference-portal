@@ -3,6 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { requireConvenerManage } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/server";
+import { sendEmail } from "@/lib/email";
+import { volunteerAcceptedEmail } from "@/lib/emailTemplates";
+import { withSalutation } from "@/lib/certificates";
 import type { ActionResult } from "@/lib/actions";
 import {
   VOLUNTEER_ROLE_INFO,
@@ -158,6 +161,44 @@ export async function decideVolunteerRequest(
         : `Thank you for offering to serve as a ${label}. The Convener is unable to take up the offer at this time.${note ? ` Note: ${note}` : ""}`,
     link: decision === "accepted" ? (role === "reviewer" ? "/reviewer" : "/editor") : "/profile",
   });
+
+  // Welcome the accepted volunteer by email: what they have taken on, how to
+  // sign in, and the dates their own work depends on. A failure to send must
+  // not undo an acceptance that has already granted the role, so it reports
+  // rather than aborts — the in-app notification above still stands.
+  if (decision === "accepted") {
+    const t = (request as any).tracks;
+    const track = Array.isArray(t) ? t[0] : t;
+    const { data: who } = await admin
+      .from("profiles")
+      .select("full_name, email, title")
+      .eq("id", request.profile_id)
+      .maybeSingle();
+
+    const person = who as { full_name?: string; email?: string; title?: string } | null;
+    if (person?.email) {
+      const mail = volunteerAcceptedEmail({
+        name: withSalutation(person.full_name ?? "", person.title ?? ""),
+        role,
+        trackName: track?.name
+          ? track.code
+            ? `${track.code} — ${track.name}`
+            : track.name
+          : null,
+        note,
+      });
+      const sent = await sendEmail({
+        to: person.email,
+        subject: mail.subject,
+        text: mail.body,
+        kind: "volunteer_accepted",
+        sentBy: profile.id,
+      });
+      if (!sent.sent) {
+        console.error("[volunteer] welcome email failed: %s", sent.error);
+      }
+    }
+  }
 
   revalidateVolunteers();
   return {

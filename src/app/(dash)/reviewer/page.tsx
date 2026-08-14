@@ -22,6 +22,27 @@ export default async function ReviewerDashboard() {
     : [];
 
   // Lightweight reviewer certificate (generated from Reviewer Management).
+  // The track they volunteered for — their declared area of expertise. Read
+  // with a fallback because preferred_track_id arrives with migration 0082;
+  // without it the select is rejected outright and would empty the page.
+  let myTrack: string | null = null;
+  {
+    const { data, error } = await supabase
+      .from("volunteer_requests")
+      .select("tracks(code, name)")
+      .eq("profile_id", profile.id)
+      .eq("role", "reviewer")
+      .eq("status", "accepted")
+      .maybeSingle();
+    if (error) {
+      console.error("[reviewer] track lookup unavailable: %s", error.message);
+    } else {
+      const t = (data as any)?.tracks;
+      const track = Array.isArray(t) ? t[0] : t;
+      if (track?.name) myTrack = track.code ? `${track.code} — ${track.name}` : track.name;
+    }
+  }
+
   const { data: reviewerCert } = await supabase
     .from("reviewer_certificates")
     .select("id, certificate_number, generated_at")
@@ -67,7 +88,9 @@ export default async function ReviewerDashboard() {
     <>
       <PageHeader
         title="My Reviews"
-        subtitle="Invitations, papers awaiting your assessment, and your completed reviews."
+        subtitle={`Invitations, papers awaiting your assessment, and your completed reviews.${
+          myTrack ? ` Reviewing for ${myTrack}.` : ""
+        }`}
       />
 
       <MyCertificates certificates={certificates} types={["reviewer"]} />

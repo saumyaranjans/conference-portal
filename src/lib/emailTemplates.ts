@@ -1232,3 +1232,80 @@ export function giftMemberCouponEmail(o: {
   ]);
   return { subject, body };
 }
+
+/**
+ * Welcome for a reviewer or Track Editor whose offer the Convener accepted.
+ *
+ * Sent once, on acceptance. It has three jobs: thank them, tell them how to
+ * get in, and give them the dates their own work depends on — a volunteer who
+ * has to hunt for when reviews are due is a volunteer who returns them late.
+ * The timeline is the reviewing window, not the whole conference calendar.
+ */
+export function volunteerAcceptedEmail(o: {
+  name: string;
+  role: "reviewer" | "editor";
+  trackName?: string | null;
+  note?: string | null;
+  conferenceName?: string | null;
+}): EmailContent {
+  const conf = (o.conferenceName ?? "").trim() || CONF_DEFAULT;
+  const isEditor = o.role === "editor";
+  const label = isEditor ? "Track Editor" : "Reviewer";
+
+  const subject = `${conf} — Welcome as a ${label}`;
+
+  const duties = isEditor
+    ? [
+        "Assign reviewers to each paper in your track, and chase late reviews.",
+        "Take the accept, revise or reject decision on the strength of the reviews.",
+        "Uphold the integrity thresholds on similarity and AI-assisted writing.",
+        "Help shape your track's sessions in the conference programme.",
+      ]
+    : [
+        "Read the papers assigned to you and score each on originality, technical quality, clarity and relevance.",
+        "Write constructive comments for the author, and a private note to the editor.",
+        "Return each review within the deadline set by the Track Editor.",
+        "Declare any conflict of interest and decline the paper where one exists.",
+      ];
+
+  const timeline = [
+    "  23 Nov 2026    Abstract submission closes",
+    "  30 Nov 2026    Abstract decisions announced",
+    "  08 Dec 2026    Full paper submission closes (Pathway B)",
+    "  15 Dec 2026    Full paper decisions announced (Pathway B)",
+    "  25-27 Feb 2027 Conference, IIM Sambalpur",
+  ].join("\n");
+
+  const body = [
+    `Dear ${o.name},`,
+    "",
+    `Thank you for offering to serve as a ${label} for ${conf} — the ${FULL_CONF_TITLE}, to be held on 25–27 February 2027 at IIM Sambalpur. We are delighted to confirm your appointment.`,
+    o.trackName ? `\nYour track: ${o.trackName}` : null,
+    o.note ? `\nA note from the Convener: ${o.note}` : null,
+    "",
+    "Signing in",
+    `Use the account you already registered with, at https://glogift2027.in/login. Your ${label} dashboard appears once you sign in — there is nothing further to set up.`,
+    "",
+    `What being a ${label} involves`,
+    ...duties.map((d) => `  - ${d}`),
+    "",
+    "Key dates",
+    timeline,
+    "",
+    isEditor
+      ? "Most of the editorial work falls between December 2026 and January 2027, once abstracts have cleared and full papers arrive."
+      : "Most reviewing falls between December 2026 and January 2027. You will be notified by email as papers are assigned to you.",
+    "",
+    "Your contribution is recorded in the conference proceedings, and a Certificate of Appreciation is issued to you after the conference.",
+    "",
+    "We are grateful for your time and expertise, and look forward to working with you. If you have any questions, simply reply to this message.",
+    "",
+    "With regards,",
+    "The Editorial Office",
+    conf,
+  ]
+    .filter((l): l is string => l !== null)
+    .join("\n");
+
+  return { subject, body };
+}

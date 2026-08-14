@@ -69,11 +69,33 @@ export async function decideVolunteerRequest(
     return { ok: false, message: "Choose accept or decline." };
   }
 
-  const { data: request } = await admin
+  // preferred_track_id arrives with migration 0082. Until it is applied
+  // PostgREST rejects the whole select, which returned null and was reported
+  // as "no longer exists" — a present request, described as missing, because a
+  // failed read is not an empty one. Retry without the track, and say so when
+  // the read itself fails.
+  const BASE = "id, profile_id, role, status";
+  let { data: request, error: readError } = await admin
     .from("volunteer_requests")
-    .select("id, profile_id, role, status, preferred_track_id, tracks(code, name)")
+    .select(`${BASE}, preferred_track_id, tracks(code, name)`)
     .eq("id", id)
     .maybeSingle();
+
+  if (readError) {
+    console.error("[volunteer] track columns unavailable: %s", readError.message);
+    ({ data: request, error: readError } = await admin
+      .from("volunteer_requests")
+      .select(BASE)
+      .eq("id", id)
+      .maybeSingle());
+  }
+  if (readError) {
+    console.error("[volunteer] request lookup failed: %s", readError.message);
+    return {
+      ok: false,
+      message: `Could not read that request: ${readError.message}`,
+    };
+  }
   if (!request) return { ok: false, message: "That request no longer exists." };
 
   const role = request.role as VolunteerRole;

@@ -67,6 +67,8 @@ export async function decideVolunteerRequest(
   const id = String(formData.get("request_id") ?? "").trim();
   const decision = String(formData.get("decision") ?? "").trim();
   const note = String(formData.get("decision_note") ?? "").trim().slice(0, 500);
+  // Only offered when the volunteer named no track; blank means leave it unset.
+  const assignedTrackId = String(formData.get("track_id") ?? "").trim();
   if (!id) return { ok: false, message: "Missing request." };
   if (decision !== "accepted" && decision !== "declined") {
     return { ok: false, message: "Choose accept or decline." };
@@ -121,7 +123,8 @@ export async function decideVolunteerRequest(
   // granted and the Convener can seat them by hand — so this reports rather
   // than aborts. The 2-track cap is a database trigger and surfaces here.
   let seatNote = "";
-  const trackId = (request as any).preferred_track_id as string | null;
+  const trackId =
+    ((request as any).preferred_track_id as string | null) || assignedTrackId || null;
   if (decision === "accepted" && role === "editor" && trackId) {
     const { error: seatError } = await admin
       .from("track_editors")
@@ -134,6 +137,26 @@ export async function decideVolunteerRequest(
       seatNote = ` Their track could not be assigned automatically (${seatError.message}) — please seat them from Track Editor Management.`;
     } else {
       seatNote = " They have been seated on their chosen track.";
+    }
+  }
+
+  // Write the assignment back. Without this the seating would happen but the
+  // record would still read "no track", and the welcome email — which is sent
+  // from `request` — would omit the line it was assigned to carry.
+  if (decision === "accepted" && assignedTrackId && !(request as any).preferred_track_id) {
+    const { error: assignError } = await admin
+      .from("volunteer_requests")
+      .update({ preferred_track_id: assignedTrackId })
+      .eq("id", id);
+    if (assignError) {
+      console.error("[volunteer] could not store assigned track: %s", assignError.message);
+    } else {
+      const { data: t } = await admin
+        .from("tracks")
+        .select("code, name")
+        .eq("id", assignedTrackId)
+        .maybeSingle();
+      if (t) (request as any).tracks = t;
     }
   }
 

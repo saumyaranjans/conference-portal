@@ -102,6 +102,12 @@ export async function VolunteerRequests({ basePath }: { basePath: string }) {
       .select(columns(withTrack))
       .order("requested_at", { ascending: false });
 
+  const { data: trackList } = await admin
+    .from("tracks")
+    .select("id, code, name")
+    .order("code");
+  const tracks = (trackList ?? []) as { id: string; code: string | null; name: string }[];
+
   let { data, error } = await load(true);
   if (error) {
     // Almost certainly 0082 not yet applied. Retry without the track rather
@@ -189,6 +195,30 @@ export async function VolunteerRequests({ basePath }: { basePath: string }) {
                   >
                     <input type="hidden" name="request_id" value={r.id} />
                     <input type="hidden" name="decision" value="accepted" />
+                    {/* No track named at sign-up — let the Convener settle it
+                        here, before the welcome email goes out saying which
+                        track they are on. Accepting first and seating later
+                        would send that email with the line missing. */}
+                    {!(Array.isArray(r.tracks) ? r.tracks[0] : r.tracks)?.name && (
+                      <label className="flex flex-col gap-0.5">
+                        <span className="text-[11px] font-medium text-slate-500">
+                          {r.role === "editor" ? "Assign track" : "Track (expertise)"}
+                        </span>
+                        <select
+                          name="track_id"
+                          defaultValue=""
+                          className="input w-56 max-w-full text-xs"
+                        >
+                          <option value="">Not assigned</option>
+                          {tracks.map((t) => (
+                            <option key={t.id} value={t.id}>
+                              {t.code ? `${t.code} - ` : ""}
+                              {t.name}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    )}
                     <input
                       name="decision_note"
                       placeholder="Note to them (optional)"

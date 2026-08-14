@@ -25,6 +25,23 @@ export const dynamic = "force-dynamic";
  * the delegate staring at an error page with no idea whether they had been
  * charged.
  */
+/**
+ * Is this the delegate's browser coming back, or the bank's server telling us
+ * what happened?
+ *
+ * The same URL serves both: it is our returnURL and the Payment Advice URL
+ * ICICI has registered. They need opposite answers. A browser must be sent
+ * somewhere it can read; an advice call must receive HTTP 200, because the
+ * spec treats anything else as failed delivery and retries the message.
+ *
+ * A navigation carries Sec-Fetch-Mode: navigate, or at least asks for HTML.
+ * A server-to-server POST does neither.
+ */
+function isBrowserNavigation(req: NextRequest): boolean {
+  if (req.headers.get("sec-fetch-mode") === "navigate") return true;
+  return (req.headers.get("accept") ?? "").includes("text/html");
+}
+
 function backTo(req: NextRequest, status: string) {
   const origin = req.nextUrl.origin;
   let base = origin;
@@ -58,6 +75,15 @@ function backTo(req: NextRequest, status: string) {
         : // mismatch / unknown / unavailable need the longer explanation, and
           // that lives beside the fee on the registration page.
           `/registration?payment=${status}`;
+
+  // Server-to-server advice: acknowledge with 200 and nothing else. Redirecting
+  // it would be read as a failed delivery and the bank would send it again.
+  if (!isBrowserNavigation(req)) {
+    return new NextResponse("OK", {
+      status: 200,
+      headers: { "Content-Type": "text/plain" },
+    });
+  }
 
   return NextResponse.redirect(new URL(path, base), 303);
 }

@@ -403,8 +403,16 @@ export function SubmissionManagement({
                       )}
                     </td>
                     <td className="px-3 py-2 text-xs">
-                      {/* Pathway A has no manuscript, so no boxes and no score. */}
-                      {r.pathway === "A" ? (
+                      {/* No manuscript, no integrity check. Pathway A never
+                          has one; a Pathway B paper does not have one either
+                          until its abstract clears and it reaches the
+                          manuscript stage. Keying on pathway alone put the
+                          boxes in front of the Editorial Office while the
+                          paper was still an abstract, inviting a score for a
+                          file nobody had uploaded — and recordIntegrityCheck
+                          rejects exactly that, so the boxes could not work.
+                          stage === "full_paper" is the same test it uses. */}
+                      {r.pathway === "A" || r.stage !== "full_paper" ? (
                         <span className="text-slate-400">n/a</span>
                       ) : canRecordIntegrity ? (
                         // Editorial Office types the two numbers straight into
@@ -634,7 +642,7 @@ export function SubmissionManagement({
 
                 {/* Editorial Office enters the scores here. Pathway A has no
                     manuscript to check, so the form is simply not offered. */}
-                {canRecordIntegrity && r.pathway === "B" && (
+                {canRecordIntegrity && r.pathway === "B" && r.stage === "full_paper" && (
                   <details className="mt-3 rounded-lg border border-slate-200 p-2 dark:border-slate-700">
                     <summary className="cursor-pointer list-none text-xs font-medium text-blue-700 dark:text-blue-300">
                       {r.integrityCheckedAt

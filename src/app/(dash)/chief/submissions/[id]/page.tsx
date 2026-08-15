@@ -224,8 +224,11 @@ export default async function ChiefSubmissionPage({
         </div>
       </Section>
 
-      {/* Pathway B only — a Pathway A abstract has no manuscript to check. */}
-      {sub.submission_type === "full_paper_presentation" && (
+      {/* Only once a manuscript exists. Pathway B alone is not enough: until
+          the abstract clears, the paper is still an abstract and there is
+          nothing to run a similarity or AI check against. */}
+      {sub.submission_type === "full_paper_presentation" &&
+        sub.stage === "full_paper" && (
         <IntegrityCheck
           submission={sub}
           checkedByName={integrityCheckedByName}

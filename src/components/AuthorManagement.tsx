@@ -132,6 +132,8 @@ export function AuthorManagement({
   const [regFilter, setRegFilter] = useState<"all" | "registered" | "not">("all");
   const [modeFilter, setModeFilter] = useState<"all" | "onsite" | "virtual">("all");
   const [pathwayFilter, setPathwayFilter] = useState<"all" | "A" | "B">("all");
+  const [roleFilter, setRoleFilter] = useState<"all" | "corresponding" | "co">("all");
+  const [signupFilter, setSignupFilter] = useState<"all" | "yes" | "no">("all");
   // Active alphabet-index letter ("all" = every author).
   const [letter, setLetter] = useState<string>("all");
   // Track + pathway filters for the Registration analytics panel (independent
@@ -202,6 +204,16 @@ export function AuthorManagement({
         modeFilter === "all" ? "All" : modeFilter === "onsite" ? "On-site" : "Virtual"
       }`,
       `Pathway: ${pathwayFilter === "all" ? "All" : `Pathway ${pathwayFilter}`}`,
+      `Role: ${
+        roleFilter === "all"
+          ? "All"
+          : roleFilter === "corresponding"
+            ? "Corresponding"
+            : "Co-author"
+      }`,
+      `Sign-up: ${
+        signupFilter === "all" ? "All" : signupFilter === "yes" ? "Signed up" : "Not signed up"
+      }`,
       `Name starts with: ${letter === "all" ? "All" : letter}`,
     ].join("   |   ");
     const headers = [
@@ -284,6 +296,20 @@ export function AuthorManagement({
         !row.papers.some((p) => p.pathway === pathwayFilter)
       )
         return false;
+      // Role is per paper — someone may be corresponding on one and a
+      // co-author on another — so this matches anyone holding the role on at
+      // least one paper, the same way the pathway filter reads.
+      if (
+        roleFilter !== "all" &&
+        !row.papers.some((p) =>
+          roleFilter === "corresponding"
+            ? p.role === "Corresponding"
+            : p.role === "Co-author"
+        )
+      )
+        return false;
+      if (signupFilter === "yes" && !row.signedUp) return false;
+      if (signupFilter === "no" && row.signedUp) return false;
       if (!needle) return true;
       return (
         row.name.toLowerCase().includes(needle) ||
@@ -297,7 +323,7 @@ export function AuthorManagement({
       stripSalutation(a.name).localeCompare(stripSalutation(b.name))
     );
     return { list: r, available: avail };
-  }, [rows, track, q, letter, regFilter, modeFilter, pathwayFilter]);
+  }, [rows, track, q, letter, regFilter, modeFilter, pathwayFilter, roleFilter, signupFilter]);
 
   return (
     <div className="space-y-4 [&_.badge]:rounded-md">
@@ -430,6 +456,26 @@ export function AuthorManagement({
             <option value="all">All (mode)</option>
             <option value="onsite">On-site</option>
             <option value="virtual">Virtual</option>
+          </select>
+          <select
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value as typeof roleFilter)}
+            className="input flex-1 text-sm sm:min-w-[10rem]"
+            aria-label="Author role filter"
+          >
+            <option value="all">All (role)</option>
+            <option value="corresponding">Corresponding</option>
+            <option value="co">Co-author</option>
+          </select>
+          <select
+            value={signupFilter}
+            onChange={(e) => setSignupFilter(e.target.value as typeof signupFilter)}
+            className="input flex-1 text-sm sm:min-w-[10rem]"
+            aria-label="Sign-up filter"
+          >
+            <option value="all">All (sign-up)</option>
+            <option value="yes">Signed up</option>
+            <option value="no">Not signed up</option>
           </select>
         </div>
         {/* Line 2 — long search + count + download */}

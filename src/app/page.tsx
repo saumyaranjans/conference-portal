@@ -82,7 +82,15 @@ const EVENT_JSONLD = {
   },
   eventAttendanceMode: "https://schema.org/MixedEventAttendanceMode",
   eventStatus: "https://schema.org/EventScheduled",
-  image: ["https://glogift2027.in/og-image.png"],
+  // Three aspect ratios, as Google's structured-data guidance asks for. The
+  // search thumbnail slot is square-ish, so offering only the 1.9:1 banner left
+  // Google to pick its own candidate from the page — and it chose a committee
+  // headshot, because those are square, face-bearing and named in their alt.
+  image: [
+    "https://glogift2027.in/og-image-square.png",
+    "https://glogift2027.in/og-image-4x3.png",
+    "https://glogift2027.in/og-image.png",
+  ],
   url: "https://glogift2027.in",
   location: {
     "@type": "Place",

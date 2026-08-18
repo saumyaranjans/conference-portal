@@ -23,6 +23,11 @@ export default function robots(): MetadataRoute.Robots {
         "/reviewer-invite/",
         "/track-editor-invite/",
         "/chair-invite/",
+        // Committee portraits. They stay visible to visitors — robots.txt
+        // binds crawlers, not browsers — but Google cannot use a face it has
+        // not crawled as the search thumbnail, and left to itself it picked
+        // one over the conference banner.
+        "/people/",
         // Capability-token URLs — must never be crawled.
         "/paper-assignment/",
         "/review-invite/",

@@ -23,11 +23,12 @@ export default function robots(): MetadataRoute.Robots {
         "/reviewer-invite/",
         "/track-editor-invite/",
         "/chair-invite/",
-        // Committee portraits. They stay visible to visitors — robots.txt
-        // binds crawlers, not browsers — but Google cannot use a face it has
-        // not crawled as the search thumbnail, and left to itself it picked
-        // one over the conference banner.
-        "/people/",
+        // NOTE: /people/ is deliberately NOT blocked here. Google had already
+        // indexed a committee portrait and was using it as this site's search
+        // thumbnail; blocking the path would have frozen that, because a
+        // crawler turned away at robots.txt can never read the noindex that
+        // asks for the removal. The portraits are kept crawlable and carry
+        // `X-Robots-Tag: noindex` from vercel.json instead.
         // Capability-token URLs — must never be crawled.
         "/paper-assignment/",
         "/review-invite/",

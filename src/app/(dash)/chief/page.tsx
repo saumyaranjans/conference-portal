@@ -289,12 +289,19 @@ export default async function ChiefDashboard() {
         }
       />
 
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
         <StatCard
           label="Pending Track Editor assignment"
           value={pendingAssignment}
         />
         <StatCard label="Submissions" value={totals.total_submissions ?? 0} />
+        {/* A paper sits at `submitted` from the moment a Track Editor takes it
+            until that editor assigns a reviewer — only the assignment trigger
+            moves it to `under_review`. Without this tile that gap is invisible:
+            such a paper counts in Submissions and in none of the tiles beside
+            it, so the one live manuscript in the conference reads as missing
+            and "Under review 0" reads as a broken counter. */}
+        <StatCard label="Awaiting reviewer" value={totals.submitted ?? 0} />
         <StatCard label="Under review" value={totals.under_review ?? 0} />
         <StatCard label="Accepted" value={totals.accepted ?? 0} />
         <StatCard label="Rejected" value={totals.rejected ?? 0} />

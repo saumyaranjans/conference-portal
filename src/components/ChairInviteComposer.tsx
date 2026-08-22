@@ -27,8 +27,6 @@ export function ChairInviteComposer({
 }: {
   editors: Person[];
   tracks: TrackOpt[];
-  /** Kept for callers that still pass it; the count is read server-side now. */
-  openByTrack?: Record<string, number>;
 }) {
   const router = useRouter();
   const [trackId, setTrackId] = useState("");

@@ -258,7 +258,6 @@ const ORG_CONTACTS =
 export function chairInviteEmail(o: {
   name?: string;
   track: string;
-  openCount?: number;
   conferenceName?: string;
   /** Short brand, e.g. "GLOGIFT 27". */
   brand?: string;
@@ -283,11 +282,11 @@ export function chairInviteEmail(o: {
     "Greetings of the Day!",
     "",
     `You have kindly been invited to serve as the Track Editor for the ${o.track} track of ${conf}.`,
-    typeof o.openCount === "number" && o.openCount > 0
-      ? `There ${o.openCount === 1 ? "is" : "are"} currently ${o.openCount} submission${
-          o.openCount === 1 ? "" : "s"
-        } awaiting handling in this track.`
-      : null,
+    // Deliberately says nothing about how many papers the track holds. An
+    // invitee is not yet an editor and may decline; until the Convener assigns
+    // papers to them individually they are entitled to know nothing about the
+    // submissions, not even their number. The next paragraph already sets the
+    // right expectation — papers arrive in the Track Queue as they are assigned.
     "",
     "As Track Editor you will invite reviewers, manage assignments, and record decisions for the papers placed in your care. Papers are assigned to you individually by the Convener, and appear in your Track Queue as they are.",
     o.siteUrl ? "" : null,

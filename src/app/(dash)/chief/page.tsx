@@ -269,14 +269,6 @@ export default async function ChiefDashboard() {
     p.roles.includes("editor")
   );
 
-  // Open (non-final) submission count per track, for the chair-invitation email.
-  const openByTrack: Record<string, number> = {};
-  for (const s of submissions) {
-    if (s.track_id && ["submitted", "under_review"].includes(s.status)) {
-      openByTrack[s.track_id] = (openByTrack[s.track_id] ?? 0) + 1;
-    }
-  }
-
   return (
     <>
       <PageHeader
@@ -435,7 +427,6 @@ export default async function ChiefDashboard() {
             id: t.id,
             name: t.name,
           }))}
-          openByTrack={openByTrack}
         />
       </Section>
 

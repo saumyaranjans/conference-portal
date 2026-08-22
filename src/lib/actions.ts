@@ -4082,12 +4082,6 @@ export async function prepareChairInvite(
   const conferenceName: string = t.conferences?.name ?? "GLOGIFT 27";
   const brand = shortConf(t.conferences);
 
-  const { count: openCount } = await admin
-    .from("submissions")
-    .select("id", { count: "exact", head: true })
-    .eq("track_id", trackId)
-    .in("status", ["submitted", "under_review"]);
-
   let target:
     | { id: string; full_name: string | null; email: string | null; roles?: string[] }
     | null = null;
@@ -4195,7 +4189,6 @@ export async function prepareChairInvite(
   const { subject, body } = chairInviteEmail({
     name: recipientName,
     track: t.name,
-    openCount: openCount ?? 0,
     conferenceName,
     brand,
     siteUrl: siteUrl(),

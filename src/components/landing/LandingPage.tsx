@@ -242,14 +242,6 @@ export const FAQ_ITEMS: { q: string; a: string }[] = [
 
 const PUBLICATIONS = [
   {
-    title: "GLOGIFT 27 Conference Proceedings",
-    badge: "Book with ISBN",
-    cover: "/journals/proceedings.svg",
-    url: "",
-    detail:
-      "All accepted and presented papers appear in a dedicated proceedings volume.",
-  },
-  {
     title: "Global Journal of Flexible Systems Management",
     badge: "Springer · ABDC-A",
     cover: "/journals/gjfsm.jpg",
@@ -294,6 +286,17 @@ const PUBLICATIONS = [
     cover: "/journals/rml.jpg",
     url: "https://www.emeraldgrouppublishing.com/book-series/review-management-literature",
     detail: "Selected best papers fast-tracked as book chapters.",
+  },
+  // Last deliberately: the proceedings take every accepted paper, so they are
+  // the floor rather than an outlet to aim for. The list now runs from the
+  // most selective journal down to the volume everyone appears in.
+  {
+    title: "GLOGIFT 27 Conference Proceedings",
+    badge: "Book with ISBN",
+    cover: "/journals/proceedings.svg",
+    url: "",
+    detail:
+      "All accepted and presented papers appear in a dedicated proceedings volume.",
   },
 ];
 

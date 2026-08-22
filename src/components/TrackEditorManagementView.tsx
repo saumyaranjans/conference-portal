@@ -129,6 +129,11 @@ export async function TrackEditorManagementView() {
     const assigned = papersByEditor.get(p.id) ?? [];
     const papers: TEPaper[] = assigned.map((s) => {
       const decided = decisionBySub.has(s.id);
+      // Only accept and reject finish a paper. A revision sends it back to the
+      // author and it returns for another decision, so it stays outstanding.
+      const activeDecision = decisionBySub.get(s.id) ?? null;
+      const concluded =
+        activeDecision === "accept" || activeDecision === "reject";
       const authors = [...(s.submission_authors ?? [])].sort(
         (a: any, b: any) => (a.author_order ?? 0) - (b.author_order ?? 0)
       );
@@ -184,7 +189,8 @@ export async function TrackEditorManagementView() {
         title: s.title ?? "",
         accepted: !!s.editor_accepted_at,
         decided,
-        decision: decisionBySub.get(s.id) ?? null,
+        concluded,
+        decision: activeDecision,
         corresponding,
         coAuthors,
         reviewers,
@@ -196,8 +202,10 @@ export async function TrackEditorManagementView() {
       tracksInvited: tracks.filter((t) => t.status === "invited").length,
       papersAssigned: papers.length,
       awaitingAcceptance: papers.filter((x) => !x.accepted).length,
-      decisionsTaken: papers.filter((x) => x.decided).length,
-      pendingDecisions: papers.filter((x) => x.accepted && !x.decided).length,
+      // Both keyed on `concluded`, so the pair still adds up to the papers the
+      // editor has taken on: every assigned paper is either finished or waiting.
+      decisionsTaken: papers.filter((x) => x.concluded).length,
+      pendingDecisions: papers.filter((x) => x.accepted && !x.concluded).length,
     };
     return {
       profileId: p.id,

@@ -35,7 +35,17 @@ export type TEPaper = {
   pathway: "A" | "B";
   title: string;
   accepted: boolean;
+  /** A decision of any kind has been recorded — revisions included. */
   decided: boolean;
+  /**
+   * The paper is finished with: accepted or rejected.
+   *
+   * A revision is a decision the editor genuinely made, but it does not end
+   * the work — the author revises and it returns for another. Counting it as
+   * a decision taken emptied the pending tile the moment a revision was
+   * recorded, leaving nothing tracking the paper that still needed an outcome.
+   */
+  concluded: boolean;
   decision: string | null;
   corresponding: string | null;
   coAuthors: string[];

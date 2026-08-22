@@ -1,6 +1,9 @@
 import { createAdminClient } from "@/lib/supabase/server";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
-import { decideVolunteerRequest } from "@/lib/volunteerActions";
+import {
+  assignVolunteerTrack,
+  decideVolunteerRequest,
+} from "@/lib/volunteerActions";
 import { PageHeader, Section, StatCard } from "@/components/ui/Primitives";
 import { VOLUNTEER_ROLE_INFO, type VolunteerRole } from "@/lib/types";
 
@@ -109,11 +112,16 @@ export async function VolunteerRequests({ basePath }: { basePath: string }) {
   const tracks = (trackList ?? []) as { id: string; code: string | null; name: string }[];
 
   let { data, error } = await load(true);
+  // Whether the database can hold a track at all. Assigning one is only
+  // offered when it can — a picker that cannot store its answer is worse than
+  // no picker, because it reads as a job done.
+  let trackColumnReady = true;
   if (error) {
     // Almost certainly 0082 not yet applied. Retry without the track rather
     // than render an empty queue and leave offers looking as though they
     // vanished.
     console.error("[volunteers] track embed failed: %s", error.message);
+    trackColumnReady = false;
     ({ data, error } = await load(false));
     if (error) console.error("[volunteers] load failed: %s", error.message);
   }
@@ -256,6 +264,7 @@ export async function VolunteerRequests({ basePath }: { basePath: string }) {
                 <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-400 dark:border-slate-700">
                   <th className="py-2 pr-3">Name</th>
                   <th className="py-2 pr-3">Role</th>
+                  <th className="py-2 pr-3">Track</th>
                   <th className="py-2 pr-3">Decision</th>
                   <th className="py-2 pr-3">On</th>
                   <th className="py-2">Reverse</th>
@@ -278,6 +287,60 @@ export async function VolunteerRequests({ basePath }: { basePath: string }) {
                     </td>
                     <td className="py-2 pr-3">
                       <RoleBadge role={r.role} />
+                    </td>
+                    {/* The track the offer was recorded against. An offer made
+                        without one used to stay trackless for good: nothing
+                        displayed it and nothing could set it. Show it, and
+                        offer the picker when it is missing. */}
+                    <td className="py-2 pr-3">
+                      {(() => {
+                        const t = Array.isArray(r.tracks) ? r.tracks[0] : r.tracks;
+                        if (t?.name) {
+                          return (
+                            <span className="text-xs text-slate-700 dark:text-slate-300">
+                              {t.code ? `${t.code} - ` : ""}
+                              {t.name}
+                            </span>
+                          );
+                        }
+                        // No column to write to yet (migration 0082): say so
+                        // rather than offer a control that cannot save.
+                        if (!trackColumnReady) {
+                          return (
+                            <span className="text-xs text-slate-400">
+                              Not available yet
+                            </span>
+                          );
+                        }
+                        return (
+                          <ActionForm
+                            action={assignVolunteerTrack}
+                            className="flex flex-wrap items-center gap-1"
+                          >
+                            <input type="hidden" name="request_id" value={r.id} />
+                            <select
+                              name="track_id"
+                              defaultValue=""
+                              aria-label={`Assign a track to ${r.profiles?.full_name ?? "this volunteer"}`}
+                              className="input w-44 max-w-full text-xs"
+                            >
+                              <option value="">Not assigned</option>
+                              {tracks.map((t) => (
+                                <option key={t.id} value={t.id}>
+                                  {t.code ? `${t.code} - ` : ""}
+                                  {t.name}
+                                </option>
+                              ))}
+                            </select>
+                            <SubmitButton
+                              variant="secondary"
+                              className="!px-2 !py-1 text-[11px]"
+                            >
+                              Assign
+                            </SubmitButton>
+                          </ActionForm>
+                        );
+                      })()}
                     </td>
                     <td className="py-2 pr-3">
                       <span

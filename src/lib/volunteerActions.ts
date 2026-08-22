@@ -58,6 +58,76 @@ async function setRole(
   return error ? error.message : null;
 }
 
+/**
+ * Set (or correct) the track on an offer that has already been decided.
+ *
+ * The track can only be chosen at the moment of accepting, and an offer that
+ * arrived without one stayed trackless for good — the decided list showed no
+ * track and had no way to add one, so the record never caught up with the
+ * seating done by hand elsewhere. This is that missing correction.
+ *
+ * An accepted editor is seated on the track as well, exactly as accepting
+ * would have done, so the two routes leave the same state behind. Reviewers
+ * are not seated: for them a track is expertise, and papers are assigned one
+ * at a time.
+ */
+export async function assignVolunteerTrack(
+  formData: FormData
+): Promise<ActionResult> {
+  await requireConvenerManage("chief", "admin");
+  const admin = createAdminClient();
+
+  const id = String(formData.get("request_id") ?? "").trim();
+  const trackId = String(formData.get("track_id") ?? "").trim();
+  if (!id) return { ok: false, message: "Missing request." };
+  if (!trackId) return { ok: false, message: "Choose a track first." };
+
+  const { data: request, error: readError } = await admin
+    .from("volunteer_requests")
+    .select("id, profile_id, role, status")
+    .eq("id", id)
+    .maybeSingle();
+  if (readError) {
+    console.error("[volunteer] request lookup failed: %s", readError.message);
+    return { ok: false, message: `Could not read that request: ${readError.message}` };
+  }
+  if (!request) return { ok: false, message: "That request no longer exists." };
+
+  // Fails loudly while migration 0082 is unapplied. Reporting the error beats
+  // a control that appears to work and quietly stores nothing.
+  const { error: assignError } = await admin
+    .from("volunteer_requests")
+    .update({ preferred_track_id: trackId })
+    .eq("id", id);
+  if (assignError) {
+    console.error("[volunteer] could not store assigned track: %s", assignError.message);
+    return {
+      ok: false,
+      message: `Could not store the track: ${assignError.message}`,
+    };
+  }
+
+  const role = request.role as VolunteerRole;
+  let seatNote = "";
+  if (role === "editor" && request.status === "accepted") {
+    const { error: seatError } = await admin
+      .from("track_editors")
+      .upsert(
+        { track_id: trackId, profile_id: request.profile_id },
+        { onConflict: "track_id,profile_id", ignoreDuplicates: true }
+      );
+    if (seatError) {
+      console.error("[volunteer] seating failed: %s", seatError.message);
+      seatNote = ` They could not be seated automatically (${seatError.message}) — please seat them from Track Editor Management.`;
+    } else {
+      seatNote = " They have been seated on this track.";
+    }
+  }
+
+  revalidateVolunteers();
+  return { ok: true, message: `Track assigned.${seatNote}` };
+}
+
 export async function decideVolunteerRequest(
   formData: FormData
 ): Promise<ActionResult> {

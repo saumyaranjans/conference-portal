@@ -258,6 +258,14 @@ const PUBLICATIONS = [
       "Selected best papers fast-tracked after further peer review and revision.",
   },
   {
+    title: "FIIB Business Review",
+    badge: "SAGE · ABDC-B",
+    cover: "/journals/fiib.jpg",
+    url: "https://journals.sagepub.com/home/fib",
+    detail:
+      "Selected best papers fast-tracked after further peer review and revision.",
+  },
+  {
     title: "International Journal of Global Business & Competitiveness",
     badge: "Springer · ABDC-C",
     cover: "/journals/ijgbc.jpg",
@@ -266,10 +274,25 @@ const PUBLICATIONS = [
       "Selected best papers fast-tracked after further peer review and revision.",
   },
   {
+    title: "International Journal of Accounting, Business and Finance",
+    badge: "ABDC-C",
+    cover: "/journals/ijabf.jpg",
+    url: "https://www.ijabf.in/index.php/IJABF",
+    detail:
+      "Selected best papers fast-tracked after further peer review and revision.",
+  },
+  {
     title: "Book Series on Flexible Systems Management",
     badge: "Springer · Scopus-indexed",
     cover: "/journals/book-series.jpg",
     url: "https://link.springer.com/series/10780",
+    detail: "Selected best papers fast-tracked as book chapters.",
+  },
+  {
+    title: "Review of Management Literature",
+    badge: "Emerald · Scopus-indexed",
+    cover: "/journals/rml.jpg",
+    url: "https://www.emeraldgrouppublishing.com/book-series/review-management-literature",
     detail: "Selected best papers fast-tracked as book chapters.",
   },
 ];

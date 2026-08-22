@@ -16,16 +16,13 @@ export function AssignPaperEditor({
   chairs,
   invitedCount = 0,
   currentId,
-  defaultLabel,
 }: {
   submissionId: string;
   chairs: ChairOption[];
   /** Invited but not yet accepted — they cannot be given a paper yet. */
   invitedCount?: number;
-  /** The per-paper override, when the Convener has set one. */
+  /** Who holds this paper, when the Convener has assigned it. */
   currentId: string | null;
-  /** What "no override" means for this paper — usually "Any track chair". */
-  defaultLabel: string;
 }) {
   const router = useRouter();
   const [value, setValue] = useState(currentId ?? "");
@@ -68,7 +65,11 @@ export function AssignPaperEditor({
           onChange={(e) => setValue(e.target.value)}
           aria-label="Track Editor for this paper"
         >
-          <option value="">{defaultLabel}</option>
+          {/* Blank, and never a name. Naming the track's only editor here read
+              as though the paper were already theirs, when an unassigned paper
+              is visible to nobody: edits_submission() grants access on the
+              per-paper assignment alone. Every paper is handed over by hand. */}
+          <option value=""></option>
           {chairs.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name}

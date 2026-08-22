@@ -536,11 +536,6 @@ export default async function ChiefDashboard() {
                       chairs={eligible}
                       invitedCount={invitedByTrack.get((s as any).track_id) ?? 0}
                       currentId={assignedId}
-                      defaultLabel={
-                        eligible.length === 1
-                          ? `${eligible[0].name} (track editor)`
-                          : "Any Track Editor on this track"
-                      }
                     />
                     {assignedId && (
                       <span className="badge bg-blue-100 text-blue-800 mt-1 inline-block">

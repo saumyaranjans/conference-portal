@@ -275,7 +275,7 @@ const PUBLICATIONS = [
   },
   {
     title: "International Journal of Accounting, Business and Finance",
-    badge: "ABDC-C",
+    badge: "Indian Accounting Association · ABDC-C",
     cover: "/journals/ijabf.jpg",
     url: "https://www.ijabf.in/index.php/IJABF",
     detail:

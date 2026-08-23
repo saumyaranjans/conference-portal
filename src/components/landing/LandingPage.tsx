@@ -14,6 +14,7 @@ import { IkatStrip } from "@/components/landing/IkatStrip";
 import { BackToTop } from "@/components/landing/BackToTop";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { TRACKS } from "@/components/landing/tracks";
+import { PUBLICATIONS } from "@/components/landing/publications";
 
 /**
  * The GLOGIFT 27 landing page. Content comes from the conference brochure;
@@ -240,65 +241,8 @@ export const FAQ_ITEMS: { q: string; a: string }[] = [
   },
 ];
 
-const PUBLICATIONS = [
-  {
-    title: "Global Journal of Flexible Systems Management",
-    badge: "Springer · ABDC-A",
-    cover: "/journals/gjfsm.jpg",
-    url: "https://link.springer.com/journal/40171",
-    detail:
-      "Selected best papers fast-tracked after further peer review and revision.",
-  },
-  {
-    title: "FIIB Business Review",
-    badge: "SAGE · ABDC-B",
-    cover: "/journals/fiib.jpg",
-    url: "https://journals.sagepub.com/home/fib",
-    detail:
-      "Selected best papers fast-tracked after further peer review and revision.",
-  },
-  {
-    title: "International Journal of Global Business & Competitiveness",
-    badge: "Springer · ABDC-C",
-    cover: "/journals/ijgbc.jpg",
-    url: "https://link.springer.com/journal/42943",
-    detail:
-      "Selected best papers fast-tracked after further peer review and revision.",
-  },
-  {
-    title: "International Journal of Accounting, Business and Finance",
-    badge: "Indian Accounting Association · ABDC-C",
-    cover: "/journals/ijabf.jpg",
-    url: "https://www.ijabf.in/index.php/IJABF",
-    detail:
-      "Selected best papers fast-tracked after further peer review and revision.",
-  },
-  {
-    title: "Book Series on Flexible Systems Management",
-    badge: "Springer · Scopus-indexed",
-    cover: "/journals/book-series.jpg",
-    url: "https://link.springer.com/series/10780",
-    detail: "Selected best papers fast-tracked as book chapters.",
-  },
-  {
-    title: "Review of Management Literature",
-    badge: "Emerald · Scopus-indexed",
-    cover: "/journals/rml.jpg",
-    url: "https://www.emeraldgrouppublishing.com/book-series/review-management-literature",
-    detail: "Selected best papers fast-tracked as book chapters.",
-  },
-  // Last deliberately: the proceedings take every accepted paper, so they are
-  // the floor rather than an outlet to aim for. The list now runs from the
-  // most selective journal down to the volume everyone appears in.
-  {
-    title: "GLOGIFT 27 Conference Proceedings",
-    badge: "Book with ISBN",
-    cover: "/journals/proceedings.svg",
-    url: "",
-    detail:
-      "All accepted and presented papers appear in a dedicated proceedings volume.",
-  },
-];
+// Outlets live in publications.ts so this section and the Publishing Outlet
+// Guidelines page always show the same list.
 
 /** Each session gets a colour and a small motion that suits its subject. */
 const SESSIONS: {
@@ -1535,6 +1479,39 @@ export function LandingPage() {
                 </span>
                 <svg viewBox="0 0 24 24" className="ml-auto h-5 w-5 shrink-0 text-slate-300 transition
                      group-hover:translate-x-1 group-hover:text-emerald-500 dark:text-slate-600"
+                     fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </Link>
+
+              <Link
+                href="/publishing-outlet-guidelines"
+                className="group relative flex items-center gap-4 overflow-hidden rounded-2xl
+                           border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur
+                           transition duration-300 hover:-translate-y-0.5 hover:border-violet-300
+                           hover:shadow-[0_14px_34px_-14px_rgba(139,92,246,0.65)]
+                           dark:border-slate-700 dark:bg-slate-900/70 dark:hover:border-violet-500/60"
+              >
+                <span aria-hidden className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-violet-400 to-violet-700" />
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-violet-50
+                                 text-violet-600 transition group-hover:scale-105
+                                 dark:bg-violet-500/15 dark:text-violet-300">
+                  <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    <path d="M4 5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v16H6a2 2 0 0 1-2-2z" />
+                    <path d="M17 7h1a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-1" />
+                    <path d="M8 7h5M8 11h5" />
+                  </svg>
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold leading-5 text-slate-800 dark:text-slate-100">
+                    Publishing Outlet Guidelines
+                  </span>
+                  <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">
+                    Journals, book series &amp; what each suits
+                  </span>
+                </span>
+                <svg viewBox="0 0 24 24" className="ml-auto h-5 w-5 shrink-0 text-slate-300 transition
+                     group-hover:translate-x-1 group-hover:text-violet-500 dark:text-slate-600"
                      fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                   <path d="M5 12h14M13 6l6 6-6 6" />
                 </svg>

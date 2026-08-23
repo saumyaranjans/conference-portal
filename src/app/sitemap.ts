@@ -12,6 +12,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/conference-flyer",
     "/conference-brochure",
     "/full-paper-submission-guidelines",
+    "/publishing-outlet-guidelines",
     "/how-to-reach",
     "/travelogue",
     "/security",

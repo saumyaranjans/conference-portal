@@ -125,7 +125,20 @@ export default function FullPaperSubmissionGuidelinesPage() {
             <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600 dark:text-slate-300">
               Prepare an editorially complete, double-anonymous manuscript for
               papers progressing through GLOGIFT 27 Pathway B and subsequently
-              considered for the selected Springer journals.
+              considered for the conference&apos;s prioritised journals.
+            </p>
+            <p className="mt-2 max-w-3xl text-base leading-7 text-slate-600 dark:text-slate-300">
+              The journals set out below are the outlets the conference
+              prioritises, and the requirements on this page are written for
+              them. The{" "}
+              <Link
+                href="/publishing-outlet-guidelines"
+                className="font-semibold text-blue-700 hover:underline dark:text-blue-300"
+              >
+                other publishing outlets
+              </Link>{" "}
+              are handled by the Track Editors, who suggest the one a paper
+              suits once it has been reviewed.
             </p>
             <div className="mt-5 inline-flex max-w-4xl items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-950 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100">
               <svg viewBox="0 0 24 24" className="mt-0.5 h-5 w-5 shrink-0 text-amber-600 dark:text-amber-300" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -147,7 +160,7 @@ export default function FullPaperSubmissionGuidelinesPage() {
               Select by research fit
             </p>
             <h2 id="journal-fit-heading" className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
-              Selected Springer journals
+              The conference&apos;s prioritised journals
             </h2>
           </div>
           <div className="grid gap-4 lg:grid-cols-2">

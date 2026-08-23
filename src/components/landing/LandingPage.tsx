@@ -786,6 +786,61 @@ export function LandingPage() {
                 <div key={pub.title}>{body}</div>
               );
             })}
+
+            {/* Sits in the outlets grid rather than beside it: the prizes are
+                the other thing a Pathway B paper can be worth, and an author
+                weighing where the work might land should see both together.
+                Seven outlets leave the last row half empty, which is where
+                this goes. */}
+            <div className="card card-pad card-hover flex gap-4 h-full border-l-4 border-l-amber-400">
+              <span
+                aria-hidden
+                className="flex h-24 w-[4.5rem] shrink-0 items-center justify-center rounded-md
+                           bg-gradient-to-b from-amber-50 to-amber-100 text-amber-600
+                           ring-1 ring-amber-200 dark:from-amber-500/15 dark:to-amber-500/5
+                           dark:text-amber-300 dark:ring-amber-500/30"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  className="h-9 w-9"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M8 4h8v5a4 4 0 0 1-8 0z" />
+                  <path d="M8 5H5.5A1.5 1.5 0 0 0 4 6.5v.8A3.7 3.7 0 0 0 7.7 11H8" />
+                  <path d="M16 5h2.5A1.5 1.5 0 0 1 20 6.5v.8A3.7 3.7 0 0 1 16.3 11H16" />
+                  <path d="M12 13v3" />
+                  <path d="M9 20h6" />
+                  <path d="M10.5 16h3l.5 4h-4z" />
+                </svg>
+              </span>
+              <div className="min-w-0">
+                <span className="badge bg-amber-100 text-amber-900">
+                  Pathway B only
+                </span>
+                <p className="text-sm font-semibold text-slate-900 mt-2 dark:text-slate-100">
+                  Best Paper Awards
+                </p>
+                <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-700 dark:text-slate-300">
+                  <span>
+                    <strong>1st</strong> ₹15,000
+                  </span>
+                  <span>
+                    <strong>2nd</strong> ₹12,000
+                  </span>
+                  <span>
+                    <strong>3rd</strong> ₹10,000
+                  </span>
+                </div>
+                <p className="text-xs text-slate-600 mt-1.5 dark:text-slate-400">
+                  Awarded in every track, for work of exceptional scholarly
+                  quality and real contribution to the field.
+                </p>
+              </div>
+            </div>
           </div>
 
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-3">

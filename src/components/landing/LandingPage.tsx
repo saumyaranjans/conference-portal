@@ -368,7 +368,10 @@ export const LEADERSHIP = [
   {
     name: "Prof (Dr) Sushil",
     role: "GIFT Founder President",
-    org: "GIFT Society · Emeritus Professor, IIT Delhi",
+    // The editorship belongs here rather than in the badge: it is the reason
+    // the conference's first-listed outlet is what it is, and an author
+    // reading the outlets section should be able to connect the two.
+    org: "GIFT Society · Emeritus Professor, IIT Delhi · Editor-in-Chief, Global Journal of Flexible Systems Management",
   },
   {
     name: "Prof (Dr) Seema Gupta",

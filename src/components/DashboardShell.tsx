@@ -57,7 +57,10 @@ export async function DashboardShell({
       .select("*")
       .eq("is_active", true)
       .order("sort_order")
-      .limit(6),
+      // Was 6, which silently dropped the seventh outlet the moment three
+      // journals were added. The cap only exists so a long list cannot run
+      // away with the sidebar; it should sit above the real count, not under it.
+      .limit(12),
     // Decides whether Conference Registration belongs in the nav at all: an
     // author with nothing accepted has nothing to register against, and the
     // entry would only lead to an empty page.

@@ -846,8 +846,9 @@ export function LandingPage() {
                   ))}
                 </div>
                 <p className="text-xs text-slate-600 mt-2 dark:text-slate-400">
-                  Awarded in every track, for work of exceptional scholarly
-                  quality and real contribution to the field. Open to{" "}
+                  Judged across all submissions to the conference — three
+                  prizes in total, not one per track — for work of exceptional
+                  scholarly quality and real contribution to the field. Open to{" "}
                   <PW p="B" /> papers only — a <PW p="A" /> paper is presented
                   on the accepted abstract, so there is no manuscript to judge.
                 </p>

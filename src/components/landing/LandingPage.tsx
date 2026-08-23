@@ -792,13 +792,17 @@ export function LandingPage() {
                 weighing where the work might land should see both together.
                 Seven outlets leave the last row half empty, which is where
                 this goes. */}
-            <div className="card card-pad card-hover flex gap-4 h-full border-l-4 border-l-amber-400">
+            <div
+              className="card card-pad card-hover flex gap-4 h-full border-l-4 border-l-rose-500
+                         bg-rose-50/70 border-rose-100
+                         dark:bg-rose-500/10 dark:border-rose-500/25"
+            >
               <span
                 aria-hidden
                 className="flex h-24 w-[4.5rem] shrink-0 items-center justify-center rounded-md
-                           bg-gradient-to-b from-amber-50 to-amber-100 text-amber-600
-                           ring-1 ring-amber-200 dark:from-amber-500/15 dark:to-amber-500/5
-                           dark:text-amber-300 dark:ring-amber-500/30"
+                           bg-gradient-to-b from-rose-100 to-rose-200 text-rose-600
+                           ring-1 ring-rose-200 dark:from-rose-500/20 dark:to-rose-500/5
+                           dark:text-rose-300 dark:ring-rose-500/30"
               >
                 <svg
                   viewBox="0 0 24 24"
@@ -818,26 +822,31 @@ export function LandingPage() {
                 </svg>
               </span>
               <div className="min-w-0">
-                <span className="badge bg-amber-100 text-amber-900">
-                  Pathway B only
-                </span>
-                <p className="text-sm font-semibold text-slate-900 mt-2 dark:text-slate-100">
+                <p className="text-lg font-bold text-rose-900 dark:text-rose-100">
                   Best Paper Awards
                 </p>
-                <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-700 dark:text-slate-300">
-                  <span>
-                    <strong>1st</strong> ₹15,000
-                  </span>
-                  <span>
-                    <strong>2nd</strong> ₹12,000
-                  </span>
-                  <span>
-                    <strong>3rd</strong> ₹10,000
-                  </span>
+                {/* The amounts as badges, so the three places read at a glance
+                    instead of as a run-on line of figures. */}
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {[
+                    ["1st", "₹15,000"],
+                    ["2nd", "₹12,000"],
+                    ["3rd", "₹10,000"],
+                  ].map(([place, amount]) => (
+                    <span
+                      key={place}
+                      className="badge bg-rose-100 text-rose-900 dark:bg-rose-500/20 dark:text-rose-200"
+                    >
+                      <strong className="font-semibold">{place}</strong>
+                      &nbsp;{amount}
+                    </span>
+                  ))}
                 </div>
-                <p className="text-xs text-slate-600 mt-1.5 dark:text-slate-400">
+                <p className="text-xs text-slate-600 mt-2 dark:text-slate-400">
                   Awarded in every track, for work of exceptional scholarly
-                  quality and real contribution to the field.
+                  quality and real contribution to the field. Open to{" "}
+                  <PW p="B" /> papers only — a <PW p="A" /> paper is presented
+                  on the accepted abstract, so there is no manuscript to judge.
                 </p>
               </div>
             </div>
@@ -1439,7 +1448,10 @@ export function LandingPage() {
             <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
               Quick Appendices
             </p>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {/* Four across on a wide screen: a fourth appendix wrapped onto a
+                row of its own, which read as an afterthought rather than one
+                of the set. */}
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <Link
                 href="/conference-flyer"
                 className="group relative flex items-center gap-4 overflow-hidden rounded-2xl

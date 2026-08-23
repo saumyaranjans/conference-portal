@@ -1543,8 +1543,11 @@ export function LandingPage() {
                   <span className="block text-sm font-semibold leading-5 text-slate-800 dark:text-slate-100">
                     Full Paper Submission Guidelines (Pathway B)
                   </span>
+                  {/* Names the two journals the page is actually written for.
+                      "Journal requirements" was true of nothing in particular
+                      once four more outlets appeared elsewhere on the page. */}
                   <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">
-                    Templates &amp; journal requirements
+                    Templates &amp; requirements — GJFSM, IJGBC
                   </span>
                 </span>
                 <svg viewBox="0 0 24 24" className="ml-auto h-5 w-5 shrink-0 text-slate-300 transition

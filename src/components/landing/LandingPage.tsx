@@ -557,6 +557,19 @@ export const [FACULTY, POST_DOC, STAFF] = COMMITTEE;
  * One membership type on its own coloured surface. `wide` lays the cards out
  * across a full row; the narrow panels sit two-abreast beside each other.
  */
+/**
+ * Editorships worth showing beside a committee member's name.
+ *
+ * A committee card is otherwise just a face and a name, which is right for
+ * most of it — but where someone edits one of the journals this conference
+ * asks authors to aim at, the connection is worth making on the page rather
+ * than leaving for them to discover.
+ */
+const EDITORSHIPS: Record<string, string> = {
+  "Prof (Dr) Dharen Kumar Pandey":
+    "Editor-in-Chief, International Journal of Accounting, Business and Finance",
+};
+
 export function CommitteePanel({
   group,
   people,
@@ -593,6 +606,11 @@ export function CommitteePanel({
             <p className="text-xs font-medium text-slate-800 dark:text-slate-200">
               {name}
             </p>
+            {EDITORSHIPS[name] && (
+              <p className="mt-1 text-[10px] leading-3.5 text-slate-500 dark:text-slate-400">
+                {EDITORSHIPS[name]}
+              </p>
+            )}
           </div>
         ))}
       </div>

@@ -661,8 +661,8 @@ function Heading({ id, children }: { id?: string; children: React.ReactNode }) {
 const NAV_LINKS: { href: string; label: string; accent?: boolean }[] = [
   { href: "#submission", label: "Conference tracks" },
   { href: "/schedule", label: "Conference Schedule" },
-  { href: "#committee", label: "Conference advisory" },
   { href: "#dates", label: "Important dates" },
+  { href: "#committee", label: "Conference advisory" },
   // The one link that leaves the page, so it carries the colour and pulse
   // that mark it out from the section jumps.
   { href: "/travelogue", label: "Sambalpur travelogue", accent: true },

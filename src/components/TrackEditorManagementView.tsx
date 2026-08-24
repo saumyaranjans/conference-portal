@@ -28,6 +28,31 @@ export async function TrackEditorManagementView() {
       "id, status, track_id, profile_id, profile:profiles!track_editors_profile_id_fkey(id, full_name, email, mobile, affiliation, institution), tracks(code, name)"
     );
 
+  // Invitations to people with no account yet. These live in their own table
+  // because there is no profile to hang them on; nothing displayed them until
+  // now, which made an invitation to a newcomer invisible once sent.
+  const { data: inviteData } = await admin
+    .from("track_editor_invitations")
+    .select(
+      "id, full_name, email, designation, affiliation, status, created_at, expires_at, tracks(code, name)"
+    )
+    .neq("status", "accepted")
+    .order("created_at", { ascending: false });
+
+  const pendingInvites = ((inviteData ?? []) as any[]).map((i) => ({
+    id: i.id as string,
+    name: (i.full_name as string) ?? i.email,
+    email: i.email as string,
+    affiliation:
+      [i.designation, i.affiliation].filter(Boolean).join(", ") || null,
+    track: i.tracks
+      ? `${i.tracks.code ? i.tracks.code + " — " : ""}${i.tracks.name}`
+      : "—",
+    status: i.status as string,
+    sentAt: i.created_at as string,
+    expiresAt: (i.expires_at as string) ?? null,
+  }));
+
   const memberships = ((teData ?? []) as any[]).filter(
     (m) => m.profile && m.profile.email
   );
@@ -246,7 +271,8 @@ export async function TrackEditorManagementView() {
         title="Track Editor Management"
         subtitle="Every Track Editor — the tracks they chair, the papers assigned to them, and their decision workload."
       />
-      <TrackEditorManagement rows={rows} tracks={tracks} conveners={conveners} />
+      <TrackEditorManagement pendingInvites={pendingInvites}
+      rows={rows} tracks={tracks} conveners={conveners} />
     </>
   );
 }

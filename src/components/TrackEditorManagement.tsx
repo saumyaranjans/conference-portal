@@ -134,15 +134,29 @@ function editorRates(r: TrackEditorRow) {
   };
 }
 
+export type PendingInvite = {
+  id: string;
+  name: string;
+  email: string;
+  affiliation: string | null;
+  track: string;
+  status: string;
+  sentAt: string;
+  expiresAt: string | null;
+};
+
 export function TrackEditorManagement({
   rows,
   tracks,
   conveners,
+  pendingInvites = [],
 }: {
   rows: TrackEditorRow[];
   tracks: { code: string; name: string }[];
   /** Convener account(s) — the "Handling Convener" and Remind-Convener target. */
   conveners: { id: string; full_name: string | null }[];
+  /** Invitations to people who have no account yet. */
+  pendingInvites?: PendingInvite[];
 }) {
   const [track, setTrack] = useState("all");
   const [q, setQ] = useState("");
@@ -285,6 +299,92 @@ export function TrackEditorManagement({
 
   return (
     <div className="space-y-4 [&_.badge]:rounded-md">
+      {/* Invitations to people who do not have an account yet.
+          These are held in their own table, keyed by a sign-up token rather
+          than a profile, and nothing displayed them: an invitation sent to
+          somebody new disappeared the moment it left, with no way to see who
+          was waiting or whether the link had expired. */}
+      {pendingInvites.length > 0 && (
+        <div className="card card-pad border-l-4 border-l-amber-400">
+          <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+            Invitations awaiting sign-up ({pendingInvites.length})
+          </h3>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            Sent to people with no account yet. They appear in the list below
+            once they accept and their account is created.
+          </p>
+          <div className="mt-3 overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-400 dark:border-slate-700">
+                  <th className="py-2 pr-3">Name</th>
+                  <th className="py-2 pr-3">Track</th>
+                  <th className="py-2 pr-3">Sent</th>
+                  <th className="py-2">State</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pendingInvites.map((i) => {
+                  const expired =
+                    !!i.expiresAt && new Date(i.expiresAt).getTime() <= Date.now();
+                  const revoked = i.status === "revoked";
+                  return (
+                    <tr
+                      key={i.id}
+                      className="border-b border-slate-100 dark:border-slate-800"
+                    >
+                      <td className="py-2 pr-3">
+                        <span className="font-medium text-slate-800 dark:text-slate-100">
+                          {i.name}
+                        </span>
+                        <br />
+                        <span className="text-xs text-slate-500">{i.email}</span>
+                        {i.affiliation && (
+                          <>
+                            <br />
+                            <span className="text-xs text-slate-400">
+                              {i.affiliation}
+                            </span>
+                          </>
+                        )}
+                      </td>
+                      <td className="py-2 pr-3 text-xs text-slate-600 dark:text-slate-300">
+                        {i.track}
+                      </td>
+                      <td className="py-2 pr-3 text-xs text-slate-500">
+                        {fmtDate(i.sentAt)}
+                      </td>
+                      <td className="py-2">
+                        <span
+                          className={`badge ${
+                            revoked
+                              ? "bg-slate-100 text-slate-600"
+                              : expired
+                                ? "bg-rose-100 text-rose-700"
+                                : "bg-amber-100 text-amber-800"
+                          }`}
+                        >
+                          {revoked
+                            ? "Declined"
+                            : expired
+                              ? "Link expired"
+                              : "Awaiting sign-up"}
+                        </span>
+                        {expired && !revoked && (
+                          <p className="mt-1 text-[11px] text-slate-400">
+                            Invite again to issue a fresh link.
+                          </p>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {/* Analytics */}
       <div className="card card-pad">
         <div className="flex flex-wrap items-center justify-between gap-3">

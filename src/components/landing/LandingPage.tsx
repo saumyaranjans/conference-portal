@@ -440,7 +440,7 @@ export const ADVISORY_BOARD = [
   },
   {
     name: "Prof (Dr) Kirankumar S. Momaya",
-    org: "Chair Professor, Indian Institute of Technology Bombay",
+    org: "Chair Professor, Indian Institute of Technology Bombay · Editor-in-Chief, International Journal of Global Business and Competitiveness",
   },
   {
     name: "Prof (Dr) Ramesh Anbanandam",

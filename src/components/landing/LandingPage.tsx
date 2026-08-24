@@ -1443,10 +1443,7 @@ export function LandingPage() {
                     <div className="flex justify-center mb-3">
                       <Avatar name={p.name} size="sm" />
                     </div>
-                    <p className="badge bg-blue-100 text-blue-800">
-                      Advisory Board
-                    </p>
-                    <p className="text-sm font-semibold text-slate-900 mt-2 dark:text-slate-100">
+                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                       {p.name}
                     </p>
                     <p className="text-xs text-slate-500 mt-1">{p.org}</p>

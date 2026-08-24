@@ -430,6 +430,22 @@ export const ADVISORY_BOARD = [
     name: "Prof M. P. Gupta",
     org: "Director, Indian Institute of Management Lucknow",
   },
+  {
+    name: "Prof Neetu Yadav",
+    org: "Associate Professor, Birla Institute of Technology and Science, Pilani",
+  },
+  {
+    name: "Prof Sanjay Dhir",
+    org: "Fellow, IIM Lucknow · Professor, DMS, Indian Institute of Technology Delhi",
+  },
+  {
+    name: "Prof Kirankumar S. Momaya",
+    org: "Chair Professor, Indian Institute of Technology Bombay",
+  },
+  {
+    name: "Prof Ramesh Anbanandam",
+    org: "Indian Institute of Technology Roorkee",
+  },
 ];
 
 /* Members are listed alphabetically, ignoring the honorific — sorted here
@@ -505,6 +521,10 @@ const PORTRAITS: Record<string, string> = {
   "Dr Abid Haleem": "/people/abid-haleem.jpg",
   "Prof Shveta Singh": "/people/shveta-singh.jpg",
   "Prof M. P. Gupta": "/people/mp-gupta.jpg",
+  "Prof Neetu Yadav": "/people/neetu-yadav.jpg",
+  "Prof Sanjay Dhir": "/people/sanjay-dhir.jpg",
+  "Prof Kirankumar S. Momaya": "/people/kirankumar-momaya.jpg",
+  "Prof Ramesh Anbanandam": "/people/ramesh-anbanandam.jpg",
   "Prof (Dr) Seema Gupta": "/people/seema-gupta.jpg",
   "Prof (Dr) Saumyaranjan Sahoo": "/people/saumyaranjan-sahoo.jpg",
   "Prof (Dr) A. Manish Kumar": "/people/a-manish-kumar.jpg",
@@ -1417,7 +1437,7 @@ export function LandingPage() {
               <p className="text-[11px] font-semibold tracking-wide mb-3 text-slate-500 dark:text-slate-400">
                 Advisory Board
               </p>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
                 {ADVISORY_BOARD.map((p) => (
                   <div key={p.name} className="card card-pad text-center card-hover">
                     <div className="flex justify-center mb-3">

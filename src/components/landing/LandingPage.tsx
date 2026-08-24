@@ -661,11 +661,8 @@ function Heading({ id, children }: { id?: string; children: React.ReactNode }) {
 const NAV_LINKS: { href: string; label: string; accent?: boolean }[] = [
   { href: "#submission", label: "Conference tracks" },
   { href: "/schedule", label: "Conference Schedule" },
-  { href: "#fees", label: "Register for conference" },
+  { href: "#committee", label: "Conference advisory" },
   { href: "#dates", label: "Important dates" },
-  // No nav entry for the advisory: the section on this page carries the four
-  // leaders and a link through to the full committee, which keeps the bar to
-  // one line at its original wording.
   // The one link that leaves the page, so it carries the colour and pulse
   // that mark it out from the section jumps.
   { href: "/travelogue", label: "Sambalpur travelogue", accent: true },
@@ -1470,7 +1467,7 @@ export function LandingPage() {
               <p className="text-[11px] font-semibold tracking-wide mb-3 text-slate-500 dark:text-slate-400">
                 Advisory Board
               </p>
-              <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
+              <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
                 {/* Alphabetical, ignoring the honorific — the same rule the committee
                     panels use, so a member added later lands in place rather
                     than at the end. Sorted here because byName is declared
@@ -1488,6 +1485,32 @@ export function LandingPage() {
                     <p className="text-xs text-slate-500 mt-1">{p.org}</p>
                     </div>
                   ))}
+
+                {/* The slots left over on the last row. An empty gap reads as
+                    an unfinished list; an invitation reads as an open door —
+                    and the people most likely to see it are exactly the ones
+                    who edit a journal that could join the outlets above. */}
+                <div
+                  className={`card card-pad flex flex-col items-center justify-center gap-1 border-dashed
+                              border-2 border-blue-200 bg-blue-50/40 text-center
+                              dark:border-blue-500/30 dark:bg-blue-500/5
+                              col-span-2 sm:col-span-3 lg:col-span-5`}
+                >
+                  <p className="text-sm font-semibold text-blue-900 dark:text-blue-200">
+                    Join the Advisory Board
+                  </p>
+                  <p className="mt-1.5 text-xs leading-5 text-slate-600 dark:text-slate-400">
+                    We welcome editors and senior academics to the board — and
+                    journals to join the conference&rsquo;s publishing outlets,
+                    so selected papers can be fast-tracked to them.
+                  </p>
+                  <Link
+                    href="/contact"
+                    className="mt-3 inline-block text-xs font-semibold text-blue-700 hover:underline dark:text-blue-300"
+                  >
+                    Write to the Convener &rarr;
+                  </Link>
+                </div>
               </div>
             </div>
 

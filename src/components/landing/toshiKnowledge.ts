@@ -4,6 +4,8 @@ import {
 } from "@/lib/registrationFees";
 import { MAX_SUBMISSIONS_PER_AUTHOR } from "@/lib/types";
 import { TRACKS } from "@/components/landing/tracks";
+import { PUBLICATIONS } from "@/components/landing/publications";
+import { ADVISORY_BOARD } from "@/components/landing/advisory";
 import type { FaqItem } from "@/components/landing/FaqBot";
 
 /**
@@ -22,7 +24,34 @@ const feeLines = Object.entries(REGISTRATION_FEE_BY_CATEGORY)
 
 const trackNames = TRACKS.map(([name], i) => `${i + 1}. ${name}`).join(" ");
 
+const outletLines = PUBLICATIONS.map((p) => `${p.title} (${p.badge})`).join("; ");
+
+/** Board members who edit one of the outlets, so Toshi can name them. */
+const boardEditors = ADVISORY_BOARD.filter((m) => m.org.includes("Editor"))
+  .map((m) => `${m.name} — ${m.org.split(" · ").slice(-1)[0]}`)
+  .join("; ");
+
 export const TOSHI_KNOWLEDGE: FaqItem[] = [
+  {
+    q: "Where can my paper be published? What are the publishing outlets?",
+    a: `Selected papers may be considered for these outlets: ${outletLines}. Selection is made by the respective editorial boards and each journal applies its own review in full — being selected is an invitation to submit, not an acceptance. Full details, and a link to each publisher's own author instructions, are on the Publishing Outlet Guidelines page.`,
+  },
+  {
+    q: "Is there a best paper award or prize money?",
+    a: "Yes. Best Paper Awards carry ₹15,000 for first place, ₹12,000 for second and ₹10,000 for third. They are judged across all submissions to the conference — three prizes in total, not one per track — and are open to Pathway B papers only, since a Pathway A paper is presented on its accepted abstract and there is no manuscript to judge.",
+  },
+  {
+    q: "Who is on the conference advisory board?",
+    a: `The advisory board has ${ADVISORY_BOARD.length} members from institutions including the IITs, the IIMs, BITS Pilani, DTU, Jamia Millia Islamia, Sapienza University of Rome and Wayne State University. Several edit journals associated with the conference: ${boardEditors}. The full board, with affiliations, is under Conference advisory on the home page.`,
+  },
+  {
+    q: "Can I pay the registration fee online yet?",
+    a: "Not yet. Online payment is being set up with ICICI Bank and will open shortly. You can complete your registration details now — they are saved — and you will be emailed as soon as the payment link is live. Please do not attempt to transfer fees by any other route in the meantime.",
+  },
+  {
+    q: "Which journal should I target, and where are its guidelines?",
+    a: "The Full Paper Submission Guidelines page covers the conference's own requirements and the two journals it prioritises — the Global Journal of Flexible Systems Management and the International Journal of Global Business and Competitiveness. The Publishing Outlet Guidelines page lists every outlet, says what each one suits, and links to the publisher's own author instructions. Word limits and formatting are set by the publisher, not the conference, so check theirs before submitting.",
+  },
   {
     q: "How much is the registration fee for each category?",
     a: `Registration fees (per delegate) — ${feeLines}. Early-bird rates apply on or before 20 December 2026; regular rates from 21 December 2026. GIFT Society members receive a ${Math.round(GLOGIFT_MEMBER_DISCOUNT * 100)}% discount.`,

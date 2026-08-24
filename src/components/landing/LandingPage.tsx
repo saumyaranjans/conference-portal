@@ -15,6 +15,7 @@ import { BackToTop } from "@/components/landing/BackToTop";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { TRACKS } from "@/components/landing/tracks";
 import { PUBLICATIONS } from "@/components/landing/publications";
+import { ADVISORY_BOARD } from "@/components/landing/advisory";
 
 /**
  * The GLOGIFT 27 landing page. Content comes from the conference brochure;
@@ -385,76 +386,6 @@ export const LEADERSHIP = [
   },
 ];
 
-/**
- * The wider advisory board. Shown inside the reveal rather than beside the
- * four above: those four run the conference, these advise it, and nine more
- * cards at full size would push the call for papers off the screen.
- *
- * Affiliations are exactly as supplied — no institution is inferred for
- * anyone whose paperwork did not name one.
- */
-export const ADVISORY_BOARD = [
-  {
-    name: "Prof (Dr) P. K. Suri",
-    org: "Professor, Delhi School of Management, DTU",
-  },
-  {
-    name: "Prof (Dr) Arpan Kumar Kar",
-    org: "Indian Institute of Technology Delhi",
-  },
-  {
-    name: "Prof (Dr) Santosh Rangnekar",
-    org: "Professor, Indian Institute of Technology Roorkee",
-  },
-  {
-    name: "Prof (Dr) Abhijit Majumdar",
-    org: "Indian Institute of Technology Delhi",
-  },
-  {
-    name: "Prof (Dr) Anand Jha",
-    org: "Chair, Department of Finance · Mike Ilitch School of Business, Wayne State University",
-  },
-  {
-    name: "Prof (Dr) Idiano D'Adamo",
-    org: "Full Professor of Management Engineering · Sapienza University of Rome",
-  },
-  {
-    name: "Prof (Dr) Abid Haleem",
-    org: "Professor, Mechanical Engineering · Faculty of Engineering and Technology, Jamia Millia Islamia",
-  },
-  {
-    name: "Prof (Dr) Shveta Singh",
-    org: "Indian Institute of Technology Delhi",
-  },
-  {
-    name: "Prof (Dr) M. P. Gupta",
-    org: "Director, Indian Institute of Management Lucknow",
-  },
-  {
-    name: "Prof (Dr) Neetu Yadav",
-    org: "Associate Professor, Birla Institute of Technology and Science, Pilani",
-  },
-  {
-    name: "Prof (Dr) Sanjay Dhir",
-    org: "Fellow, IIM Lucknow · Professor, DMS, Indian Institute of Technology Delhi",
-  },
-  {
-    name: "Prof (Dr) Kirankumar S. Momaya",
-    org: "Chair Professor, Indian Institute of Technology Bombay · Editor-in-Chief, International Journal of Global Business and Competitiveness",
-  },
-  {
-    name: "Prof (Dr) Ramesh Anbanandam",
-    org: "Indian Institute of Technology Roorkee",
-  },
-  {
-    name: "Prof (Dr) Sudhir Rana",
-    org: "College of Business, Liwa University · Editor-in-Chief, FIIB Business Review and Review of Management Literature",
-  },
-  {
-    name: "Prof (Dr) Shubham Singhania",
-    org: "FORE School of Management, New Delhi · Editor, Review of Management Literature",
-  },
-];
 
 /* Members are listed alphabetically, ignoring the honorific — sorted here
    rather than in the arrays below so a name added later lands in place. */

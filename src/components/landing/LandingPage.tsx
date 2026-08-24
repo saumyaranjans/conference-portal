@@ -395,56 +395,64 @@ export const LEADERSHIP = [
  */
 export const ADVISORY_BOARD = [
   {
-    name: "Prof P. K. Suri",
+    name: "Prof (Dr) P. K. Suri",
     org: "Professor, Delhi School of Management, DTU",
   },
   {
-    name: "Prof Arpan Kumar Kar",
+    name: "Prof (Dr) Arpan Kumar Kar",
     org: "Indian Institute of Technology Delhi",
   },
   {
-    name: "Dr Santosh Rangnekar",
+    name: "Prof (Dr) Santosh Rangnekar",
     org: "Professor, Indian Institute of Technology Roorkee",
   },
   {
-    name: "Prof Abhijit Majumdar",
+    name: "Prof (Dr) Abhijit Majumdar",
     org: "Indian Institute of Technology Delhi",
   },
   {
-    name: "Prof Anand Jha",
+    name: "Prof (Dr) Anand Jha",
     org: "Chair, Department of Finance · Mike Ilitch School of Business, Wayne State University",
   },
   {
-    name: "Prof Idiano D'Adamo",
+    name: "Prof (Dr) Idiano D'Adamo",
     org: "Full Professor of Management Engineering · Sapienza University of Rome",
   },
   {
-    name: "Dr Abid Haleem",
-    org: "Professor, Mechanical Engineering · Faculty of Engineering and Technology",
+    name: "Prof (Dr) Abid Haleem",
+    org: "Professor, Mechanical Engineering · Faculty of Engineering and Technology, Jamia Millia Islamia",
   },
   {
-    name: "Prof Shveta Singh",
+    name: "Prof (Dr) Shveta Singh",
     org: "Indian Institute of Technology Delhi",
   },
   {
-    name: "Prof M. P. Gupta",
+    name: "Prof (Dr) M. P. Gupta",
     org: "Director, Indian Institute of Management Lucknow",
   },
   {
-    name: "Prof Neetu Yadav",
+    name: "Prof (Dr) Neetu Yadav",
     org: "Associate Professor, Birla Institute of Technology and Science, Pilani",
   },
   {
-    name: "Prof Sanjay Dhir",
+    name: "Prof (Dr) Sanjay Dhir",
     org: "Fellow, IIM Lucknow · Professor, DMS, Indian Institute of Technology Delhi",
   },
   {
-    name: "Prof Kirankumar S. Momaya",
+    name: "Prof (Dr) Kirankumar S. Momaya",
     org: "Chair Professor, Indian Institute of Technology Bombay",
   },
   {
-    name: "Prof Ramesh Anbanandam",
+    name: "Prof (Dr) Ramesh Anbanandam",
     org: "Indian Institute of Technology Roorkee",
+  },
+  {
+    name: "Prof (Dr) Sudhir Rana",
+    org: "College of Business, Liwa University · Editor-in-Chief, FIIB Business Review and Review of Management Literature",
+  },
+  {
+    name: "Prof (Dr) Shubham Singhania",
+    org: "FORE School of Management, New Delhi · Editor, Review of Management Literature",
   },
 ];
 
@@ -512,19 +520,21 @@ function initials(name: string) {
 const PORTRAITS: Record<string, string> = {
   "Prof (Dr) Mahadeo Jaiswal": "/people/mp-jaiswal.jpg",
   "Prof (Dr) Sushil": "/people/sushil.jpg",
-  "Prof P. K. Suri": "/people/pk-suri.jpg",
-  "Prof Arpan Kumar Kar": "/people/arpan-kumar-kar.jpg",
-  "Dr Santosh Rangnekar": "/people/santosh-rangnekar.jpg",
-  "Prof Abhijit Majumdar": "/people/abhijit-majumdar.jpg",
-  "Prof Anand Jha": "/people/anand-jha.jpg",
-  "Prof Idiano D'Adamo": "/people/idiano-dadamo.jpg",
-  "Dr Abid Haleem": "/people/abid-haleem.jpg",
-  "Prof Shveta Singh": "/people/shveta-singh.jpg",
-  "Prof M. P. Gupta": "/people/mp-gupta.jpg",
-  "Prof Neetu Yadav": "/people/neetu-yadav.jpg",
-  "Prof Sanjay Dhir": "/people/sanjay-dhir.jpg",
-  "Prof Kirankumar S. Momaya": "/people/kirankumar-momaya.jpg",
-  "Prof Ramesh Anbanandam": "/people/ramesh-anbanandam.jpg",
+  "Prof (Dr) P. K. Suri": "/people/pk-suri.jpg",
+  "Prof (Dr) Arpan Kumar Kar": "/people/arpan-kumar-kar.jpg",
+  "Prof (Dr) Santosh Rangnekar": "/people/santosh-rangnekar.jpg",
+  "Prof (Dr) Abhijit Majumdar": "/people/abhijit-majumdar.jpg",
+  "Prof (Dr) Anand Jha": "/people/anand-jha.jpg",
+  "Prof (Dr) Idiano D'Adamo": "/people/idiano-dadamo.jpg",
+  "Prof (Dr) Abid Haleem": "/people/abid-haleem.jpg",
+  "Prof (Dr) Shveta Singh": "/people/shveta-singh.jpg",
+  "Prof (Dr) M. P. Gupta": "/people/mp-gupta.jpg",
+  "Prof (Dr) Neetu Yadav": "/people/neetu-yadav.jpg",
+  "Prof (Dr) Sanjay Dhir": "/people/sanjay-dhir.jpg",
+  "Prof (Dr) Kirankumar S. Momaya": "/people/kirankumar-momaya.jpg",
+  "Prof (Dr) Ramesh Anbanandam": "/people/ramesh-anbanandam.jpg",
+  "Prof (Dr) Sudhir Rana": "/people/sudhir-rana.jpg",
+  "Prof (Dr) Shubham Singhania": "/people/shubham-singhania.jpg",
   "Prof (Dr) Seema Gupta": "/people/seema-gupta.jpg",
   "Prof (Dr) Saumyaranjan Sahoo": "/people/saumyaranjan-sahoo.jpg",
   "Prof (Dr) A. Manish Kumar": "/people/a-manish-kumar.jpg",

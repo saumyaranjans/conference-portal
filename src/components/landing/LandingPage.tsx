@@ -1453,7 +1453,13 @@ export function LandingPage() {
                 Advisory Board
               </p>
               <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
-                {ADVISORY_BOARD.map((p) => (
+                {/* Alphabetical, ignoring the honorific — the same rule the committee
+                    panels use, so a member added later lands in place rather
+                    than at the end. Sorted here because byName is declared
+                    below this array. */}
+                {[...ADVISORY_BOARD]
+                  .sort((a, b) => byName(a.name, b.name))
+                  .map((p) => (
                   <div key={p.name} className="card card-pad text-center card-hover">
                     <div className="flex justify-center mb-3">
                       <Avatar name={p.name} size="sm" />
@@ -1462,8 +1468,8 @@ export function LandingPage() {
                       {p.name}
                     </p>
                     <p className="text-xs text-slate-500 mt-1">{p.org}</p>
-                  </div>
-                ))}
+                    </div>
+                  ))}
               </div>
             </div>
 

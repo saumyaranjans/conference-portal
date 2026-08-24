@@ -385,6 +385,53 @@ export const LEADERSHIP = [
   },
 ];
 
+/**
+ * The wider advisory board. Shown inside the reveal rather than beside the
+ * four above: those four run the conference, these advise it, and nine more
+ * cards at full size would push the call for papers off the screen.
+ *
+ * Affiliations are exactly as supplied — no institution is inferred for
+ * anyone whose paperwork did not name one.
+ */
+export const ADVISORY_BOARD = [
+  {
+    name: "Prof P. K. Suri",
+    org: "Professor, Delhi School of Management, DTU",
+  },
+  {
+    name: "Prof Arpan Kumar Kar",
+    org: "Indian Institute of Technology Delhi",
+  },
+  {
+    name: "Dr Santosh Rangnekar",
+    org: "Professor, Indian Institute of Technology Roorkee",
+  },
+  {
+    name: "Prof Abhijit Majumdar",
+    org: "Indian Institute of Technology Delhi",
+  },
+  {
+    name: "Prof Anand Jha",
+    org: "Chair, Department of Finance · Mike Ilitch School of Business, Wayne State University",
+  },
+  {
+    name: "Prof Idiano D'Adamo",
+    org: "Full Professor of Management Engineering · Sapienza University of Rome",
+  },
+  {
+    name: "Dr Abid Haleem",
+    org: "Professor, Mechanical Engineering · Faculty of Engineering and Technology",
+  },
+  {
+    name: "Prof Shveta Singh",
+    org: "Indian Institute of Technology Delhi",
+  },
+  {
+    name: "Prof M. P. Gupta",
+    org: "Director, Indian Institute of Management Lucknow",
+  },
+];
+
 /* Members are listed alphabetically, ignoring the honorific — sorted here
    rather than in the arrays below so a name added later lands in place. */
 /* Strips "Prof (Dr) ", "Dr ", "Ms " and the like. The parenthesised part
@@ -449,6 +496,15 @@ function initials(name: string) {
 const PORTRAITS: Record<string, string> = {
   "Prof (Dr) Mahadeo Jaiswal": "/people/mp-jaiswal.jpg",
   "Prof (Dr) Sushil": "/people/sushil.jpg",
+  "Prof P. K. Suri": "/people/pk-suri.jpg",
+  "Prof Arpan Kumar Kar": "/people/arpan-kumar-kar.jpg",
+  "Dr Santosh Rangnekar": "/people/santosh-rangnekar.jpg",
+  "Prof Abhijit Majumdar": "/people/abhijit-majumdar.jpg",
+  "Prof Anand Jha": "/people/anand-jha.jpg",
+  "Prof Idiano D'Adamo": "/people/idiano-dadamo.jpg",
+  "Dr Abid Haleem": "/people/abid-haleem.jpg",
+  "Prof Shveta Singh": "/people/shveta-singh.jpg",
+  "Prof M. P. Gupta": "/people/mp-gupta.jpg",
   "Prof (Dr) Seema Gupta": "/people/seema-gupta.jpg",
   "Prof (Dr) Saumyaranjan Sahoo": "/people/saumyaranjan-sahoo.jpg",
   "Prof (Dr) A. Manish Kumar": "/people/a-manish-kumar.jpg",
@@ -1354,6 +1410,31 @@ export function LandingPage() {
           </div>
 
           <AdvisoryReveal>
+            {/* Same card as the four above — portrait, role, name,
+                affiliation — so the board reads as one list broken across a
+                fold rather than as two different things. */}
+            <div className="mb-4 rounded-2xl border border-slate-200 p-4 dark:border-slate-700">
+              <p className="text-[11px] font-semibold tracking-wide mb-3 text-slate-500 dark:text-slate-400">
+                Advisory Board
+              </p>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {ADVISORY_BOARD.map((p) => (
+                  <div key={p.name} className="card card-pad text-center card-hover">
+                    <div className="flex justify-center mb-3">
+                      <Avatar name={p.name} size="sm" />
+                    </div>
+                    <p className="badge bg-blue-100 text-blue-800">
+                      Advisory Board
+                    </p>
+                    <p className="text-sm font-semibold text-slate-900 mt-2 dark:text-slate-100">
+                      {p.name}
+                    </p>
+                    <p className="text-xs text-slate-500 mt-1">{p.org}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <div className="grid gap-4 lg:grid-cols-6">
               <CommitteePanel
                 group={FACULTY}

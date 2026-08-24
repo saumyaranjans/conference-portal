@@ -602,7 +602,12 @@ export function CommitteePanel({
 
 export function Avatar({ name, size }: { name: string; size: "lg" | "sm" }) {
   const dim = size === "lg" ? "h-32 w-32 text-3xl" : "h-24 w-24 text-xl";
-  const ring = "ring-4 ring-white shadow-md dark:ring-slate-800";
+  // The white ring is a halo that lifts the portrait off the card; against a
+  // white card it is invisible on its own, so the photo also carries a hairline
+  // at its own edge. Without it a pale background — a studio wall, an overcast
+  // sky — bleeds into the card and the portrait has no edge at all.
+  const ring =
+    "ring-4 ring-white shadow-md border border-slate-200 dark:ring-slate-800 dark:border-slate-600";
   const photo = PORTRAITS[name];
   if (photo) {
     return (
